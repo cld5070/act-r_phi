@@ -1,0 +1,152 @@
+QHP 2008 / Creatine.DOCS
+
+Created : 27-Mar-09
+Last Modified : 27-Mar-09
+Author : Tom Coleman
+Copyright : 2009
+
+<structurename> CreatineCells </structurename>
+
+<vardoc>
+<name> CreatineCells.CreatineToCreatinine </name>
+<topic> CreatineToCreatinine - Overview </topic>
+</vardoc>
+
+<vardoc>
+<name> CreatineCells.K </name>
+<topic> K - DefinitionCC1 </topic>
+</vardoc>
+
+<vardoc>
+<name> CreatineCells.OtherMass </name>
+<topic> OtherMass - DefinitionCC2 </topic>
+</vardoc>
+
+<vardoc>
+<name> CreatineCells.TotalMass </name>
+<topic> TotalMass - DefinitionCC3 </topic>
+<topic> TotalMass - Concentration Units  </topic>
+<topic> TotalMass - Physical Units </topic>
+</vardoc>
+
+<topicdoc>
+<name> CreatineToCreatinine - Overview </name>
+<label> Overview </label>
+<content>
+
+Creatinine is formed by nonenzymatic dehydration of 
+creatine and creatine phosphate within striated, smooth and 
+cardiac muscle. The rate of creatinine production in normal 
+subjects has been measured and was found to be 1.7% of the
+creatine pool. 
+
+In HumMod, the creatine pool or mass is the sum of skeletal 
+muscle creatine mass and creatine in smooth & cardiac muscle, 
+collectively known as other mass.
+
+Crim MC, Calloway DH, Margen S. Creatinine metabolism in men:
+creatien pool size and turnover in relation to creatine intake.
+J Nutr 106: 371 - 381, 1975. 
+
+</content>
+</topicdoc>
+
+<topicdoc>
+<name> TotalMass - Physical Units </name>
+<label> Physical Units </label>
+<content>
+
+Units for mass are G
+
+</content>
+</topicdoc>
+
+<topicdoc>
+<name> TotalMass - Concentration Units </name>
+<label> Concentration Units </label>
+<content>
+
+Skeletal muscle has a creatine concentration of 
+4mG/G Wet Weight. Since skeletal muscle mass is 40% 
+of body weight, skeletal muscle creatine mass is 
+calculated as  4.1 * 27 = 111G.
+
+Other Mass = 17G
+
+Total Mass = 17 + 111 = 128G
+
+Borsook H, Bubnoff JW. The hydrolysis of phosphocreatine
+and the origin of urinary creatinine. 
+J. Biol. Chem. 168: 493 - 510, 1947. 
+
+Baldwin D, Robinson PK, Zierler KL, Lilenthal JL, Jr. 
+Interrelationships of magnesium, potassium, phosphorus, 
+and creatine in skeletal muscle.
+J. Clin Invest 31:850 - 858, 1952.
+
+Vignos PJ Jr., warner JL. Glycogen, creatine, and high 
+energy phosphate in human muscle disease.
+J Lab Clin Med 62: 579 - 590, 1963. 
+
+Forbes RM, Cooper AR, Mitchell HH. The composition of 
+the adult human body as determined by chemical analysis.
+J Biol Chem 203:359 - 366, 1953.
+
+Cooper AR, Forbes RM, Mitchell HH. Further studies on 
+the gross composition and mineral elements of the adult
+human body. J Biol Chem 223: 969 - 975, 1956. 
+
+Clarys JP, Martin AD, Drinkwater DT. Gross tissue weights 
+in the human body by cadaver dissection. 
+Human Biology 56: 459 - 473, 1984.
+
+</content>
+</topicdoc>
+
+<topicdoc>
+<name> K - DefinitionCC1 </name>
+<label> Definition </label>
+<content>
+
+K is the rate constant for the conversion of creatine
+to creatinine. Creatine exits muscle and is converted 
+to creatinine at a very steady rate constant of 
+0.0169/Day. Converting from G to mG/Min, this rate constant
+becomes 0.0619 * 1000/1440 = 0.012. The units are (mG/Min)/G.
+
+Since the molecular weight of creatine and creatinine are 
+131.15 and 113.12 respectively, the ratio is 0.86. 
+
+Therefore K = 0.012 * 0.86 = 0.010
+
+Crim MC, Calloway DH, Margen S. Creatine metabolism in
+men: urinary creatine and creatinine excretions with 
+creatine feeding. J. Nutr 106; 371 - 381, 1975.
+
+</content>
+</topicdoc>
+
+<topicdoc>
+<name> OtherMass - DefinitionCC2 </name>
+<label> Definition </label>
+<content>
+
+OtherMass is defined as the amount of creatine not
+stored in skeletal muscle. It is approximately 10% 
+of total mass and has a value of 17G.
+
+</content>
+</topicdoc>
+
+<topicdoc>
+<name> TotalMass - DefinitionCC3 </name>
+<label> Definition </label>
+<content>
+
+Total mass is the creatine pool.
+Total Mass = CreatineSkeletalMuscle + OtherMass 
+
+</content>
+</topicdoc>
+
+End

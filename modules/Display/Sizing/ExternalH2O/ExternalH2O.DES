@@ -1,0 +1,98 @@
+HumMod / ExternalH2O
+
+Created : 2012-03-22
+Revised : 2012-03-22
+Author : Tom Coleman
+Copyright : 2012-2012
+By : University of Mississippi Medical Center
+
+<panel><name> Sizing-ExternalH2O </name>
+
+<showbitmap>
+  <row> 0.3 </row>
+  <col> 1.0 </col>
+  <name> WholeBody </name>
+</showbitmap>
+
+<label>
+  <row> 0.3 </row>
+  <col> 4.5 </col>
+  <text> Sizing | External H2O </text>
+</label>
+
+<showclock>
+  <row> 0.3 </row><col> 32.0 </col>
+  <name> System.X </name>
+  <ampm/>
+  <secs/>
+  <days/>
+</showclock>
+
+<groupbox>
+   <row> 2.0 </row>
+   <col> 1.0 </col>
+   <high> 11.2 </high>
+   <wide> 30.0 </wide>
+
+<structurename> Sizing-ExternalH2O </structurename>
+
+<showvalue>
+  <row> 1.0 </row><col> 1.0 </col>
+  <name> Total_Mass </name>
+  <format><integer/></format>
+  <label> Total (G) </label>
+</showvalue>
+
+<showvalue>
+  <row> 2.4 </row><col> 1.0 </col>
+  <name> GILumen_Mass </name>
+  <format><integer/></format>
+  <label> GI Lumen (G) </label>
+</showvalue>
+
+<showvalue>
+  <row> 3.4 </row><col> 3.0 </col>
+  <name> GILumen_Percent </name>
+  <format><decimal> 1 </decimal></format>
+  <label> % Base </label>
+</showvalue>
+
+<showvalue>
+  <row> 4.8 </row><col> 1.0 </col>
+  <name> Peritoneum_Mass </name>
+  <format><integer/></format>
+  <label> Peritoneum (G) </label>
+</showvalue>
+
+<showvalue>
+  <row> 5.8 </row><col> 3.0 </col>
+  <name> Peritoneum_Percent </name>
+  <format><decimal> 1 </decimal></format>
+  <label> % Base </label>
+</showvalue>
+
+<showvalue>
+  <row> 7.2 </row><col> 1.0 </col>
+  <name> Lung_Mass </name>
+  <format><integer/></format>
+  <label> Lung (G) </label>
+</showvalue>
+
+<showvalue>
+  <row> 8.2 </row><col> 3.0 </col>
+  <name> Lung_Percent </name>
+  <format><decimal> 1 </decimal></format>
+  <label> % Base </label>
+</showvalue>
+
+<showvalue>
+  <row> 9.6 </row><col> 1.0 </col>
+  <name> Sizing-OrganMass.BaseMass(G) </name>
+  <format><integer/></format>
+  <label> Base Mass (G) </label>
+</showvalue>
+
+</groupbox>
+</panel>
+
+End

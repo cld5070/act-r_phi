@@ -1,0 +1,43 @@
+HumMod / RBCSolids
+
+Created : 26-Jun-06
+Revised : 2012-03-21
+Author : Tom Coleman
+Copyright : 2006-2012
+By : University Of Mississippi Medical Center
+
+<structure><name> RBCSolids </name>
+
+<variables>
+
+<var><name> Mass </name></var>
+<var><name> InitialMass </name></var>
+
+<parm><name> FractSolids </name><val> 0.34 </val></parm>
+
+</variables>
+
+<definitions>
+
+<block><name> Init </name>
+
+<def>
+  <name> InitialMass </name>
+  <val> FractSolids * RBCVol.InitialVol </val>
+</def>
+
+</block>
+
+<block><name> CalcVol </name>
+
+<def>
+  <name> Mass </name>
+  <val> FractSolids * RBCVol.Vol </val>
+</def>
+
+</block>
+
+</definitions>
+</structure>
+
+End

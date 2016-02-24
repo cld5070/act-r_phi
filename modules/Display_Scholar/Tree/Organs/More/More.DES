@@ -1,0 +1,27 @@
+HumMod / ORGANS DES
+
+Created : 2011-07-26
+Last Modified : 2012-01-28
+Author : Tom Coleman
+Copyright : 2011-2012
+By : University of Mississippi Medical Center
+
+<branch>
+  <name> MORE </name>
+  <label> More </label>
+  <parent> ORGANS </parent>
+</branch>
+
+<?path Display\Tree\Organs\More\ ?>
+
+<?include AdrenalGland.DES ?>
+<?include Bladder.DES ?>
+<?include Hypothalamus.DES ?>
+<?include Ovaries.DES ?>
+<?include Pancreas.DES ?>
+<?include Peritoneum.DES ?>
+<?include Sweat.DES ?>
+<?include Testes.DES ?>
+<?include Uterus.DES ?>
+
+End

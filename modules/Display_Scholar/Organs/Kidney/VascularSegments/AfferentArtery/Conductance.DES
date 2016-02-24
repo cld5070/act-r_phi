@@ -1,0 +1,142 @@
+HumMod / Conductance
+
+Created : 13-Apr-08
+Revised : 2012-02-19
+Author : Tom Coleman
+Copyright : 2008-2012
+By : University of Mississippi Medical Center
+
+<groupbox>
+   <row> 2.0 </row>
+   <col> 1.0 </col>
+   <high> 27.4 </high>
+   <wide> 30.0 </wide>
+   <title> Conductance </title>
+
+<structurename> Kidney-AfferentArtery </structurename>
+
+<showvalue>
+   <row> 1.4 </row><col> 1.0 </col>
+   <name> Conductance </name>
+   <format><decimal> 1 </decimal></format>
+   <label> Conductance </label>
+</showvalue>
+
+<showgraph>
+  <row> 2.4 </row><col> 1.0 </col><high> 7 </high><wide> 28 </wide>
+  <leftmargin> 6 </leftmargin>
+  <xaxis>
+    <name> System.X </name>
+    <label> Time </label>
+    <scale><min> 0 </min><max> 2 </max></scale>
+  </xaxis>
+  <yaxis>
+    <yvar>
+      <name> Conductance </name>
+      <nolabel/>
+      <linecolor> BLUE </linecolor>
+    </yvar>
+    <scale><min> 20 </min><max> 40 </max></scale>
+  </yaxis>
+</showgraph>
+
+<radiobuttons>
+  <row> 9.8 </row><col> 1.0 </col>
+  <name> Clamp </name>
+  <listname> Common.Switch </listname>
+  <label> Clamp </label>
+</radiobuttons>
+
+<repeatlist>
+  <name> Kidney-AfferentArtery.Level </name>
+  <repeat><reps> 100 </reps><stepsize> 1.0 </stepsize></repeat>
+</repeatlist>
+
+<slidebar>
+  <row> 11.2 </row><col> 1.0 </col>
+  <name> Level </name>
+  <listname> Kidney-AfferentArtery.Level </listname>
+  <label> Level </label>
+</slidebar>
+
+<showbargraph>
+  <row> 12.6 </row><col> 1.0 </col><high> 8 </high><wide> 28 </wide>
+  <leftmargin> 12 </leftmargin>
+  <title> Effect </title>
+  <showinitialvalues/>
+  <bar>
+    <name> Kidney-NephronCount.Total(xNormal) </name>
+    <label> Nephron Count </label>
+    <color> BLUE </color>
+  </bar>
+  <bar>
+    <name> TGFEffect </name>
+    <label> TGF </label>
+    <color> BLUE </color>
+  </bar>
+  <bar>
+    <name> SympEffect </name>
+    <label> Alpha Symp's </label>
+    <color> BLUE </color>
+  </bar>
+  <bar>
+    <name> MyogenicEffect </name>
+    <label> Myogenic </label>
+    <color> BLUE </color>
+  </bar>
+  <bar>
+    <name> Anesthesia.VascularConductance </name>
+    <label> Anesthesia </label>
+    <color> BLUE </color>
+  </bar>
+  <bar>
+    <name> Viscosity.ConductanceEffect </name>
+    <label> Viscosity </label>
+    <color> BLUE </color>
+  </bar>
+  <scale><min> 0 </min><max> 2 </max><inc> 1 </inc></scale>
+</showbargraph>
+
+<showvalue>
+  <row> 21.0 </row><col> 1.0 </col>
+  <name> BasicConductance </name>
+  <format><decimal> 1 </decimal></format>
+  <label> Basic Conductance </label>
+</showvalue>
+
+<slidebar>
+  <row> 22.4 </row><col> 3.0 </col>
+  <name> Multiplier </name>
+  <listname> Common.Multiplier </listname>
+  <label> X </label>
+</slidebar>
+
+<showvalue>
+  <row> 23.8 </row><col> 3.0 </col>
+  <name> NominalConductance </name>
+  <format><decimal> 1 </decimal></format>
+  <label> Nominal </label>
+</showvalue>
+
+<showvalue>
+  <row> 24.8 </row><col> 3.0 </col>
+  <name> Conductance(/G) </name>
+  <format><decimal> 5 </decimal></format>
+  <label> /G </label>
+</showvalue>
+
+<showvalue>
+  <row> 25.8 </row><col> 3.0 </col>
+  <name> Kidney-Size.InitialMass </name>
+  <format><integer/></format>
+  <label> Mass </label>
+</showvalue>
+
+<infobutton>
+  <row> 1.2 </row><col> 26.0 </col>
+  <line>  </line>
+</infobutton>
+
+</groupbox>
+
+End

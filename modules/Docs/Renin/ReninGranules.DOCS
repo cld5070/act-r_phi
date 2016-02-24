@@ -1,0 +1,158 @@
+QHP 2008 / Renin.DOCS
+
+Created : 27-Mar-09
+Last Modified : 27-Mar-09
+Author : Tom Coleman
+Copyright : 2009
+
+<structurename> ReninGranules </structurename>
+
+<vardoc>
+<name> ReninGranules.Change </name>
+<topic> ReninGranules - Overview </topic>
+<topic> Change - DefinitionRG1 </topic>
+</vardoc>
+
+<vardoc>
+<name> ReninGranules.Flux </name>
+<topic> Flux - DefinitionRG2 </topic>
+</vardoc>
+
+<vardoc>
+<name> ReninGranules.FluxK </name>
+<topic> FluxK - DefinitionRG3 </topic>
+</vardoc>
+
+<vardoc>
+<name> ReninGranules.Gain </name>
+<topic> Gain - DefinitionRG4 </topic>
+</vardoc>
+
+<vardoc>
+<name> ReninGranules.Loss </name>
+<topic> Loss - definitionRG5 </topic>
+</vardoc>
+
+<vardoc>
+<name> ReninGranules.Mass </name>
+<topic> Mass - DefinitionRG6 </topic>
+</vardoc>
+
+<topicdoc>
+<name> ReninGranules - Overview </name>
+<label> Overview </label>
+<content>
+
+
+Renin in the kidney resides in two compartments: 
+a free compartment, comprising 10% of the total
+and  a granule compartment, comprising 90% of 
+the total amount. Newly synthesized renin enters 
+the free compartment. 
+
+Renin moves from the renin granular pool to and from
+the renin free pool. ReninGranule flux is the movement
+of renin from the free pool into the granular pool.
+
+Park CS, Malvin RL, Murray RD, Cho KW. Renin
+secretion as a function of renal renin content
+in dogs. Am J Physiol 234: F506 - F509, 1978.
+
+Travis RH, Ricanati ES Temporal pattern of 
+secretion of renin in the hemorrhaged dog.
+Endocrinology 111: 373 - 379, 1982.
+
+Katz SA, Malvin RL. Secretion of newly synthesized 
+renin. Endocrinology 111: 201 - 207, 1982.
+
+Toffelmire EB, Slater K, Corvol P, Menard J, Schambelan M.
+Response of plasma prorenin and active renin to chronic
+and acute alterations of renin secretion in normal humans.
+Studies using a direct immunoradiometric asssay.
+J Clin Invest 83: 679 - 687, 1989.
+
+</content>
+</topicdoc>
+
+<topicdoc>
+<name> Change - DefinitionRG1 </name>
+<label> Definition </label>
+<content>
+
+Change in the Renin Granule Pool or mass is a function 
+of both gains and losses in reningranule mass over time. 
+Gain may occur from increased flux to the granule pool 
+and losses from increased flux to the renin free pool.
+
+</content>
+</topicdoc>
+
+<topicdoc>
+<name> Flux - DefinitionRG2 </name>
+<label> Definition </label>
+<content>
+
+Flux is the movement of renin from the renin
+from the renin free pool into the granular pool.
+
+Flux = FluxK * Mass
+
+</content>
+</topicdoc>
+
+<topicdoc>
+<name> FluxK - DefinitionRG3 </name>
+<label> Definition </label>
+<content>
+
+If we assume that the granules can refill the 
+free stores in 100 minutes, this gives a flow 
+rate of 870 GU/Min to and from the granules. 
+This then defines the rate constant. 
+
+Granule Mass = 870000 GU
+Flow rate = 870 GU/Min
+FromGranK = 0.001
+
+FluxK = 0.001
+
+
+</content>
+</topicdoc>
+
+<topicdoc>
+<name> Gain - DefinitionRG4 </name>
+<label> Definition </label>
+<content>
+
+Gain is the positive change in the mass
+of renin granules. Gain is a result of
+increased flux to the granule pool.
+ 
+</content>
+</topicdoc>
+
+<topicdoc>
+<name> Loss - DefinitionRG5 </name>
+<label> Definition </label>
+<content>
+
+Loss is defined as negative changes in mass renin
+granules and is a function of increased renin free flux.
+
+</content>
+</topicdoc>
+
+<topicdoc>
+<name> Mass - DefinitionRG6 </name>
+<label> Definition </label>
+<content>
+
+Mass is the amount of renin in granular form 
+at any given time.
+
+</content>
+</topicdoc>
+
+  
+End

@@ -1,0 +1,137 @@
+HumMod / LeftHeartPumping-Diastole
+
+Created : 2010-05-25
+Revised : 2012-07-21
+Author : Tom Coleman
+Copyright : 2010-2012
+By : University of Mississippi Medical Center
+
+<structure><name> LeftHeartPumping-Diastole </name>
+
+<variables>
+
+<var><name> EDV </name></var>
+<var><name> EDP </name></var>
+<var><name> TMP </name></var>
+
+<parm><name> Stiffness </name><val> 1.0 </val></parm>
+
+<parm><name> BreakVolume </name><val> 125 </val></parm>
+
+<parm><name> BreakPressure-Basic </name><val> 11 </val></parm>
+<var><name> BreakPressure </name></var>
+
+<var><name> Slope </name></var>
+
+<parm><name> K-Basic </name><val> 0.01 </val></parm>
+<var><name> K </name></var>
+
+<var><name> Del </name></var>
+
+<var><name> MitralStenosis </name></var>
+
+</variables>
+
+<definitions>
+
+<block><name> Parms </name>
+
+<def>
+  <name> BreakPressure </name>
+  <val> Stiffness * BreakPressure-Basic </val>
+</def>
+
+<def>
+  <name> Slope </name>
+  <val> BreakPressure / BreakVolume </val>
+</def>
+
+<def>
+  <name> K </name>
+  <val> Stiffness * K-Basic </val>
+</def>
+
+</block>
+
+<block><name> Calc </name>
+
+<def>
+  <name> MitralStenosis </name>
+  <val> MitralValve-Stenosis.Effect </val>
+</def>
+
+<def>
+  <name> EDP </name>
+  <val> 
+      ( MitralStenosis * LeftAtrium.Pressure )
+    + ( ( 1 - MitralStenosis ) * Pericardium-Cavity.Pressure )
+  </val>
+</def>
+
+<def>
+  <name> TMP </name>
+  <val> ( EDP - Pericardium-Cavity.Pressure ) MAX 0 </val>
+</def>
+
+<call> TMP-Passive-Inverse </call>
+
+</block>
+
+<block><name> TMP-Passive </name>
+
+<if>
+<test> EDV GT BreakVolume </test>
+<true> 
+  <def>
+    <name> Del </name>
+    <val> EDV - BreakVolume </val>
+  </def>
+
+  <def>
+    <name> TMP </name>
+    <val> BreakPressure + ( K * Del * Del ) </val>
+  </def>
+</true>
+
+<false> 
+  <def>
+    <name> TMP </name>
+    <val> Slope * EDV </val>
+  </def>
+</false>
+
+</if>
+
+</block>
+
+<block><name> TMP-Passive-Inverse </name>
+
+<if>
+<test> TMP GT BreakPressure </test>
+<true> 
+  <def>
+    <name> Del </name>
+    <val> TMP - BreakPressure </val>
+  </def>
+
+  <def>
+    <name> EDV </name>
+    <val> BreakVolume + SQRT ( Del / K ) </val>
+  </def>
+</true>
+
+<false> 
+  <def>
+    <name> EDV </name>
+    <val> TMP / Slope </val>
+  </def>
+</false>
+
+</if>
+
+</block>
+
+</definitions>
+</structure>
+
+End

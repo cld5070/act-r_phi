@@ -1,0 +1,121 @@
+QHP 2008 / ADH.DOCS
+
+Created : 27-Mar-09
+Last Modified : 27-Mar-09
+Author : Tom Coleman
+Copyright : 2009
+
+<structurename> ADHSlowMass </structurename>
+
+<vardoc>
+<name> ADHSlowMass.Change </name>
+<topic> ADHSlowMass - Overview </topic>
+<topic> Change - DefinitionADHSM1 </topic>
+</vardoc>
+
+<vardoc>
+<name> ADHSlowMass.Flux </name>
+<topic> Flux - DefinitionADHSM2 </topic>
+</vardoc>
+
+<vardoc>
+<name> ADHSlowMass.FluxK </name>
+<topic> FluxK - DefinitionADHSM3 </topic>
+</vardoc>
+
+<vardoc>
+<name> ADHSlowMass.Mass </name>
+<topic> Mass - DefinitionADHSM4 </topic>
+</vardoc>
+
+
+<topicdoc>
+<name> ADHSlowMass - Overview </name>
+<label> Overview </label>
+<content>
+
+In HumMod, the amount of ADH stored in the posterior pituitary is 
+divided into two distict masses - the SlowMass and the FastMass. 
+This assumption comes from hemorrhage studies in dogs which show 
+that the initial secretory response is not sustained in the 
+presence of a maintained stimulus of hemorrhagic hypotension. 
+
+When a chronic stimulus is applied, sizeable depletion of hormonal 
+stores occurs and a coincidental increase in synthesis occurs. This 
+is the Slow Mass of ADH and is the predominant factor controlling 
+rate of synthesis in the hypothalamus. In HumMod, feedback is a multiplier 
+of base secretion and is dependant on the Slow Mass storage level. 
+As the Slow Mass levels decrease, synthesis increases. 
+
+Sachs H, Share L, Osinchak J, Carpi A. Capacity of the neurohypophysis
+to release vasopressin. Endocrinology 81: 755 - 770, 1967. 
+   
+ 
+</content>
+</topicdoc>
+
+<topicdoc>
+<name> Change - DefinitionADHSM1</name>
+<label> Definition </label>
+<content>
+
+Change in the SlowMass pool can occur in three ways: 
+1. ADH synthesis increases the Slow Mass pool 
+2. Flux of ADH out of the SlowMass pool into the FastMass pool 
+depletes the FastMass pool.
+3. Flux of ADH out of FastMass pool into the SlowMass pool increases
+the SlowMass pool.   
+
+Change is therefore defined as 
+ADHSynthesis.Rate + ADHFastMass.Flux - ADHSlowMass.Flux
+
+</content>
+</topicdoc>
+
+<topicdoc>
+<name> Flux - DefinitionADHSM2 </name>
+<label> Definition </label>
+<content>
+
+Flux is the rate of movement of ADH out of the SlowMass and into 
+the FastMass and vice versa. It is defined by the Flux time 
+constant: Flux K
+
+Flux = FluxK * Mass
+
+Since normal synthesis and secretion rates are 3.2 nG/Min into 
+and out of the fast pool and the fast mass is 3200ng, the 
+fractional secretion rate is 0.001 /Min. The SlowMass is
+17000nG and so fluxes between the fast and slow is 17nG/Min
+This defines the two rate constants:
+SlowToFast - 0.0010 /Min
+FastToSlow - 0.0053 /Min
+
+
+
+</content>
+</topicdoc>
+
+<topicdoc>
+<name> FluxK - DefinitionADHSM3 </name>
+<label> Definition </label>
+<content>
+
+FluxK is the flux time constant for movement of ADH out of the Slow 
+Mass. it has  a value of 0.0010
+
+</content>
+</topicdoc>
+
+<topicdoc>
+<name> Mass - DefinitionADHSM4 </name>
+<label> Definition </label>
+<content>
+
+Mass is amount of ADH stored in the Slow Mass
+
+</content>
+</topicdoc>
+
+
+End

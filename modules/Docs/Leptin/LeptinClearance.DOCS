@@ -1,0 +1,191 @@
+QHP 2008 / Leptin.DOCS
+
+Created : 27-Mar-09
+Last Modified : 27-Mar-09
+Author : Tom Coleman
+Copyright : 2009
+
+<structurename> LeptinClearance </structurename>
+
+<vardoc>
+<name> LeptinClearance.K </name>
+<topic> LeptinClearance - Overview </topic>
+<topic> K - DefinitionLC1 </topic>
+<topic> LeptinClearance - Concentration Units </topic>
+</vardoc>
+
+<vardoc>
+<name> LeptinClearance.Rate </name>
+<topic> Rate - DefinitionLC2 </topic>
+<seealso> LeptinPool.Mass </seealso>
+</vardoc>
+
+
+<topicdoc>
+<name> LeptinClearance - Overview </name>
+<label> Overview </label>
+<content>
+
+Clearance of leptin is calculated from infusion studies
+in both animals and humans. Leptin is cleared from the
+circulation primarily by the kidneys.
+ 
+Rat Data
+Cumin F, Baum H-P, Levens N. Leptin is cleared from
+the circulation primarily by the kidney. 
+Int J of Obesity 20: 1120 -1126, 1996.
+
+Zeng J, Patterson BW, Klein S, Martin DR, Dagogo-Jaack S,
+Kohrrt WM, Miller SB, Landt M. Whole body kinetics and
+renal metabolism in vivo.
+Am J Physiol 273: E1102 - E1106, 1997.
+
+Human Data
+Klein S, Coppack SW, Mohamed-Ali V, Landt M. Adipose
+tissue leptin production and plasma leptin kinetics
+in humans. Daibetes 45: 984 - 987, 1996.
+
+Wong SL, DePaoli AM, Lee JH, Mantzoros CS. Leptin
+hormonal kinetics in the fed state: effects of
+adipocity, age, and gender on endogenous leptin
+production and clearance.
+J Clin Endocrinol Metab 89: 2672 - 2677, 2004.
+
+</content>
+</topicdoc>
+
+<topicdoc>
+<name> K - DefinitionLC1 </name>
+<label> Definition </label>
+<content>
+
+K is rate constant for leptin clearance. Rate constants 
+are calculated by looking at the speed or rate of the 
+decay in an appropriate data set.
+
+There is an irrational number called Euler's number 
+which is often denoted by e (and sometimes exp). 
+The value of e is roughly 2.718.
+
+If e is raised to a power, we have an exponential. 
+A specific example might be e^2. Note that the value 
+of e to a power can be obtained using an infinite series 
+(and e to a power is part of every scientific calculator 
+and computer programming library).
+
+If we raise e to an unspecified power using a variable, 
+we have an exponential function. An example might be e^x.
+
+The exponential function gets attention when is noted 
+that its derivative with respect to x is again the 
+exponential function. This can be denoted as
+
+	d(e^x)/dx = e^x
+
+The exponential function is also used to (inversely) 
+define the natural logarithm, denoted by In. If ex = y 
+then x = ln y.
+
+Note that e^0 = 1 and e^-¥ = 0. (¥ represents infinity).
+
+In models, we often see responses where a variable decays 
+in an exponential fashion from an initial value to a steady 
+state value. Such responses can roughly be represented by
+
+	e^-Kt
+
+where K is a positive constant called the rate constant and 
+t is the independent variable (usually time). This function 
+again has the boundary values of e^K0 = 1 and e^-K¥ = 0. 
+(¥ represents infinity). The importance of K is that it 
+determines the speed (or rate and hence its name) of transition 
+between 1 and 0.
+
+We can now work this backwards and get an estimate of K 
+by looking at the speed or rate of the decay in an 
+appropriate data set.
+
+When t = 1/K, we have e^-1, which has a value of 0.37. 
+This means that the decay is 63% of way to its final value 
+(defined as t0.63). So we observe how long it takes the decay 
+to get to 63% of its final value and then we define K = 1/t0.63.
+
+Another (and comparable) way to find a rate constant is to 
+observe how long it takes a decay to get half way to its final 
+value - this is the half-time. We can denote the half-time 
+as t1/2. The exponential function is then e^-Kt1/2 = 0.5. 
+We can solve this equality for K by taking the natural 
+logarithm of both sides of the equation and rearranging.
+
+	-Kt1/2 = ln (0.5)
+	K = - ln(0.5) / t1/2
+
+Or simply
+
+	K = 0.69 / t1/2
+
+
+</content>
+</topicdoc>
+
+<topicdoc>
+<name> Rate - DefinitionLC2 </name>
+<label> Definition </label>
+<content>
+
+Clearance rate is calculated using the rate constant K 
+and the circulating mass of leptin.
+
+Rate = K * LeptinPool.Mass
+
+</content>
+</topicdoc>
+
+<topicdoc> 
+<name> LeptinClearance - Concentration Units </name>
+<label> Concentration units </label>
+<content>
+
+Clearance Rate = 1.2 uG/Min
+
+K has a value of 0.010
+
+Rat Data
+Reference (1)
+Clearance: 5.75 +/- 0.70 ml/min/kg.
+
+Cumin F, Baum H-P, Levens N. Leptin is cleared from
+the circulation primarily by the kidney. 
+Int J of Obesity 20: 1120 -1126, 1996.
+
+Reference (2)
+Half life; 9.4 +/- 3.0 min
+Clearance: 3.6 +/- 1.2 nG/100g fat/min
+
+Zeng J, Patterson BW, Klein S, Martin DR, Dagogo-Jaack S,
+Kohrrt WM, Miller SB, Landt M. Whole body kinetics and
+renal metabolism in vivo.
+Am J Physiol 273: E1102 - E1106, 1997.
+
+Human Data
+Reference (3)
+Half life: 24.9 +/- 4.4 min.
+Leptin Clearance rate: 1.50 +/- 0.23 ml/kg/min.
+
+Klein S, Coppack SW, Mohamed-Ali V, Landt M. Adipose
+tissue leptin production and plasma leptin kinetics
+in humans. Diabetes 45: 984 - 987, 1996.
+
+Reference (4)
+Half Life: 3.4 +/- 1.5 hour
+Clearance: 79 +/- 16 ml/kg/hour
+Wong SL, DePaoli AM, Lee JH, Mantzoros CS. Leptin
+hormonal kinetics in the fed state: effects of
+adipocity, age, and gender on endogenous leptin
+production and clearance.
+J Clin Endocrinol Metab 89: 2672 - 2677, 2004. 
+
+</content>
+</topicdoc>
+
+End

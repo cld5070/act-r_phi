@@ -1,0 +1,68 @@
+HumMod / UT_InterstitialProtein
+
+Created : 21-Oct-04
+Revised : 2012-02-11
+Author : Tom Coleman
+Copyright : 2005-2012
+By : University of Mississippi Medical Center
+
+<structure><name> UT_InterstitialProtein </name>
+
+<variables>
+
+<var><name> Gain </name></var>
+<var><name> Loss </name></var>
+
+<var><name> [Protein] </name></var>
+<var><name> [Protein(G/dL)] </name></var>
+
+<var><name> COP </name></var>
+
+<var><name> InitialMass </name></var>
+
+</variables>
+
+<equations>
+
+<diffeq>
+  <name> Mass </name>
+  <integralname> Mass </integralname>
+  <dervname> Change </dervname>
+  <errorlim> 0.75 </errorlim>
+</diffeq>
+
+</equations>
+
+<definitions>
+
+<block><name> Init </name>
+
+<def><name> InitialMass </name><val> TissueH2O.UT_SizeFract * InterstitialProtein.InitialMass </val></def>
+<def><name> Mass </name><val> InitialMass </val></def>
+
+</block>
+
+<block><name> Calc </name>
+
+<def><name> [Protein] </name><val> Mass / UT_InterstitialWater.Vol </val></def>
+<def><name> [Protein(G/dL)] </name><val> 100.0 * [Protein] </val></def>
+
+<copy><from> [Protein] </from><to> Colloids.[Prot] </to></copy>
+  <call> Colloids.GetPres </call>
+<copy><from> Colloids.Pres </from><to> COP </to></copy>
+
+</block>
+
+<block><name> Dervs </name>
+
+<def><name> Gain </name><val> UT_CapillaryProtein.Rate </val></def>
+<def><name> Loss </name><val> UT_LymphProtein.Rate </val></def>
+
+<def><name> Change </name><val> Gain - Loss </val></def>
+
+</block>
+
+</definitions>
+</structure>
+
+End

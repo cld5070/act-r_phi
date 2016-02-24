@@ -1,0 +1,20 @@
+HumMod / Size-LeftHeartPumping DES
+
+Created : 2011-08-10
+Last Modified : 2011-08-10
+Author : Tom Coleman
+Copyright : 2011-2011
+By : University of Mississippi Medical Center
+
+<structure><name> Size-LeftHeartPumping </name>
+
+<definitions>
+
+<block><name> Calc </name>
+  <call> LeftHeartPumping.Init </call>
+</block>
+
+</definitions>
+</structure>
+
+End

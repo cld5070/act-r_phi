@@ -1,0 +1,134 @@
+QHP 2008 / ANP.DOCS
+
+Created : 27-Mar-09
+Last Modified : 27-Mar-09
+Author : Tom Coleman
+Copyright : 2009
+
+<structurename> ANPPump </structurename>
+
+<vardoc>
+<name> ANPPump.Rate </name>
+<topic> ANPPump - Overview </topic>
+<topic> ANP - Physical Units </topic>
+<topic> ANP - Concentration Units </topic>
+</vardoc>
+
+<vardoc>
+<name> ANPPump.Setting </name>
+<topic> Setting - DefinitionANP1 </topic>
+<topic> ANP - Physical Units </topic>
+<topic> ANP - Concentration Units </topic>
+</vardoc>
+
+<vardoc>
+<name> ANPPump.Switch </name>
+<topic> Switch - DefinitionANP2 </topic>
+<topic> ANP - Physical Units </topic>
+<topic> ANP - Concentration Units </topic>
+</vardoc>
+
+<topicdoc>
+<name> ANP - Physical Units</name>
+<label> Physical Units </label>
+<content>
+
+[Plasma]    pG/mL or pMol/L
+Fluxes      pMol/Min
+
+</content>
+</topicdoc>
+
+<topicdoc>
+<name> ANP - Concentration Units  </name>
+<label> Concentration Units  </label>
+<content>
+
+A typical concentration is 20pMol/L
+1pMol/L = 3pG/mL
+
+Normal ANP secretion rate is 67pMol/min. 
+The right heart secretes 41pMol/Min and the left heart 26pMol/min 
+
+</content>
+</topicdoc>
+
+<topicdoc>
+<name> ANPPump - Overview </name>
+<label> Overview </label>
+<content>
+
+The ANPPump enables the model user to change 
+[ANP] levels by infusing atrial natriuretic peptide at different 
+rates. Data is taken from a variety of human and animal studies 
+relating infusion rates to plasma concentrations 
+of ANP.
+
+ANP is a potent natriuretic peptide involved in hormonal 
+regulation of extracellular fluid volume and blood pressure 
+homeostasis. It is secreted by the atrial walls of the heart 
+in response to stretch, which can occur from excess blood volume.
+ANP acts on the kidneys to cause small increases in glomerular 
+filtration rate (GFR) and decreases in sodium reabsorption 
+by the collecting ducts. 
+
+Dog Data
+Maack T, Marion DN, Camargo MJ, Kleinert HD, Laragh JH, Vaughan ED Jr,
+Atlas SA. Effects of auriculin (atrial natriuretic factor) on
+blood pressure, renal function, and the renin-aldosterone
+system in dogs. Am J Med 77: 1069 - 1075, 1984.
+
+Burnett JC Jr., Granger JP, Opgenorth TJ. Effects of synthetic
+atrial natriuretic factor on renal function and renin release.
+Am J Physiol 247: F863 - F866, 1984.
+
+Granger JP, Opgenorth TJ, Salazar J, Romero JC, Burnett JC,Jr.
+Long-term hypotensive and renal effects of atrial natriuretic
+peptide. Hypertension 8(6 Pt 2):II-112 - II-116, 1986.
+
+Kivlighn SD, Lohmeier TE, Yang HM, Shin Y. Chronic effects of
+a physiological dose of ANP on arterial pressure and renin release.
+Am J Physiol 258: H1491 - H1497, 1990.
+
+Human Data
+Cody RJ, Atlas SA, Laragh JH, Kubo SH, Covit AB, Ryman KS, 
+Shaknovich A, Pondolfino K, Clark M, Camargo MJ. Atrial
+natriuretic factor in normal subjects and heart failure
+patients. Plasma levels and renal, hormonal, and hemodynamic
+responses to peptide infusion. J Cli Invest 78: 1362 - 1374, 1986.
+
+Yandle TG, Richards AM, Nicholls MG, Cuneo R, Espiner EA, Livesey JH.
+Metabolic clearance rate and plasma half life of alpha-human atrial
+natriuretic peptide in man. Life Sciences 38: 1827 - 1833, 1986.
+
+</content>
+</topicdoc>
+
+<topicdoc>
+<name> Switch - DefinitionANP2 </name>
+<label> Definition </label>
+<content>
+
+When the ANPpump switch is turned on, the model 
+user can set infusion rates using the sliding bar 
+feature in the ANPPump display box. 
+
+</content>
+</topicdoc>
+
+<topicdoc>
+<name> Setting - DefinitionANP1 </name>
+<label> Definition </label>
+<content>
+
+When the ANPPump switch is turned on, the model 
+user can set infusion rates using the sliding bar 
+feature in the ANP pump display box. Rates of infusion
+may be increased from 0, in increments of 10, up to 
+100pMol/Min and from 100, in increments of 100, up to 
+1000pMol/Min. 
+
+</content>
+</topicdoc>
+   
+End

@@ -1,0 +1,40 @@
+HumMod / LeftHeartPumping-Work
+
+Created : 2011-08-10
+Last Modified : 2011-08-10
+Author : Tom Coleman
+Copyright : 2011-2011
+By : University of Mississippi Medical Center
+
+<structure><name> LeftHeartPumping-Work </name>
+
+<variables>
+
+<var><name> Work </name></var>
+
+<parm><name> ClampSwitch </name><val> FALSE </val></parm>
+<parm><name> ClampSetting </name><val> 0.0 </val></parm>
+
+</variables>
+
+<definitions>
+
+<block><name> Calc </name>
+
+<conditional>
+  <name> Work </name>
+  <test> ClampSwitch </test>
+  <true> ClampSetting </true>
+  <false>
+      Heart-Ventricles.Rate
+    * LeftHeartPumping-Pumping.StrokeVolume
+    * SystemicArtys.Pressure
+  </false>
+</conditional>
+
+</block>
+
+</definitions>
+</structure>
+
+End

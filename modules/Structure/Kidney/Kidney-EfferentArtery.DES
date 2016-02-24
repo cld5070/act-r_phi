@@ -1,0 +1,133 @@
+HumMod / Kidney-EfferentArtery DES
+
+Created : 16-Nov-04
+Revised : 2012-02-19
+Author : Tom Coleman
+Copyright : 2006-2012
+By : University Of Mississippi Medical Center
+
+<structure><name> Kidney-EfferentArtery </name>
+
+<variables>
+
+<var><name> Conductance </name></var>
+
+<var><name> BasicConductance </name></var>
+<parm><name> Multiplier </name><val> 1.0 </val></parm>
+<var><name> NominalConductance </name></var>
+<constant><name> Conductance(/G) </name><val> 0.06218 </val></constant>
+
+<parm><name> Clamp </name><val> FALSE </val></parm>
+<parm><name> Level </name><val> 0.0 </val></parm>
+
+<var><name> A2Effect </name></var>
+<var><name> SympEffect </name></var>
+
+<var><name> PressureGradient </name></var>
+<var><name> BloodFlow </name></var>
+
+<var><name> OuterVesselsInflow </name></var>
+<var><name> OuterVesselsOutflow </name></var>
+
+<var><name> VasaRectaInflow </name></var>
+<var><name> VasaRectaOutflow </name></var>
+</variables>
+
+<functions>
+
+<curve>
+  <name> A2Effect </name>
+  <point><x> 0.0 </x><y> 1.2 </y><slope> 0.0 </slope></point>
+  <point><x> 1.3 </x><y> 1.0 </y><slope> -0.4 </slope></point>
+  <point><x> 3.0 </x><y> 0.6 </y><slope> 0.0 </slope></point>
+</curve>
+
+<curve>
+  <name> SympEffect </name>
+  <point><x> 1.5 </x><y> 1.0 </y><slope> 0.0 </slope></point>
+  <point><x> 7.0 </x><y> 0.3 </y><slope> 0.0 </slope></point>
+</curve>
+
+</functions>
+
+<definitions>
+
+<block><name> Init </name>
+
+<def>
+  <name> NominalConductance </name>
+  <val> Conductance(/G) * Kidney-Size.InitialMass </val>
+</def>
+
+</block>
+
+<block><name> Calc </name>
+
+<def>
+  <name> BasicConductance </name>
+  <val> NominalConductance * Multiplier </val>
+</def>
+
+<def>
+  <name> A2Effect </name>
+  <val> A2Effect [ A2Pool.Log10Conc ] </val>
+</def>
+
+<def>
+  <name> SympEffect </name>
+  <val> SympEffect [ Kidney-AlphaReceptors.Activity ] </val>
+</def>
+
+<conditional><name> Conductance </name>
+<test> Clamp </test>
+<true> Level </true>
+<false>
+    BasicConductance
+  * Kidney-NephronCount.Total(xNormal)
+  * A2Effect
+  * SympEffect
+  * Anesthesia.VascularConductance
+  * Viscosity.ConductanceEffect
+</false>
+</conditional>
+
+</block>
+
+<block><name> Wrapup </name>
+
+<def>
+  <name> PressureGradient </name>
+  <val> GlomerulusFiltrate.Pressure - SystemicVeins.Pressure </val>
+</def>
+
+<def>
+  <name> BloodFlow </name>
+  <val> PressureGradient * Conductance </val>
+</def>
+
+<def>
+  <name> VasaRectaInflow </name>
+  <val> VasaRecta.Inflow </val>
+</def>
+
+<def>
+  <name> VasaRectaOutflow </name>
+  <val> VasaRecta.Outflow </val>
+</def>
+
+<def>
+  <name> OuterVesselsInflow </name>
+  <val> BloodFlow - GlomerulusFiltrate.GFR - VasaRectaInflow </val>
+</def>
+
+<def>
+  <name> OuterVesselsOutflow </name>
+  <val> BloodFlow - VasaRectaOutflow </val>
+</def>
+
+</block>
+
+</definitions>
+</structure>
+
+End

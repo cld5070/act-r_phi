@@ -1,0 +1,61 @@
+HumMod / BladderProtein
+
+Created : 16-Mar-08
+Revised : 2012-10-31
+Author : Tom Coleman
+Copyright : 2008-2012
+By : University of Mississippi Medical Center
+
+<structure><name> BladderProtein </name>
+<variables>
+
+<var><name> [Protein] </name></var>
+<var><name> [Protein(G/mL)] </name></var>
+
+<constant><name> InitialConc </name><val> 0.0 </val></constant>
+<var><name> InitialMass </name></var>
+
+</variables>
+
+<equations>
+
+<diffeq>
+  <name> Mass </name>
+  <integralname> Mass </integralname>
+  <dervname> Change </dervname>
+</diffeq>
+
+</equations>
+
+<definitions>
+
+<block><name> Init </name>
+
+  <def><name> InitialMass </name><val> InitialConc * BladderVolume.InitialVolume </val></def>
+  <def><name> Mass </name><val> InitialMass </val></def>
+
+</block>
+
+<block><name> Dervs </name>
+
+  <def><name> Change </name><val> CD_Protein.Outflow </val></def>
+
+</block>
+
+<block><name> Conc </name>
+
+  <def><name> [Protein] </name><val> Mass / BladderVolume.Mass </val></def>
+  <def><name> [Protein(G/mL)] </name><val> [Protein] </val></def>
+
+</block>
+
+<block><name> Void </name>
+
+  <def><name> Mass </name><val> Mass - ( BladderVolume.VolumeVoid * [Protein] ) </val></def>
+
+</block>
+
+</definitions>
+</structure>
+
+End

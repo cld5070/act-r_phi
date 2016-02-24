@@ -1,0 +1,31 @@
+HumMod / More DES
+
+Created : 2011-07-26
+Last Modified : 2011-07-28
+Author : Tom Coleman
+Copyright : 2011-2011
+By : University of Mississippi Medical Center
+
+<branch>
+  <name> MORE </name>
+  <label> More </label>
+  <parent> ORGANS </parent>
+</branch>
+
+<?path Display\Tree\Organs\More\ ?>
+
+<!--
+<?include AdiposeTissue.DES ?>
+<?include Bone.DES ?>
+<?include Brain.DES ?>
+<?include GITract.DES ?>
+<?include Kidney.DES ?>
+<?include LeftHeart.DES ?>
+<?include Liver.DES ?>
+<?include OtherTissue.DES ?>
+<?include RespiratoryMuscle.DES ?>
+<?include RightHeart.DES ?>
+<?include SkeletalMuscle.DES ?>
+<?include Skin.DES ?>
+-->
+End

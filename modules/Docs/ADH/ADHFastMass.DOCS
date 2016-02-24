@@ -1,0 +1,119 @@
+QHP 2008 / ADH.DOCS
+
+Created : 27-Mar-09
+Last Modified : 27-Mar-09
+Author : Tom Coleman
+Copyright : 2009
+
+<structurename> ADHFastMass </structurename>
+
+<vardoc>
+<name> ADHFastMass.Change </name>
+<topic> ADHFastMass - Overview </topic>
+<topic> Change - DefinitionADHFM1 </topic>
+</vardoc>
+
+<vardoc>
+<name> ADHFastMass.Flux </name>
+<topic> Flux - DefinitionADHFM2 </topic>
+</vardoc>
+
+<vardoc>
+<name> ADHFastMass.FluxK </name>
+<topic> FluxK - DefinitionADHFM3 </topic>
+</vardoc>
+
+<vardoc>
+<name> ADHFastMass.Mass </name>
+<topic> Mass - DefinitionADHFM4 </topic>
+</vardoc>
+
+
+<topicdoc>
+<name> ADHFastMass - Overview </name>
+<label> Overview </label>
+<content>
+
+In HumMod, the amount of ADH stored in the posterior pituitary is 
+divided into two distict masses - the SlowMass and the FastMass. 
+This assumption comes from hemorrhage studies in dogs which show 
+that the initial secretory response is not sustained in the 
+presence of a maintained stimulus of hemorrhagic hypotension. 
+The Fast Mass is a readily releasable pool of ADH which is released 
+in response to an acute stimulus and does not result in a net 
+increase in synthesis of ADH (as indexed by total mRNA or nucleolar 
+volume in hypothalamic neurons).
+The fast mass comprises about 10 -20% of the total hormone content 
+of the gland - 3200nG. Since normal synthesis and secretion rates
+are 3.2nG/Min into and out of the FastMass pool, the fractional 
+secretion rate is 0.001/min 
+
+Sachs H, Share L, Osinchak J, Carpi A. Capacity of the neurohypophysis
+to release vasopressin. Endocrinology 81: 755 - 770, 1967. 
+   
+ 
+</content>
+</topicdoc>
+
+<topicdoc>
+<name> Change - DefinitionADHFM1</name>
+<label> Definition </label>
+<content>
+
+Change in the FastMass pool can occur in three ways: 
+1. ADH secretion depletes the Fast Mass pool 
+2. Flux of ADH out of the FastMass pool into the SlowMass pool
+also depletes the FastMass pool.
+3. Flux of ADH out of SlowMass pool into the FastMass pool increases
+the FastMass pool.   
+
+Change is therefore defined as 
+ADHSlowMassFlux - ADHFastMass.Flux - ADHSecretion.Rate
+
+</content>
+</topicdoc>
+
+<topicdoc>
+<name> Flux - DefinitionADHFM2 </name>
+<label> Definition </label>
+<content>
+
+Flux is the rate of movement of ADH out of the FastMass and into 
+the SlowMass and vice versa. It is defined by the Flux time 
+constant: Flux K
+
+Flux = FluxK * Mass
+
+Since normal synthesis and secretion rates are 3.2 nG/Min into 
+and out of the fast pool and the fast mass is 3200ng, the 
+fractional secretion rate is 0.001 /Min. The SlowMass is
+17000nG and so fluxes between the fast and slow is 17nG/Min
+This defines the two rate constants:
+SlowToFast - 0.0010 /Min
+FastToSlow - 0.0053 /Min
+
+</content>
+</topicdoc>
+
+<topicdoc>
+<name> FluxK - DefinitionADHFM3 </name>
+<label> Definition </label>
+<content>
+
+FluxK is the flux time constant for movement of ADH out of the Fast 
+Mass. it has  a value of .0043
+
+</content>
+</topicdoc>
+
+<topicdoc>
+<name> Mass - DefinitionADHFM4 </name>
+<label> Definition </label>
+<content>
+
+Mass is the amount of ADH stored in the FastMass 
+
+</content>
+</topicdoc>
+
+End

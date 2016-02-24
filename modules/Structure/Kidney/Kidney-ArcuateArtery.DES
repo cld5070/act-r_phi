@@ -1,0 +1,85 @@
+HumMod / Kidney-ArcuateArtery
+
+Created : 20-Dec-05
+Last Modified : 26-Jan-10
+Author : Tom Coleman
+Copyright : 2005-2010
+By : University of Mississippi Medical Center
+Solver : DES 2005
+Schema : 2005.0
+
+<structure><name> Kidney-ArcuateArtery </name>
+
+<variables>
+
+<var><name> Pressure </name></var>
+
+<var><name> Conductance </name></var>
+
+<var><name> BasicConductance </name></var>
+<parm><name> Multiplier </name><val> 1.0 </val></parm>
+<var><name> NominalConductance </name></var>
+<constant><name> Conductance(/G) </name><val> 1.555 </val></constant>
+
+<parm><name> Stenosis </name><val> 1.0 </val></parm>
+
+<var><name> PressureGradient </name></var>
+<var><name> BloodFlow </name></var>
+
+</variables>
+
+<definitions>
+
+<block><name> Init </name>
+
+<def>
+  <name> NominalConductance </name>
+  <val> Conductance(/G) * Kidney-Size.InitialMass </val>
+</def>
+
+</block>
+
+<block><name> Calc </name>
+
+<def>
+  <name> BasicConductance </name>
+  <val> NominalConductance * Multiplier </val>
+</def>
+
+<def>
+  <name> Conductance </name>
+  <val> BasicConductance * Viscosity.ConductanceEffect / Stenosis </val>
+</def>
+
+</block>
+
+<block><name> Pressure </name>
+
+<def>
+  <name> Pressure </name>
+  <val>
+      Kidney-Pressure.ArtyPressure
+    - ( Kidney-Flow.BloodFlow / Conductance )
+  </val>
+</def>
+
+</block>
+
+<block><name> Wrapup </name>
+
+<def>
+  <name> PressureGradient </name>
+  <val> Kidney-Pressure.ArtyPressure - Pressure </val>
+</def>
+
+<def>
+  <name> BloodFlow </name>
+  <val> PressureGradient * Conductance </val>
+</def>
+
+</block>
+
+</definitions>
+</structure>
+
+End

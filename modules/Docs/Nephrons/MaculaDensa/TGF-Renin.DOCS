@@ -1,0 +1,123 @@
+QHP 2008 / MaculaDensa.DOCS
+
+Created : 27-Mar-09
+Last Modified : 27-Mar-09
+Author : Tom Coleman
+Copyright : 2009
+
+<structurename> TGF-Renin </structurename>
+
+<vardoc>
+<name> TGF-Renin.A2Effect </name>
+<topic> A2Effect - Overview </topic>
+<topic> XX </topic>
+<topic> XXXX </topic>
+<seealso> XXX </seealso>
+<seealso> XXX </seealso>
+</vardoc>
+
+<vardoc>
+<name> TGF-Renin.ANPEffect </name>
+<topic> ANPEffect - Overview </topic>
+<topic> XXXX </topic>
+<topic> XXX </topic>
+<seealso> XXX </seealso>
+<seealso> XXXX </seealso>
+</vardoc>
+
+<vardoc>
+<name> TGF-Renin.BasicSignal </name>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<seealso> XXXX </seealso>
+<seealso> XXXX </seealso>
+</vardoc>
+
+<vardoc>
+<name> TGF-Renin.Clamp </name>
+<topic> XX </topic>
+<topic> XX </topic>
+<topic> XXXX </topic>
+<seealso> XXX </seealso>
+<seealso> XXX </seealso>
+</vardoc>
+
+<vardoc>
+<name> TGF-Renin.FurosemideEffect </name>
+<topic> XXX</topic>
+<topic> XXXX </topic>
+<topic> XXX </topic>
+<seealso> XXX </seealso>
+<seealso> XXXX </seealso>
+</vardoc>
+
+<vardoc>
+<name> TGF-Renin.Level </name>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<seealso> XXXX </seealso>
+<seealso> XXXX </seealso>
+</vardoc>
+
+<vardoc>
+<name> TGF-Renin.NaEffect </name>
+<topic> XX </topic>
+<topic> XX </topic>
+<topic> XXXX </topic>
+<seealso> XXX </seealso>
+<seealso> XXX </seealso>
+</vardoc>
+
+<vardoc>
+<name> TGF-Renin.Signal </name>
+<topic> XXX</topic>
+<topic> XXXX </topic>
+<topic> XXX </topic>
+<seealso> XXX </seealso>
+<seealso> XXXX </seealso>
+</vardoc>
+
+
+<topicdoc>
+<name> ANPEffect - Overview </name>
+<label> Overview </label>
+<content>
+
+Kurtz A, della Bruna R, Pfeilschifter J, Taugner A, Bauer C.
+Atrial natriuretic peptide inhibits renin release from
+juxtaglomerular cells by a cGMP- mediated process.
+Proc Natl Acad Sci USA 83: 4769 - 4773, 1986.
+
+</content>
+</topicdoc>
+
+<topicdoc>
+<name> FurosemideEffect - Overview </name>
+<label> Overview </label>
+<content>
+
+He XR, Greenberg SG, Briggs JP, Schnerman J. Effects
+of furosemide and verapamil on the NaCl dependency
+of macula densa-mediated renin secretion. 
+Hypertension 26: 137 - 142, 1995.
+
+
+</content>
+</topicdoc>
+
+<topicdoc>
+<name> A2Effect - Overview </name>
+<label> Overview </label>
+<content>
+Barrett GL, Morgan TO, Smith M. Influence of angiotensin II (AII)
+and angiotensin I (AI) on renal renin synthesis and release.
+Clin Exp Hypertens A. 10: 1279 - 1282, 1988.
+
+</content>
+</topicdoc>
+
+  
+
+End

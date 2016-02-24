@@ -1,0 +1,21 @@
+HumMod | More
+
+Created : 2011-07-26
+Last Modified : 2012-01-28
+Author : Tom Coleman
+Copyright : 2011-2012
+By : University of Mississippi Medical Center
+
+<?path Display\Organs\More\ ?>
+
+<?include AdrenalGland\AdrenalGland.DES ?>
+<?include Bladder\Bladder.DES ?>
+<?include Hypothalamus\Hypothalamus.DES ?>
+<?include Pancreas\Pancreas.DES ?>
+<?include Peritoneum\Peritoneum.DES ?>
+<?include Sweat\Sweat.DES ?>
+<?include Ovaries\Ovaries.DES ?>
+<?include Uterus\Uterus.DES ?>
+<?include Testes\Testes.DES ?>
+
+End

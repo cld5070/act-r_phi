@@ -1,0 +1,118 @@
+HumMod / Organs
+
+Created : 08-Dec-05
+Revised : 2012-02-17
+Author : Tom Coleman
+Copyright : 2006-2012
+By : University Of Mississippi Medical Center
+
+<branch>
+  <name> Kidney </name>
+  <label> Kidney </label>
+  <parent> ORGANS </parent>
+</branch>
+
+<leaf>
+  <name> Kidney-Circulation </name>
+  <label> Circulation </label>
+  <parent> Kidney </parent>
+</leaf>
+
+<branch>
+  <name> Kidney-VascularSegments </name>
+  <label> Vascular Segments </label>
+  <parent> Kidney </parent>
+</branch>
+
+<leaf>
+  <name> VascularSegments-ArcuateArtery </name>
+  <label> Arcuate Artery </label>
+  <parent> Kidney-VascularSegments </parent>
+</leaf>
+
+<leaf>
+  <name> VascularSegments-AfferentArtery </name>
+  <label> Afferent Artery </label>
+  <parent> Kidney-VascularSegments </parent>
+</leaf>
+
+<leaf>
+  <name> VascularSegments-MyogenicResponse </name>
+  <label> Myogenic Response </label>
+  <parent> Kidney-VascularSegments </parent>
+</leaf>
+
+<leaf>
+  <name> VascularSegments-EfferentArtery </name>
+  <label> Efferent Artery </label>
+  <parent> Kidney-VascularSegments </parent>
+</leaf>
+
+<leaf>
+  <name> Kidney-Metabolism </name>
+  <label> Metabolism </label>
+  <parent> Kidney </parent>
+</leaf>
+
+<leaf>
+  <name> Kidney-Fuel </name>
+  <label> Fuel </label>
+  <parent> Kidney </parent>
+</leaf>
+
+<leaf>
+  <name> Kidney-CO2 </name>
+  <label> CO2 </label>
+  <parent> Kidney </parent>
+</leaf>
+
+<leaf>
+  <name> Kidney-Lactate </name>
+  <label> Lactate </label>
+  <parent> Kidney </parent>
+</leaf>
+
+<leaf>
+  <name> Kidney-AcidBase </name>
+  <label> Acid-Base </label>
+  <parent> Kidney </parent>
+</leaf>
+
+<leaf>
+  <name> Kidney-Nerves </name>
+  <label> Nerves </label>
+  <parent> Kidney </parent>
+</leaf>
+
+<leaf>
+  <name> Kidney-Function </name>
+  <label> Function </label>
+  <parent> Kidney </parent>
+</leaf>
+
+<leaf>
+  <name> Kidney-Structure </name>
+  <label> Structure </label>
+  <parent> Kidney </parent>
+</leaf>
+
+<leaf>
+  <name> Kidney-Size </name>
+  <label> Size </label>
+  <parent> Kidney </parent>
+</leaf>
+
+<separatorbar>
+  <parent> Kidney </parent>
+</separatorbar>
+
+<leaf>
+  <name> Kidney-NephronCount </name>
+  <label> NephronCount </label>
+  <parent> Kidney </parent>
+</leaf>
+
+<?path Display\Tree\Organs\ ?>
+<?include Nephrons.DES ?>
+
+End

@@ -1,0 +1,155 @@
+QHP 2008 / Creatine.DOCS
+
+Created : 27-Mar-09
+Last Modified : 27-Mar-09
+Author : Tom Coleman
+Copyright : 2009
+
+<structurename> CreatineSkeletalMuscle </structurename>
+
+<vardoc>
+<name> CreatineSkeletalMuscle.[Creatine]</name>
+<topic> [Creatine] - Overview </topic>
+<topic> [Creatine] - DefinitionCSM1 </topic>
+<topic> [Creatine] - Physical Units </topic>
+<topic> [Creatine] - Concentration Units </topic>
+<seealso> SkeletalMuscle-Size.Mass </seealso>
+</vardoc>
+
+<vardoc>
+<name> CreatineSkeletalMuscle.Mass </name>
+<topic> Mass - DefinitionCSM2 </topic>
+<topic> [Creatine] - Physical Units </topic>
+<topic> [Creatine] - Concentration Units </topic>
+</vardoc>
+
+
+<topicdoc>
+<name> [Creatine] - Overview </name>
+<label> Overview </label>
+<content>
+
+Creatine in the body arises from two sources:
+endogenous synthesis from amino acids and creatine
+in the diet, notably from the ingestion of meat. 
+Endogenous synthesis occurs primarily in the kidney
+but also occurs in the liver. Creatine is concentrated 
+and stored mainly in skeletal muscle where it is used 
+as an energy source, particularly during strenous exercise
+when oxidative metabolism is too slow to provide sufficient 
+energy. 90% of the body stores of creatine are contained in 
+skeletal muscle. The remaining 10% is contained in smooth 
+and cardiac muscle. Creatine leaks into the extracellular 
+fluid where it is converted to creatinine. 
+
+Creatinine is excreted both renally and extrarenally. 
+Extrarenal degradation probably occurs in the intestine 
+by intestinal bacteria. Extrarenal excretion is about 1.5% 
+of total excretion and varies with plasma creatinine 
+concentration.
+
+Borsook H, Bubnoff JW. The hydrolysis of phosphocreatine
+and the origin of urinary creatinine. 
+J. Biol. Chem. 168: 493 - 510, 1947.  
+
+Van Pilsum JF, Bovis M. Effect of various protein precipitants
+on recoveries of creatinine added to plasma. 
+Clin Chem 3: 90 - 94, 1957.
+
+Conn RB, Jr. Fluorimetric determination of creatine.
+Clin Chem 6: 537 - 548, 1960.
+
+Koszalka TR. extrahepatic creatine synthesis in the rat: Role
+of the pancreas and kidney. 
+
+Arch Biochem Biophys 122: 400 - 405, 1967
+
+Jones JD, Burnett PC. Creatinine metabolism in humans with 
+decreased renal function: creatinine deficit. 
+Clin Chem 20: 1204 - 1212, 1974.
+
+Mitch WE, Collier VU, Walser M. Creatinine metabolism in 
+chronic renal failure. Clin Sci (Lond) 58: 327 - 335, 1980.
+  
+Lew SW, Bosch JP. Effect of diet on creatinine clearance and 
+excretion in young and elderly healthy subjects and in patients 
+with renal disease. J Am Soc Nephrol 2:856 -865, 1991.
+
+</content>
+</topicdoc>
+
+<topicdoc>
+<name> [Creatine] - DefinitionCSM1 </name>
+<label> Definition </label>
+<content>
+
+[Creatine] is the concentration of creatine in skeletal 
+muscle expressed as mG/G of muscle mass
+
+</content>
+</topicdoc>
+
+<topicdoc>
+<name> [Creatine] - Physical Units </name>
+<label> Physical Units </label>
+<content>
+
+Units for mass are G
+Units for [Ceatine] are mG/G
+
+</content>
+</topicdoc>
+
+<topicdoc>
+<name> [Creatine] - Concentration Units </name>
+<label> Concentration Units </label>
+<content>
+
+Skeletal muscle has a creatine concentration of 
+4mG/G Wet Weight. Since skeletal muscle mass is 40% 
+of body weight, skeletal muscle creatine mass is 
+calculated as  4.1 * 27 = 111G.
+
+Assumptions: Initial body weight = 72KG
+Muscle Mass = 27.7KG
+
+Borsook H, Bubnoff JW. The hydrolysis of phosphocreatine
+and the origin of urinary creatinine. 
+J. Biol. Chem. 168: 493 - 510, 1947. 
+
+Baldwin D, Robinson PK, Zierler KL, Lilenthal JL, Jr. 
+Interrelationships of magnesium, potassium, phosphorus, 
+and creatine in skeletal muscle.
+J. Clin Invest 31:850 - 858, 1952.
+
+Vignos PJ Jr., warner JL. Glycogen, creatine, and high 
+energy phosphate in human muscle disease.
+J Lab Clin Med 62: 579 - 590, 1963. 
+
+Forbes RM, Cooper AR, Mitchell HH. The composition of 
+the adult human body as determined by chemical analysis.
+J Biol Chem 203:359 - 366, 1953.
+
+Cooper AR, Forbes RM, Mitchell HH. Further studies on 
+the gross composition and mineral elements of the adult
+human body. J Biol Chem 223: 969 - 975, 1956. 
+
+Clarys JP, Martin AD, Drinkwater DT. Gross tissue weights 
+in the human body by cadaver dissection. 
+Human Biology 56: 459 - 473, 1984.
+
+</content>
+</topicdoc>
+
+<topicdoc>
+<name> Mass - DefinitionCSM2 </name>
+<label> Definition </label>
+<content>
+
+Mass is the total amount of creatine in skeletal muscle. 
+
+</content>
+</topicdoc>
+
+ 
+End

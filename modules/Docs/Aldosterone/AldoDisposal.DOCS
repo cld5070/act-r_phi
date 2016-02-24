@@ -1,0 +1,161 @@
+QHP 2008 / Aldosterone.DOCS
+Created : 27-Mar-09
+Last Modified : 27-Mar-09
+Author : Tom Coleman
+Copyright : 2009
+
+<structurename> AldoDisposal </structurename>
+
+<vardoc>
+<name> AldoDisposal.Clearance </name>
+<topic> Clearance - Overview </topic>
+<topic> Clearance - DefinitionAD1 </topic>
+<seealso> OrganFlow.HepaticVeinFlow </seealso>
+</vardoc>
+
+<vardoc>
+<name> AldoDisposal.Degradation </name>
+<topic> Degradation - DefinitionAD2 </topic>
+</vardoc>
+
+<vardoc>
+<name> AldoDisposal.DegradeK </name>
+<topic> DegradeK - DefinitionAD3 </topic>
+</vardoc>
+
+<vardoc>
+<name> AldoDisposal.ExtractK </name>
+<topic> ExtractK - DefinitionAD4 </topic>
+</vardoc>
+
+<vardoc>
+<name> AldoDisposal.Rate </name>
+<topic> Rate - DefinitionAD5 </topic>
+</vardoc>
+
+<topicdoc>
+<name> Clearance - Overview </name>
+<label> Overview  </label>
+<content>
+
+Aldosterone is degraded mainly in the liver and 
+conjugated especially to glucuronic acid and, 
+to a lesser extent, sulfates. About 25 per 
+cent of these conjugates are excreted in the bile 
+and then in the feces. The remaining conjugates formed 
+by the liver enter the circulation but are not 
+bound to plasma proteins, are highly soluble in 
+the plasma, and are therefore filtered readily 
+by the kidneys and excreted in the urine. 
+
+Aldosterone disposal is therefore a combination of
+clearance rate and degradation rate. 
+
+Clearance rate is affected by liver blood flow and by 
+the liver extraction coefficient - the percentage of 
+a substance removed in a single passage through an 
+organ or tissue, in this case the liver. If hepatic 
+blood flow is compromised, plasma levels of aldosterone 
+are markedly increased. Any factor affecting hepatic blood 
+flow will also affect aldosterone disposal. For example, 
+postural changes affect hepatic blood flow and the metabolic 
+clearance of aldosterone in the upright position is half 
+of that in the supine position.    
+
+Degradation rate is a function of the time constant
+for degradation and the mass of aldosterone available. 
+Changes in liver function may affect the ability of 
+the organ to degrade aldosterone. This has been 
+demonstrated in patients with hepatic cirrhosis. 
+
+Coppage WS Jr., Island DP, Cooner AE, Liddle GW.
+The metabolism of aldosterone in normal subjects and 
+in patients with hepatic cirrhosis. 
+J Clin Invest. 41: 1672 - 1680, 1962.
+
+Tait JF, Little B, Tait SAS, Flood C. The metabolic 
+clearance rate of aldosterone in pregnant and 
+non-pregnant subjects, estimated by both single injections 
+and constant infusion methods.
+J. Clin Invest. 41: 2093 - 2100, 1962.
+
+Tait JF, Tait SAS, Little B, Laumas KR. The disappearance 
+of 7-H^3-d-aldosterone in the plasma of normal subjects. 
+J Clin Invest. 40: 72 - 80, 1961.  
+    
+</content>
+</topicdoc>
+
+<topicdoc>
+<name> Clearance - DefinitionAD1 </name>
+<label> Definition </label>
+<content>
+
+Clearance is defined as the rate of removal of aldosterone
+from the circulation in a single passage through the liver. 
+It is dependent on the ExtractK, the liver extraction 
+coefficient and on liver blood flow. 
+
+</content>
+</topicdoc>
+
+<topicdoc>
+<name> Degradation - DefinitionAD2 </name>
+<label> Definition </label>
+<content>
+
+Degradation is the rate at which aldosterone is broken down
+into its metabolites in the liver. It is a function of the
+rate constant for degradation (degradeK) and the amount
+of aldosterone available - AldoPool.Mass
+
+
+</content>
+</topicdoc>
+
+<topicdoc>
+<name> DegradeK - DefinitionAD3 </name>
+<label> Definition </label>
+<content>
+
+DegradeK is the rate constant for degradation of aldosterone 
+into its metabolites. DegradeK is a parameter with a value 
+of 0.00070.
+
+</content>
+</topicdoc>
+
+
+<topicdoc>
+<name> ExtractK - DefinitionAD4 </name>
+<label> Definition </label>
+<content>
+
+Extract K is the the liver extraction coefficient
+for aldosterone. The extraction coefficient of a 
+substance is the percentage of that substance removed
+from blood or plasma in a single passage through a 
+tissue or organ, in this case the liver. it is calculated 
+by subtracting the venous concentration from the arterial 
+concentration, and dividing thsi value by the arterial
+blood concentration. the extraction ratioo is multiplied
+by organ blood flow to generate teh organ clearance rate
+Extract K is a parameter which can be altered using the 
+sliding bar in the aldosterone disposal display box. 
+Normal values are 0.78  
+
+</content>
+</topicdoc>
+
+<topicdoc>
+<name> Rate - DefinitionAD5 </name>
+<label> Definition </label>
+<content>
+
+Disposal rate of aldosterone is defined as clearance 
+plus degradation
+
+</content>
+</topicdoc>
+
+End

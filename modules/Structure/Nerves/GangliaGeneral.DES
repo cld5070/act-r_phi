@@ -1,0 +1,41 @@
+HumMod / GangliaGeneral
+
+Created : 01-Apr-05
+Revised : 2012-02-03
+Author : Tom Coleman
+Copyright : 2006-2012
+By : University Of Mississippi Medical Center
+
+<structure><name> GangliaGeneral </name>
+
+<variables>
+
+<var><name> NA(Hz) </name></var>
+<var><name> NA </name></var>
+
+<parm><name> Clamp </name><val> FALSE </val></parm>
+<parm><name> Level </name><val> 0.0 </val></parm>
+
+</variables>
+
+<definitions>
+
+<block><name> Calc </name>
+
+<conditional>
+  <name> NA(Hz) </name>
+  <test> Clamp </test>
+  <true> Level </true>
+  <false> SympsCNS.NA(Hz) </false>
+</conditional>
+
+<def>
+  <name> NA </name>
+  <val> 0.667 * NA(Hz) </val>
+</def>
+
+</block>
+</definitions>
+</structure>
+
+End

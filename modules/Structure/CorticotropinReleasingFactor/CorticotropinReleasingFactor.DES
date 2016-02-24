@@ -1,0 +1,85 @@
+HumMod | CorticotropinReleasingFactor Reference
+
+Created : 2011-07-30
+Last Modified : 2011-07-30
+Author : Tom Coleman
+Copyright : 2011-2011
+By : University of Mississippi Medical Center
+
+<structure><name> CorticotropinReleasingFactor </name>
+
+<variables>
+
+<var><name> EffectOnACTH </name></var>
+
+<var><name> StressFactor </name></var>
+<var><name> [Cortisol]Factor </name></var>
+
+<parm><name> Stress </name><val> 2 </val></parm>
+
+</variables>
+
+<functions>
+
+<curve><name> StressFactor </name>
+<point><x> 0 </x><y> 0 </y><slope> 0 </slope></point>
+<point><x> 2 </x><y> 1 </y><slope> 1.0 </slope></point>
+<point><x> 5 </x><y> 5 </y><slope> 0 </slope></point>
+</curve>
+
+<curve><name> [Cortisol]Factor </name>
+<point><x>   0 </x><y> 1.5 </y><slope> 0 </slope></point>
+<point><x>  20 </x><y> 1.0 </y><slope> -0.01 </slope></point>
+<point><x> 100 </x><y> 0.5 </y><slope> 0 </slope></point>
+</curve>
+
+</functions>
+
+<definitions>
+
+<block><name> Dervs </name>
+<testcase>
+
+<case>
+<test>( System.X - Status.LastAsleep ) LT 960</test>
+<def>
+  <name> StressFactor </name>
+  <val>1</val>
+  <!--<val> StressFactor [ Stress ] </val>-->
+</def>
+</case>
+
+<case>
+<test>( System.X - Status.LastAsleep ) GT 960</test>
+ <def>
+  <name> StressFactor </name>
+  <val> ( 1 + ( System.X / 9600 ) - ( Status.LastAsleep / 9600 ) )</val>
+ </def>
+</case>
+
+<case>
+<test>( System.X - Status.LastAsleep ) EQ 960</test>
+ <def>
+  <name> StressFactor </name>
+  <val> ( 1 + ( System.X / 9600 ) - ( Status.LastAsleep / 9600 ) )</val>
+ </def>
+</case>
+
+</testcase>
+
+<def>
+  <name> [Cortisol]Factor </name>
+  <val> [Cortisol]Factor [ Cortisol.[Conc(uG/dL)] ] </val>
+</def>
+
+<def>
+  <name> EffectOnACTH </name>
+  <val> StressFactor * [Cortisol]Factor </val>
+</def>
+
+</block>
+
+</definitions>
+</structure>
+
+End

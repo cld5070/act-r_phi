@@ -1,0 +1,11 @@
+HumMod / BloodChemistry DES
+
+Revised : 2012-03-11
+
+<leaf>
+  <name> BloodChemistry </name>
+  <label> Blood Chemistry </label>
+  <parent> DIAGNOSIS </parent>
+</leaf>
+
+End

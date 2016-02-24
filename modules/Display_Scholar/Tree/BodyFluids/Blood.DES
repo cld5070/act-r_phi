@@ -1,0 +1,57 @@
+HumMod / Blood
+
+Created : 19-Jun-06
+Last Modified : 2011-07-27
+Author : Tom Coleman
+Copyright : 2008-2011
+By : University of Mississippi Medical Center
+
+<branch>
+  <name> Blood </name>
+  <label> Blood </label>
+  <parent> BODYFLUIDS </parent>
+</branch>
+
+<leaf>
+  <name> Blood_Volume </name>
+  <label> Volume </label>
+  <parent> Blood </parent>
+</leaf>
+
+<leaf>
+  <name> Blood_Plasma </name>
+  <label> Plasma </label>
+  <parent> Blood </parent>
+</leaf>
+
+<leaf>
+  <name> Blood_RedCells </name>
+  <label> Red Cells </label>
+  <parent> Blood </parent>
+</leaf>
+
+<branch>
+  <name> Blood_Hemoglobin </name>
+  <label> Hemoglobin </label>
+  <parent> Blood </parent>
+</branch>
+
+<leaf>
+  <name> Hemoglobin_Properties </name>
+  <label> Properties </label>
+  <parent> Blood_Hemoglobin </parent>
+</leaf>
+
+<leaf>
+  <name> Hemoglobin_Loading </name>
+  <label> Loading </label>
+  <parent> Blood_Hemoglobin </parent>
+</leaf>
+
+<leaf>
+  <name> Blood_Viscosity </name>
+  <label> Viscosity </label>
+  <parent> Blood </parent>
+</leaf>
+
+End

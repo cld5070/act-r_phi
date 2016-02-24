@@ -1,0 +1,40 @@
+HumMod / MT_CapillaryWater
+
+Created : 26-Mar-08
+Revised : 2012-02-09
+Author : Tom Coleman
+Copyright : 2008-2012
+By : University of Mississippi Medical Center
+
+<structure><name> MT_CapillaryWater </name>
+
+<variables>
+
+<var><name> Rate </name></var>
+<var><name> Gradient </name></var>
+
+<parm><name> Perm </name><val> 0.44 </val></parm>
+
+</variables>
+
+<definitions>
+
+<block><name> Dervs </name>
+
+<def><name> Gradient </name>
+  <val>
+      RegionalPressure.MiddleCapy
+    - MT_InterstitialWater.Pressure
+    + MT_InterstitialProtein.COP
+    - PlasmaProtein.COP
+  </val>
+</def>
+
+<def><name> Rate </name><val> Perm * Gradient </val></def>
+
+</block>
+
+</definitions>
+</structure>
+
+End

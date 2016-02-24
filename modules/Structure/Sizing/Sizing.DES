@@ -1,0 +1,140 @@
+HumMod / Sizing
+
+Created : 2012-03-10
+Revised : 2012-10-31
+Author : Tom Coleman
+Copyright : 2012-2012
+By : University of Mississippi Medical Center
+
+<?path Structure\Sizing\ ?>
+
+<?include Sizing-OrganMass.DES ?>
+<?include Sizing-BloodVolume.DES ?>
+<?include Sizing-ExternalH2O.DES ?>
+
+<?include Size-ACTH.DES ?>
+<?include Size-ADH.DES ?>
+<?include Size-Aldosterone.DES ?>
+<?include Size-AminoAcid.DES ?>
+<?include Size-ANP.DES ?>
+<?include Size-Bladder.DES ?>
+<?include Size-BodyH2O.DES ?>
+<?include Size-BodySize.DES ?>
+<?include Size-Ca.DES ?>
+<?include Size-Calcitonin.DES ?>
+<?include Size-CellularPotassium.DES ?>
+<?include Size-Cortisol.DES ?>
+<?include Size-Creatine.DES ?>
+<?include Size-Creatinine.DES ?>
+<?include Size-DietGoalNutrition.DES ?>
+<?include Size-Epinephrine.DES ?>
+<?include Size-EPO.DES ?>
+<?include Size-Estradiol.DES ?>
+<?include Size-ExtracellularChloride.DES ?>
+<?include Size-ExtracellularPhosphate.DES ?>
+<?include Size-ExtracellularPotassium.DES ?>
+<?include Size-ExtracellularSodium.DES ?>
+<?include Size-ExtracellularSulphate.DES ?>
+<?include Size-FatSize.DES ?>
+<?include Size-FattyAcid.DES ?>
+<?include Size-FSH.DES ?>
+<?include Size-General.DES ?>
+<?include Size-Glucagon.DES ?>
+<?include Size-Glucose.DES ?>
+<?include Size-hCG.DES ?>
+<?include Size-Heat.DES ?>
+<?include Size-Inhibin.DES ?>
+<?include Size-Insulin.DES ?>
+<?include Size-Ketoacid.DES ?>
+<?include Size-Lactate.DES ?>
+<?include Size-LeftHeartPumping.DES ?>
+<?include Size-Leptin.DES ?>
+<?include Size-LH.DES ?>
+<?include Size-Norepinephrine.DES ?>
+<?include Size-OrganCalories.DES ?>
+<?include Size-OrganCO2.DES ?>
+<?include Size-OrganConductance.DES ?>
+<?include Size-OrganSize.DES ?>
+<?include Size-ParathyroidHormone.DES ?>
+<?include Size-PlasmaProtein.DES ?>
+<?include Size-Progesterone.DES ?>
+<?include Size-Renin.DES ?>
+<?include Size-RightHeartPumping.DES ?>
+<?include Size-SkeletalMuscleSize.DES ?>
+<?include Size-Testosterone.DES ?>
+<?include Size-ThyroidHormone.DES ?>
+<?include Size-Triglyceride.DES ?>
+<?include Size-Urea.DES ?>
+<?include Size-VitaminD.DES ?>
+<?include Size-Weight.DES ?>
+
+<structure><name> Sizing </name>
+
+<definitions>
+
+<block><name> Calc </name>
+  <call> Sizing-OrganMass.Calc </call>
+  <call> Sizing-BloodVolume.Calc </call>
+  <call> Sizing-ExternalH2O.Calc </call>
+
+  <call> Size-Weight.Calc </call>
+
+<!--  <call> Size-OrganSize.Calc </call> -->
+  <call> Size-General.Calc </call>
+  <call> Size-BodyH2O.Calc </call>
+  <call> Size-BodySize.Calc </call>
+
+  <call> Size-ACTH.Calc </call>
+  <call> Size-ADH.Calc </call>
+  <call> Size-Aldosterone.Calc </call>
+  <call> Size-AminoAcid.Calc </call>
+  <call> Size-ANP.Calc </call>
+  <call> Size-Bladder.Calc </call>
+  <call> Size-Ca.Calc </call>
+  <call> Size-Calcitonin.Calc </call>
+  <call> Size-CellularPotassium.Calc </call>
+  <call> Size-Cortisol.Calc </call>
+  <call> Size-Creatine.Calc </call>
+  <call> Size-Creatinine.Calc </call>
+  <call> Size-DietGoalNutrition.Calc </call>
+  <call> Size-Epinephrine.Calc </call>
+  <call> Size-EPO.Calc </call>
+  <call> Size-Estradiol.Calc </call>
+  <call> Size-ExtracellularChloride.Calc </call>
+  <call> Size-ExtracellularPhosphate.Calc </call>
+  <call> Size-ExtracellularPotassium.Calc </call>
+  <call> Size-ExtracellularSodium.Calc </call>
+  <call> Size-ExtracellularSulphate.Calc </call>
+  <call> Size-FattyAcid.Calc </call>
+  <call> Size-FSH.Calc </call>
+  <call> Size-Glucagon.Calc </call>
+  <call> Size-Glucose.Calc </call>
+  <call> Size-hCG.Calc </call>
+  <call> Size-Heat.Calc </call>
+  <call> Size-Inhibin.Calc </call>
+  <call> Size-Insulin.Calc </call>
+  <call> Size-Ketoacid.Calc </call>
+  <call> Size-Lactate.Calc </call>
+  <call> Size-LeftHeartPumping.Calc </call>
+  <call> Size-Leptin.Calc </call>
+  <call> Size-LH.Calc </call>
+  <call> Size-Norepinephrine.Calc </call>
+  <call> Size-OrganCalories.Calc </call>
+  <call> Size-OrganCO2.Calc </call>
+  <call> Size-OrganConductance.Calc </call>
+  <call> Size-ParathyroidHormone.Calc </call>
+  <call> Size-PlasmaProtein.Calc </call>
+  <call> Size-Progesterone.Calc </call>
+  <call> Size-Renin.Calc </call>
+  <call> Size-RightHeartPumping.Calc </call>
+  <call> Size-Testosterone.Calc </call>
+  <call> Size-ThyroidHormone.Calc </call>
+  <call> Size-Triglyceride.Calc </call>
+  <call> Size-Urea.Calc </call>
+  <call> Size-VitaminD.Calc </call>
+</block>
+
+</definitions>
+</structure>
+
+End

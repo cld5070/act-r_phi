@@ -1,0 +1,111 @@
+QHP 2008 / Lactate.DOCS
+
+Created : 27-Mar-09
+Last Modified : 27-Mar-09
+Author : Tom Coleman
+Copyright : 2009
+
+<structurename> LacPool </structurename>
+
+<vardoc>
+<name> LacPool.[Lac-(mEq/L)] </name>
+<topic> [Lac-(mEq/L)] - DefinitionLP1  </topic>
+<topic> Lactate - Overview </topic>
+<topic> Lactate - Physical Units </topic>
+<seealso> Lactate - Concentration Units </seealso>
+<seealso> XXX </seealso>
+</vardoc>
+
+<vardoc>
+<name> LacPool.[Lac-(mG/dL)] </name>
+<topic> [Lac-(mG/dL)] - DefinitionLP2 </topic>
+<topic> XXXX </topic>
+<topic> XXX </topic>
+<seealso> XXX </seealso>
+<seealso> XXXX </seealso>
+</vardoc>
+
+<vardoc>
+<name> LacPool.[Lac-] </name>
+<topic> [Lac-] - DefinitionLP3 </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<seealso> XXXX </seealso>
+<seealso> XXXX </seealso>
+</vardoc>
+
+<vardoc>
+<name> LacPool.Change </name>
+<topic> Change - DefinitionLP4 </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<seealso> XXXX </seealso>
+<seealso> XXXX </seealso>
+</vardoc>
+
+<vardoc>
+<name> LacPool.Mass </name>
+<topic> Mass _ DefinitionLP5 </topic>
+<topic> XX </topic>
+<topic> XXXX </topic>
+<seealso> XXX </seealso>
+<seealso> XXX </seealso>
+</vardoc>
+
+<vardoc>
+<name> LacPool.PumpRate </name>
+<topic> PumpRate - DefinitionLP6 </topic>
+<topic> XXXX </topic>
+<topic> XXX </topic>
+<seealso> XXX </seealso>
+<seealso> XXXX </seealso>
+</vardoc>
+
+<vardoc>
+<name> LacPool.PumpSetting </name>
+<topic> PumpSetting - DefinitionLP7 </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<seealso> XXXX </seealso>
+<seealso> XXXX </seealso>
+</vardoc>
+
+<vardoc>
+<name> LacPool.PumpSwitch </name>
+<topic> PumpSwitch - DefinitionLP8 </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<seealso> XXXX </seealso>
+<seealso> XXXX </seealso>
+</vardoc>
+
+
+<topicdoc>
+<name> XXX</name>
+<label> XXX</label>
+<content>
+
+
+</content>
+</topicdoc>
+
+<topicdoc>
+<name> XX </name>
+<label> XXX </label>
+<content>
+
+
+</content>
+</topicdoc>
+
+<topicdoc>
+<name> XXX </name>
+<label> XXX </label>
+<content>
+
+
+</content>
+</topicdoc>
+
+   
+End

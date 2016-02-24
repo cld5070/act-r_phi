@@ -1,0 +1,127 @@
+HumMod / BloodVessels
+
+Created : 09-Apr-08
+Revised : 2012-02-10
+Author : Tom Coleman
+Copyright : 2008-2012
+By : University of Mississippi Medical Center
+
+<branch>
+  <name> BloodVessels </name>
+  <label> Blood Vessels </label>
+  <parent> CIRCULATION </parent>
+</branch>
+
+<leaf>
+  <name> BloodVessels_SystemicArteries </name>
+  <label> Systemic Arteries </label>
+  <parent> BloodVessels </parent>
+</leaf>
+
+<branch>
+  <name> SystemicVeins </name>
+  <label> Systemic Veins </label>
+  <parent> BloodVessels </parent>
+</branch>
+
+<leaf>
+  <name> SystemicVeins-Summary </name>
+  <label> Summary </label>
+  <parent> SystemicVeins </parent>
+</leaf>
+
+<leaf>
+  <name> SystemicVeins-Conductance </name>
+  <label> Conductance </label>
+  <parent> SystemicVeins </parent>
+</leaf>
+
+<leaf>
+  <name> BloodVessels_SplanchnicVeins </name>
+  <label> Splanchnic Veins </label>
+  <parent> BloodVessels </parent>
+</leaf>
+
+<branch>
+  <name> GreatVeins </name>
+  <label> Great Veins </label>
+  <parent> BloodVessels </parent>
+</branch>
+
+<leaf>
+  <name> SuperiorVenaCava </name>
+  <label> Superior Vena Cava </label>
+  <parent> GreatVeins </parent>
+</leaf>
+
+<leaf>
+  <name> CoronarySinus </name>
+  <label> Coronary Sinus </label>
+  <parent> GreatVeins </parent>
+</leaf>
+
+<leaf>
+  <name> InferiorVenaCava </name>
+  <label> Inferior Vena Cava </label>
+  <parent> GreatVeins </parent>
+</leaf>
+
+<leaf>
+  <name> BloodVessels_RightAtrium </name>
+  <label> Right Atrium </label>
+  <parent> BloodVessels </parent>
+</leaf>
+
+<leaf>
+  <name> BloodVessels_RightVentricle </name>
+  <label> Right Ventricle </label>
+  <parent> BloodVessels </parent>
+</leaf>
+
+<leaf>
+  <name> BloodVessels_PulmonaryArtery </name>
+  <label> Pulmonary Artery </label>
+  <parent> BloodVessels </parent>
+</leaf>
+
+<leaf>
+  <name> BloodVessels_PulmonaryCapillaries </name>
+  <label> Pulmonary Capillaries </label>
+  <parent> BloodVessels </parent>
+</leaf>
+
+<leaf>
+  <name> BloodVessels_PulmonaryVeins </name>
+  <label> Pulmonary Veins </label>
+  <parent> BloodVessels </parent>
+</leaf>
+
+<leaf>
+  <name> BloodVessels_LeftAtrium </name>
+  <label> Left Atrium </label>
+  <parent> BloodVessels </parent>
+</leaf>
+
+<leaf>
+  <name> BloodVessels_LeftVentricle </name>
+  <label> Left Ventricle </label>
+  <parent> BloodVessels </parent>
+</leaf>
+
+<separatorbar>
+  <parent> BloodVessels </parent>
+</separatorbar>
+
+<leaf>
+  <name> BloodVessels_VascularConductance </name>
+  <label> Vascular Conductance </label>
+  <parent> BloodVessels </parent>
+</leaf>
+
+<leaf>
+  <name> BloodVessels_VascularCompliance </name>
+  <label> Vascular Compliance </label>
+  <parent> BloodVessels </parent>
+</leaf>
+
+End

@@ -1,0 +1,91 @@
+HumMod / RightHeartPumping-ContractileProtein
+
+Created : 2011-08-10
+Last Modified : 2011-08-11
+Author : Tom Coleman
+Copyright : 2011-2011
+By : University of Mississippi Medical Center
+
+<structure><name> RightHeartPumping-ContractileProtein </name>
+
+<variables>
+
+<var><name> InitialMass </name></var>
+
+<var><name> Functional </name></var>
+<var><name> Ischemic </name></var>
+<var><name> Dead </name></var>
+
+<parm><name> Delay(Days) </name><val> 10 </val></parm>
+<var><name> K </name></var>
+
+</variables>
+
+<equations>
+
+<diffeq>
+  <name> Mass </name>
+  <integralname> Mass </integralname>
+  <dervname> Change </dervname>
+  <errorlim> 1.5 </errorlim>
+</diffeq>
+
+</equations>
+
+<definitions>
+
+<block><name> Init </name>
+
+<def>
+  <name> InitialMass </name>
+  <val> RightHeart-Size.InitialProteinMass </val>
+</def>
+
+<def>
+  <name> Mass </name>
+  <val> InitialMass </val>
+</def>
+
+</block>
+
+<block><name> Parms </name>
+
+<def>
+  <name> K </name>
+  <val> INVERT ( 1440 * Delay(Days) ) </val>
+</def>
+
+</block>
+
+<block><name> Calc </name>
+
+<def>
+  <name> Ischemic </name>
+  <val> RightHeart-Infarction.IschemicTissueFraction * Mass </val>
+</def>
+
+<def>
+  <name> Dead </name>
+  <val> RightHeart-Infarction.DeadTissueFraction * Mass </val>
+</def>
+
+<def>
+  <name> Functional </name>
+  <val> Mass - Ischemic - Dead </val>
+</def>
+
+</block>
+
+<block><name> Dervs </name>
+
+<def>
+  <name> Change </name>
+  <val> K * ( 0.000137 * RightHeartPumping-Work.Work - Mass ) </val>
+</def>
+
+</block>
+
+</definitions>
+</structure>
+
+End

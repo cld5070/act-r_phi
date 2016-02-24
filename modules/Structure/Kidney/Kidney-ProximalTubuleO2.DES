@@ -1,0 +1,106 @@
+HumMod / Kidney-ProximalTubuleO2
+
+Created : 2012-08-06
+Revised : 2012-08-06
+Author : Tom Coleman
+Copyright : 2012-2012
+By : University of Mississippi Medical Center
+
+<structure><name> Kidney-ProximalTubuleO2 </name>
+
+<variables>
+
+<var><name> O2Need </name></var>
+<var><name> O2Use </name></var>
+
+<var><name> Tubule[O2] </name></var>
+<var><name> AerobicFraction </name></var>
+
+<var><name> BloodFlow </name></var>
+<parm><name> BloodFlowFraction </name><val> 0.40 </val></parm>
+
+</variables>
+
+<equations>
+
+<impliciteq>
+  <name> TubulePO2 </name>
+  <startname> TubulePO2 </startname>
+  <initialval> 35.0 </initialval>
+  <endname> TubulePO2End </endname>
+  <errorlim> 0.35 </errorlim>
+  <searchmin> 0.0 </searchmin>
+  <searchmaxname> SearchMax </searchmaxname>
+</impliciteq>
+
+</equations>
+
+<functions>
+
+<curve>
+  <name> PO2OnAerobicFraction </name>
+  <point><x>  2.0 </x><y> 0.0 </y><slope> 0 </slope></point>
+  <point><x> 20.0 </x><y> 1.0 </y><slope> 0 </slope></point>
+</curve>
+
+</functions>
+
+<definitions>
+
+<block><name> Calc </name>
+
+<def>
+  <name> O2Need </name>
+  <val> Metabolism-Tools.CalToO2 * Kidney-Metabolism.ProximalTubuleCals </val>
+</def>
+
+<def>
+  <name> SearchMax </name>
+  <val> PO2Artys.Pressure </val>
+</def>
+
+<implicitmath><name> TubulePO2 </name>
+
+<def>
+  <name> AerobicFraction </name>
+  <val> PO2OnAerobicFraction [ TubulePO2 ] </val>
+</def>
+
+<def>
+  <name> O2Use </name>
+  <val> O2Need * AerobicFraction </val>
+</def>
+
+<def>
+  <name> BloodFlow </name>
+  <val> BloodFlowFraction * Kidney-Flow.BloodFlow </val>
+</def>
+
+<conditional>
+  <name> Tubule[O2] </name>
+  <test> Kidney-Flow.BloodFlow GT 0.0 </test>
+  <true> O2Artys.[O2] - ( O2Use / BloodFlow ) </true>
+  <false> 0.0 </false>
+</conditional>
+
+<copy>
+  <from> Tubule[O2] </from>
+  <to> HgbTissue.[O2] </to>
+</copy>
+
+<call> HgbTissue.O2ToPO2 </call>
+
+<copy>
+  <from> HgbTissue.pO2 </from>
+  <to> TubulePO2End </to>
+</copy>
+
+</implicitmath>
+
+</block>
+
+</definitions>
+
+</structure>
+
+End

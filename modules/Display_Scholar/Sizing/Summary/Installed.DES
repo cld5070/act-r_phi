@@ -1,0 +1,37 @@
+HumMod / Installed
+
+Created : 2012-03-13
+Revised : 2012-03-13
+Author : Tom Coleman
+Copyright : 2012-2012
+By : University Of Mississippi Medical Center
+
+<groupbox>
+   <row> 2.0 </row>
+   <col> 1.0 </col>
+   <high> 18.0 </high>
+   <wide> 30.0 </wide>
+   <title> Installed </title>
+
+<checkmark>
+  <row> 1.0 </row><col> 1.0 </col>
+  <name> Sizing-OrganMass.Installed </name>
+  <label> Organ Mass </label>
+</checkmark>
+
+<checkmark>
+  <row> 2.0 </row><col> 1.0 </col>
+  <name> Sizing-BloodVolume.Installed </name>
+  <label> Blood Volume </label>
+</checkmark>
+
+<checkmark>
+  <row> 3.0 </row><col> 1.0 </col>
+  <name> Sizing-ExternalH2O.Installed </name>
+  <label> External H2O </label>
+</checkmark>
+
+
+</groupbox>
+
+End

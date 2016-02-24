@@ -1,0 +1,48 @@
+HumMod / TechnicalActive
+
+Created : 11-Aug-08
+Revised : 2012-07-21
+Author : Tom Coleman
+Copyright : 2008-2012
+By : University of Mississippi Medical Center
+
+<groupbox>
+   <row> 20.8 </row>
+   <col> 1.0 </col>
+   <high> 5.0 </high>
+   <wide> 30.0 </wide>
+   <title> Technical - Active </title>
+
+<structurename> RightHeartPumping-Systole </structurename>
+
+<showvalue>
+   <row> 1.4 </row><col> 1.0 </col>
+   <name> K </name>
+   <format><decimal> 1 </decimal></format>
+   <label> K </label>
+</showvalue>
+
+<showvalue>
+   <row> 2.4 </row><col> 3.0 </col>
+   <name> RightHeartPumping-Contractility.Contractility </name>
+   <format><decimal> 1 </decimal></format>
+   <label> Contractility </label>
+</showvalue>
+
+<showvalue>
+   <row> 3.4 </row><col> 3.0 </col>
+   <name> K-Basic </name>
+   <format><decimal> 1 </decimal></format>
+   <label> K - Basic </label>
+</showvalue>
+
+<infobutton>
+  <row> 1.2 </row>
+  <col> 26.0 </col>
+
+  <line>  </line>
+</infobutton>
+
+</groupbox>
+
+End

@@ -1,0 +1,58 @@
+HumMod / PulmVeins DES
+
+Created : 21-Oct-04
+Revised : 2012-07-17
+Author : Tom Coleman
+Copyright : 2006-2012
+By : University Of Mississippi Medical Center
+
+<structure><name> PulmVeins </name>
+
+<variables>
+
+<var><name> Vol </name><val> 216.0 </val></var>
+<parm><name> V0 </name><val> 150.0 </val></parm>
+<var><name> StressedVol </name></var>
+<var><name> Pressure </name><val> 7 </val></var>
+<var><name> TMP </name></var>
+<var><name> ExternalPressure </name></var>
+<parm><name> Compliance </name><val> 6.0 </val></parm>
+<parm><name> Conductance </name><val> 5400 </val></parm>
+
+</variables>
+
+<definitions>
+
+<block><name> Dervs </name>
+
+<def>
+  <name> Pressure </name>
+  <val> ( PulmVessels.BloodFlow / Conductance ) + LeftAtrium.Pressure </val>
+</def>
+
+<def>
+  <name> ExternalPressure </name>
+  <val> Thorax.AvePressure </val>
+</def>
+
+<def>
+  <name> TMP </name>
+  <val> ( Pressure - Thorax.AvePressure ) MAX 0 </val>
+</def>
+
+<def>
+  <name> StressedVol </name>
+  <val> TMP * Compliance </val>
+</def>
+
+<def>
+  <name> Vol </name>
+  <val> StressedVol + V0 </val>
+</def>
+
+</block>
+
+</definitions>
+</structure>
+
+End
