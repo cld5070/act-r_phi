@@ -3,19 +3,19 @@
      it under the terms of the GNU General Public License as published by
      the Free Software Foundation, either version 3 of the License, or
      (at your option) any later version.
- 
+
      This program is distributed in the hope that it will be useful,
      but WITHOUT ANY WARRANTY; without even the implied warranty of
      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
      GNU General Public License for more details.
- 
+
      You should have received a copy of the GNU General Public License
      along with this program.  If not, see <http://www.gnu.org/licenses/>.
 |#
 
 ;;;By Christopher L. Dancy II
 ;;;The College of Information Sciences and Technology, The Pennsylvania State University - University Park
-;;;Made to be used with HumMod v1.6.2 - Modular 
+;;;Made to be used with HumMod v1.6.2 - Modular
 ;;;---------------
 ;;; - New thread version, This version needs tested more
 ;;;---------------
@@ -36,10 +36,10 @@
 ;(eval-when (:compile-toplevel :load-toplevel :execute)
 ;  (let ((*compile-file-pathname* nil))
 ;    (asdf:load-system :bordeaux-threads)))
-	
+
 ;;Function to test for non ACT-R/Phi based events in queue (modified run function in scheduling.lisp to use)
 (defun non-phi-events ()
- (or 
+ (or
   (mp-modules-events 'procedural)
   (mp-modules-events 'declarative)
   (mp-modules-events :fatigue)
@@ -59,7 +59,7 @@
 
 (defvar *HumModProc* nil)
 ;;We can leave it to this for now, because this should only come into question when multiple solver are started from the same directory
-(defvar *pipeID* (write-to-string (random(get-universal-time))))
+(defvar *pipeID* (concatenate 'string (write-to-string (random(get-universal-time))) "-" (write-to-string (random(get-universal-time)))))
 
 ;;We use this so we have a reference to the next update-event that is scheduled to be run
 (defvar *nextUpdateEvent* nil)
@@ -72,25 +72,22 @@
 ;;;clear out any unwanted files
 (defun clear-phys-files ()
 	(sleep 0.5)
-	(dolist (fileName (directory (concatenate 'string *HumModDir* "SolverOut*")))
-	(handler-case (delete-file fileName)
-	(error () nil)))
-	(dolist (fileName (directory (concatenate 'string *HumModDir* "SolverIn*")))
-	(handler-case (delete-file fileName)
-	(error () nil)))
-	(dolist (fileName (directory (concatenate 'string *HumModDir* "*.tem")))
-	(handler-case (delete-file fileName)
-	(error () nil))))
+	(dolist (fileName (directory (concatenate 'string *HumModDir* "SolverOut" *pipeID*)))
+	 (handler-case (delete-file fileName) (error () nil)))
+	(dolist (fileName (directory (concatenate 'string *HumModDir* "SolverIn" *pipeID*)))
+	 (handler-case (delete-file fileName) (error () nil)))
+	(dolist (fileName (directory (concatenate 'string *HumModDir* *pipeID* ".tem")))
+	 (handler-case (delete-file fileName) (error () nil))))
 
 ;;;Initialize Variable and Variable Order Hash-Table for physiological variable order
 (defun init-list-to-hash (myList)
  (handler-case (let ((phys (get-module physio)))
   (loop
 	 for k in myList
-	  do (if (not(equal ':|solverout| k))
+	  do (when (not(equal ':|solverout| k))
 	   (loop
 	    for k2 in k
-		  do (if (not (equal ':|varroster| k2))
+		  do (when (not (equal ':|varroster| k2))
 			  (setf (gethash (cadr k2) (phys-module-vars phys)) 0)))))) (error (e) (progn (print e) nil (return-from init-list-to-hash))))
 t)
 
@@ -112,22 +109,22 @@ t)
 		 (let ((currTime (get-universal-time)))
 			 (handler-case (while (and (not (probe-file solverOutputFile)) (< (- (get-universal-time) currTime) 480))) (error (e) (print e))))
 		(when (not (probe-file solverOutputFile)) (go resetAdvance)))
-	
+
 	(tagbody parseValList
-			(handler-case (setf physValueList (s-xml:parse-xml-file solverOutputFile)) 
-				((or file-error s-xml::xml-parser-error type-error) () 
+			(handler-case (setf physValueList (s-xml:parse-xml-file solverOutputFile))
+				((or file-error s-xml::xml-parser-error type-error) ()
 					 (go parseValList)))
-			(when (not physValueList) 
+			(when (not physValueList)
 				(go parseValList))
 			(when (equal (caadr physValueList) ':|varroster|)
 				(while (not (handler-case (delete-file solverOutputFile)
 					(error () nil))))
 				(go parseValList)))
-				
+
 
 	(handler-case (delete-file solverOutputFile)
 			(error () nil))
-			
+
 	(setf (phys-module-physValList phys) physValueList)
 	;;Record values requested by model to list (to be analyzed later)
 	(let ((newVals (record-phys-vals (phys-module-recordedPhys phys) physValueList (phys-module-vals-analysis phys))))
@@ -136,7 +133,7 @@ t)
 
 ;;;Set HumMod Vars using specified list
 (defun set-phys-vals (varValList)
-  
+
   (tagbody
 	resetSetVal
 	(clear-phys-files)
@@ -146,15 +143,15 @@ t)
 				(timeOut 6))
 		;;Construct message to be sent to new HumMod Solver Process
 		;; -We must find the chunk in the hash-table because the request to HumMod is case sensitive
-		(loop 
+		(loop
 		 for v in varValList
 		 do
-		  (loop 
+		  (loop
 		   for k being the hash-keys in (phys-module-vars phys)
 			 do
 				(if (equal (string-upcase (car v)) (string-upcase k))
-				 (setq setPhysMessage 
-				  (concatenate 'string 
+				 (setq setPhysMessage
+				  (concatenate 'string
 				   setPhysMessage "<setvalue><var>" k "</var><val>" (write-to-string (cadr v)) "</val></setvalue>")))))
 
 		 (setf setPhysMessage (concatenate 'string setPhysMessage "</solverin>\""))
@@ -172,13 +169,13 @@ t)
 		(while (probe-file solverInputFile))
 		 (let ((currTime (get-universal-time)))
 			 ;;We only wait so long for the file to be created
-			 (handler-case (while (and (not (probe-file solverOutputFile)) (< (- (get-universal-time) currTime) timeOut))) 
+			 (handler-case (while (and (not (probe-file solverOutputFile)) (< (- (get-universal-time) currTime) timeOut)))
 				(error (e) (print e))))
 		 (when (not (probe-file solverOutputFile)) (go startGetVals)))
 
 		 (let ((checkError nil))
 
-		 (handler-case (setf checkError (s-xml:parse-xml-file solverOutputFile)) 
+		 (handler-case (setf checkError (s-xml:parse-xml-file solverOutputFile))
 				((or file-error s-xml::xml-parser-error type-error) () nil))
 		(while (probe-file solverOutputFile) (handler-case (delete-file solverOutputFile)
 			(error () nil)))
@@ -187,40 +184,48 @@ t)
 		for v in checkError
 					do
 					 ;;If we have an error, then we reset the entire physiology system and (try to) update it back to its last state
-					 ;; We will need to find a way to improve this in the future so that all phys variable changes and advances 
+					 ;; We will need to find a way to improve this in the future so that all phys variable changes and advances
 					 ;; can be accomplished. For this we may need a internal list of functions (& params) run within the struct
 					 (if (equal ':|parameterchangefailed| v)
 							(progn
 							;#+:Windows (close-HumMod '(#_TerminateProcess (ccl::external-process-id *HumModProc*) 1))
 							;#+:Unix (close-HumMod '(signal-external-process *HumModProc* 9))
 							(create-phys-vars)
-							 
+
 							 (dotimes (i (floor (/ (mp-time) (phys-module-delay phys))))
 								(update-phys-vars))
 							 (go resetSetVal)))))))))
 
 (define-condition modelSolver-error (error)
  ((text :initarg :text :reader text)))
-							 
+
 (defun start-HumMod ()
 
  (let (oldDir)
-   (setf oldDir 
+   (setf oldDir
 #+:ccl   (ccl::current-directory-name)
 #+:sbcl	 (sb-posix:getcwd)
 	)
 #+:ccl	 (ccl::cwd *HumModDir*)
 #+:sbcl	 (sb-posix:chdir *HumModDir*)
-   (setf *HumModProc* 
-	(run-program "ModelSolver.exe"
+
+  (print *HumModDir*)
+   (print (ccl::current-directory-name))
+   (setf *HumModProc*
+	(run-program (concatenate 'string *HumModDir* '"ModelSolver")
 	 (list (concatenate 'string
 	  "\"<root><model>" *HumModDir* "HumMod.DES</model><pipeid>"
-	  *pipeID* "</pipeid></root>\"")) 
+	  *pipeID* "</pipeid></root>\""))
 	  :wait nil :output t))
 	(sleep 4)
 #+:ccl (ccl::cwd oldDir)
 #+:sbcl (sb-posix:chdir oldDir)
-  )
+(print "--------$$$$$######------------")
+(print *HumModProc*)
+)
+
+
+
 	;;(For mind Modeling) Create pid file to close a leftover modelsolver process (if it isn't killed by model file)
 	;;This now is offloaded to the model file so that each model created in parallel can use their specific ModelSolver PID
 	#|(let (
@@ -230,7 +235,7 @@ t)
 	 (with-open-file
 	  (mS (concatenate 'string fileName "pid") :direction :output :if-exists :supersede :if-does-not-exist :create)
 	   (format mS "~a" msPID))
-	   
+
 	 (with-open-file
 	  (mS (concatenate 'string fileName (write-to-string (parse-integer (subseq msPID 22 (- (length msPID) 1)) :radix 16))) :direction :output :if-exists :overwrite :if-does-not-exist :create)
 	   (format mS "~a~%" (write-to-string (parse-integer (subseq msPID 22 (- (length msPID) 1)) :radix 16)))))|#
@@ -241,7 +246,7 @@ t)
 
 ;;Can be used to close HumMod from terminal
 (defmacro close-HumMod (fun) (eval fun))
-	
+
 ;;Can be used to reset HumMod variables to initial model
 (defun reset-HumMod ()
  (tagbody
@@ -254,13 +259,13 @@ t)
 	(solverOutputFile (concatenate 'string *HumModDir* "SolverOut" pipeID))
 	;Reset/Restart Utility Message (needed to start getting values from HumMod model solver)
 	(resetMessage "\"<solverin><restart/></solverin>\""))
-	
+
 	 (handler-case
 	  (with-open-file
 		(messageStream  solverInputFile
 		:direction :output :if-exists :overwrite :if-does-not-exist :create)
 			(format messageStream resetMessage)) ((or simple-error ccl::simple-file-error) () (go resetCreate)))
-			
+
 	 (while (probe-file solverInputFile))
 	 (let ((currTime (get-universal-time)))
 	  (while (and (not (probe-file solverOutputFile)) (< (- (get-universal-time) currTime) 5))))
@@ -271,12 +276,12 @@ t)
 
 ;;Generate hash-table of physiological variables & Hash-Table of the order of the variables
 ;; and default values
-(defun create-phys-vars () 
+(defun create-phys-vars ()
  (tagbody
 	 resetCreate
 	(clear-phys-files)
 	;;Set Physiology Substrate periodic communication time (HumMod)
-	(let* 
+	(let*
 	  ((phys (get-module physio))
 	  (pipeID (phys-module-pipeID phys))
 	  ;;Set the name of the files used to input to model solver stream and to which solver outputs results
@@ -288,7 +293,7 @@ t)
 	  (getVarsMessage "\"<solverin><requestvarroster/></solverin>\"")
 	  ;We have the simulation go for X mins to stabilize some
 	  ; -variables in HumMod (e.g. osmoreceptors), this also returns values
-	  (getValsMessage 
+	  (getValsMessage
 		(concatenate 'string "\"<solverin><gofor><solutionint>1</solutionint><displayint>"
 							"1</displayint></gofor></solverin>\""))
 	  (physVarList nil)
@@ -314,7 +319,7 @@ t)
 	(handler-case (delete-file solverOutputFile)
 			(error () nil))
    (when (not (phys-module-vars-baseLine-init phys))
-	(handler-case 
+	(handler-case
 	 (with-open-file
 		(messageStream  solverInputFile
 		:direction :output :if-exists :overwrite :if-does-not-exist :create)
@@ -332,14 +337,14 @@ t)
 (let ((parseStart (get-universal-time)))
   (tagbody parseVarList
 	(when (> (- (get-universal-time) parseStart) 8) (go getVars))
-	(handler-case (setf physVarList (s-xml:parse-xml-file solverOutputFile)) 
-		((or file-error s-xml::xml-parser-error type-error) () 
+	(handler-case (setf physVarList (s-xml:parse-xml-file solverOutputFile))
+		((or file-error s-xml::xml-parser-error type-error) ()
 			(go parseVarList)))
 	;;To handle the times when the solver is on a slower machine and the files are output slower than expected at the initial setup
 	 (when (equal (cadr physVarList) ':|valuesframe|)
 	  (handler-case (delete-file solverOutputFile) (error () nil))
-	  (handler-case (setf physVarList (s-xml:parse-xml-file solverOutputFile)) 
-		((or file-error s-xml::xml-parser-error type-error) () 
+	  (handler-case (setf physVarList (s-xml:parse-xml-file solverOutputFile))
+		((or file-error s-xml::xml-parser-error type-error) ()
 			(go parseVarList))))
 	 (setf (phys-module-physVarList phys) physVarList)
 	 (when (not (init-list-to-hash physVarList)) (print "problem with init") (go getVars))
@@ -350,7 +355,7 @@ t)
 			(error () nil))
 
 	;;Advance Simulator X mins (done to get level osmo-receptor values at a steady state)
-   (let ((timeOut 10))	
+   (let ((timeOut 10))
 	(tagbody
 		 startGetVals
 		(handler-case (delete-file solverOutputFile)
@@ -360,9 +365,9 @@ t)
 		  (with-open-file
 			 (messageStream solverInputFile
 			 :direction :output :if-exists :overwrite :if-does-not-exist :create)
-				(format messageStream getValsMessage)) ((or simple-error ccl::simple-file-error) () 
+				(format messageStream getValsMessage)) ((or simple-error ccl::simple-file-error) ()
 					(progn (handler-case (progn (delete-file solverInputFile) (delete-file solverOutputFile))
-							(error () nil)) 
+							(error () nil))
 						   (go startGetVals))))
 
 		(while (probe-file solverInputFile))
@@ -372,11 +377,11 @@ t)
 			(when (not (probe-file solverOutputFile)) (go startGetVals))
 	(let ((parseStart (get-universal-time)))
       (tagbody parseValList
-		(when (> (- (get-universal-time) parseStart) 4) (go startGetVals)) 
-			(handler-case (setf physValueList (s-xml:parse-xml-file solverOutputFile)) 
-				((or file-error s-xml::xml-parser-error type-error) () 
+		(when (> (- (get-universal-time) parseStart) 4) (go startGetVals))
+			(handler-case (setf physValueList (s-xml:parse-xml-file solverOutputFile))
+				((or file-error s-xml::xml-parser-error type-error) ()
 					 (go parseValList)))
-			(when (not physValueList) 
+			(when (not physValueList)
 				(go parseValList))
 			(when (equal (caadr physValueList) ':|varroster|)
 				(while (not (handler-case (delete-file solverOutputFile)
@@ -385,7 +390,7 @@ t)
 
 			 (while (not (handler-case (delete-file solverOutputFile)
 					(error () nil))))
-			
+
 				(setf (phys-module-physValList (get-module physio)) physValueList)
 				(let ((varCount 0))
 
@@ -423,15 +428,15 @@ t)
 	 (dolist (recVar recVarList)
 		(let ((valNum (gethash recVar (phys-module-vars (get-module physio)))))
 			(when valNum
-				(setf tempValList (if tempValList 
+				(setf tempValList (if tempValList
 									(append tempValList (list (list recVar (cadar (nthcdr valNum (cadr allValList))))))
 									(list (list recVar (cadar (nthcdr valNum (cadr allValList))))))))))
 	 (if savedValList (append savedValList (list tempValList))
 					  (list tempValList))))
-					  
+
 ;;;find the time (in seconds) of the last event within the specified modules
 (defun find-last-event-time (moduleList)
- (verify-current-mp 
+ (verify-current-mp
    "mp-show-queue called with no current meta-process."
    (let ((events (meta-p-events (current-mp)))
 		(lastTime nil))
@@ -439,7 +444,7 @@ t)
 	(dolist (mod moduleList (length moduleList))
 	 (if (or (eq (evt-module event) mod)
 		  (eq (evt-module event) 'NONE))
-			(if (or (eq lastTime nil) 
+			(if (or (eq lastTime nil)
 				  (> (evt-time event) lastTime))
 					(setf lastTime (evt-time event))
 					))))
@@ -449,11 +454,11 @@ t)
 
 ;;;
 (defun schedule-update-phys (delay)
- ;;if no events are currently scheduled, 
+ ;;if no events are currently scheduled,
  ;; schedule for update function to be run again later if there is a conflict resolution event eventually scheduled
  ;; Else check to see if last event is after the current time + delay and if it isn't, schedule next update and continue
  (if
-  (not (or 
+  (not (or
 	  (mp-modules-events 'procedural)
 	  (mp-modules-events 'declarative)
 	  (mp-modules-events :fatigue)
@@ -465,26 +470,26 @@ t)
 	  (mp-modules-events 'imaginal)
 	  (mp-modules-events 'motor)
 	  (mp-modules-events 'speech)))
-	(progn 
+	(progn
 	 (setf *nextUpdateEvent* (schedule-event-after-change 'update-phys-vars :module 'physio :delay t :output t :maintenance t))
 	 (return-from schedule-update-phys t)
 	 (setf (phys-module-updateSwitch (get-module physio)) nil))
 	(progn
-	 (if (and 
+	 (if (and
 		  (not (phys-module-updateSwitch (get-module physio)))
 		  (> (+ (phys-module-lastUpdate (get-module physio)) delay) (find-last-event-time (list 'procedural 'declarative :fatigue 'vision 'audio 'blending 'temporal 'goal 'imaginal 'motor 'speech))))
-	  (progn 
+	  (progn
 	   (setf *nextUpdateEvent* (schedule-event-after-change 'update-phys-vars :module 'physio :delay t :output t :maintenance t))
 	   (if (phys-module-physValList (get-module physio))
 		(return-from schedule-update-phys nil)
 		(return-from schedule-update-phys t))
 		(setf (phys-module-updateSwitch (get-module physio)) t))
-	  (progn 
+	  (progn
 	   (setf *nextUpdateEvent* (schedule-event-relative delay 'update-phys-vars :module 'physio :priority :max :output t :maintenance t))
 	   (setf (phys-module-updateSwitch (get-module physio)) nil)
 	   (return-from schedule-update-phys t)))))
 )
-					  
+
 ;;;Update Phys Variable Hash Table with variable info from
 ;;; HumMod *updateDelay should be obtained from buffer parameter and be in ms*
 (defun update-phys-vars ()
@@ -492,7 +497,7 @@ t)
 	(print (get-phys-vals nil (list '("System.X"))))
 	(print (mp-time))
 	(print "Out")|#
-	(let* 
+	(let*
 	 ((phys (get-module physio))
 	 ;;Convert update delay to HumMod format (mins) and then to string
 	 (physUpdateDelay (float (/ (phys-module-delay phys) 60)))
@@ -505,10 +510,10 @@ t)
 	 (solverOutputFile (concatenate 'string *HumModDir* "SolverOut" pipeID))
 	 (physValueList nil)
 	 ;;Utility Messages that can be sent to solver
-	 (getValsMessage 
+	 (getValsMessage
 			 (concatenate 'string "\"<solverin><gofor><solutionint>" physUpdateDelay
 			 "</solutionint><displayint>" physUpdateDelay "</displayint></gofor></solverin>\"")))
-			 
+
 	  ;;
 	  (when (null (schedule-update-phys (phys-module-delay phys))) (return-from update-phys-vars))
 	  (while (probe-file solverOutputFile)
@@ -525,17 +530,17 @@ t)
 
 		;wait for HumMod to digest input file
 		(while (probe-file solverInputFile))
-		
+
 		;wait for HumMod to output corresponding file and if it takes too long, reset
 		(let ((startTime (get-universal-time)))
 		(while (and (not (probe-file solverOutputFile)) (< (- (get-universal-time) startTime) 5)))
 		(when (not (probe-file solverOutputFile)) (go startGetVals))))
 
 		 (tagbody parseValList
-			(handler-case (setf physValueList (s-xml:parse-xml-file solverOutputFile)) 
-				((or file-error s-xml::xml-parser-error type-error) () 
+			(handler-case (setf physValueList (s-xml:parse-xml-file solverOutputFile))
+				((or file-error s-xml::xml-parser-error type-error) ()
 					 (go parseValList)))
-			(when (not physValueList) 
+			(when (not physValueList)
 				(go parseValList))
 			(when (equal (caadr physValueList) ':|varroster|)
 				(while (not (handler-case (delete-file solverOutputFile)
@@ -549,7 +554,7 @@ t)
 	;;Record values requested by model to list (to be analyzed later)
 	(let ((newVals (record-phys-vals (phys-module-recordedPhys phys) physValueList (phys-module-vals-analysis phys))))
 		(when (car newVals) (setf (phys-module-vals-analysis phys) newVals)))
-				
+
 	(incf (phys-module-timeSliceCount phys))))
 )
 
@@ -559,7 +564,7 @@ t)
 	(let ((newList '(ISA phys-var)))
 	;;for each variable in our list
 	(dolist (currSlot physVarList)
-		;;append the slot (or slot value) to the list 
+		;;append the slot (or slot value) to the list
 		(setf newList (append newList (list (read-from-string
 				(string-upcase (remove #\space (car currSlot))))))))
 	;make a chunk from our list
@@ -662,7 +667,7 @@ t)
 (defstruct phys-module
 	;;Delay to update HumMod variables
 	(delay)
-	
+
 	;Switch that allows us to schedule an update-phys event x seconds(S.T. 0 <= x <= delay) past the end of any particular run
 	(updateSwitch nil)
 
@@ -670,7 +675,7 @@ t)
 	(create-phys-event)
 	(set-food-event)
 	(set-drink-event)
-  
+
 	;;Initial time to advance model
 	(initial-advance 1440)
 	esc
@@ -695,7 +700,7 @@ t)
 	;;Holds our physiological variables and place in value list (e.g., 1, 2, 3, etc.)
 	(vars (make-hash-table :test #'equal))
 	;(vars-order (make-hash-table :test #'equal))
-	
+
 	;List form of physiological variables
 	(physVarList nil)
 
@@ -710,7 +715,7 @@ t)
 
 	;;Switch for continuous startle reflex effect on memory noise (:ans)
 	epi-ans
-	
+
 	;;Parameter set by user to record certain variables
 	(recordedPhys nil);
 
@@ -718,7 +723,7 @@ t)
 	(debugMe 0)
 
 	(changeVar-List nil)
-	
+
 	;Total number of physiological variables
 	(varCount 0)
 
@@ -726,7 +731,7 @@ t)
    ;;Internal arousal value (linked to epi & CRF and used by DM)
 	(arousal 0)
 
-	;;Obtained by setting integration nerve to value that results in max HR from (from Nater, La Marca 2006 - Stress-induced changes in human salivary alpha-amylase activity—associations with adrenergic activity)
+	;;Obtained by setting integration nerve to value that results in max HR from (from Nater, La Marca 2006 - Stress-induced changes in human salivary alpha-amylase activityï¿½associations with adrenergic activity)
 	(epi-max 67)
 
     (crh-max 5)
@@ -739,7 +744,7 @@ t)
 	(cort-high-perc 0.75)
 
 	(max-integ-nerve-activation 2.7)
-	
+
 	;;Holds the time of the (in ms) that the update-phys-vars function was run
 	(lastUpdate 0)
 )
@@ -818,7 +823,7 @@ t)
 
 ;;;Define request function for module (slides 53-54 in extending-actr.ppt)
 (defun phys-module-requests (phys buffer spec)
-	;;start underlying substrate 
+	;;start underlying substrate
 	(if (not (phys-module-init phys))
 	 (progn
 
@@ -849,7 +854,7 @@ t)
 						 (setf (phys-module-busy phys) t)
 						;;Put chunk into buffer and set module back to free after delay seconds
 						;;Use schedule event to update variables every delay
-						(schedule-set-buffer-chunk 'efferent (define-chunks-fct (list (chunk-spec-to-chunk-def spec))) delay 
+						(schedule-set-buffer-chunk 'efferent (define-chunks-fct (list (chunk-spec-to-chunk-def spec))) delay
 							:module 'physio :priority :min))
 				  (progn (print (chunk-spec-chunk-type spec))
 					 (print "Warning - invalid chunk-type in efferent buffer")))))
@@ -857,8 +862,8 @@ t)
 
 (define-module-fct 'physio
 				   '(phys-substrate efferent output)
-	(list 
-		(define-parameter 
+	(list
+		(define-parameter
 			:phys-delay
 			:documentation "Delta for HumMod updates"
 			:default-value .03
@@ -874,7 +879,7 @@ t)
 			:default-value nil
 			:valid-test (lambda (x) (or (typep x 't) (typep x 'nil)))
 			:owner t)
-		
+
 		(define-parameter
 		:recorded-phys
 		:documentation "Physiological (HumMod) variables to be recorded during the simulation"
