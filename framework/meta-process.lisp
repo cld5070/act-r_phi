@@ -98,6 +98,9 @@
 ;;;             : * Added a safety check to define-meta-process to prevent the
 ;;;             :   creation of new meta-processes while there's some meta-process
 ;;;             :   running (basically same issue as defining new models on the fly).
+;;; 2014.02.18 Dan
+;;;             : * Mp-models now returns the models in a deterministic, but 
+;;;             :   unspecified order.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -282,7 +285,7 @@
   "returns a list of the names of all the models in the current meta-process"
   (verify-current-mp  
    "mp-models called with no current meta-process."
-   (hash-table-keys (meta-p-models (current-mp)))))
+   (meta-p-model-order (current-mp))))
 
 (defun meta-process-names ()
   (hash-table-keys (mps-table *meta-processes*)))

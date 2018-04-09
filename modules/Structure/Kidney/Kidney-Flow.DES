@@ -10,7 +10,6 @@ By : University Of Mississippi Medical Center
 
 <variables>
 
-<var><name> Conductance </name></var>
 <var><name> BloodFlow </name></var>
 <var><name> PlasmaFlow </name></var>
 
@@ -18,33 +17,16 @@ By : University Of Mississippi Medical Center
 
 <definitions>
 
-<block><name> Init </name>
-  <call> Kidney-ArcuateArtery.Init </call>
-  <call> Kidney-AfferentArtery.Init </call>
-  <call> Kidney-EfferentArtery.Init </call>
-</block>
-
 <block><name> Calc </name>
 
 <def>
-  <name> Conductance </name>
-  <val>
-    INVERT (
-      ( INVERT Kidney-ArcuateArtery.Conductance )
-    + ( INVERT Kidney-AfferentArtery.Conductance )
-    + ( INVERT Kidney-EfferentArtery.Conductance )
-    )
-  </val>
-</def>
-
-<def>
   <name> BloodFlow </name>
-  <val> ( Kidney-Pressure.PressureGradient * Conductance ) MAX 0.0 </val>
+  <val> RightKidney-Flow.BloodFlow + LeftKidney-Flow.BloodFlow </val>
 </def>
 
 <def>
   <name> PlasmaFlow </name>
-  <val> BloodVol.PVCrit * BloodFlow </val>
+  <val> LeftKidney-Flow.PlasmaFlow + RightKidney-Flow.PlasmaFlow </val>
 </def>
 
 </block>

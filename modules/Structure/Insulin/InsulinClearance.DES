@@ -13,7 +13,7 @@ By : University Of Mississippi Medical Center
 <var><name> Rate </name></var>
 <var><name> RenalDegradation </name></var>
 
-<parm><name> K </name><val> 0.00061 </val></parm>
+<parm><name> K </name><val> 0.00061 </val></parm>0.00061
 
 </variables>
 
@@ -28,11 +28,12 @@ By : University Of Mississippi Medical Center
 <def>
   <name> Rate </name>
   <val>
-       InsulinReceptors-Liver.NetBinding 
-     + InsulinReceptors-General.NetBinding 
+         InsulinReceptors-Liver.NetBinding 
+     + InsulinReceptors-General.NetBinding
      + RenalDegradation
   </val>
 </def>
+ <!--   -->
 
 </block>
 

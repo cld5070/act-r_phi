@@ -13,9 +13,11 @@ Schema : DES V1.0
 
 <var><name> Temp(F) </name></var>
 <var><name> Temp(C) </name></var>
-<var><name> Temp(K) </name></var>
+<var><name> Temp(K) </name><val> 310 </val></var>
 
 <var><name> Flux </name></var>
+<var><name> FluxToGI </name><val> 0 </val></var>
+
 <var><name> Gain </name></var>
 <var><name> Loss </name></var>
 
@@ -92,6 +94,15 @@ Schema : DES V1.0
   </val>
 </def>
 
+<def>
+  <name> FluxToGI </name>
+  <val>
+    ( GITract-Flow.BloodFlow / 1000.0 )
+    * ( HeatCore.Temp(K) - GILumenHeat.DegK )
+    * SpecificHeat.Blood
+  </val>
+</def>
+
 </block>
 
 <block><name> Dervs </name>
@@ -102,7 +113,7 @@ Schema : DES V1.0
       Metabolism-CaloriesUsed.CoreHeat(kCal/Min)
     + HeatSkeletalMuscle.Flux
     + GILumenHeat.Absorption
-    + HeatIVDrip.Flux
+    + HeatIVDrip.FluxToCore
     + HeatTransfusion.Flux
   </val>
 </def>
@@ -111,6 +122,7 @@ Schema : DES V1.0
   <name> Loss </name>
   <val>
       Flux
+    + FluxToGI
     + HeatInsensibleLung.Flux
     + HeatUrine.Flux
     + HeatDialyzer.Flux

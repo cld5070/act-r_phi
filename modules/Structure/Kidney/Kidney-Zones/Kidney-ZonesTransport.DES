@@ -56,22 +56,22 @@ By : University of Mississippi Medical Center
 
 <def>
   <name> Total_PT </name>
-  <val> PT_Na.Reab </val>
+  <val> ProximalTubule_Na.Reab </val>
 </def>
 
 <def>
   <name> Total_LH </name>
-  <val> LH_Na.Reab </val>
+  <val> LoopOfHenle_Na.Reab </val>
 </def>
 
 <def>
   <name> Total_DT </name>
-  <val> DT_Na.Reab </val>
+  <val> DistalTubule_Na.Reab </val>
 </def>
 
 <def>
   <name> Total_CD </name>
-  <val> CD_Na.Reab </val>
+  <val> CollectingDuct_Na.Reab </val>
 </def>
 
 <def>

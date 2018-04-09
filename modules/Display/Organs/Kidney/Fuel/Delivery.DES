@@ -29,9 +29,12 @@ By : University of Mississippi Medical Center
 <justify> LEFT </justify>
 
 <textcell> </textcell>
-<textcell> Glucose </textcell>
-<textcell> Fat </textcell>
-<textcell> Lactate </textcell>
+<textcell> Right Glucose </textcell>
+<textcell> Left Glucose </textcell>
+<textcell> Right Fat </textcell>
+<textcell> LeftFat </textcell>
+<textcell> Right Lactate </textcell>
+<textcell> Left Lactate </textcell>
 
 </column>
 
@@ -48,7 +51,22 @@ By : University of Mississippi Medical Center
 </valuecell>
 
 <valuecell>
+  <name> GlucosePool.[Glucose] </name>
+  <format><decimal> 3 </decimal></format>
+</valuecell>
+
+<valuecell>
   <name> FAPool.[FA] </name>
+  <format><decimal> 3 </decimal></format>
+</valuecell>
+
+<valuecell>
+  <name> FAPool.[FA] </name>
+  <format><decimal> 3 </decimal></format>
+</valuecell>
+
+<valuecell>
+  <name> LacPool.[Lac-] </name>
   <format><decimal> 3 </decimal></format>
 </valuecell>
 
@@ -67,17 +85,32 @@ By : University of Mississippi Medical Center
 <textcell> % </textcell>
 
 <valuecell>
-  <name> GlucoseAvailable</name>
+  <name>  RightKidney-Fuel.GlucoseAvailable</name>
   <format><integer/></format>
 </valuecell>
 
 <valuecell>
-  <name> FAAvailable </name>
+  <name> LeftKidney-Fuel.GlucoseAvailable</name>
   <format><integer/></format>
 </valuecell>
 
 <valuecell>
-  <name> LacAvailable </name>
+  <name>  RightKidney-Fuel.FAAvailable </name>
+  <format><integer/></format>
+</valuecell>
+
+<valuecell>
+  <name> LeftKidney-Fuel.FAAvailable </name>
+  <format><integer/></format>
+</valuecell>
+
+<valuecell>
+  <name>  RightKidney-Fuel.LacAvailable </name>
+  <format><integer/></format>
+</valuecell>
+
+<valuecell>
+  <name> LeftKidney-Fuel.LacAvailable </name>
   <format><integer/></format>
 </valuecell>
 
@@ -91,19 +124,35 @@ By : University of Mississippi Medical Center
 <textcell> mG </textcell>
 
 <valuecell>
-  <name> GlucoseDelivered(mG/Min) </name>
+  <name> RightKidney-Fuel.GlucoseDelivered(mG/Min) </name>
   <format><integer/></format>
 </valuecell>
 
 <valuecell>
-  <name> FADelivered(mG/Min) </name>
+  <name> LeftKidney-Fuel.GlucoseDelivered(mG/Min) </name>
   <format><integer/></format>
 </valuecell>
 
 <valuecell>
-  <name> LacDelivered(mG/Min) </name>
+  <name> RightKidney-Fuel.FADelivered(mG/Min) </name>
   <format><integer/></format>
 </valuecell>
+
+<valuecell>
+  <name> LeftKidney-Fuel.FADelivered(mG/Min) </name>
+  <format><integer/></format>
+</valuecell>
+
+<valuecell>
+  <name> RightKidney-Fuel.LacDelivered(mG/Min) </name>
+  <format><integer/></format>
+</valuecell>
+
+<valuecell>
+  <name> LeftKidney-Fuel.LacDelivered(mG/Min) </name>
+  <format><integer/></format>
+</valuecell>
+
 
 </column>
 
@@ -115,37 +164,38 @@ By : University of Mississippi Medical Center
 <textcell> Cals </textcell>
 
 <valuecell>
-  <name> GlucoseDelivered(Cals/Min) </name>
+  <name> RightKidney-Fuel.GlucoseDelivered(Cals/Min) </name>
   <format><integer/></format>
 </valuecell>
 
 <valuecell>
-  <name> FADelivered(Cals/Min) </name>
+  <name> LeftKidney-Fuel.GlucoseDelivered(Cals/Min) </name>
   <format><integer/></format>
 </valuecell>
 
 <valuecell>
-  <name> LacDelivered(Cals/Min) </name>
+  <name> RightKidney-Fuel.FADelivered(Cals/Min) </name>
+  <format><integer/></format>
+</valuecell>
+
+<valuecell>
+  <name> LeftKidney-Fuel.FADelivered(Cals/Min) </name>
+  <format><integer/></format>
+</valuecell>
+
+<valuecell>
+  <name> RightKidney-Fuel.LacDelivered(Cals/Min) </name>
+  <format><integer/></format>
+</valuecell>
+
+<valuecell>
+  <name> LeftKidney-Fuel.LacDelivered(Cals/Min) </name>
   <format><integer/></format>
 </valuecell>
 
 </column>
 
 </showtable>
-
-<showvalue>
-   <row> 7.2 </row><col> 1.0 </col>
-   <name> InsulinEffect </name>
-   <format><decimal> 2 </decimal></format>
-   <label> Insulin Effect </label>
-</showvalue>
-
-<showvalue>
-   <row> 8.2 </row><col> 1.0 </col>
-   <name> InsulinPool.[Insulin] </name>
-   <format><decimal> 0 </decimal></format>
-   <label> [Insulin] </label>
-</showvalue>
 
 <infobutton>
   <row> 1.2 </row>

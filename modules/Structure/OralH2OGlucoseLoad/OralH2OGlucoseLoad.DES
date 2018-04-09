@@ -14,9 +14,11 @@ Schema : 2005.0
 
 <parm><name> Switch </name><val> FALSE </val></parm>
 <parm><name> H2ORate </name><val> 0.0 </val></parm>
+<parm><name> NaClContent </name><val> 0.0 </val></parm>
 <parm><name> Glucose(%) </name><val> 5.0 </val></parm>
 
 <var><name> GlucoseRate </name></var>
+<var><name> NaClRate </name><val> 0 </val></var>
 
 </variables>
 
@@ -36,6 +38,13 @@ Schema : 2005.0
   <dervname> GlucoseChange </dervname>
 </diffeq>
 
+<diffeq>
+  <name> TotalNa </name>
+  <integralname> TotalNa </integralname>
+  <initialval> 0.0 </initialval>
+  <dervname> NaClChange </dervname>
+</diffeq>
+
 </equations>
 
 <definitions>
@@ -46,8 +55,11 @@ Schema : 2005.0
 
 <block><name> Dervs </name>
 
-  <def><name> H2OChange </name><val> H2ORate </val></def>
-  <def><name> GlucoseChange </name><val> GlucoseRate </val></def>
+  <def><name> H2OChange </name><val> H2ORate * Switch </val></def>
+  <def><name> GlucoseChange </name><val> GlucoseRate * Switch </val></def>
+  <def><name> NaClRate </name><val> NaClContent / 1000 * H2OChange </val></def>
+  <def><name> NaClChange </name><val> NaClRate</val></def>
+
 
 </block>
 

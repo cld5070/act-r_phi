@@ -26,9 +26,9 @@ By : University Of Mississippi Medical Center
 
 <var><name> Degradation </name></var>
 
-<parm><name> K1 </name><val> 0.0249 </val></parm>
-<parm><name> K2 </name><val> 0.00124 </val></parm>
-<parm><name> K3 </name><val> 0.00134 </val></parm>
+<parm><name> K1 </name><val> 0.00706 </val></parm>0.0249
+<parm><name> K2 </name><val> 0.0000802 </val></parm>0.00124
+<parm><name> K3 </name><val> 0.00094 </val></parm>0.00134
 
 <var><name> [Insulin] </name></var>
 <var><name> [Insulin(mU/mL)] </name></var>
@@ -55,10 +55,10 @@ By : University Of Mississippi Medical Center
 <definitions>
 <block><name> Calc </name>
 
-<def><name> Free </name><val> Total - Bound </val></def>
+<def><name> Free </name><val> Total - Bound + ( InsulinPump.T2D * 10 )  </val></def>
 
 <def><name> BoundFraction </name><val> Bound / Total </val></def>
-<def><name> BoundFraction(%) </name><val> 100 * BoundFraction </val></def>
+<def><name> BoundFraction(%) </name><val> 100 * BoundFraction / ( InsulinPump.T2D + 1 ) </val></def>
 
 </block>
 

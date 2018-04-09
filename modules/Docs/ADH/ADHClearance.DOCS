@@ -10,200 +10,156 @@ Copyright : 2009
 <vardoc>
 <name> ADHClearance.Kidney </name>
 <topic> ADHClearance - Overview </topic>
-<topic> Kidney - DefinitionADHC1 </topic>
-<topic> ADHClearance - Concentration Units </topic>
-<seealso> Kidney-Flow.BloodFlow </seealso>
-<seealso> ADHPool.[ADH] </seealso>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<seealso> XXXX </seealso>
+<seealso> XXXX </seealso>
 </vardoc>
 
 <vardoc>
 <name> ADHClearance.KidneyK </name>
-<topic> KidneyK - DefinitionADHC2 </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<seealso> XXXX </seealso>
+<seealso> XXXX </seealso>
 </vardoc>
 
 <vardoc>
 <name> ADHClearance.Liver </name>
-<topic> Liver - DefinitionADHC3 </topic>
-<seealso> GITract-Flow.BloodFlow </seealso>
-<seealso> ADHPool.[ADH] </seealso>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<seealso> XXXX </seealso>
+<seealso> XXXX </seealso>
 </vardoc>
 
 <vardoc>
 <name> ADHClearance.LiverK </name>
-<topic> LiverK - DefinitionADHC4 </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<seealso> XXXX </seealso>
+<seealso> XXXX </seealso>
 </vardoc>
 
 <vardoc>
 <name> ADHClearance.Other </name>
-<topic> Other - DefinitionADHC5 </topic>
-<seealso> OtherTissue-Flow.BloodFlow </seealso>
-<seealso> ADHPool.[ADH] </seealso>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<seealso> XXXX </seealso>
+<seealso> XXXX </seealso>
 </vardoc> 
 
 <vardoc>
 <name> ADHClearance.OtherK </name>
-<topic> OtherK - DefinitionADHC6 </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<seealso> XXXX </seealso>
+<seealso> XXXX </seealso>
 </vardoc>
 
 <vardoc>
 <name> ADHClearance.Total </name>
-<topic> Total - DefinitionADHC7 </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<seealso> XXXX </seealso>
+<seealso> XXXX </seealso>
 </vardoc>
+
+
 
 <topicdoc>
 <name> ADHClearance - Overview </name>
 <label> Overview </label>
 <content>
 
-Infusion studies examining ADH clearance rates in both 
-experimental animals (dogs and rats) and in human 
-subjects indicate that ADH is cleared mainly by the 
-kidneys, the liver and to a lesser extent by other tissues. 
-Total clearance is therefore the sum of these three
-individual clearances. Individual clearances are calculated 
-from blood flow, plasma concentration of ADH and elimination 
-rate constants for extraction in the individual organs. 
-During severe hemorrhage and hypotension, clearance of vasopressin 
-from the circulation will be reduced because of decreased blood 
-flow to the kidneys, the liver and the other tissues responsible 
-for the removal of vasopressin from the circulating blood.
-
-Reviews
-Lauson HD. Metabolism of antidiuretic hormones.
-Am J Med 42: 713 - 744, 1967.
-
-Rat Data
-Janaky T, Laszlo FA, Sirokman F, Morgat JL. Biological half-life
-and organ distribution of [3H]8-arginine-vasopressin in the 
-rat. J Endocrinol 93: 295 - 303, 1982.
-
-Human Data
-Usami S, Chien S. Role of hepatic blood flow in regulating 
-plasma concentration of antidiuretic hormone after hemorrhage.
-Proc Soc Exp Biol Med 113: 606 - 609, 1963.
+ADH is cleared from the pool by the liver and the kidneys. 
+With severe hemorrhage and hypotension, it is likely that the 
+clearance of vasopressin from the circulation will be reduced 
+because of decreased blood flow to the kidneys and splanchnic 
+viscera, the organs resposible for the removal of vasopressin 
+from the circulating blood.
  
-Fabian M, Forsling ML, Jones JJ, Pryor JS. The clearance and 
-antidiuretic potency of neurohypophysial hormones in man, and
-their plasma binding and stability. 
-J Physiol 204: 653 - 668, 1969.
-
-Bermansour M, Rainfray M, Paillard F, Ardaillou R. Metabolic
-clearance of immunoreactive vasopressin in man.
-Eur J Clin Invest 12: 475 - 480, 1982. 
-
-Os I, Kjeldsen SE, Aakesson I, Skjoto J, Westheim A, Eide I,
-Leren P. Arteriovenous difference of plasma vasopressin in normal
-man and effect of posture. Acta Physiol Scand 122: 49 - 53, 1984. 
-
-Dog Data
-Share L. Rate of disappearance of arginine vasopressin from 
-circulating blood in the dog. Am J Physiol 203:1179 - 1181, 1962.
-
-Lauson HD, Bocanegra M, Beuzeville CF. Hepatic and renal clearance
-of vasopressin from plasma of dogs. 
-Am J Physiol 209: 199 - 214, 1965
-
-Harvey N, Jones JJ, Lee J. The renal clearance and plasma binding
-of vasopressin in the dog. J Endocrinol 38: 163 - 171, 1967.
-
-Montani JP, Liard JF, Schoun j, Mohring J. Hemodynamic effects of 
-exogenous and endogenous vasopressin at low plasma concentrations
-in conscious dogs. Circ Res 47: 346 - 355, 1980.
+Share L. Control of Vasopressin Release: An Old But 
+Continuing Story.News Physiol. Sci. Volume 11, February 1996. 
 
 </content>
 </topicdoc>
 
 <topicdoc>
-<name> ADHClearance - Concentration Units </name>
-<label> Concentration Units </label>
+<name> XX </name>
+<label> XXX </label>
 <content>
 
-Clearance rates for ADH are typically 3.2 nG/Min
+XX concentrations have been expressed in
+
+   pG/mL
+   pMol/L
+   uU/mL
+
+A typical concentration is XXX pG/mL
 
 </content>
 </topicdoc>
 
 <topicdoc>
-<name> Kidney - DefinitionADHC1 </name>
-<label> Definition </label>
+<name> XXX </name>
+<label> Overview </label>
 <content>
 
-Kidney clearance is the rate of ADH cleared from the 
-kidney. It is a function of kidney blood flow, ADH 
-plasma concentration and the time constant K for 
-renal extraction of ADH. 
 
 </content>
 </topicdoc>
 
-<topicdoc>
-<name> KidneyK - DefinitionADHC2 </name>
-<label> Definition </label>
-<content>
+   Typical XX is XX pg/ml at a
+   secretion rate of XX ng/min.
 
-Kidney K is the time constant for the renal extraction 
-of ADH. Kidney K has a value of 0.00059
+   Physical units.
 
-</content>
-</topicdoc>
+   [Plasma]    pG/mL
+   Plasma Mass nG
+   Fluxes      nG/Min
+   Stored Mass uG
 
-<topicdoc>
-<name> Liver - DefinitionADHC3 </name>
-<label> Definition </label>
-<content>
+   Volume of distribution is ECFV,
+   which is 15000 mL.
 
-Liver clearance is the rate of ADH cleared from the 
-liver. It is a function of GI blood flow, ADH 
-plasma concentration and the time constant K for 
-liver extraction of ADH. 
+   Initial ECFV pool is 30 nG or
+   30000 pG.
 
-</content>
-</topicdoc>
+   Normal synthesis and secretion
+   rates are 3.2 nG/Min into and
+   out of the fast pool.
 
-<topicdoc>
-<name> LiverK - DefinitionADHC4 </name>
-<label> Definition </label>
-<content>
+   The fast mass is 3200 nG, making
+   the fractional secretion rate
+   0.001 /Min.
 
-Liver K is the time constant for the hepatic extraction 
-of ADH. Liver K has a value of 0.0005
+   The slow mass is 17000 nG.
 
-</content>
-</topicdoc>
+   Fluxes between the fast and slow
+   pools is 17 nG/Min, defining these
+   2 rate constants.
 
-<topicdoc>
-<name> Other - DefinitionADHC5 </name>
-<label> Definition </label>
-<content>
+      SlowToFast - 0.0010 /Min
+      FastToSlow - 0.0053 /Min
 
-Other clearance is the rate of ADH cleared from the 
-other tissues. It is a function of other tissue blood 
-flow, ADH plasma concentration and the time constant K for 
-other tissue extraction of ADH. 
+   Thrasher. AJP 278:R469-R475, 2000.
 
-</content>
-</topicdoc>
+       Neural stimulation of ADH release
+       seems to come primarily from the
+       baroreflex.
 
-<topicdoc>
-<name> OtherK - DefinitionADHC6 </name>
-<label> Definition </label>
-<content>
+   I favoring the idea that there is little
+   tonic neural stimulation of AVP release.
 
-OtherK is the time constant for the clearance of ADH from
-other tissue. OtherK has a value of 0.00108.
-
-</content>
-</topicdoc>
-
-<topicdoc>
-<name> Total - DefinitionADHC7 </name>
-<label> Definition </label>
-<content>
-
-Total clearance is the sum of kidney, liver and other 
-tissue clearances.
-
-</content>
-</topicdoc>
+   Hemorrhage causes a big stimulus.  Brain
+   death only decreases AVP moderately.
+   Trauma to the hypophysis will decrease
+   AVP more.
 
 End

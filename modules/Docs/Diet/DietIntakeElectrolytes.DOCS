@@ -11,7 +11,7 @@ Copyright : 2009
 
 
 <vardoc>
-<name> DietIntakeElectrolytes.Cl-_mMol/Min </name>
+<name> DietIntakeElectrolytes.Cl-_mEq/Min </name>
 <topic> XXX</topic>
 <topic> XXXX </topic>
 <topic> XXX </topic>
@@ -29,7 +29,7 @@ Copyright : 2009
 </vardoc>
 
 <vardoc>
-<name> DietIntakeElectrolytes.K+_mMol/Min </name>
+<name> DietIntakeElectrolytes.K+_mEq/Min </name>
 <topic> XX </topic>
 <topic> XX </topic>
 <topic> XXXX </topic>
@@ -38,7 +38,7 @@ Copyright : 2009
 </vardoc>
 
 <vardoc>
-<name> DietIntakeElectrolytes.Na+_mMol/Min </name>
+<name> DietIntakeElectrolytes.Na+_mEq/Min </name>
 <topic> XXX</topic>
 <topic> XXXX </topic>
 <topic> XXX </topic>

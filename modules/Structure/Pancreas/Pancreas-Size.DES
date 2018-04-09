@@ -35,6 +35,7 @@ By : University Of Mississippi Medical Center
 <var><name> OtherCellMass </name></var>
 <parm><name> OtherCellMassPercent </name><val> 5 </val></parm>
 
+<var><name> dummy </name></var>
 </variables>
 
 <definitions>
@@ -89,6 +90,7 @@ By : University Of Mississippi Medical Center
   <val> EndocrineMass * ( OtherCellMassPercent / 100 ) </val>
 </def>
 
+<def><name> dummy </name><val> System.X </val></def>
 </block>
 
 </definitions>

@@ -43,13 +43,6 @@ Schema : DES V1.0
   </yaxis>
 </showgraph>
 
-<showvalue>
-   <row> 9.8 </row><col> 1.0 </col>
-   <name> COPEffect </name>
-   <format><decimal> 2 </decimal></format>
-   <label> COP Effect </label>
-</showvalue>
-
 <repeatlist>
   <name> PlasmaProtein.SynthesisBasic </name>
   <repeat><reps> 20 </reps><stepsize>  0.001 </stepsize></repeat>
@@ -58,7 +51,7 @@ Schema : DES V1.0
 
 <slidebar>
   <row> 11.2 </row><col> 1.0 </col>
-  <name> SynthesisBasic </name>
+  <name> AlbuminPool.SynthesisBasic </name>
   <listname> PlasmaProtein.SynthesisBasic </listname>
   <label> Basic </label>
 </slidebar>

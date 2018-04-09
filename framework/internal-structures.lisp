@@ -237,6 +237,20 @@
 ;;;             : * Added new slots to the chunk-type structure to indicate
 ;;;             :   and manage the new static chunk-types which create 
 ;;;             :   subtypes instead of growing the base type when extended.
+;;; 2013.10.02 Dan
+;;;             : * Took the # off of the setting for the default break event
+;;;             :   action since that function isn't defined at this point.
+;;; 2014.02.12 Dan
+;;;             : * Added the user-defined slot to chunk-types for use with
+;;;             :   printing 'cannonical' names of types based on the added
+;;;             :   option of defined for the :show-static-subtype-names param.
+;;; 2014.02.17 Dan
+;;;             : * Added the creation-type slot to chunks to allow things like
+;;;             :   this to still work with static chunks:
+;;;             :    (chunk-type foo)
+;;;             :    (chunk-type (bar (:include foo)) slot)
+;;;             :    (define-chunks (a isa bar))
+;;;             :    (set-chunk-slot-value a slot t)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -293,13 +307,14 @@
 
 (defstruct act-r-chunk-type ; (:print-function print-chunk-type))
   "The internal structure of a chunk-type"
-  name documentation supertypes subtypes slots extended-slots indices possible-slots static subtree)
+  name documentation supertypes subtypes slots extended-slots indices possible-slots static subtree (user-defined t))
 
 (defstruct act-r-chunk ; (:print-function print-chunk))
   "The internal structure of a chunk"
   name base-name
   documentation 
   chunk-type 
+  creation-type
   slot-value-lists 
   copied-from
   merged-chunks
@@ -322,7 +337,7 @@
   "Events for system maintenance")
 
 (defstruct (act-r-break-event 
-            (:include act-r-maintenance-event (action #'act-r-event-break-action))) 
+            (:include act-r-maintenance-event (action 'act-r-event-break-action))) 
   "The ACT-R break events"
   )
 

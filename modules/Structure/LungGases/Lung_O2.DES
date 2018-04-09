@@ -14,7 +14,7 @@ By : University Of Mississippi Medical Center
 <var><name> Loss </name></var>
 
 <var><name> [O2] </name></var>
-<var><name> pO2 </name></var>
+<var><name> pO2 </name><val> 100 </val></var>
 
 <var><name> MembraneGradient </name></var>
 
@@ -40,7 +40,7 @@ By : University Of Mississippi Medical Center
   <startname> Uptake </startname>
   <initialval> 250.0 </initialval>
   <endname> EndUptake </endname>
-  <errorlim> 2.5 </errorlim>
+  <errorlim> .25 </errorlim>
 </impliciteq>
 
 </equations>
@@ -119,7 +119,8 @@ By : University Of Mississippi Medical Center
     <val> Uptake </val>
   </def>
 
-  <def><name> Change </name><val> Gain - Loss </val></def>
+<def><name> Change </name><val> Gain - Loss </val></def>  
+
 
   <def>
     <name> DxMax </name>

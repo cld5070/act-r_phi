@@ -16,7 +16,6 @@ Copyright : 2009
 
 <vardoc>
 <name> GlucosePump.Setting </name>
-<topic> Setting - DefinitionGP1 </topic>
 <topic> GlucosePump - Overview </topic>
 <topic> Glucose - Physical Units </topic>
 <topic> Glucose - Concentration Units </topic>
@@ -24,7 +23,6 @@ Copyright : 2009
 
 <vardoc>
 <name> GlucosePump.Switch </name>
-<topic> Switch - DefinitionGP2 </topic>
 <topic> GlucosePump - Overview </topic>
 <topic> Glucose - Concentration Units </topic>
 <topic> Glucose - Physical Units </topic>
@@ -40,6 +38,7 @@ plasma glucose levels by infusing glucose at different
 rates. Data is taken from a variety of human studies 
 relating infusion rates to plasma concentrations 
 of glucose.
+
 
 </content>
 </topicdoc>
@@ -89,33 +88,6 @@ steady state.
 </content>
 </topicdoc>
 
-<topicdoc>
-<name> Switch - DefinitionGP1 </name>
-<label> Definition </label>
-<content>
-
-When the glucose pump switch is turned on, the model 
-user can set infusion rates using the sliding bar 
-feature in the glucose pump display box. 
-
-</content>
-</topicdoc>
-
-<topicdoc>
-<name> Setting - DefinitionGHP2 </name>
-<label> Definition </label>
-<content>
-
-When the glucose pump switch is turned on, the model 
-user can set infusion rates using the sliding bar 
-feature in the glucose pump display box. Rates of infusion
-may be increased from 0 mG/Min, in increments of 10, up to 
-300 mG/Min; from 300 mG/Min, in increments of 100, up to
-1000 mG/min; and from 1000 mG/Min, in increments of 1000
-up to 10,000nG/Min. 
-
-</content>
-</topicdoc>
    
 
 End

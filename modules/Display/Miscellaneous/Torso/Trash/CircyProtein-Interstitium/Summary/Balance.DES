@@ -66,21 +66,21 @@ Schema : DES V1.0
 
 <showvalue>
    <row> 15.6 </row><col> 1.0 </col>
-   <name> UT_InterstitialProtein.Mass </name>
+   <name> Torso_Upper_InterstitialProtein.Mass </name>
    <format><decimal> 1 </decimal></format>
    <label> Upper Torso </label>
 </showvalue>
 
 <showvalue>
    <row> 16.6 </row><col> 1.0 </col>
-   <name> MT_InterstitialProtein.Mass </name>
+   <name> Torso_Middle_InterstitialProtein.Mass </name>
    <format><decimal> 1 </decimal></format>
    <label> Middle Torso </label>
 </showvalue>
 
 <showvalue>
    <row> 17.6 </row><col> 1.0 </col>
-   <name> LT_InterstitialProtein.Mass </name>
+   <name> Torso_Lower_InterstitialProtein.Mass </name>
    <format><decimal> 1 </decimal></format>
    <label> Lower Torso </label>
 </showvalue>

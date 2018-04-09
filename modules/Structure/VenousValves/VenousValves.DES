@@ -16,7 +16,7 @@ By : University Of Mississippi Medical Center
 
 <var><name> WattsEffect </name></var>
 <var><name> RateEffect </name></var>
-
+<var><name> WattsInput </name></var>
 </variables>
 
 <functions>
@@ -39,9 +39,10 @@ By : University Of Mississippi Medical Center
 
 <block><name> Calc </name>
 
+<def><name> WattsInput </name><val> Exercise-Metabolism.MotionWatts + (  Exercise-Metabolism.StandardEfficiency * PostureEnergy.Cals / Exercise-Metabolism.WattsToCals  ) </val></def>
 <def>
   <name> WattsEffect </name>
-  <val> WattsEffect [ Exercise-Metabolism.MotionWatts ] </val>
+  <val> WattsEffect [ WattsInput ] </val>
 </def>
 
 <def>

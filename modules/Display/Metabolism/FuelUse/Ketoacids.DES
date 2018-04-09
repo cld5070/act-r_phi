@@ -44,7 +44,7 @@ Schema : 2005.0
 
 <showvalue>
   <row> 11.8 </row><col> 1.0 </col>
-  <name> LM_Ketoacids.Synthesis </name>
+  <name> LiverMetabolism_Ketoacids.Synthesis </name>
   <format><decimal> 1 </decimal></format>
   <label> Liver Synthesis </label>
 </showvalue>

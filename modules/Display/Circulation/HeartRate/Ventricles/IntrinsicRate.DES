@@ -39,7 +39,7 @@ Schema : 2005.0
 
 <slidebar>
   <row> 3.8 </row><col> 3.0 </col>
-  <name> BasicRate </name>
+  <name> BasicRateTarget </name>
   <listname> Heart-Ventricles.BasicRate </listname>
   <label> BasicRate </label>
 </slidebar>

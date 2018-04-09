@@ -16,13 +16,21 @@ By : University Of Mississippi Medical Center
 
 <showvalue>
    <row> 1.4 </row><col> 1.0 </col>
-   <name> [HCO3(mEq/L)] </name>
+   <name> RightKidney-CO2.[HCO3(mEq/L)] </name>
+   <format><decimal> 1 </decimal></format>
+   <label> [HCO3] </label>
+</showvalue>
+
+
+<showvalue>
+   <row> 2.4 </row><col> 1.0 </col>
+   <name> LeftKidney-CO2.[HCO3(mEq/L)] </name>
    <format><decimal> 1 </decimal></format>
    <label> [HCO3] </label>
 </showvalue>
 
 <showgraph>
-  <row> 2.4 </row><col> 1.0 </col><high> 7 </high><wide> 28 </wide>
+  <row> 3.4 </row><col> 1.0 </col><high> 6 </high><wide> 28 </wide>
   <leftmargin> 4 </leftmargin>
   <xaxis>
     <name> System.X </name>
@@ -31,9 +39,14 @@ By : University Of Mississippi Medical Center
   </xaxis>
   <yaxis>
     <yvar>
-      <name> [HCO3(mEq/L)] </name>
+      <name> RightKidney-CO2.[HCO3(mEq/L)] </name>
       <nolabel/>
       <linecolor> BLUE </linecolor>
+    </yvar>
+    <yvar>
+      <name> LeftKidney-CO2.[HCO3(mEq/L)] </name>
+      <nolabel/>
+      <linecolor> GREEN </linecolor>
     </yvar>
     <scale>
       <min> 10 </min><max> 20 </max>
@@ -41,43 +54,82 @@ By : University Of Mississippi Medical Center
   </yaxis>
 </showgraph>
 
-<showvalue>
-   <row> 9.8 </row><col> 1.0 </col>
-   <name> Mass </name>
-   <format><decimal> 1 </decimal></format>
-   <label> Mass </label>
-</showvalue>
+<showtable>
+<row> 4.8 </row><col> 1 </col>
 
-<showvalue>
-   <row> 10.8 </row><col> 3 </col>
-   <name> Change </name>
-   <format><decimal> 2 </decimal></format>
-   <label> Change </label>
-</showvalue>
+<column>
+<indent> 0 </indent>
+<fieldwidth> 7 </fieldwidth>
+<justify> LEFT </justify>
 
-<showvalue>
-   <row> 12.2 </row><col> 3 </col>
-   <name> InflowBase</name>
-   <format><decimal> 2 </decimal></format>
-   <label> Inflow </label>
-</showvalue>
+<textcell> </textcell>
+<textcell> Mass </textcell>
+<textcell> Change </textcell>
+<textcell> Inflow</textcell>
+<textcell> Outflow</textcell>
 
-<showvalue>
-   <row> 13.2 </row><col> 3 </col>
-   <name> OutflowBase</name>
-   <format><decimal> 2 </decimal></format>
-   <label> Outflow </label>
-</showvalue>
 
-<showvalue>
-   <row> 14.6 </row><col> 1.0 </col>
-   <name> PCO2</name>
-   <format> <integer/> </format>
-   <label> pCO2 </label>
-</showvalue>
+</column>
+
+<column>
+<indent> 7.0 </indent>
+<fieldwidth> 8.0 </fieldwidth>
+<justify> RIGHT </justify>
+
+<textcell> Left </textcell>
+<valuecell>
+  <name> LeftKidney-CO2.Mass  </name>
+  <format><decimal> 3 </decimal></format>
+</valuecell>
+
+<valuecell>
+  <name> LeftKidney-CO2.Change  </name>
+  <format><decimal> 3 </decimal></format>
+</valuecell>
+
+<valuecell>
+  <name> LeftKidney-CO2.InflowBase</name>
+  <format><decimal> 3 </decimal></format>
+</valuecell>
+
+<valuecell>
+  <name> LeftKidney-CO2.OutflowBase</name>
+  <format><decimal> 3 </decimal></format>
+</valuecell>
+
+</column>
+
+<column>
+<indent> 15.0 </indent>
+<fieldwidth> 8.0 </fieldwidth>
+<justify> RIGHT </justify>
+<textcell> Right </textcell>
+
+<valuecell>
+  <name> RightKidney-CO2.Mass  </name>
+  <format><decimal> 3 </decimal></format>
+</valuecell>
+
+<valuecell>
+  <name> RightKidney-CO2.Change  </name>
+  <format><decimal> 3 </decimal></format>
+</valuecell>
+
+<valuecell>
+  <name> RightKidney-CO2.InflowBase</name>
+  <format><decimal> 3 </decimal></format>
+</valuecell>
+
+<valuecell>
+  <name> RightKidney-CO2.OutflowBase</name>
+  <format><decimal> 3 </decimal></format>
+</valuecell>
+</column>
+</showtable>
+
 
 <showgraph>
-  <row> 15.6 </row><col> 1.0 </col><high> 7 </high><wide> 28 </wide>
+  <row> 14.6 </row><col> 1.0 </col><high> 7 </high><wide> 28 </wide>
   <leftmargin> 4 </leftmargin>
   <xaxis>
     <name> System.X </name>
@@ -86,9 +138,14 @@ By : University Of Mississippi Medical Center
   </xaxis>
   <yaxis>
     <yvar>
-      <name> PCO2 </name>
+      <name> RightKidney-CO2.PCO2 </name>
       <nolabel/>
       <linecolor> BLUE </linecolor>
+    </yvar>
+    <yvar>
+      <name> LeftKidney-CO2.PCO2 </name>
+      <nolabel/>
+      <linecolor> GREEN </linecolor>
     </yvar>
     <scale>
       <min> 30 </min><max> 50 </max><inc> 10 </inc>
@@ -96,12 +153,7 @@ By : University Of Mississippi Medical Center
   </yaxis>
 </showgraph>
 
-<showvalue>
-   <row> 23.0 </row><col> 1.0 </col>
-   <name> Kidney-Size.LiquidVol</name>
-   <format> <integer/> </format>
-   <label> Volume </label>
-</showvalue>
+
 
 <infobutton>
   <row> 1.2 </row>

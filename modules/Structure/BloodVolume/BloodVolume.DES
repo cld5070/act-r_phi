@@ -26,6 +26,7 @@ Schema : 2005.0
 
 <block><name> Parms </name>
 
+  <call> RBCSolids.Parms </call>
   <call> RBCClearance.Parms </call>
   <call> [EPO]Delay.Parms </call>
 

@@ -127,7 +127,9 @@ proc select_copyrights {} {
           -text {Department of Psychology, Rice University} -width 56
 
 
-    image create photo small_onr_logo -file smalllogo.gif
+    global tcl_env_dir
+
+    image create photo small_onr_logo -file [file join $tcl_env_dir dialogs smalllogo.gif]
 
     label .copyright.image -width 400 -height 142 -anchor center \
           -image small_onr_logo
@@ -178,7 +180,7 @@ proc select_copyrights {} {
 
     send_environment_cmd \
       "create simple-handler .copyright.lab30 copyrightlab30var \
-         (lambda (x) (meta-p-version (current-mp))) nil"
+         (lambda (x) *actr-version-string*) nil"
 
     send_environment_cmd \
       "create simple-handler .checkstate local_connection \
@@ -201,21 +203,26 @@ proc select_copyrights {} {
 # start the lisp side running
 
 if {$standalone_mode == 1} {
-  cd "../../apps"
+  
+   set cur_dir [pwd]
 
- if [catch {exec "actr6s-64.exe" -V}] {
-    if [catch {exec "actr6s-32.exe" -V}] {
-      tk_messageBox -icon warning -title "No ACT-R available" \
-                    -message "Cannot run the ACT-R application. Contact Dan for help." -type ok
-      exit
-    } else {
+   global top_dir
+
+   cd [file join $top_dir apps]
+
+   if [catch {exec "actr6s-64.exe" -V}] {
+     if [catch {exec "actr6s-32.exe" -V}] {
+       tk_messageBox -icon warning -title "No ACT-R available" \
+                     -message "Cannot run the ACT-R application. Contact Dan for help." -type ok
+       exit
+     } else {
       exec "./run-32.bat" &
-    }
-  } else {
+     }
+   } else {
       exec "./run-64.bat" &
-  }
+   }
 
-  cd "../GUI/dialogs"
+   cd $cur_dir
 }
 
 

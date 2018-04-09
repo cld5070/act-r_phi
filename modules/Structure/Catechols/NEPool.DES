@@ -68,8 +68,10 @@ Schema : DES V1.0
   <val>
        NESecretion.Rate
      + NESecretion.Spillover
-     + NEPump.Rate </val>
+     + NEPump.Rate
      + Pheochromocytoma.NERate
+     - NEBolus.Change
+ </val>
 </def>
 
 <def>

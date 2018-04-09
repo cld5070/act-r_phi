@@ -31,7 +31,7 @@ By : University of Mississippi Medical Center
   <if>
   <test> DailyPlannerControl.Switch </test>
   <true>
-    <message> The daily planner is controlling exeercise now. </message>
+ <!--   <message> The daily planner is controlling exercise now. </message>-->
     <def><name> Request </name><val> LastValidRequest </val></def>
     <exitblock/>
   </true>
@@ -40,7 +40,7 @@ By : University of Mississippi Medical Center
   <if>
   <test> Brain-Function.Comatose </test>
   <true>
-    <message> Subject is comatose and can't exercise. </message>
+<!--    <message> Subject is comatose and can't exercise. </message>-->
     <def><name> Request </name><val> LastValidRequest </val></def>
     <exitblock/>
   </true>
@@ -49,7 +49,7 @@ By : University of Mississippi Medical Center
   <if>
   <test> ( Request EQ REQUEST_TREADMILL ) AND ( NOT Status.Standing ) </test>
   <true>
-    <message> To use treadmill, subject must be standing. </message>
+ <message> To use treadmill, subject must be standing. </message>
     <def><name> Request </name><val> LastValidRequest </val></def>
     <exitblock/>
   </true>
@@ -116,31 +116,31 @@ By : University of Mississippi Medical Center
 <case>
 <test> SkeletalMuscle-Ph.Ph LE Exercise-Motivation.Motivation </test>
   <call> StopExercising </call>
-  <message> I stopped exercising. My muscles gave out. </message>
+<message> I stopped exercising. My muscles gave out. </message>
 </case>
 
 <case>
 <test> SkeletalMuscle-Function.Failed </test>
   <call> StopExercising </call>
-  <message> I stopped exercising. My muscles are too weak. </message>
+<message> I stopped exercising. My muscles are too weak. </message>
 </case>
 
 <case>
 <test> Brain-Function.Comatose </test>
   <call> StopExercising </call>
-  <message> This subject is not conscious. Exercise is over. </message>
+<!--  <message> This subject is not conscious. Exercise is over. </message>-->
 </case>
 
 <case>
 <test> Brain-Function.Impaired </test>
   <call> StopExercising </call>
-  <message> I can't exercise any more. I'm too confused. </message>
+<message> I can't exercise any more. I'm too confused. </message>
 </case>
 
 <case>
 <test> RespiratoryMuscle-Function.Failed </test>
   <call> StopExercising </call>
-  <message> I stopped exercising. I can't breathe. </message>
+<message> I stopped exercising. I can't breathe. </message>
 </case>
 
 </testcase>

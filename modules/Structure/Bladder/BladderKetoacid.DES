@@ -1,9 +1,9 @@
 HumMod / BladderKetoacid
 
 Created : 16-Mar-08
-Revised : 2012-10-31
+Revised : 2013-02-04
 Author : Tom Coleman
-Copyright : 2008-2012
+Copyright : 2008-2013
 By : University of Mississippi Medical Center
 
 <structure><name> BladderKetoacid </name>
@@ -38,14 +38,14 @@ By : University of Mississippi Medical Center
 
 <block><name> Dervs </name>
 
-  <def><name> Change </name><val> CD_KA.Outflow </val></def>
+  <def><name> Change </name><val> CollectingDuct_KA.Outflow </val></def>
 
 </block>
 
 <block><name> Conc </name>
 
   <def><name> [KA-] </name><val> Mass / BladderVolume.Mass </val></def>
-  <def><name> [KA-(mMol/L)] </name><val> 100.0 * [KA-] </val></def>
+  <def><name> [KA-(mMol/L)] </name><val> 1000 * [KA-] </val></def>
 
 </block>
 

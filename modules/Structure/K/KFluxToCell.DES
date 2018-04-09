@@ -14,7 +14,7 @@ Schema : 2005.0
 
 <var><name> Rate </name></var>
 
-<parm><name> BasicK </name><val> 0.002 </val></parm>
+<parm><name> BasicK </name><val> 0.0018 </val></parm>
 <var><name> K </name></var>
 
 </variables>

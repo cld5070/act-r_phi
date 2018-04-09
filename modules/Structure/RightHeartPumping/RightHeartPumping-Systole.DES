@@ -1,9 +1,9 @@
 HumMod / RightHeartPumping-Systole
 
 Created : 2010-05-25
-Revised : 2012-07-20
+Revised : 2013-02-26
 Author : Tom Coleman and Radu Iliescu
-Copyright : 2010-2012
+Copyright : 2010-2013
 By : University of Mississippi Medical Center
 
 <structure><name> RightHeartPumping-Systole </name>
@@ -13,7 +13,9 @@ By : University of Mississippi Medical Center
 <var><name> ESP </name></var>
 <var><name> TMP </name></var>
 
-<parm><name> K-Basic </name><val> 3.7 </val></parm>
+<parm><name> XTarget </name><val> 1 </val></parm>
+<var><name> K-Basic </name></var>
+<var><name> K-Multiplier </name></var>
 <var><name> K </name></var>
 
 <var><name> SBP </name></var>
@@ -23,14 +25,24 @@ By : University of Mississippi Medical Center
 
 <var><name> Del </name></var>
 
+<var><name> Initial-K-Basic </name></var>
+
 </variables>
 
 <equations>
 
+<diffeq>
+  <name> X </name>
+  <integralname> X </integralname>
+  <initialval> 1.0 </initialval>
+  <dervname> dX   </dervname>
+  <errorlim> 0.03 </errorlim>
+</diffeq>
+
 <impliciteq>
   <name> ESV </name>
   <startname> ESV </startname>
-  <initialval> 50 </initialval>
+  <initialval> 44 </initialval>50
   <endname> ESV-End </endname>
   <errorlim> 0.5 </errorlim>
   <searchmin> 0 </searchmin>
@@ -38,16 +50,41 @@ By : University of Mississippi Medical Center
 
 </equations>
 
+<functions>
+
+<curve><name> K-Multiplier </name>
+<point><x> 0 </x><y> 0.0 </y><slope> 0 </slope></point>
+<point><x> 1 </x><y> 1.0 </y><slope> 0.3 </slope></point>
+<point><x> 3 </x><y> 1.3 </y><slope> 0 </slope></point>
+</curve>
+
+</functions>
+
 <definitions>
+
+<block><name> Init </name>
+
+<def>
+  <name> K-Basic </name>
+  <val> Initial-K-Basic </val>
+</def>
+
+</block>
 
 <block><name> Calc </name>
 
+<def><name> dX </name><val> 0.05 * ( XTarget - X ) </val></def>
 <def><name> ESP </name><val> SBP </val></def>
 <def><name> TMP </name><val> ESP - Pericardium-Cavity.Pressure </val></def>
 
 <def>
+  <name> K-Multiplier </name>
+  <val> K-Multiplier [ RightHeartPumping-Contractility.Contractility ] </val>
+</def>
+
+<def>
   <name> K </name>
-  <val> K-Basic * RightHeartPumping-Contractility.Contractility </val>
+  <val> X * K-Basic * K-Multiplier </val>
 </def>
 
 <implicitmath><name> ESV </name>
@@ -65,7 +102,7 @@ By : University of Mississippi Medical Center
 </block>
 
 <block><name> TMP-Passive </name>
-
+<!--  
 <if>
 <test> ESV GT RightHeartPumping-Diastole.BreakVolume </test>
 <true> 
@@ -88,6 +125,17 @@ By : University of Mississippi Medical Center
 </false>
 
 </if>
+-->
+
+<def>
+    <name> TMP-Passive </name>
+    <val> RightHeartPumping-Diastole.Slope * ESV </val>
+  </def>
+
+  <def>
+    <name> Del </name>
+    <val> ESV - RightHeartPumping-Diastole.BreakVolume </val>
+  </def>
 
 </block>
 
@@ -103,7 +151,7 @@ By : University of Mississippi Medical Center
 
   <def>
     <name> ESV-End </name>
-    <val> RightHeartPumping-Diastole.BreakVolume + SQRT ( TMP-Passive / RightHeartPumping-Diastole.K ) </val>
+    <val> RightHeartPumping-Diastole.BreakVolume + SQRT ( Del / RightHeartPumping-Diastole.K ) </val>
   </def>
 </true>
 

@@ -1,23 +1,23 @@
 ;;;  -*- mode: LISP; Syntax: COMMON-LISP;  Base: 10 -*-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; 
+;;;
 ;;; Author      : Dan Bothell
 ;;; Copyright   : (c) 2004 Dan Bothell
 ;;; Availability: Covered by the GNU LGPL, see LGPL.txt
-;;; Address     : Department of Psychology 
+;;; Address     : Department of Psychology
 ;;;             : Carnegie Mellon University
 ;;;             : Pittsburgh, PA 15213-3890
 ;;;             : db30@andrew.cmu.edu
-;;; 
-;;; 
+;;;
+;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; 
+;;;
 ;;; Filename    : chunks.lisp
 ;;; Version     : 1.3
-;;; 
+;;;
 ;;; Description : Definition of chunks and the function that manipulate them.
-;;; 
-;;; Bugs        : 
+;;;
+;;; Bugs        :
 ;;;
 ;;; To do       : * Finish the documentation.
 ;;;             : * This one is a big target for benchmarking and optimizing.
@@ -39,16 +39,16 @@
 ;;; 2005.01.17 Dan
 ;;;             : * Switched to using command-output for printing.
 ;;;             : * Renamed pprint-chunk pprint-chunkS and took away its
-;;;             :   printing of chunk parameters and added pprint-chunks-plus 
-;;;             :   to display chunks with chunk parameters. 
+;;;             :   printing of chunk parameters and added pprint-chunks-plus
+;;;             :   to display chunks with chunk parameters.
 ;;; 2005.01.21 Dan
 ;;;             : * Updated merge-chunks-fct to work more efficiently.
 ;;; 2005.01.24 Dan
 ;;;             : * Fixed some bugs I introduced with the changes to pprint-
-;;;             :   chunks and pprint-chunks-plus - I changed their return 
+;;;             :   chunks and pprint-chunks-plus - I changed their return
 ;;;             :   value which broke other things...
 ;;; 2005.02.04 Dan
-;;;             : * Added the fast-* chunk accessors to eliminate the 
+;;;             : * Added the fast-* chunk accessors to eliminate the
 ;;;             :   excessive calling of valid-slot-name.
 ;;; 2005.02.09 Dan
 ;;;             : * Fixed a bug that the fast-* stuff introduced with respect
@@ -81,7 +81,7 @@
 ;;;             :   like loc1 which now when copied ends up as loc10 which
 ;;;             :   of course looks like "loc"+"10" instead of "loc1"+"0".
 ;;;             :   So, I've changed it so that it adds a - between the
-;;;             :   chunk's name and the number so that would be loc1-0.             
+;;;             :   chunk's name and the number so that would be loc1-0.
 ;;; 2005.08.10 Dan
 ;;;             : * Minor clean-up in define-chunks to remove unused variables
 ;;;             :   in the let.
@@ -100,13 +100,13 @@
 ;;;             : * Modified the chunk printing function so that it can suppress
 ;;;             :   the "unfilled" extended slots of a chunk if desired.
 ;;; 2006.02.20 Dan
-;;;             : * Fixed a bug in extend-chunks that causes problems with chunk 
+;;;             : * Fixed a bug in extend-chunks that causes problems with chunk
 ;;;             :   parameters when merged when the ACT-R is both compiled and
 ;;;             :   loaded in the same session i.e. if one loads a previously
 ;;;             :   compiled version there's no problem so it shouldn't have
 ;;;             :   caused too many problems.
 ;;; 2006.07.06 Dan
-;;;             : * Fixed a bug in define-chunks-fct.  When a chunk-type 
+;;;             : * Fixed a bug in define-chunks-fct.  When a chunk-type
 ;;;             :   specified a default value for a slot which was a symbol (thus
 ;;;             :   interepreted as a chunk name) nothing ever created such a
 ;;;             :   chunk if it wasn't defined.  It doesn't make sense to do it
@@ -117,7 +117,7 @@
 ;;; 2006.07.10 Dan
 ;;;             : * Added get-chunk-warn for use in several of the "user" functions
 ;;;             :   because they don't provide a warning if the chunk-name is
-;;;             :   invalid, but since get-chunk is used for other purposes, 
+;;;             :   invalid, but since get-chunk is used for other purposes,
 ;;;             :   I don't want to change it directly.
 ;;;             : * Added changed true-chunk-name to true-chunk-name-fct and
 ;;;             :   added a macro for true-chunk-name to make it user accessible.
@@ -135,13 +135,13 @@
 ;;;             :   all of the model's chunks and replaces any refrence to a
 ;;;             :   chunk name in a slot with the chunk's "true" name and then
 ;;;             :   optionally releases any non-true name i.e. the name that
-;;;             :   was "merged away".  Generally, this probably won't see 
+;;;             :   was "merged away".  Generally, this probably won't see
 ;;;             :   much use, but cleaning up the references may be useful at
 ;;;             :   times, and if a model creates so many names that the symbol
 ;;;             :   table becomes a memory limiter clearing those out maybe
 ;;;             :   necessary.
 ;;; 2006.10.17 Dan
-;;;             : * Minor bug fix in normalize-chunk-names for the unintern 
+;;;             : * Minor bug fix in normalize-chunk-names for the unintern
 ;;;             :   clause.
 ;;; 2006.10.20 Dan
 ;;;             : * More clean-up added to normalize-chunk-names - should free
@@ -149,7 +149,7 @@
 ;;; 2007.01.04 Dan
 ;;;             : * Minor tweak to chunk-copied-from-fct to make sure that the
 ;;;             :   "copied-from" chunk still exists - which may not be the case
-;;;             :   for something like a goal or imaginal requests which delete 
+;;;             :   for something like a goal or imaginal requests which delete
 ;;;             :   the original.
 ;;; 2007.01.15 Dan
 ;;;             : * Bug from that last update fixed - use chunk-p-fct instead
@@ -178,22 +178,22 @@
 ;;; 2008.07.31 Dan
 ;;;             : * Moved chunk-slot-equal from chunk-spec to here and removed
 ;;;             :   the equivalent equal-compare-slot-values function since
-;;;             :   there don't need to be two such functions.  
+;;;             :   there don't need to be two such functions.
 ;;;             : * Also improved chunk-slot-equal so that it doesn't need to
 ;;;             :   use eq-chunks-fct which may save 10% or more time wise for
 ;;;             :   models becuase it removes duplicate lookups.
 ;;;             : * Added the testing of val1 and val2 back into the chunk
 ;;;             :   case of chunk-slot-equal since a nil can short-circuit the
 ;;;             :   chunk lookup - slows down the chunk only cases but speeds
-;;;             :   up the nil tests which is probably more common in the 
+;;;             :   up the nil tests which is probably more common in the
 ;;;             :   average model.
 ;;; 2008.10.08 Dan
 ;;;             : * Improvement to normalize-chunk-names so it doesn't have to
-;;;             :   look up non-chunks.  
+;;;             :   look up non-chunks.
 ;;; 2008.10.20 Dan [1.1]
-;;;             : * Made changes to add the option of having chunk merging 
-;;;             :   work like the older ACT-R versions where it essentially 
-;;;             :   normalizes as it goes. It can be enabled via the :dcnn 
+;;;             : * Made changes to add the option of having chunk merging
+;;;             :   work like the older ACT-R versions where it essentially
+;;;             :   normalizes as it goes. It can be enabled via the :dcnn
 ;;;             :   parameter and is on by default.
 ;;; 2008.10.30 Dan
 ;;;             : * Tweaked chunk-slot-equal to make it a little more efficient.
@@ -212,7 +212,7 @@
 ;;;             :   when it changes chunk slot values.
 ;;; 2008.12.10 Dan
 ;;;             : * Added the :copy-from-chunk-function keyword to extend
-;;;             :   chunks because sometimes having access to the original 
+;;;             :   chunks because sometimes having access to the original
 ;;;             :   chunk may be useful when copying a parameter.
 ;;; 2009.02.13 Dan
 ;;;             : * Modified chunk-copy-fct to better control for size since
@@ -225,14 +225,14 @@
 ;;;             :    (= s1 s2))
 ;;;             :
 ;;;             :   which can result in runaway memory usage if a chunk gets
-;;;             :   copied, then the copy gets copied, and so on, in a Lisp which 
+;;;             :   copied, then the copy gets copied, and so on, in a Lisp which
 ;;;             :   "rounds up" the size (ACL and possibly others).
 ;;; 2009.02.13 Dan
 ;;;             : * Modified chunk-copy-fct to use the new option of "short
 ;;;             :   chunk copy names".  So, instead of A-0-0-0-0 one would have
 ;;;             :   A-3 instead.
 ;;; 2009.04.23 Dan
-;;;             : * Fixed a bug introduced in chunk-slot-equal the last time it 
+;;;             : * Fixed a bug introduced in chunk-slot-equal the last time it
 ;;;             :   was updated which caused t to match any non-chunk value if
 ;;;             :   t was also not explicitly defined as a chunk.
 ;;; 2010.04.30 Dan
@@ -247,7 +247,7 @@
 ;;;             :   funtions for a parameter include the parameter in the warning
 ;;;             :   when there's a bad chunk name provided.
 ;;; 2011.04.27 Dan
-;;;             : * Added some declaims to avoid compiler warnings about 
+;;;             : * Added some declaims to avoid compiler warnings about
 ;;;             :   undefined functions.
 ;;; 2011.04.28 Dan
 ;;;             : * Added a mechanism for suppressing the warnings that get
@@ -260,11 +260,11 @@
 ;;; 2012.10.15 Dan
 ;;;             : * Changed chunk-back-links to use a hash-table instead of a
 ;;;             :   list of lists to improve performance.  Significant reduction
-;;;             :   in time and memory usage when :ncnar is t found in test 
+;;;             :   in time and memory usage when :ncnar is t found in test
 ;;;             :   cases.
 ;;; 2013.03.13 Dan [1.3]
 ;;;             : * Changed chunk creation so that all slots which exist for
-;;;             :   the chunk get set in the table, even if they are empty, 
+;;;             :   the chunk get set in the table, even if they are empty,
 ;;;             :   because that's important for matching chunk-specs now since
 ;;;             :   a non-existent slot needs to be diferentiated from an empty
 ;;;             :   slot.
@@ -273,7 +273,7 @@
 ;;;             :   slots which are themselves chunks.
 ;;;             : * Re-fixed because I undid the previous change which is still
 ;;;             :   important.
-;;; 2013.05.20 Dan 
+;;; 2013.05.20 Dan
 ;;;             : * Added the resolve-a-static-chunks-type function to handle
 ;;;             :   converting a chunk to the minimal type needed for holding
 ;;;             :   its contents.
@@ -292,15 +292,38 @@
 ;;;             :   x with a slot1 and extended x with a slot2 but haven't extended
 ;;;             :   either of those (x+slot1 or x+slot2) with the other to create
 ;;;             :   x+slot1&slot2 a definition for a chunk like this:
-;;;             :   (isa x slot1 "a" slot2 "b") will fail, but either of these: 
+;;;             :   (isa x slot1 "a" slot2 "b") will fail, but either of these:
 ;;;             :   (isa x slot1 "a") (isa x slot2 "b") would be fine.
 ;;;             : * Fixed resolve-chunks-type so that it doesn't remove the
 ;;;             :   static slots of the root type from the chunks i.e. those are
 ;;;             :   allowed to have a value of nil and still exist.
+;;; 2014.02.12 Dan
+;;;             : * Changed pprint-a-chunk to use canonical-chunk-type-name
+;;;             :   instead of directly testing the type and static printing
+;;;             :   state.
+;;; 2014.02.17 Dan
+;;;             : * Changed set-chk-slot-value so that it resolves a static
+;;;             :   chunk's type after the change.
+;;;             : * Set the creation-type slot when creating a chunk and check
+;;;             :   that when resolving a chunk's type.  If it moves up the
+;;;             :   hierarchy allow the slots of the creation type to still be
+;;;             :   used in set and mod operations for verification of valid
+;;;             :   slots until it either has the same type as its creation
+;;;             :   type or becomes a type which isn't a supertype of the
+;;;             :   creation type.  What this allows is the following sequence
+;;;             :   of operations which are used by some of the device code to
+;;;             :   create visual features 'incrementally':
+;;;             :   (chunk-type foo)
+;;;             :   (chunk-type (bar (:include foo)) slot)
+;;;             :   (define-chunk (a isa bar)) ;; falls back to foo at this point
+;;;             :   (set-chunk-slot-value a slot t) ;; want to set that slot later
+;;; 2014.12.17 Dan
+;;;             : * Changed the declaim for get-module-fct since CMUCL actually
+;;;             :   cares about the return value spec.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
-;;; 
+;;;
 ;;; Globals and underlying chunk structures are not for general use.
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -311,11 +334,11 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Design Choices:
-;;; 
-;;; 
+;;;
+;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; 
+;;;
 ;;; The code
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -324,7 +347,7 @@
 #-(or (not :clean-actr) :packaged-actr :ALLEGRO-IDE) (in-package :cl-user)
 
 
-(declaim (ftype (function (t) t) get-module-fct))
+(declaim (ftype (function (t) (values t t)) get-module-fct))
 (declaim (ftype (function (&optional t) t) sgp-fct))
 (declaim (ftype (function () t) current-model))
 (declaim (ftype (function () t) use-short-copy-names))
@@ -344,7 +367,7 @@
 
 (defvar *chunk-parameter-undefined* (gentemp "Unused-Param"))
 
-(defvar *chunk-parameters-list* nil 
+(defvar *chunk-parameters-list* nil
   "Internal list of parameters that have been added to chunks")
 
 (defvar *chunk-parameters-copy-list* nil
@@ -362,7 +385,7 @@
 
 
 (defconstant *pprint-chunk-string*
-    (formatter 
+    (formatter
      "~S~:[ (~s)~;~*~]~%~@[~S~%~]  ISA ~S~%~:{   ~s  ~s~%~}")
   "compiled format string for printing chunks")
 
@@ -382,13 +405,10 @@
              (eql chunk-name (act-r-chunk-name chunk))
              (act-r-chunk-name chunk)
              (act-r-chunk-documentation chunk)
-             
-             (let ((type (act-r-chunk-chunk-type chunk)))
-               (if (or (null (act-r-chunk-type-static type)) *show-static-names*)
-                   (act-r-chunk-type-name type)
-                 (act-r-chunk-type-static type)))
-               
-             (mapcan #'(lambda (slot-name) 
+
+             (canonical-chunk-type-name (act-r-chunk-chunk-type chunk))
+
+             (mapcan #'(lambda (slot-name)
                          (multiple-value-bind (value exists) (gethash slot-name (act-r-chunk-slot-value-lists chunk))
                              (when (or exists
                                        (car (no-output (sgp-fct (list :show-all-slots))))
@@ -402,13 +422,13 @@
              (format nil *pprint-chunk-parameters-string*
                (mapcar #'(lambda (param)
                            (list (act-r-chunk-parameter-name param)
-                                 (funcall (act-r-chunk-parameter-accessor param) 
+                                 (funcall (act-r-chunk-parameter-accessor param)
                                           chunk-name)))
                  *chunk-parameters-list*)))
-            
+
             )
           chunk-name)
-      
+
       :error)))
 
 (defmacro pprint-chunks (&rest chunk-names)
@@ -417,7 +437,7 @@
 
 (defun pprint-chunks-fct (&optional chunk-names-list)
   "Print the chunks"
-  (verify-current-mp  
+  (verify-current-mp
    "pprint-chunks called with no current meta-process."
    (verify-current-model
     "pprint-chunks called with no current model."
@@ -441,7 +461,7 @@
 
 (defun pprint-chunks-plus-fct (&optional chunk-names-list)
   "Print the chunks and their parameters"
-  (verify-current-mp  
+  (verify-current-mp
    "pprint-chunks-plus called with no current meta-process."
    (verify-current-model
     "pprint-chunks-plus called with no current model."
@@ -452,7 +472,7 @@
 
 (defun chunks ()
   "Returns a list of the names of all currently defined chunks"
-  (verify-current-mp  
+  (verify-current-mp
    "chunks called with no current meta-process."
    (verify-current-model
     "chunks called with no current model."
@@ -460,7 +480,7 @@
 
 (defun get-chunk (name)
   "Internal function for getting the chunk structure from its name"
-  (verify-current-mp  
+  (verify-current-mp
    "get-chunk called with no current meta-process."
    (verify-current-model
     "get-chunk called with no current model."
@@ -469,7 +489,7 @@
 
 (defun get-chunk-warn (name)
   "Internal function for getting the chunk structure from its name"
-  (verify-current-mp  
+  (verify-current-mp
    "get-chunk called with no current meta-process."
    (verify-current-model
     "get-chunk called with no current model."
@@ -508,7 +528,7 @@
     (when c
       (act-r-chunk-documentation c))))
 
-  
+
 (defun create-undefined-chunk (name)
   "Create a new chunk with the given name of chunk-type chunk with a warning"
   (model-warning "Creating chunk ~S of default type chunk" name)
@@ -526,30 +546,31 @@
       (when (use-short-copy-names)
         (unless (act-r-chunk-base-name chunk)
           (setf (act-r-chunk-base-name chunk) (concatenate 'string (symbol-name chunk-name) "-"))))
-      
-      
+
+
       (let* ((new-name (new-name-fct (if (use-short-copy-names)
                                          (act-r-chunk-base-name chunk)
                                        (concatenate 'string (symbol-name chunk-name) "-"))))
-             (new-chunk (make-act-r-chunk 
+             (new-chunk (make-act-r-chunk
                          :name new-name
                          :base-name (act-r-chunk-base-name chunk)
                          :merged-chunks (list new-name)
                          :chunk-type (act-r-chunk-chunk-type chunk)
+                         :creation-type (act-r-chunk-creation-type chunk)
                          :parameter-values (make-array *chunk-parameters-count*
                                                        :initial-element *chunk-parameter-undefined*)
-                         ;(copy-seq (act-r-chunk-parameter-values chunk)) 
-                         :slot-value-lists 
+                         ;(copy-seq (act-r-chunk-parameter-values chunk))
+                         :slot-value-lists
                          (make-hash-table :size (hash-table-count (act-r-chunk-slot-value-lists chunk))))))
-        
-        ;; Copy the slot-value hash table 
+
+        ;; Copy the slot-value hash table
         (maphash #'(lambda (key value)
                      (setf (gethash key (act-r-chunk-slot-value-lists new-chunk))
                        value))
                  (act-r-chunk-slot-value-lists chunk))
-        
+
         ;; Create the back links as needed
-        
+
         (when (update-chunks-on-the-fly)
           (dolist (slot-name (act-r-chunk-type-slots (act-r-chunk-chunk-type chunk)))
             (let ((old (gethash slot-name (act-r-chunk-slot-value-lists chunk))))
@@ -560,31 +581,31 @@
                     (let ((ht (make-hash-table)))
                       (setf (gethash new-name ht) (list slot-name))
                       (setf (chunk-back-links old) ht))))))))
-        
+
         ;; update its parameters for only those that need it
-        
+
         (dolist (param *chunk-parameters-copy-list*)
           (if (act-r-chunk-parameter-copy param)
               (let ((current (aref (act-r-chunk-parameter-values chunk) (act-r-chunk-parameter-index param))))
                 (setf (aref (act-r-chunk-parameter-values new-chunk) (act-r-chunk-parameter-index param))
-                  (funcall (act-r-chunk-parameter-copy param) 
+                  (funcall (act-r-chunk-parameter-copy param)
                            (if (eq current *chunk-parameter-undefined*)
                                (chunk-parameter-default param chunk-name)
                              current))))
             (setf (aref (act-r-chunk-parameter-values new-chunk) (act-r-chunk-parameter-index param))
-              (funcall (act-r-chunk-parameter-copy-from-chunk param) 
+              (funcall (act-r-chunk-parameter-copy-from-chunk param)
                        chunk-name))))
-                        
-                                              
+
+
         ;; Put it into the main table
-        
+
         (setf (gethash new-name (act-r-model-chunks-table (current-model-struct)))
           new-chunk)
-        
+
         ;; note the original
-        
+
         (setf (act-r-chunk-copied-from new-chunk) chunk-name)
-        
+
         new-name))))
 
 (defmacro chunk-copied-from (chunk-name)
@@ -606,11 +627,11 @@
 
 (defun define-chunks-fct (chunk-def-list)
   "Create chunks in the current model"
-  
-  ;; Do it in 2 passes like the old add-dm because there could be 
+
+  ;; Do it in 2 passes like the old add-dm because there could be
   ;; circular references which should be allowed
-  
-  (verify-current-mp  
+
+  (verify-current-mp
    "define-chunks called with no current meta-process."
    (verify-current-model
     "define-chunks called with no current model."
@@ -641,7 +662,7 @@
                                     ((= pos 2)
                                      (setf name (first chunk-def))
                                      (setf doc (second chunk-def))))
-                              
+
                               (cond ((or (null name) (not (symbolp name)))
                                      (print-warning "Invalid chunk definition: ~S chunk name is not a valid symbol." chunk-def))
                                     ((and doc (not (stringp doc)))
@@ -666,74 +687,75 @@
                                            (print-warning "Invalid chunk definition: ~S nonexistent slot combination for static type ~s." chunk-def (act-r-chunk-type-name type))
                                            (setf slots :error))
                                      (unless (eq slots :error)
-                                       (let ((c (make-act-r-chunk 
+                                       (let ((c (make-act-r-chunk
                                                  :name name
                                                  :merged-chunks (list name)
                                                  :documentation doc
                                                  :chunk-type type
+                                                 :creation-type type
                                                  :parameter-values (make-array *chunk-parameters-count*
                                                                                :initial-element *chunk-parameter-undefined*)
                                                  :slot-value-lists slots-and-values)))
                                          (push-last c chunk-list)
-                                              
+
                                          ;; enter it into the main chunk table
                                          (setf (gethash name (act-r-model-chunks-table (current-model-struct))) c))))))))))
             (print-warning "~S is not a list in call to define-chunks-fct" chunk-def)))
-      
+
       ;; second pass create slot-value list and define parameters
-      
+
       (dolist (chunk chunk-list)
-        
+
         (let* ((ct (act-r-chunk-chunk-type chunk))
                (slots-table (make-hash-table :size (length (ct-slot-names ct)))))
-          
+
           ;; add any unused slots to the list
-          (let ((used (do ((s (act-r-chunk-slot-value-lists chunk) (cddr s)) 
-                           (slots nil)) 
-                          ((null s) slots) 
+          (let ((used (do ((s (act-r-chunk-slot-value-lists chunk) (cddr s))
+                           (slots nil))
+                          ((null s) slots)
                         (push s slots))))
-            
+
             (dolist (default (act-r-chunk-type-slots ct))
               (if (atom default)
                   (unless (find default used)
                     (setf (act-r-chunk-slot-value-lists chunk) (append (list default nil) (act-r-chunk-slot-value-lists chunk))))
                 (unless (find (car default) used)
                   (setf (act-r-chunk-slot-value-lists chunk) (append default (act-r-chunk-slot-value-lists chunk)))))))
-          
+
           (do* ((s (act-r-chunk-slot-value-lists chunk) (cddr s))
                 (slot-name (car s) (car s))
                 (slot-value (cadr s) (cadr s)))
                ((null s))
-            
-            (when (and slot-value (symbolp slot-value) 
+
+            (when (and slot-value (symbolp slot-value)
                        (not (chunk-p-fct slot-value))
                        (not (numberp slot-value))
                        (not (eq t slot-value)))
               (create-undefined-chunk slot-value))
-            
+
             ;; if updates are happening on the fly map the value to
             ;; the "true" name
-  
+
             (when (and (chunk-p-fct slot-value) (update-chunks-on-the-fly))
               (setf slot-value (true-chunk-name-fct slot-value))
               ;; make the back links
-              
+
               (let ((bl (chunk-back-links slot-value)))
                   (if (hash-table-p bl)
                       (push slot-name (gethash (act-r-chunk-name chunk) bl))
                     (let ((ht (make-hash-table)))
                       (setf (gethash (act-r-chunk-name chunk) ht) (list slot-name))
                       (setf (chunk-back-links slot-value) ht)))))
-            
+
             (setf (gethash slot-name slots-table) slot-value))
-          
+
           (setf (act-r-chunk-slot-value-lists chunk) slots-table)
-          
+
           (when (act-r-chunk-type-static ct)
             (resolve-chunks-type chunk))))
-      
+
       (mapcar #'act-r-chunk-name chunk-list)))))
-        
+
 
 (defun chk-slot-value (chunk slot-name)
   "Internal function for getting the value of a slot in a chunk structure"
@@ -751,7 +773,7 @@
     (when c
       (if (valid-slot-name slot-name (act-r-chunk-chunk-type c))
           (chk-slot-value c slot-name)
-        (print-warning 
+        (print-warning
          "chunk ~S does not have a slot called ~S." chunk-name slot-name)))))
 
 
@@ -763,20 +785,20 @@
   "Set the value of a chunk's slot"
   (let ((c (get-chunk-warn chunk-name)))
     (when c
-      (if (valid-slot-name slot-name (act-r-chunk-chunk-type c))
+      (if (valid-slot-name slot-name (or (act-r-chunk-creation-type c) (act-r-chunk-chunk-type c)))
           (set-chk-slot-value c slot-name value)
         (print-warning "chunk ~S does not have a slot called ~S." chunk-name slot-name)))))
-  
+
 
 (defun set-chk-slot-value (c slot-name value)
   "internal chunk slot setting function"
   ;; changing the chunk breaks it as a copy
   (setf (act-r-chunk-copied-from c) nil)
-  
+
   ;; If the value in the slot now is a chunk
   ;; remove this chunk from the back links of that
   ;; chunk
-  
+
   (when (update-chunks-on-the-fly)
     (let ((old (gethash slot-name (act-r-chunk-slot-value-lists c))))
       (when (chunk-p-fct old)
@@ -785,19 +807,19 @@
           (if new-links
               (setf (gethash (act-r-chunk-name c) bl) new-links)
             (remhash (act-r-chunk-name c) bl))))))
-  
+
   ;; If the new value should be a chunk but isn't
   ;; create one for it
-  
-  (when (and value (symbolp value) 
+
+  (when (and value (symbolp value)
              (not (chunk-p-fct value))
              (not (numberp value))
              (not (eq t value)))
     (create-undefined-chunk value))
-  
+
   ;; if updates are happening on the fly map the value to
   ;; the "true" name
-  
+
   (when (and (chunk-p-fct value) (update-chunks-on-the-fly))
     (setf value (true-chunk-name-fct value))
     ;; If it's a chunk save the back link to this chunk
@@ -807,10 +829,12 @@
         (let ((ht (make-hash-table)))
           (setf (gethash (act-r-chunk-name c) ht) (list slot-name))
           (setf (chunk-back-links value) ht)))))
-  
+
   ;; Set the new slot value
-  
-  (setf (gethash slot-name (act-r-chunk-slot-value-lists c)) value))
+
+  (setf (gethash slot-name (act-r-chunk-slot-value-lists c)) value)
+  (resolve-chunks-type c)
+  value)
 
 
 (defmacro mod-chunk (chunk-name &rest modifications)
@@ -830,17 +854,14 @@
             (push (car s) slots)
             (push (list (car s) (second s)) slots-and-values))
           (cond ((not (every #'(lambda (slot)
-                                 (valid-slot-name 
-                                  slot (act-r-chunk-chunk-type c)))
+                                 (valid-slot-name slot (or (act-r-chunk-creation-type c) (act-r-chunk-chunk-type c))))
                              slots))
                  (print-warning "Invalid slot name in modifications list."))
                 ((not (= (length slots) (length (remove-duplicates slots))))
-                 (print-warning 
-                  "Slot name used more than once in modifications list."))
+                 (print-warning "Slot name used more than once in modifications list."))
                 (t
                  (dolist (slot-value slots-and-values chunk-name)
-                   (set-chk-slot-value 
-                    c (first slot-value) (second slot-value))))))))))
+                   (set-chk-slot-value c (first slot-value) (second slot-value))))))))))
 
 
 
@@ -854,7 +875,7 @@
   (let ((c (get-chunk chunk-name)))
     (when c
       (chk-slot-value c slot-name))))
-      
+
 (defun fast-set-chunk-slot-value-fct (chunk-name slot-name value)
   "Set the value of a chunk's slot without testing validity"
   (let ((c (get-chunk chunk-name)))
@@ -867,9 +888,9 @@
   (let ((c (get-chunk chunk-name)))
     (when c
       (unless (oddp (length modifications-list))
-        (loop 
+        (loop
           (when (null modifications-list) (return))
-          (set-chk-slot-value 
+          (set-chk-slot-value
            c
            (pop modifications-list)
            (pop modifications-list)))
@@ -892,16 +913,16 @@
       (let ((tn (act-r-chunk-name c)))
         ;; If this chunk has back-links from others to it then warn because
         ;; that's likely a problem
-        
-        (when (update-chunks-on-the-fly) 
+
+        (when (update-chunks-on-the-fly)
           (when (and (hash-table-p (chunk-back-links chunk-name)) (not (zerop (hash-table-count (chunk-back-links chunk-name)))))
             (model-warning "Chunk ~s is being deleted but it is still used as a slot value in other chunks." chunk-name))
-          
+
           (when (and (not (eq tn chunk-name)) (hash-table-p (chunk-back-links tn)) (not (zerop (hash-table-count (chunk-back-links tn)))))
             (model-warning "Chunk ~s is being deleted but its true name ~s is still used as a slot value in other chunks." chunk-name tn))
-          
+
           ;; Delete all of the back-links to this chunk
-          
+
           (dolist (slot-name (act-r-chunk-type-slots (act-r-chunk-chunk-type c)))
             (let ((old (gethash slot-name (act-r-chunk-slot-value-lists c))))
               (when (chunk-p-fct old)
@@ -910,17 +931,17 @@
                   (if new-links
                       (setf (gethash tn bl) new-links)
                     (remhash tn bl)))))))
-        
+
         ;; Take all the related chunks out of the main hash-table
-        
+
         (dolist (x (act-r-chunk-merged-chunks c))
           (remhash x (act-r-model-chunks-table (current-model-struct)))
-          
+
           ;; Take them out of the meta-data table too
-          
+
           (when (update-chunks-on-the-fly)
             (remhash x (act-r-model-chunk-ref-table (current-model-struct)))))
-        
+
         chunk-name))))
 
 (defmacro purge-chunk (chunk-name)
@@ -944,27 +965,28 @@
       (unless (chunk-equal-test c1 c2)
         (return-from merge-chunks-fct nil))
       (unless (eq c1 c2)
-        
+
         ;; update the parameters for c1
-        
+
         (dolist (param *chunk-parameters-merge-list*)
           (setf (aref (act-r-chunk-parameter-values c1) (act-r-chunk-parameter-index param))
             (funcall (act-r-chunk-parameter-merge param) chunk-name1 chunk-name2)))
-        
-        
+
+
         ;; For any chunks which had been merged with c2 also remap them
         ;; and indicate them in c1
+
         (dolist (x (act-r-chunk-merged-chunks c2))
           (setf (gethash x (act-r-model-chunks-table (current-model-struct))) c1)
           (push x (act-r-chunk-merged-chunks c1)))
-                
-        
+
+
         ;; When name-remapping is on
-        
+
         (when (update-chunks-on-the-fly)
-          
+
           ;; delete all back-links to the c2 chunk
-          
+
           (dolist (slot-name (act-r-chunk-type-slots (act-r-chunk-chunk-type c2)))
             (let ((old (gethash slot-name (act-r-chunk-slot-value-lists c2))))
               (when (chunk-p-fct old)
@@ -973,10 +995,10 @@
                   (if new-links
                       (setf (gethash chunk-name2 bl) new-links)
                     (remhash chunk-name2 bl))))))
-          
+
           ;; replace all the slot values which hold chunk-name2 with chunk-name1
-          
-          
+
+
           (when (hash-table-p (chunk-back-links chunk-name2))
             (maphash (lambda (chunk slots)
                        (dolist (x slots)
@@ -985,7 +1007,7 @@
                            (funcall notify chunk))))
                      (chunk-back-links chunk-name2))
             (clrhash (chunk-back-links chunk-name2)))))
-      
+
       chunk-name1)))
 
 
@@ -994,7 +1016,7 @@
   `(create-chunk-alias-fct ',chunk ',alias))
 
 (defun create-chunk-alias-fct (chunk alias)
-  (verify-current-mp  
+  (verify-current-mp
    "create-chunk-alias called with no current meta-process."
    (verify-current-model
     "create-chunk-alias called with no current model."
@@ -1048,7 +1070,7 @@
   (and c1 c2 (or (eq c1 c2)
                    (and (eq (act-r-chunk-chunk-type c1)
                             (act-r-chunk-chunk-type c2))
-                        (every #'(lambda (slot-name) 
+                        (every #'(lambda (slot-name)
                                    (chunk-slot-equal
                                     (chk-slot-value c1 slot-name)
                                     (chk-slot-value c2 slot-name)))
@@ -1062,7 +1084,7 @@
       (cond ((and (setf c1 (get-chunk val1))
                   (setf c2 (get-chunk val2)))
              (eq c1 c2))
-            ((stringp val1) 
+            ((stringp val1)
              (and (stringp val2) (string-equal val1 val2)))
             (t (equalp val1 val2))))))
 
@@ -1071,7 +1093,7 @@
 
 (defun suppress-extension-warnings ()
   (setf *suppress-extend-item-warning* t))
-  
+
 (defun unsuppress-extension-warnings ()
   (setf *suppress-extend-item-warning* nil))
 
@@ -1115,17 +1137,17 @@
                 (setf *chunk-parameters-merge-list* (remove ,exists *chunk-parameters-merge-list*))
                 (setf (act-r-chunk-parameter-index ,param) (act-r-chunk-parameter-index ,exists)))
               (incf *chunk-parameters-count*))
-         
+
            (push ,param *chunk-parameters-list*)
-           
-           (if ',copy-function 
+
+           (if ',copy-function
                (push ,param *chunk-parameters-copy-list*)
              (when ',copy-from-chunk-function
                (push ,param *chunk-parameters-copy-list*)))
-           
+
            (when ',merge-function
              (push ,param *chunk-parameters-merge-list*))
-           
+
          (defun ,accessor-name (chunk-name)
            (let ((c (get-chunk chunk-name)))
              (if c
@@ -1147,14 +1169,14 @@
 
 (defun normalize-chunk-names (&optional (unintern? nil))
   (if (current-model-struct)
-      (if (update-chunks-on-the-fly) 
-          
+      (if (update-chunks-on-the-fly)
+
           ;; Use the meta-data table to do the work
           (maphash (lambda (key value)
                      (when (not (eq key (act-r-chunk-name value))) ;; not a used chunk
-                       
+
                        ;; Square up all names for unused chunks
-                       
+
                        (let ((bl (chunk-back-links key)))
                          (when (hash-table-p bl)
                            (let ((tn (true-chunk-name-fct key)))
@@ -1165,31 +1187,31 @@
                                             (funcall notify c))))
                                       bl))
                            (clrhash bl)))
-                       
+
                        ;; release names of unused chunks
-                       
+
                        (when unintern?
-                         
+
                          ;; Take it out of the main hash-table
                          (remhash key (act-r-model-chunks-table (current-model-struct)))
-                         
+
                          ;; Take it out of the meta-data table too
                          (remhash key (act-r-model-chunk-ref-table (current-model-struct)))
-                         
+
                          ;; unintern the name
                          (release-name-fct key))))
                    (act-r-model-chunks-table (current-model-struct)))
-        
+
         ;; Without the meta-data do it the hard way
         (let ((possible-removals nil))
           (maphash (lambda (key value)
                      (when (not (eq key (act-r-chunk-name value)))
                        (push key possible-removals)))
                    (act-r-model-chunks-table (current-model-struct)))
-          
+
           ;; clean up the chunk references
           ;; this could take a while
-          
+
           (when possible-removals
             (maphash (lambda (chunk val)
                        (when (eq chunk (act-r-chunk-name val))
@@ -1200,20 +1222,20 @@
                                (dolist (notify (notify-on-the-fly-hooks))
                                  (funcall notify chunk)))))))
                      (act-r-model-chunks-table (current-model-struct))))
-           
+
            (when unintern?
              (dolist (x possible-removals)
                (remhash x (act-r-model-chunks-table (current-model-struct)))
                (release-name-fct x)))))
-       
+
        (print-warning "No current model in which to normalize chunk names.")))
 
 
 (defun resolve-a-static-chunks-type (chunk-name)
   (let ((chunk (get-chunk chunk-name)))
-    (when chunk 
+    (when chunk
       (resolve-chunks-type chunk))))
-      
+
 (defun resolve-chunks-type (chunk)
   (let ((type (act-r-chunk-chunk-type chunk)))
     (awhen (act-r-chunk-type-static type)
@@ -1225,6 +1247,17 @@
                (unless (find slot (act-r-chunk-type-slots root-type))
                  (remhash slot (act-r-chunk-slot-value-lists chunk))))
              (setf (act-r-chunk-chunk-type chunk) (get-chunk-type result-type))
+
+             ;; if the chunk is of the initial type or no longer a supertype
+             ;; of that original type then it will be treated as being of
+             ;; the current type from now on.
+             (let ((creation-type (act-r-chunk-creation-type chunk)))
+               (when creation-type
+                 (let ((creation-name (act-r-chunk-type-name creation-type)))
+                   (when (or (eq result-type creation-name)
+                             (not (chunk-type-subtype-p-fct creation-name result-type)))
+                     (setf (act-r-chunk-creation-type chunk) nil)))))
+
              result-type))))
 
 

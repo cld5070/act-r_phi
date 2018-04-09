@@ -1,11 +1,10 @@
 HumMod / AAPool
 
 Created : 07-Apr-05
-Last Modified : 26-Jan-10
+Revised : 2013-02-18
 Author : Tom Coleman
-Copyright : 2006-2010
+Copyright : 2006-2013
 By : University Of Mississippi Medical Center
-Schema : DES V1.0
 
 <structure><name> AAPool </name>
 
@@ -21,7 +20,7 @@ Schema : DES V1.0
 <constant><name> PER_ML_TO_PER_DL </name><val> 100.0 </val></constant>
 <constant><name> MG_TO_MMOL </name><val> 10.0 </val></constant>
 
-<var><name> Target[AA] </name><val> 0.50 </val></var>
+<var><name> Target[AA] </name><val> 0.50 </val></var>0.5
 <var><name> InitialMass </name></var>
 
 </variables>
@@ -44,7 +43,7 @@ Schema : DES V1.0
   <def><name> Mass </name><val> InitialMass </val></def>
 </block>
 
-<block><name> CalcConc </name>
+<block><name> Conc </name>
 
 <def><name> [AA] </name><val> Mass / ECFV.Vol </val></def>
 <def><name> [AA(mG/dL)] </name><val> PER_ML_TO_PER_DL * [AA] </val></def>
@@ -52,7 +51,7 @@ Schema : DES V1.0
 
 </block>
 
-<block><name> CalcDervs </name>
+<block><name> Dervs </name>
 
 <def>
   <name> Gain </name>
@@ -62,13 +61,27 @@ Schema : DES V1.0
   </val>
 </def>
 
+<!--
 <def>
   <name> Loss </name>
   <val>
      CellProtein.Inflow
-   + LM_AminoAcids.Uptake
+   + LiverMetabolism_AminoAcids.Uptake
   </val>
 </def>
+-->
+
+
+
+
+<def>
+  <name> Loss </name>
+  <val>
+     CellProtein.Inflow
+   + LiverMetabolism_AminoAcids.Uptake
+  </val>
+</def>
+
 
 <def><name> Change </name><val> Gain - Loss </val></def>
 

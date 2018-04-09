@@ -13,6 +13,9 @@ By : University Of Mississippi Medical Center
 <var><name> Gain </name></var>
 <var><name> Loss </name></var>
 
+<var><name> sizeModification </name></var>
+
+
 <var><name> TargetConc </name><val> 0.038 </val></var>
 <var><name> InitialMass </name></var>
 
@@ -97,7 +100,7 @@ By : University Of Mississippi Medical Center
 
 <def>
   <name> Secretion </name>
-  <val> Secretion-Basic * [Ca]Effect </val>
+  <val> Secretion-Basic * sizeModification * [Ca]Effect </val>
 </def>
 
 <def><name> Degradation </name><val> K * Mass </val></def>

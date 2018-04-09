@@ -1,7 +1,7 @@
 HumMod / Use
 
 Created : 2012-02-14
-Revised : 2012-02-14
+Revised : 2013-02-08
 Author : Tom Coleman
 Copyright : 2012-2012
 By : University of Mississippi Medical Center
@@ -9,7 +9,7 @@ By : University of Mississippi Medical Center
 <groupbox>
    <row> 12.2 </row>
    <col> 1.0 </col>
-   <high> 20.0 </high>
+   <high> 18.8 </high>
    <wide> 30.0 </wide>
    <title> Use </title>
 
@@ -33,13 +33,6 @@ By : University of Mississippi Medical Center
    <format><integer/></format>
    <label> Anaerobic </label>
 </showvalue>
-
-<slidebar>
-  <row> 4.8 </row><col> 1.0 </col>
-  <name> FAPreference </name>
-  <listname> Common.Percent </listname>
-  <label> Use FA (%) </label>
-</slidebar>
 
 <showtable>
 <row> 6.2 </row><col> 1 </col>
@@ -137,35 +130,35 @@ By : University of Mississippi Medical Center
 </showtable>
 
 <showvalue>
-   <row> 14.0 </row><col> 1.0 </col>
+   <row> 12.6 </row><col> 1.0 </col>
    <name> Glucose(%) </name>
    <format><integer/></format>
    <label> Glucose (%) </label>
 </showvalue>
 
 <showvalue>
-   <row> 15.0 </row><col> 1.0 </col>
+   <row> 13.6 </row><col> 1.0 </col>
    <name> Fat(%) </name>
    <format><integer/></format>
    <label> Fat (%) </label>
 </showvalue>
 
 <showvalue>
-   <row> 16.0 </row><col> 1.0 </col>
+   <row> 14.6 </row><col> 1.0 </col>
    <name> Lactate(%) </name>
    <format><integer/></format>
    <label> Lactate (%) </label>
 </showvalue>
 
 <showvalue>
-   <row> 17.0 </row><col> 1.0 </col>
+   <row> 15.6 </row><col> 1.0 </col>
    <name> Total(%) </name>
    <format><integer/></format>
    <label> Total (%) </label>
 </showvalue>
 
 <showvalue>
-   <row> 18.4 </row><col> 1.0 </col>
+   <row> 17.0 </row><col> 1.0 </col>
    <name> Adequacy </name>
    <format><decimal> 1 </decimal></format>
    <label> Adequacy </label>

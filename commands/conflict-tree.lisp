@@ -43,6 +43,8 @@
 ;;;            :   the same (doesn't affect the matching itself).
 ;;; 2011.04.28 Dan
 ;;;            : * Added some declares to quite compliation warnings.
+;;; 2013.10.18 Dan
+;;;            : * Added a few more stats to conflict-tree-stats. 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -83,9 +85,12 @@
 ;;;                  are valid
 ;;;     :sets - the number of different sets of productions found at in the
 ;;;             non-empty leaf nodes
+;;;     :average-set - the mean size of non-empty sets
+;;;     :largest-set - the size of the largest set
 ;;;
 ;;; > (conflict-tree-stats )
-;;; ((:DEPTH . 24) (:MIN-DEPTH . 3) (:TOTAL-NODES . 4670) (:TERMINAL . 3422) (:NON-EMPTY . 3373) (:SETS . 1073))
+;;; ((:DEPTH . 24) (:MIN-DEPTH . 3) (:TOTAL-NODES . 4670) (:TERMINAL . 3422) (:NON-EMPTY . 3373) (:SETS . 1073) 
+;;;  (:AVERAGE-SET . 4.746098) (:LARGEST-SET . 187))
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -233,10 +238,14 @@
 
 (defun conflict-tree-stats ()
   (setf *tree-data* nil)
-  (mapcar #'cons '(:depth :min-depth :total-nodes :terminal :non-empty :sets) 
+  (mapcar #'cons '(:depth :min-depth :total-nodes :terminal :non-empty :sets :average-set :largest-set) 
     (append (multiple-value-list (get-tree-stats (procedural-conflict-tree (get-module procedural))))
             (list (length *tree-data*)) (list (length (remove nil *tree-data*)))
-            (list (length (remove-duplicates *tree-data* :test 'equalp))))))
+            (list (length (remove-duplicates *tree-data* :test 'equalp)))
+            (list (let ((nodes (remove nil *tree-data*)))
+                    (unless (null nodes)
+                      (* 1.0 (/ (reduce '+ (mapcar 'length nodes)) (length nodes))))))
+            (list (reduce 'max (mapcar 'length *tree-data*))))))
 
 (defmethod get-tree-stats ((node binary-test-node))
   (let ((max-depth 0)

@@ -19,7 +19,8 @@ By : University of Mississippi Medical Center
   <call> Brain-Metabolism.CalcCals </call>
   <call> Fat-Metabolism.CalcCals </call>
   <call> GITract-Metabolism.CalcCals </call>
-  <call> Kidney-Metabolism.CalcCals </call>
+  <call> LeftKidney-Metabolism.CalcCals </call>
+  <call> RightKidney-Metabolism.CalcCals </call>
   <call> LeftHeart-Metabolism.CalcCals </call>
   <call> Liver-Metabolism.CalcCals </call>
   <call> OtherTissue-Metabolism.CalcCals </call>
@@ -27,6 +28,8 @@ By : University of Mississippi Medical Center
   <call> RightHeart-Metabolism.CalcCals </call>
   <call> SkeletalMuscle-Metabolism.CalcCals </call>
   <call> Skin-Metabolism.CalcCals </call>
+  <call> Kidney-Metabolism.CalcCals </call>
+
 </block>
 
 <block><name> SplitCals </name>
@@ -34,7 +37,8 @@ By : University of Mississippi Medical Center
   <call> Brain-Metabolism.SplitCals </call>
   <call> Fat-Metabolism.SplitCals </call>
   <call> GITract-Metabolism.SplitCals </call>
-  <call> Kidney-Metabolism.SplitCals </call>
+  <call> LeftKidney-Metabolism.SplitCals </call>
+  <call> RightKidney-Metabolism.SplitCals </call>
   <call> LeftHeart-Metabolism.SplitCals </call>
   <call> Liver-Metabolism.SplitCals </call>
   <call> OtherTissue-Metabolism.SplitCals </call>
@@ -42,6 +46,8 @@ By : University of Mississippi Medical Center
   <call> RightHeart-Metabolism.SplitCals </call>
   <call> SkeletalMuscle-Metabolism.SplitCals </call>
   <call> Skin-Metabolism.SplitCals </call>
+  <call> Kidney-Metabolism.SplitCals </call>
+
 </block>
 
 </definitions>

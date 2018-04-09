@@ -1,47 +1,46 @@
 HumMod / Blood Pressure
 
-Created : 02-Apr-09
-Last Modified : 26-Jan-10
+Created : 2014-02-25
+Revised : 2014-02-25
 Author : Tom Coleman
-Copyright : 2008-2010
-By : University of Mississippi Medical Center
-Schema : DES V1.0
+Copyright : 2014-2014
+By : Tom Coleman
 
 <showvalue>
-   <row> 10.6 </row><col> 1.0 </col>
+   <row> 7.8 </row><col> 1.0 </col>
    <name> SystemicArtys.SBP </name>
    <format><integer/></format>
    <label> Blood Pressure </label>
 </showvalue>
 
 <label>
-  <row> 10.6 </row>
+  <row> 7.8 </row>
   <col> 19 </col>
   <text> / </text>
 </label>
 
 <showvalue>
-   <row> 10.6 </row><col> 20 </col>
+   <row> 7.8 </row><col> 20 </col>
    <name> SystemicArtys.Pressure </name>
    <format><integer/></format>
    <nolabel/>
 </showvalue>
 
 <label>
-  <row> 10.6 </row>
+  <row> 7.8 </row>
   <col> 23 </col>
   <text> / </text>
 </label>
 
 <showvalue>
-   <row> 10.6 </row><col> 24 </col>
+   <row> 7.8 </row><col> 24 </col>
    <name> SystemicArtys.DBP </name>
    <format><integer/></format>
    <nolabel/>
 </showvalue>
 
 <showgraph>
-  <row> 11.6 </row><col> 1.0 </col><high> 9.8 </high><wide> 26 </wide>
+  <row> 8.8 </row><col> 1.0 </col><high> 7 </high><wide> 26 </wide>
   <leftmargin> 4 </leftmargin>
   <xaxis>
     <name> System.X </name>
@@ -73,33 +72,33 @@ Schema : DES V1.0
 </showgraph>
 
 <showvalue>
-   <row> 22.0 </row><col> 1.0 </col>
+   <row> 15.8 </row><col> 1.0 </col>
    <name> SystemicArtys.SBP(kPa) </name>
    <format><decimal> 1 </decimal></format>
    <label> BP (kPa) </label>
 </showvalue>
 
 <label>
-  <row> 22.0 </row>
+  <row> 15.8 </row>
   <col> 14 </col>
   <text> / </text>
 </label>
 
 <showvalue>
-   <row> 22.0 </row><col> 15 </col>
+   <row> 15.8 </row><col> 15 </col>
    <name> SystemicArtys.MeanBP(kPa) </name>
    <format><decimal> 1 </decimal></format>
    <nolabel/>
 </showvalue>
 
 <label>
-  <row> 22.0 </row>
+  <row> 15.8 </row>
   <col> 19 </col>
   <text> / </text>
 </label>
 
 <showvalue>
-   <row> 22.0 </row><col> 20 </col>
+   <row> 15.8 </row><col> 20 </col>
    <name> SystemicArtys.DBP(kPa) </name>
    <format><decimal> 1 </decimal></format>
    <nolabel/>

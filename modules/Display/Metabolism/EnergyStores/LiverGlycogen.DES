@@ -42,7 +42,7 @@ By : University Of Mississippi Medical Center
 
 <showvalue>
   <row> 9.8 </row><col> 1.0 </col>
-  <name> LM_Glycogen.Mass </name>
+  <name> LiverMetabolism_Glycogen.Mass </name>
   <format><integer/></format>
   <label> Mass </label>
 </showvalue>

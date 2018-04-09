@@ -31,6 +31,8 @@ Schema : DES V1.0
   <val> 0.0 </val>
 </var>
 
+<parm><name> Dummy </name><val> 0 </val></parm>
+
 </variables>
 
 <definitions>
@@ -59,6 +61,17 @@ Schema : DES V1.0
 
 </block>
 
+<block><name> Parms </name>
+
+<onjustchanged><name> Dummy </name>
+<def><name> DigoxinGILumen.Mass </name><val> DigoxinGILumen.Mass + ( 1000.0 * Dose * Dummy )  </val></def>
+<def><name> TotalDoses </name><val> TotalDoses + Dummy </val></def>
+<def><name> CumulativeDose </name><val> CumulativeDose + ( 1000 * Dummy * Dose ) </val></def>
+<def><name> TimeLastDose </name><val> System.X </val></def>
+<def><name> Dummy </name><val> 0 </val></def>
+</onjustchanged>
+</block>
+
 <block><name> Reset </name>
 
 <def>
@@ -77,6 +90,8 @@ Schema : DES V1.0
 </def>
 
 </block>
+
+
 
 </definitions>
 </structure>

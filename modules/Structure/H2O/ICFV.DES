@@ -14,8 +14,10 @@ By : University of Mississippi Medical Center
 <var><name> InitialVol </name></var>
 
 <var><name> Vol(L) </name></var>
+<var><name> InitialVol(L) </name></var>
 
 <var><name> FractBodyH2O </name></var>
+<var><name> InitialFractBodyH2O </name></var>
 
 </variables>
 
@@ -25,12 +27,7 @@ By : University of Mississippi Medical Center
 
 <def>
   <name> FractBodyH2O </name>
-  <val> 1.0 - ECFV.FractBodyH2O </val>
-</def>
-
-<def>
-  <name> InitialVol </name>
-  <val> FractBodyH2O * BodyH2O.InitialVol </val>
+  <val> InitialFractBodyH2O </val>
 </def>
 
 <def>
@@ -39,8 +36,13 @@ By : University of Mississippi Medical Center
 </def>
 
 <def>
+  <name> InitialVol(L) </name>
+  <val> InitialVol / 1000.0 </val>
+</def>
+
+<def>
   <name> Vol(L) </name>
-  <val> Vol / 1000.0 </val>
+  <val> InitialVol(L) </val>
 </def>
 
 </block>

@@ -9,9 +9,17 @@ Schema : DES V1.0
 
 <structure><name> Size-Glucagon </name>
 
+<variables>
+<var><name> SizeModification </name></var>
+<constant><name>  BasicVD </name><val> 15312 </val></constant> <!-- ECFV -->
+</variables>
+
 <definitions>
 
 <block><name> Calc </name>
+  <def><name> SizeModification </name><val> Sizing-ECFV.Vol / BasicVD </val></def>
+  <def><name> GlucagonSecretion.sizeModification </name><val> SizeModification </val></def>
+
   <call> GlucagonPool.Init </call>
 </block>
 

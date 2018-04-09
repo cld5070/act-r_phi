@@ -8,10 +8,19 @@ By : University of Mississippi Medical Center
 Schema : DES V1.0
 
 <structure><name> Size-Leptin </name>
+<variables>
+<var><name> SizeModification </name></var>
+<constant><name>  BasicVD </name><val> 15312 </val></constant> <!-- ECFV -->
+</variables>
 
 <definitions>
 
 <block><name> Calc </name>
+
+  <def><name> SizeModification </name><val> Sizing-ECFV.Vol / BasicVD </val></def>
+  <def><name> LeptinSecretion.sizeModification </name><val> SizeModification </val></def>
+
+
   <call> LeptinPool.Init </call>
 </block>
 

@@ -42,7 +42,7 @@ By : University Of Mississippi Medical Center
 
 <showvalue>
    <row> 9.8 </row><col> 1.0 </col>
-   <name> CD_H2O.Outflow </name>
+   <name> CollectingDuct_H2O.Outflow </name>
    <format><decimal> 1 </decimal></format>
    <label> H2O Rate </label>
 </showvalue>

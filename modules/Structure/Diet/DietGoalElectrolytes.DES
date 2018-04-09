@@ -10,20 +10,21 @@ By : University Of Mississippi Medical Center
 
 <variables>
 
-<parm>
+<var>
   <name> Na+_mMol/Day </name>
-  <val> 180.0 </val>
-</parm>
+</var>
 
-<parm>
+<parm><name> Salt_mMol/Day </name><val> 180.0 </val></parm>
+<parm><name> KCl_mMol/Day </name><val> 20 </val></parm>
+<parm><name> DietaryK+_mMol/Day </name><val> 50.0 </val></parm>
+
+<var>
   <name> Cl-_mMol/Day </name>
-  <val> 200.0 </val>
-</parm>
+</var>
 
-<parm>
+<var>
   <name> K+_mMol/Day </name>
-  <val> 70.0 </val>
-</parm>
+</var>
 
 <parm>
   <name> Ca++_mMol/Day </name>
@@ -32,15 +33,91 @@ By : University Of Mississippi Medical Center
 
 <parm>
   <name> PO4---_mMol/Day </name>
-  <val> 30.0 </val>
+  <val> 20.0 </val>
 </parm>
 
 <parm>
   <name> SO4--_mMol/Day </name>
-  <val> 50.0 </val>
+  <val> 35.0 </val>
 </parm>
 
+<var><name> NH4+_mMol/Day </name></var>
+<var><name> HCO3-_mMol/Day </name></var>
+
+<var><name> Anions </name></var>
+<var><name> Cations </name></var>
+
 </variables>
+<definitions>
+
+<block><name> Parms </name>
+
+<def>
+  <name> Na+_mMol/Day </name>
+  <val> Salt_mMol/Day </val>
+</def>
+
+<def>
+  <name> Cl-_mMol/Day </name>
+  <val> Salt_mMol/Day + KCl_mMol/Day </val>
+</def>
+
+<def>
+  <name> K+_mMol/Day </name>
+  <val> KCl_mMol/Day + DietaryK+_mMol/Day </val>
+</def>
+
+<def>
+  <name> Cations </name>
+  <val>
+      Na+_mMol/Day
+    + K+_mMol/Day
+    + ( 2 * Ca++_mMol/Day )
+  </val>
+</def>
+
+<def>
+  <name> Anions </name>
+  <val>
+      Cl-_mMol/Day
+    + ( 2 * PO4---_mMol/Day )
+    + ( 2 * SO4--_mMol/Day )
+  </val>
+</def>
+
+<if>
+<test> Cations GT Anions </test>
+<true>
+
+<def>
+  <name> NH4+_mMol/Day </name>
+  <val> 0 </val>
+</def>
+
+<def>
+  <name> HCO3-_mMol/Day </name>
+  <val> Cations - Anions </val>
+</def>
+
+</true>
+<false>
+
+<def>
+  <name> NH4+_mMol/Day </name>
+  <val> Anions - Cations </val>
+</def>
+
+<def>
+  <name> HCO3-_mMol/Day </name>
+  <val> 0 </val>
+</def>
+
+</false>
+</if>
+
+</block>
+
+</definitions>
 </structure>
 
 End

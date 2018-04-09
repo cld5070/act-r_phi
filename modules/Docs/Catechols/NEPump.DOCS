@@ -17,7 +17,6 @@ Copyright : 2009
 
 <vardoc>
 <name> NEPump.Setting </name>
-<topic> Setting - DefinitionNEP1 </topic>
 <topic> NEPump - Overview </topic>
 <topic> NE - Physical Units </topic>
 <topic> NE - Concentration Units </topic>
@@ -25,7 +24,6 @@ Copyright : 2009
 
 <vardoc>
 <name> NEPump.Switch </name>
-<topic> Switch - DefinitionNEP2 </topic>
 <topic> NEPump - Overview  </topic>
 <topic> NE - Physical Units </topic>
 <topic> NE - Concentration Units </topic>
@@ -122,34 +120,6 @@ Jones DH, Carlene A, Hamilton A, Reid JL. Choice of
 control groups in the appraisal of sympathetic nervous 
 activity in essential hypertension.
 Clinical Science 57: 339 - 344, 1979
-
-</content>
-</topicdoc>
-
-<topicdoc>
-<name> Switch - DefinitionNEP2 </name>
-<label> Definition </label>
-<content>
-
-When the NEPump switch is turned on, the model 
-user can set infusion rates using the sliding bar 
-feature in the NEPump display box. 
-
-</content>
-</topicdoc>
-
-<topicdoc>
-<name> Setting - DefinitionNEP1 </name>
-<label> Definition </label>
-<content>
-
-When the NEPump switch is turned on, the model 
-user can set infusion rates using the sliding bar 
-feature in the NEPump display box. Rates of infusion
-may be increased from 0, in increments of 100, up to 
-1000nG/Min; from 1000, in increments of 1,000, up to 
-10,000nG/Min and from 10,000, in increments of 10,000,
-up to 100,000nG/Min. 
 
 </content>
 </topicdoc>

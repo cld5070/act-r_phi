@@ -32,13 +32,8 @@ Schema : DES V1.0
 <var><name> ExtravascularSpace </name></var>
 <var><name> VolumeDistribution </name></var>
 
-<var><name> Permeability </name></var>
-<parm>
-  <name> CO_O2Ratio </name>
-  <val> 0.81 </val>
-</parm>
 
-<var><name> Gradient </name></var>
+
 <var><name> Uptake </name></var>
 
 </variables>
@@ -80,7 +75,7 @@ Schema : DES V1.0
 
 <conditional>
   <name> pCO </name>
-  <test> Lung_O2.[Capy] GT 0.002 </test>
+  <test> Lung_O2.[Capy] GT .002 </test>
   <true>
       ( [CO] * Lung_O2.pCapy )
     / ( HaldaneFactor * Lung_O2.[Capy] )
@@ -89,23 +84,8 @@ Schema : DES V1.0
 </conditional>
 
 <def>
-  <name> Permeability </name>
-  <val> CO_O2Ratio * PulmonaryMembrane.DiffusingCapacity </val>
-</def>
-
-<def>
-  <name> Gradient </name>
-  <val> Lung_CO.pCO - pCO </val>
-</def>
-
-<def>
-  <name> Uptake </name>
-  <val> Gradient * Permeability </val>
-</def>
-
-<def>
   <name> Change </name>
-  <val> Uptake + EndogenousProduction </val>
+  <val> Lung_CO.Uptake + EndogenousProduction </val>
 </def>
 
 </block>

@@ -90,7 +90,7 @@ Schema : DES V1.0
   <val> TRUE </val>
 </def>
 
-<page> I'm sick at my stomach. </page>
+<!--<page> I'm sick at my stomach. </page>-->
 
 </case>
 
@@ -101,7 +101,7 @@ Schema : DES V1.0
   <val> FALSE </val>
 </def>
 
-<page> I'm feeling better now. </page>
+<!--<page> I'm feeling better now. </page>-->
 
 </case>
 

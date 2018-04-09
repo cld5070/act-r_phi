@@ -1,23 +1,23 @@
 ;;;  -*- mode: LISP; Syntax: COMMON-LISP;  Base: 10 -*-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; 
+;;;
 ;;; Author      : Dan Bothell
 ;;; Copyright   : (c) 2004 Dan Bothell
 ;;; Availability: Covered by the GNU LGPL, see LGPL.txt
-;;; Address     : Department of Psychology 
+;;; Address     : Department of Psychology
 ;;;             : Carnegie Mellon University
 ;;;             : Pittsburgh, PA 15213-3890
 ;;;             : db30@andrew.cmu.edu
-;;; 
-;;; 
+;;;
+;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; 
+;;;
 ;;; Filename    : declarative-memory.lisp
 ;;; Version     : 1.3
-;;; 
+;;;
 ;;; Description : Implements the declarative memory module.
-;;; 
-;;; Bugs        : 
+;;;
+;;; Bugs        :
 ;;;
 ;;; To do       : [x] Better storage of activation quantities (computed act.,
 ;;;             :     base-level, and Sji's) for reference since right now
@@ -29,7 +29,7 @@
 ;;;             : [ ] Consider allowing :recently-retrieved to be partial
 ;;;             :     matched.  Possibly a separate parameter which specifies
 ;;;             :     the penalty value.
-;;; 
+;;;
 ;;; ----- History -----
 ;;;
 ;;; 2004.10.15 Dan
@@ -46,7 +46,7 @@
 ;;;             : The first thought is to hash the chunk contents - the down
 ;;;             : side is that any mod-chunk to a chunk already in DM is going
 ;;;             : to cause problems with that.
-;;;             : 
+;;;             :
 ;;;             : Add the chunk-hash-table to dm structure.
 ;;;             : Modify the add-chunk-into-dm and merge-chunk-into-dm
 ;;;             : to take advantage of that.
@@ -67,7 +67,7 @@
 ;;; 2005.01.21 Dan
 ;;;             : * Did some minor optimizing by having DM organize its chunks
 ;;;             :   by chunk-type.  That seemed to be the bottle neck in most
-;;;             :   of the tutorial models, so trying to speed that up some. 
+;;;             :   of the tutorial models, so trying to speed that up some.
 ;;;             : * Don't worry about setting fan unless spreading activation
 ;;;             :   is enabled.
 ;;; 2005.01.26 Dan
@@ -76,13 +76,13 @@
 ;;;             : * Added the spource-spread parameter to chunks to hold the
 ;;;             :   activation spread component of the computation.
 ;;; 2005.02.03 Dan
-;;;             : * Added ":output 'medium" and ":output 'low" to some of the 
-;;;             :   events that are scheduled to play friendly with the 
+;;;             : * Added ":output 'medium" and ":output 'low" to some of the
+;;;             :   events that are scheduled to play friendly with the
 ;;;             :   new detail level.
 ;;; 2005.02.04 Dan
 ;;;             : * Taking advantage of the fast-* chunk accessors.
 ;;; 2005.02.10 Dan
-;;;             : * Switched to the use of expt-coerced, exp-coerced, and 
+;;;             : * Switched to the use of expt-coerced, exp-coerced, and
 ;;;             :   log-coerced.
 ;;; 2005.04.01 Dan
 ;;;             : * Changed the fast-mergeing mechanism to work over chunks
@@ -96,12 +96,12 @@
 ;;;             :   a buffer-status function to show it.
 ;;;             : * However, the query may not be what people want - the
 ;;;             :   query returns whether the chunk in the buffer has a
-;;;             :   declarative-finst on it at the time of the query which 
+;;;             :   declarative-finst on it at the time of the query which
 ;;;             :   may not be the same as when the request was made, but
 ;;;             :   this seems like the "right" thing to return.
 ;;; 2005.06.10 Dan
 ;;;             : * Fixed a bug - terminating an ongoing retrieval didn't
-;;;             :   properly clear the events if they had already been 
+;;;             :   properly clear the events if they had already been
 ;;;             :   scheduled to occur.
 ;;; 2005.06.14 Dan
 ;;;             : * Fixed an issue with start-retrieval related to :recently-
@@ -131,8 +131,8 @@
 ;;;             :   start until the goal buffer has been set.
 ;;; 2006.06.01 Dan
 ;;;             : * Added a note to the to do list as a reminder of some thoughts
-;;;             :   on an issue that someone might want/need in the future 
-;;;             :   (dealing with chunks before they merge into DM) based on 
+;;;             :   on an issue that someone might want/need in the future
+;;;             :   (dealing with chunks before they merge into DM) based on
 ;;;             :   Mike's intrest in it now.
 ;;; 2006.07.10 Dan
 ;;;             : * Changed a call to true-chunk-name to true-chunk-name-fct in
@@ -175,7 +175,7 @@
 ;;; 2006.12.05 Dan
 ;;;             : * Minor formatting changes - no real change.
 ;;; 2006.12.06 Dan
-;;;             : * Added the retrieval-activation and retrieval-time 
+;;;             : * Added the retrieval-activation and retrieval-time
 ;;;             :   parameters to the chunk to record the activation value
 ;;;             :   that it had during a retrieval request and the time at which
 ;;;             :   that request occured.
@@ -187,7 +187,7 @@
 ;;; 2008.02.27 Dan
 ;;;             : * Changed the parameter check to only throw the warning
 ;;;             :   when the "critical" parameters are adjusted.
-;;; 2008.07.12 Dan 
+;;; 2008.07.12 Dan
 ;;;             : * Changed the text printed for the activation trace during
 ;;;             :   similarity calculations to avoid the potential confusion
 ;;;             :   that the similarity values are actually changing.
@@ -208,7 +208,7 @@
 ;;;             :   that change.
 ;;; 2008.12.10 Dan
 ;;;             : * Changed how the fan values are recorded to improve both
-;;;             :   space and time.  Instead of a list on the j's now it's 
+;;;             :   space and time.  Instead of a list on the j's now it's
 ;;;             :   split into a fan-out and a fan-in.  The fan-out is just a
 ;;;             :   count of the total fan 'out' of the chunk (the length of
 ;;;             :   the old fan list) and the fan-in is the list of the chunk's
@@ -221,21 +221,21 @@
 ;;;             : * It also now addresses the issue of chunks which merge into DM
 ;;;             :   after they have had references credited to them.  Previously,
 ;;;             :   those other references were lost if the chunk actually merged
-;;;             :   with an existing chunk in DM, but now they get tracked 
+;;;             :   with an existing chunk in DM, but now they get tracked
 ;;;             :   appropriately.
 ;;; 2008.12.11 Dan
 ;;;             : * Fixed a bug with the last change - a chunk didn't get saved
 ;;;             :   on its own fan-in list.
 ;;;             : * There also isn't likely any space savings in general - only
-;;;             :   when there's duplicate instances of a value in slots (a 
+;;;             :   when there's duplicate instances of a value in slots (a
 ;;;             :   fan-in other than 1).
 ;;; 2009.08.05 Dan
 ;;;             : * Added a new hook for the activation calculations.  The
 ;;;             :   :activation-offsets hook holds a list of functions to call
-;;;             :   during activation computation.  A function on the hook will 
+;;;             :   during activation computation.  A function on the hook will
 ;;;             :   be called with the chunk name during the activation calculation
 ;;;             :   and if the function returns a number that value will be
-;;;             :   added to the activation value for the chunk.  
+;;;             :   added to the activation value for the chunk.
 ;;;             :   This hook will make it easier to extend the activation
 ;;;             :   calculation without having to completely redefine one of the
 ;;;             :   existing components via the other hooks.
@@ -258,9 +258,9 @@
 ;;; 2011.02.09 Dan
 ;;;             : * Added a merge-dm command which works like add-dm except that
 ;;;             :   the chunks are merged in as if cleared from a buffer at the
-;;;             :   current time.  It merges them in an order that guarantees 
+;;;             :   current time.  It merges them in an order that guarantees
 ;;;             :   any chunks used in slots of other chunks get merged first,
-;;;             :   but if there are circularities it just does them in the 
+;;;             :   but if there are circularities it just does them in the
 ;;;             :   order provided.
 ;;; 2011.04.25 Dan
 ;;;             : * Added an ignore declaration to the secondary reset to
@@ -269,11 +269,11 @@
 ;;;             :   still use seconds for 'user' interaction.
 ;;; 2011.04.26 Dan
 ;;;             : * Switched the finsts to use the ms time as well.
-;;;             : * Added a check for negative time deltas when computing 
+;;;             : * Added a check for negative time deltas when computing
 ;;;             :   activations with :ol # because that could lead to complex
 ;;;             :   results.
 ;;; 2011.04.28 Dan
-;;;             : * Suppress the warnings about redefining functions when 
+;;;             : * Suppress the warnings about redefining functions when
 ;;;             :   adding the chunk parameters.
 ;;; 2011.06.22 Dan
 ;;;             : * Added the :sact parameter which allows the activation
@@ -282,7 +282,7 @@
 ;;; 2011.06.23 Dan
 ;;;             : * Added dummy sact-trace structs before and after a retrieval
 ;;;             :   so other activation info doesn't overwrite the saved data.
-;;;             : * Changed it so that it now stores arbitrary activation 
+;;;             : * Changed it so that it now stores arbitrary activation
 ;;;             :   computations along with retrieval requests.
 ;;; 2011.07.17 Dan [1.2]
 ;;;             : * Added a crude retrieval buffer stuffing mechanism.
@@ -290,17 +290,17 @@
 ;;;             :   will enable the mechanism.  At time 0 and then when ever
 ;;;             :   the module is not busy and either:
 ;;;             :   - the retrieval buffer empties
-;;;             :   - :declarative-stuffing seconds pass since a stuffed 
+;;;             :   - :declarative-stuffing seconds pass since a stuffed
 ;;;             :     chunk was placed into the buffer
-;;;             :   a new stuffing attempt will be performed.  
+;;;             :   a new stuffing attempt will be performed.
 ;;;             :   The stuffed chunk will be the chunk with the highest activation
-;;;             :   among all chunks in DM. 
-;;;             :   For now there is no attempt to be efficient about the 
+;;;             :   among all chunks in DM.
+;;;             :   For now there is no attempt to be efficient about the
 ;;;             :   process so it will recompute all the activations of all
 ;;;             :   chunks each time there is a stuffing attempt.  It will not
 ;;;             :   overwrite a requested chunk, nor will it ever terminate an
 ;;;             :   ongoing requested retrieval.
-;;; 2011.09.12 Dan 
+;;; 2011.09.12 Dan
 ;;;             : * Took some unused variables out of check-declarative-stuffing
 ;;;             :   to eliminate some warnings.
 ;;; 2012.01.27 Dan
@@ -322,8 +322,8 @@
 ;;;             : * Added a new request parameter for retrievals :mp-value.
 ;;;             :   It can take the same values as the :mp parameter and if
 ;;;             :   provided will temporarily override the current :mp setting
-;;;             :   for this retrieval request if :mp has already been enabled 
-;;;             :   i.e. it can't temporarily turn on partial matching but can 
+;;;             :   for this retrieval request if :mp has already been enabled
+;;;             :   i.e. it can't temporarily turn on partial matching but can
 ;;;             :   temporarily turn it off.
 ;;;             : * Changed it so that when an invalid request terminates a
 ;;;             :   retrieval the module goes back to free instead of staying
@@ -342,10 +342,21 @@
 ;;;             : * Allow the :mp-value parameter to enable partial matching
 ;;;             :   when it is off and removed :mp from the parameters that warn
 ;;;             :   about being changed on the fly.
+;;; 2013.09.05 Dan
+;;;             : * Changed :nsji to take 3 possible values: t, nil, and warn.
+;;;             :   T works as before to allow negative sji values, warn works
+;;;             :   the way nil used to, cap values at 0 and print a warning,
+;;;             :   and nil now caps the value at 0 and doesn't print the warning.
+;;;             :   The new default is warn.
+;;; 2013.10.09 Dan
+;;;             : * Warn if :bll is set to >=1 if :ol is enabled (can't test
+;;;             :   for it in the valid function because that would require
+;;;             :   calling sgp to test :ol which may or may not be set when
+;;;             :   a model is created since :bll could go before :ol).
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
-;;; 
+;;;
 ;;; The declarative memory module has one buffer called retrieval.
 ;;;
 ;;; The declarative memory module collects the chunks that have been cleared
@@ -362,7 +373,7 @@
 ;;;
 ;;;
 ;;; In addition, to that, there are two request parameters which may be used -
-;;; :recently-retrieved and :mp-value.  
+;;; :recently-retrieved and :mp-value.
 ;;; :recently-retrieved  may be passed a value of t or nil.  The declarative
 ;;; memory module records which chunks it has returned as the result of a
 ;;; request and the recently-retrieved request parameter may be used to exclude
@@ -372,7 +383,7 @@
 ;;; :dm-finsts-decay parameter indicates for how many seconds each of those
 ;;; designations will persist.
 ;;; :mp-value can be used to temporarily change the setting of the :mp parameter
-;;; while the request is processed.  :mp-value can be used whether the :mp 
+;;; while the request is processed.  :mp-value can be used whether the :mp
 ;;; parameter has been enabled for the model or not i.e. it can temporarily
 ;;; enable partial matching even if it is off.
 ;;;
@@ -384,11 +395,11 @@
 ;;;       i.e. the module is not free between the time of a request and when
 ;;;       the chunk from that request is placed into the buffer.
 ;;; State busy will respond t if there is a pending request and nil if not.
-;;; State error will respond with t if no chunk matching the most recent request 
-;;;       could be found or nil otherwise.  The error t will not be indicated 
+;;; State error will respond with t if no chunk matching the most recent request
+;;;       could be found or nil otherwise.  The error t will not be indicated
 ;;;       until after the time for failure has passed.
-;;; Buffer requested will be t if the chunk in the buffer is the result of a request 
-;;;       and nil if it is the result of the buffer stuffing mechanism or the 
+;;; Buffer requested will be t if the chunk in the buffer is the result of a request
+;;;       and nil if it is the result of the buffer stuffing mechanism or the
 ;;;       buffer is empty.
 ;;; Buffer unrequested will be t if the chunk in the buffer was put there by the
 ;;;       buffer stuffing mechanims and it will be nil if it is the result of a
@@ -402,14 +413,14 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Design Choices:
-;;; 
+;;;
 ;;; One thing that is going in from the beginning is lots of hooks into the
 ;;; equations.  Every component of the activation equation will have an
-;;; "over-ride" function basically like the similarity-hook-fn of the 
+;;; "over-ride" function basically like the similarity-hook-fn of the
 ;;; older system.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; 
+;;;
 ;;; The code
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -432,59 +443,59 @@
   (chunks (make-hash-table))  ; the set of chunks that are in declarative memory
   (busy nil)    ; record whether the module is busy
   (failed nil)  ; record whether the last request failed
-  
+
   ;;; keep track of the central parameters internally for ease of access
-  
+
   esc er ol
-  
+
   ;;; slots for the various parameters from previous versions
   ;;; that control the subsymbolc
-  
-  blc ans pas lf le mp ms md rt bll mas 
-  
+
+  blc ans pas lf le mp ms md rt bll mas
+
   ;;; add a new parameter to act as a switch for spreading
   ;;; since relying on ga to be zero won't work
-  
+
   sa
-    
+
   ;;; only one of the old traces still really matters
   ;;; or in some cases is even possible - basically show all
   ;;; components that are enabled with this switch
-  
+
   act
-  
-  ;;; parameters for the declarative finsts count and duration 
-  
+
+  ;;; parameters for the declarative finsts count and duration
+
   num-finsts finst-span
-  
+
   ;;; a list to hold the finsts
-  
+
   finsts
-  
+
   ;;; replace the global hook functions with parameters
-  ;;; 
+  ;;;
   ;;; Start with the "low-level" hooks that over-ride
   ;;; internal values
-  
-  sim-hook ;; the old similarity hook 
+
+  sim-hook ;; the old similarity hook
            ;; called with the two values and returns similarity or nil
-  sji-hook ;; same thing now for Sji values - passed the two chunk names 
-  
+  sji-hook ;; same thing now for Sji values - passed the two chunk names
+
   w-hook   ;; Allows one to override the Wkj values in spreading
            ;; activation.
-  
+
   ;;; Higher level hooks over-ride the entire internal
-  ;;; computiation for each component 
+  ;;; computiation for each component
   ;;; the chunk name is what gets passed to all
-  
+
   bl-hook         ;; let the user redefine the base-level computation
   spreading-hook  ;; let the user redefine the spreading component
   partial-matching-hook ;; redefinition of the partial matching component
   noise-hook      ;; redefine the transient noise computation
-  
+
   offsets         ;; adds optional additional components to the
                   ;; activation equation
-  
+
   ;;; some retrieval hooks like the conflict resolution
   ;;; system has.  Could get some of this from the main
   ;;; event hooks, but seems cleaner to just hook where
@@ -494,9 +505,9 @@
   ;;; one other than through a reset.  This is so something
   ;;; like the environment can add such a hook without the
   ;;; user being able to "break" things.
-  
+
   retrieval-request-hook ;; called at the initation of the request with the spec
-  
+
   retrieval-set-hook     ;; called with the chunks that matched the spec. The
                          ;; activations have already been computed but a non-nil
                          ;; return overrides that - like the conflict-set hook.
@@ -506,38 +517,38 @@
                          ;; latency.
                          ;; If more than one returns a non-nil a warning is
                          ;; signaled and none of those effects occur.
-  
+
   retrieved-chunk-hook   ;; called with the retrieved chunk or nil on failure.
                          ;; The call occurs at the time of the actual retrieval
-                         ;; but before the buffer setting - the general event 
+                         ;; but before the buffer setting - the general event
                          ;; hook should be used to detect that.
-  
-  
+
+
   ;;; a couple of hooks to support user extensions
-  
+
   chunk-merge-hook  ;; called after a chunk has been merged into dm
   chunk-add-hook    ;; called after a chunk has been newly added to dm
-  
-  
+
+
   ;;; A hash-table of chunks in DM referenced by contents
   ;;; to speed the merging calculation
-  
+
   chunk-hash-table
-  
+
   ;;; A parameter to control whether the hash-table based merging is used
-  
+
   fast-merge
-  
+
   ;;; Saving the activation trace details for later recreation purposes
-  
+
   sact ; the switch
   trace-table ; stored results
   current-trace ; build the info as it goes
-  current-sact-chunk 
+  current-sact-chunk
   stuff stuff-event
-  
+
   nsji ;; whether the S-log(fan) is allowed to return negatives
-  
+
   ;; save the last request and time for use with the whynot-dm command
   last-request
   )
@@ -563,7 +574,7 @@
 ;;; Set to the computed value when necessary
 
 (suppress-extension-warnings)
- 
+
 (extend-chunks activation :default-value 0)
 
 ;;; Record the chunks in which a chunk occurs
@@ -634,12 +645,12 @@
 ;;; at least for now.
 
 (extend-chunks similarities :default-value nil :copy-function copy-tree)
- 
+
 ;;; compute the permanent noise as needed
 
 (defun default-permanent-noise (chunk)
   (declare (ignore chunk))
-  
+
   (let ((dm (get-module declarative)))
     (if (and dm (dm-pas dm))
         (act-r-noise (dm-pas dm))
@@ -689,38 +700,38 @@
 
 
 (defun reset-dm-module (dm)
-  
+
   ;; Set all of the slots of this instance to their initial values.
-  
+
   (clrhash (dm-chunks dm))
   (setf (dm-busy dm) nil)
   (setf (dm-failed dm) nil)
-  
+
   (setf (dm-finsts dm) nil)
-  
+
   (setf (dm-last-request dm) nil)
-  
+
   ;; parameters will be handled on thier own
-    
+
   ;;;
-  (setf (dm-chunk-hash-table dm) 
+  (setf (dm-chunk-hash-table dm)
     (make-hash-table :test #'equal))
-  
+
   (setf (dm-trace-table dm)
     (make-hash-table :test #'equal))
-  
+
   ;; set a dummy sact marker so that activation calculations
   ;; which occur before the first retrieval have somewhere to
   ;; write their values.  Could just use that as the first one,
   ;; but for now just letting this one go away.
-  
+
   (setf (dm-current-sact-chunk dm) (make-sact-chunk :name nil))
-  
+
   (setf (dm-current-trace dm) nil))
 
 (defun secondary-reset-dm-module (dm)
   (declare (ignore dm))
-  
+
   (sgp :dcsc-hook dm-fm-rh))
 
 
@@ -745,56 +756,56 @@
         (not (dm-busy dm)))
        (error
         (dm-failed dm))
-       (t (print-warning  
-           "Invalid query made of the ~S buffer with slot ~S and value ~S" 
+       (t (print-warning
+           "Invalid query made of the ~S buffer with slot ~S and value ~S"
            buffer slot value))))
     (recently-retrieved
        (remove-old-dm-finsts dm)
-       
+
        (and (buffer-read buffer)
             (chunk-copied-from-fct (buffer-read buffer))
-            (if value 
+            (if value
                 (find (chunk-copied-from-fct (buffer-read buffer))
                       (dm-finsts dm)
                       :key #'car)
               (not (find (chunk-copied-from-fct (buffer-read buffer))
                          (dm-finsts dm)
                          :key #'car)))))))
-    
-    
+
+
 
 
 (defun dm-request (dm buffer request)
   (declare (ignore buffer)) ;; It is always going to be retrieval
-  
+
   ;; kill any pending stuffing action
-  
+
   ;; Save the current request info
   (setf (dm-last-request dm) (make-last-request :time (mp-time) :spec request :rt (dm-rt dm)))
-  
+
   ;; If the module has not completed the last request
- 
+
   (when (dm-busy dm)
-    
-    ;; Report a warning about that and remove the unexecuted event 
+
+    ;; Report a warning about that and remove the unexecuted event
     ;; from the queue.
-    
+
     (model-warning "A retrieval event has been aborted by a new request")
     (delete-event (dm-busy dm)))
-  
+
   ;; Clear the failed attempt flag of the module
-  
+
   (setf (dm-failed dm) nil)
-  
+
   ;; Schedule an event to start the retrieval at the current time
   ;; but with a priority of -2000 and save that as the busy flag
   ;; instead of immediately attempting the retrieval.
-  
-  ;; Not important for this demonstration, but in the context of 
+
+  ;; Not important for this demonstration, but in the context of
   ;; a request being made from the RHS of a production this would be
   ;; important to ensure that any buffer modifications have had a chance
   ;; to occur so that the "correct" sources are used for activation spreading.
-  
+
   (setf (dm-busy dm)
     (schedule-event-relative 0 'start-retrieval
                              :module 'declarative
@@ -811,12 +822,12 @@
          (high (or (eq act 'high) (eq act t)))
          (medium (not (eq act 'low)))
          (low t))))
-                  
+
 ;;; Start-retrieval
 ;;;
 ;;; This function is called to actually attempt a retrieval.
 ;;;
-;;; The parameters it receives are an instance of the module and the 
+;;; The parameters it receives are an instance of the module and the
 ;;; chunk-spec of the request.
 ;;;
 ;;; It either schedules the setting of the retrieval buffer or indication of
@@ -828,25 +839,25 @@
 
 
 (defun start-retrieval (dm request)
-  
+
   (when (dm-stuff-event dm)
     (delete-event (dm-stuff-event dm))
     (setf (dm-stuff-event dm) nil))
-  
+
   (dolist (x (dm-retrieval-request-hook dm))
     (funcall x request))
-  
+
   (when (dm-sact dm)
     (setf (dm-current-trace dm) (make-sact-trace :esc (dm-esc dm)))
     (setf (gethash (mp-time) (dm-trace-table dm)) (dm-current-trace dm)))
-  
+
   (let* ((ct (chunk-spec-chunk-type request))
-         (chunk-list (apply #'append 
-                            (mapcar #'(lambda (x) 
+         (chunk-list (apply #'append
+                            (mapcar #'(lambda (x)
                                         (gethash x (dm-chunks dm)))
                               (chunk-type-subtypes-fct ct))))
          (temp-mp nil))
-    
+
     (when (member :recently-retrieved (chunk-spec-slots request))
       (let ((recent (chunk-spec-slot-spec request :recently-retrieved)))
         (cond ((> (length recent) 1)
@@ -870,32 +881,32 @@
                (setf (dm-busy dm) nil)
                (setf (last-request-invalid (dm-last-request dm)) :bad-value)
                (return-from start-retrieval))
-              
+
               (t ;; it's a valid request
-               
-               ;; remove any old finsts 
-               
+
+               ;; remove any old finsts
+
                (remove-old-dm-finsts dm)
-               
+
                (if (eq 'reset (third (car recent)))
                    (setf (dm-finsts dm) nil)
-                 
+
                  (cond ((or (and (eq t (third (car recent)))   ;; = request t
-                                 (eq (caar recent) '=)) 
+                                 (eq (caar recent) '=))
                             (and (null (third (car recent)))   ;; - request nil
                                  (eq (caar recent) '-)))
-                        
+
                         ;; only those chunks marked are available
                         (setf chunk-list (mapcar #'car (dm-finsts dm)))
-                        
+
                         ;; save that info for whynot
                         (setf (last-request-finst (dm-last-request dm)) :marked)
                         (setf (last-request-finst-chunks (dm-last-request dm)) chunk-list)
-                        
+
                         (when (dm-sact dm)
                           (setf (sact-trace-only-recent (dm-current-trace dm)) t)
                           (setf (sact-trace-recents (dm-current-trace dm)) chunk-list))
-                        
+
                         (when (dm-act-level (dm-act dm) 'high)
                           (model-output "Only recently retrieved chunks: ~s" chunk-list)))
                        (t
@@ -903,31 +914,31 @@
                         ;; may be "faster" to do this later
                         ;; once the set is trimed elsewise, but
                         ;; for now keep things simple
-                        
+
                         (when (dm-sact dm)
                           (setf (sact-trace-remove-recent (dm-current-trace dm)) t))
-                        
+
                         (when (dm-act-level (dm-act dm) 'high)
                           (model-output "Removing recently retrieved chunks:"))
-                        
+
                         (setf (last-request-finst (dm-last-request dm)) :unmarked)
-                        
-                        
-                        (setf chunk-list 
+
+
+                        (setf chunk-list
                           (remove-if #'(lambda (x)
-                                         (when (member x (dm-finsts dm) 
+                                         (when (member x (dm-finsts dm)
                                                        :key #'car
                                                        :test #'eq-chunks-fct)
-                                           
+
                                            (when (dm-sact dm)
                                              (push-last x (sact-trace-recents (dm-current-trace dm))))
-                                           
+
                                            (when (dm-act-level (dm-act dm) 'high)
                                              (model-output "~s" x))
                                            (push x (last-request-finst-chunks (dm-last-request dm)))
                                            t))
                                      chunk-list)))))))))
-    
+
     (unwind-protect ;; want to make sure dm-mp gets set back even if there's an error and
                     ;; and don't want to use with-parameters since changing :mp triggers a
                     ;; warning.
@@ -952,38 +963,38 @@
                      (setf (dm-busy dm) nil)
                      (setf (last-request-invalid (dm-last-request dm)) :mp-not-num)
                      (return-from start-retrieval))
-                    
+
                     (t ;; it's a valid request
                      (setf temp-mp (list (dm-mp dm)))
                      (setf (dm-mp dm) (third (car mp-value)))))))
-          
+
           ;; do this regardless now since there are multiple request parameters
-          
+
           (setf request (strip-request-parameters-from-chunk-spec request))
-          
+
           (let ((best-val nil)
                 (best nil)
                 (return-val nil)
-                (chunk-set 
+                (chunk-set
                  (cond ((or (null (dm-esc dm)) (null (dm-mp dm)))
                         ;; for tracing purposes should probably try them all
                         ;; individually instead of doing it in one call
                         ;(find-matching-chunks request :chunks chunk-list)
-                        
+
                         (let ((found nil))
                           (dolist (name chunk-list found)
                             (if (match-chunk-spec-p name request)
                                 (progn
                                   (when (dm-sact dm)
                                     (push-last name (sact-trace-matches (dm-current-trace dm))))
-                                  
+
                                   (when (dm-act-level (dm-act dm) 'medium)
-                                    (model-output "Chunk ~s matches" name)) 
+                                    (model-output "Chunk ~s matches" name))
                                   (push-last name found))
                               (progn
                                 (when (dm-sact dm)
                                   (push-last name (sact-trace-no-matches (dm-current-trace dm))))
-                                
+
                                 (when (dm-act-level (dm-act dm) 'high)
                                   (model-output "Chunk ~s does not match" name)))))))
                        (t
@@ -993,9 +1004,9 @@
                         ;; slots with a binding not nil
                         ;; empty slots are empty
                         ;; >, <, >=, and <= tests met
-                        
-                        (let* ((matches (find-matching-chunks 
-                                         (define-chunk-spec-fct 
+
+                        (let* ((matches (find-matching-chunks
+                                         (define-chunk-spec-fct
                                              (append (list 'isa (chunk-spec-chunk-type request))
                                                      (mapcan #'(lambda (x)
                                                                  (cond ((eq (car x) '=)
@@ -1010,161 +1021,161 @@
                                          :chunks chunk-list))
                                (non-matches (when (or (dm-act dm) (dm-sact dm))
                                               (set-difference chunk-list matches))))
-                          
+
                           (when (dm-act-level (dm-act dm) 'high)
                             (dolist (c non-matches)
                               (model-output "Chunk ~s does not match" c)))
-                          
+
                           (when (dm-sact dm)
                             (setf (sact-trace-matches (dm-current-trace dm)) matches)
                             (setf (sact-trace-no-matches (dm-current-trace dm)) non-matches))
-                          
+
                           matches)))))
-            
+
             (setf (last-request-matches (dm-last-request dm)) chunk-set)
-            
+
             (if (dm-esc dm)
                 (dolist (x chunk-set)
                   (compute-activation dm x request)
-                  
+
                   (setf (chunk-retrieval-activation x) (chunk-activation x))
                   (setf (chunk-retrieval-time x) (mp-time-ms))
-                  
+
                   (cond ((null best-val)
                          (setf best-val (chunk-activation x))
                          (push x best)
                          (when (dm-act-level (dm-act dm) 'medium)
-                           (model-output "Chunk ~s has the current best activation ~f" 
+                           (model-output "Chunk ~s has the current best activation ~f"
                                          x best-val)))
                         ((= (chunk-activation x) best-val)
                          (push x best)
                          (when (dm-act-level (dm-act dm) 'medium)
-                           (model-output 
-                            "Chunk ~s matches the current best activation ~f" 
+                           (model-output
+                            "Chunk ~s matches the current best activation ~f"
                             x best-val)))
                         ((> (chunk-activation x) best-val)
                          (setf best-val (chunk-activation x))
                          (setf best (list x))
                          (when (dm-act-level (dm-act dm) 'medium)
-                           (model-output 
-                            "Chunk ~s is now the current best with activation ~f" 
+                           (model-output
+                            "Chunk ~s is now the current best with activation ~f"
                             x best-val)))))
               (setf best chunk-set))
-            
+
             (when (> (length best) 1)
               (if (dm-er dm)
                   (let ((b (random-item best)))
                     (setf best (cons b (remove b best))))
                 (setf best (sort (copy-list best) #'string<))))
-            
+
             (setf (last-request-best (dm-last-request dm)) best)
-                        
+
             (when (car (dm-retrieval-set-hook dm))
               (let ((chunk-set-with-best (when best (cons (car best) (remove (car best) chunk-set)))))
                 (dolist (x (dm-retrieval-set-hook dm))
                   (let ((val (funcall x chunk-set-with-best)))
                     (when val
                       (if return-val
-                          (progn 
-                            (print-warning 
+                          (progn
+                            (print-warning
                              "multiple set-hook functions returned a value - none used")
                             (setf return-val :error))
                         (setf return-val val)))))))
-            
+
             (cond ((consp return-val)
                    (setf (dm-busy dm) (schedule-event-relative (cdr return-val) 'retrieved-chunk
-                                                               :module 'declarative 
-                                                               :destination 'declarative 
+                                                               :module 'declarative
+                                                               :destination 'declarative
                                                                :params (list (car return-val))
                                                                :details (concatenate 'string
                                                                           (symbol-name 'retrieved-chunk)
                                                                           " "
                                                                           (symbol-name (car return-val)))
                                                                :output 'medium))
-                   
+
                    (when (dm-sact dm)
                      (setf (sact-trace-result-type (dm-current-trace dm)) :force)
                      (setf (sact-trace-result (dm-current-trace dm)) (car return-val)))
-                   
+
                    (when (dm-act-level (dm-act dm) 'low)
-                     (model-output 
-                      "Retrieval-set-hook function forced retrieval of" 
+                     (model-output
+                      "Retrieval-set-hook function forced retrieval of"
                       (car return-val))))
-                  
+
                   ((numberp return-val)
                    (setf (dm-busy dm) (schedule-event-relative return-val 'retrieval-failure
-                                                               :module 'declarative 
-                                                               :destination 'declarative 
+                                                               :module 'declarative
+                                                               :destination 'declarative
                                                                :output 'low))
-                   
+
                    (when (dm-sact dm)
                      (setf (sact-trace-result-type (dm-current-trace dm)) :force-fail))
-                   
+
                    (when (dm-act-level (dm-act dm) 'low)
-                     (model-output 
+                     (model-output
                       "Retrieval-set-hook function forced retrieval failure")))
-                  
-                  ((or (null best) 
+
+                  ((or (null best)
                        (and (dm-esc dm)
                             (< best-val (dm-rt dm))))
-                   (setf (dm-busy dm) (schedule-event-relative 
+                   (setf (dm-busy dm) (schedule-event-relative
                                        (if (dm-esc dm)
                                            (compute-activation-latency dm (dm-rt dm))
                                          0)
                                        'retrieval-failure
-                                       :module 'declarative 
+                                       :module 'declarative
                                        :destination 'declarative
                                        :output 'low))
-                   
+
                    (when (dm-sact dm)
                      (setf (sact-trace-result-type (dm-current-trace dm)) :fail)
                      (setf (sact-trace-result (dm-current-trace dm)) (when best (dm-rt dm))))
-                   
+
                    (when (and (dm-act-level (dm-act dm) 'low) (null best))
-                     (model-output 
+                     (model-output
                       "No matching chunk found retrieval failure"))
-                   
+
                    (when (and (dm-act-level (dm-act dm) 'low) best)
-                     (model-output 
+                     (model-output
                       "No chunk above the retrieval threshold: ~f" (dm-rt dm)))
                    )
-                  
+
                   ((= (length best) 1)
-                   (setf (dm-busy dm) (schedule-event-relative 
+                   (setf (dm-busy dm) (schedule-event-relative
                                        (if (dm-esc dm)
                                            (compute-activation-latency dm (chunk-activation (car best)))
                                          0)
                                        'retrieved-chunk
-                                       :module 'declarative 
-                                       :destination 'declarative 
+                                       :module 'declarative
+                                       :destination 'declarative
                                        :params best
-                                       :details 
+                                       :details
                                        (concatenate 'string
                                          (symbol-name 'retrieved-chunk)
                                          " "
                                          (symbol-name (car best)))
                                        :output 'medium))
-                   
+
                    (when (dm-sact dm)
                      (setf (sact-trace-result-type (dm-current-trace dm)) :single)
                      (setf (sact-trace-result (dm-current-trace dm)) (cons (car best) (chunk-activation (car best)))))
-                   
+
                    (when (dm-act-level (dm-act dm) 'low)
-                     (model-output 
+                     (model-output
                       "Chunk ~s with activation ~f is the best"
                       (car best) (chunk-activation (car best)))))
                   (t
                    (let ((best1 (car best)))
-                     
-                     (setf (dm-busy dm) (schedule-event-relative 
+
+                     (setf (dm-busy dm) (schedule-event-relative
                                          (if (dm-esc dm)
                                              (compute-activation-latency dm (chunk-activation best1))
                                            0)
                                          'retrieved-chunk
-                                         :module 'declarative 
-                                         :destination 'declarative 
+                                         :module 'declarative
+                                         :destination 'declarative
                                          :params (list best1)
-                                         :details 
+                                         :details
                                          (concatenate 'string
                                            (symbol-name 'retrieved-chunk)
                                            " "
@@ -1173,164 +1184,164 @@
                      (when (dm-sact dm)
                        (setf (sact-trace-result-type (dm-current-trace dm)) :multi)
                        (setf (sact-trace-result (dm-current-trace dm)) (cons best1 (chunk-activation best1))))
-                     
+
                      (when (dm-act-level (dm-act dm) 'low)
-                       (model-output 
+                       (model-output
                         "Chunk ~s chosen among the chunks with activation ~f"
                         best1 (chunk-activation best1))))))))
       (when temp-mp
         (setf (dm-mp dm) (car temp-mp)))))
-  
-  
+
+
   (when (dm-sact dm)
     (setf (dm-current-trace dm) nil)))
-  
+
 
 (defun check-declarative-stuffing (dm )
-  
+
  ; (dolist (x (dm-retrieval-request-hook dm))
  ;   (funcall x request))
-  
+
  ; (when (dm-sact dm)
  ;   (setf (dm-current-trace dm) (make-sact-trace :esc (dm-esc dm)))
  ;   (setf (gethash (mp-time) (dm-trace-table dm)) (dm-current-trace dm)))
-  
+
   ;(let ((chunk-list (all-dm-chunks dm)))
-        
-      
+
+
     (let ((best-val nil)
           (best nil)
           ;(return-val nil)
-          (chunk-set 
+          (chunk-set
            ;; For now just consider everything, but this should be
            ;; smarter in the future...
            (all-dm-chunks dm)
-           
+
            ))
-      
-            
+
+
       (if (dm-esc dm)
           (dolist (x chunk-set)
             (compute-activation dm x (define-chunk-spec-fct (list 'isa (chunk-chunk-type-fct x))))
-            
+
             (cond ((null best-val)
                    (setf best-val (chunk-activation x))
                    (push x best)
                    ;(when (dm-act-level (dm-act dm) 'medium)
-                   ;  (model-output "Chunk ~s has the current best activation ~f" 
+                   ;  (model-output "Chunk ~s has the current best activation ~f"
                    ;                x best-val))
-                   
+
                    )
                   ((= (chunk-activation x) best-val)
                    (push x best)
                    ;(when (dm-act-level (dm-act dm) 'medium)
-                   ;  (model-output 
-                   ;   "Chunk ~s matches the current best activation ~f" 
+                   ;  (model-output
+                   ;   "Chunk ~s matches the current best activation ~f"
                    ;   x best-val))
-                   
+
                    )
                   ((> (chunk-activation x) best-val)
                    (setf best-val (chunk-activation x))
                    (setf best (list x))
                    ;(when (dm-act-level (dm-act dm) 'medium)
-                   ;  (model-output 
-                   ;   "Chunk ~s is now the current best with activation ~f" 
+                   ;  (model-output
+                   ;   "Chunk ~s is now the current best with activation ~f"
                    ;   x best-val))
-                   
+
                    )))
         (setf best chunk-set))
-      
+
       (when (> (length best) 1)
         (if (dm-er dm)
             (let ((b (random-item best)))
               (setf best (cons b (remove b best))))
           (setf best (sort (copy-list best) #'string<))))
-      
-      
-      
-      
-      (cond 
-            ((or (null best) 
+
+
+
+
+      (cond
+            ((or (null best)
                  (and (dm-esc dm)
                       (< best-val (dm-rt dm))))
              (setf (dm-stuff-event dm)
                (schedule-event-relative (dm-stuff dm) 'check-declarative-stuffing
-                                 :module 'declarative 
+                                 :module 'declarative
                                  :destination 'declarative
-                                        :output 'low 
+                                        :output 'low
                                         :maintenance t))
-             
+
              ;(when (dm-sact dm)
              ;  (setf (sact-trace-result-type (dm-current-trace dm)) :fail)
              ;  (setf (sact-trace-result (dm-current-trace dm)) (when best (dm-rt dm))))
-             
+
              ;(when (and (dm-act-level (dm-act dm) 'low) (null best))
-             ;  (model-output 
+             ;  (model-output
              ;   "No matching chunk found retrieval failure"))
-             
+
              ;(when (and (dm-act-level (dm-act dm) 'low) best)
-             ;  (model-output 
+             ;  (model-output
              ;   "No chunk above the retrieval threshold: ~f" (dm-rt dm)))
              )
-            
+
             ((= (length best) 1)
-             (setf (dm-stuff-event dm) (schedule-event-relative 
+             (setf (dm-stuff-event dm) (schedule-event-relative
                                  (if (dm-esc dm)
                                      (compute-activation-latency dm (chunk-activation (car best)))
                                    0)
                                  'stuff-declarative-chunk
-                                 :module 'declarative 
-                                 :destination 'declarative 
+                                 :module 'declarative
+                                 :destination 'declarative
                                  :params best
-                                 :details 
+                                 :details
                                  (concatenate 'string
                                    (symbol-name 'stuffing-chunk)
                                    " "
                                    (symbol-name (car best)))
                                  :output 'low))
-             
+
              ;(when (dm-sact dm)
              ;  (setf (sact-trace-result-type (dm-current-trace dm)) :single)
              ;  (setf (sact-trace-result (dm-current-trace dm)) (cons (car best) (chunk-activation (car best)))))
-             
+
              ;(when (dm-act-level (dm-act dm) 'low)
-             ;  (model-output 
+             ;  (model-output
              ;   "Chunk ~s with activation ~f is the best"
              ;   (car best) (chunk-activation (car best))))
              )
             (t
              (let ((best1 (car best)))
-               
-               (setf (dm-stuff-event dm) (schedule-event-relative 
+
+               (setf (dm-stuff-event dm) (schedule-event-relative
                                  (if (dm-esc dm)
                                      (compute-activation-latency dm (chunk-activation best1))
                                    0)
                                  'stuff-declarative-chunk
-                                 :module 'declarative 
-                                 :destination 'declarative 
+                                 :module 'declarative
+                                 :destination 'declarative
                                  :params (list best1)
-                                 :details 
+                                 :details
                                  (concatenate 'string
                                    (symbol-name 'stuffing-chunk)
                                    " "
                                    (symbol-name best1))
                                           :output 'low))
-               
+
                ;(when (dm-sact dm)
                ;  (setf (sact-trace-result-type (dm-current-trace dm)) :multi)
                ;  (setf (sact-trace-result (dm-current-trace dm)) (cons best1 (chunk-activation best1))))
-               
+
                ;(when (dm-act-level (dm-act dm) 'low)
-               ;  (model-output 
+               ;  (model-output
                ;   "Chunk ~s chosen among the chunks with activation ~f"
                ;   best1 (chunk-activation best1)))
-               
+
                )))) ;)
-  
-  
+
+
   ;(when (dm-sact dm)
   ;  (setf (dm-current-trace dm) nil))
-  
+
   )
 
 
@@ -1339,49 +1350,49 @@
 ;;; Called as an event when a chunk has been retrieved and is ready to be placed
 ;;; into the buffer.
 ;;;
-;;; The parameters are an instance of the module and the name of the chunk 
+;;; The parameters are an instance of the module and the name of the chunk
 ;;; to put in the buffer.
 
 (defun retrieved-chunk (dm chunk)
-  
+
   ;; Clear the busy flag
-  
+
   (setf (dm-busy dm) nil)
-  
-  
+
+
   (when (car (dm-retrieved-chunk-hook dm))
     (dolist (x (dm-retrieved-chunk-hook dm))
       (funcall x chunk)))
-  
+
   ;; Schedule an event to put the chunk into the buffer right now instead of
   ;; placing it there directly to comply with the guideline that buffer changes
   ;; should be scheduled.
-  
-  (schedule-set-buffer-chunk 'retrieval chunk 0 
-                             :module 'declarative 
+
+  (schedule-set-buffer-chunk 'retrieval chunk 0
+                             :module 'declarative
                              :priority :max)
-  
+
   ;; update the marker for having retrieved this chunk
-  
+
   (update-declarative-finsts dm chunk)
   )
 
 
 (defun stuff-declarative-chunk (dm chunk)
-  
-  (schedule-set-buffer-chunk 'retrieval chunk 0 
-                             :module 'declarative 
+
+  (schedule-set-buffer-chunk 'retrieval chunk 0
+                             :module 'declarative
                              :priority :max  :requested nil)
   (setf (dm-stuff-event dm)
                (schedule-event-relative (dm-stuff dm) 'check-declarative-stuffing
-                                        :module 'declarative 
+                                        :module 'declarative
                                         :destination 'declarative
-                                        :output 'low 
+                                        :output 'low
                                         :maintenance t)))
 
 
 (defun update-declarative-finsts (dm chunk)
-  (setf (dm-finsts dm) (remove chunk (dm-finsts dm) :key #'car 
+  (setf (dm-finsts dm) (remove chunk (dm-finsts dm) :key #'car
                                :test #'eq-chunks-fct))
   (push (cons chunk (mp-time-ms)) (dm-finsts dm))
   (setf (dm-finsts dm) (subseq (dm-finsts dm) 0 (min (length (dm-finsts dm))
@@ -1394,15 +1405,15 @@
 ;;; The parameter is an instance of the module.
 
 (defun retrieval-failure (dm)
-  
+
   ;; Clear the busy flag and set the failure flag.
-  
+
   (setf (dm-busy dm) nil)
-  
+
   (when (car (dm-retrieved-chunk-hook dm))
     (dolist (x (dm-retrieved-chunk-hook dm))
       (funcall x nil)))
-  
+
   (setf (dm-failed dm) t))
 
 
@@ -1411,19 +1422,19 @@
 
 (defun dm-params (dm param)
   (cond ((consp param)
-         
+
          (when (and (hash-table-keys (dm-chunks dm))
                     (find (car param) '(:esc :ol :fast-merge :bll :mas)))
-           (print-warning 
+           (print-warning
             "Changing declarative parameters with chunks in dm not supported.")
-           (print-warning 
+           (print-warning
             "Results may not be what one expects."))
-         
+
          (case (car param)
            (:esc (setf (dm-esc dm) (cdr param)))
            (:er (setf (dm-er dm) (cdr param)))
            (:ol (setf (dm-ol dm) (cdr param)))
-           
+
            (:blc (setf (dm-blc dm) (cdr param)))
            (:ans (setf (dm-ans dm) (cdr param)))
            (:pas (setf (dm-pas dm) (cdr param)))
@@ -1433,103 +1444,106 @@
            (:ms (setf (dm-ms dm) (cdr param)))
            (:md (setf (dm-md dm) (cdr param)))
            (:rt (setf (dm-rt dm) (cdr param)))
-           (:bll (setf (dm-bll dm) (cdr param)))
+           (:bll
+            (when (and (dm-ol dm) (cdr param) (>= (cdr param) 1.0))
+              (print-warning "Setting :bll to a value >= 1 when optimized learning is enabled will result in complex number activations and probably errors."))
+            (setf (dm-bll dm) (cdr param)))
            (:mas (setf (dm-mas dm) (cdr param))
                  (setf (dm-sa dm) (cdr param)))
-           (:pm (setf (dm-mp dm) 
-                  (if (cdr param) 
+           (:pm (setf (dm-mp dm)
+                  (if (cdr param)
                       (progn
                         (model-warning "The :pm parameter is now depricated.  Like :bll and :mas, the :mp parameter is now both a flag and a value.")
                         (model-warning "Setting :pm will change :mp to 1.0.")
                         1.0)
                     nil)))
-           
+
            (:act (setf (dm-act dm) (cdr param)))
            (:sact (setf (dm-sact dm) (cdr param)))
-           
+
            (:declarative-num-finsts (setf (dm-num-finsts dm) (cdr param)))
-           (:declarative-finst-span 
+           (:declarative-finst-span
             (setf (dm-finst-span dm) (seconds->ms (cdr param)))
             (cdr param))
-                   
+
            (:sim-hook (setf (dm-sim-hook dm) (cdr param)))
            (:sji-hook (setf (dm-sji-hook dm) (cdr param)))
            (:w-hook (setf (dm-w-hook dm) (cdr param)))
-                      
+
            (:bl-hook (setf (dm-bl-hook dm) (cdr param)))
            (:spreading-hook (setf (dm-spreading-hook dm) (cdr param)))
-           (:partial-matching-hook (setf (dm-partial-matching-hook dm) 
+           (:partial-matching-hook (setf (dm-partial-matching-hook dm)
                                      (cdr param)))
            (:noise-hook (setf (dm-noise-hook dm) (cdr param)))
-           
-           
+
+
            (:fast-merge (setf (dm-fast-merge dm) (cdr param)))
-           
+
            (:declarative-stuffing (setf (dm-stuff dm) (cdr param)))
-           
+
            (:activation-offsets
             (if (cdr param)
               (if (member (cdr param) (dm-offsets dm))
-                (print-warning 
+                (print-warning
                  "Setting parameter ~s failed because ~s already on the hook."
                  :activation-offsets
                  (cdr param))
                 (push (cdr param) (dm-offsets dm)))
               (setf (dm-offsets dm) nil)))
-           
-           (:retrieval-request-hook 
+
+           (:retrieval-request-hook
             (if (cdr param)
               (if (member (cdr param) (dm-retrieval-request-hook dm))
-                (print-warning 
+                (print-warning
                  "Setting parameter ~s failed because ~s already on the hook."
                  :retrieval-request-hook
                  (cdr param))
                 (push (cdr param) (dm-retrieval-request-hook dm)))
               (setf (dm-retrieval-request-hook dm) nil)))
-           
-           (:retrieval-set-hook 
+
+           (:retrieval-set-hook
             (if (cdr param)
                 (if (member (cdr param) (dm-retrieval-set-hook dm))
-                    (print-warning 
+                    (print-warning
                      "Setting parameter ~s failed because ~s already on the hook."
                      :retrieval-set-hook
                      (cdr param))
                   (push (cdr param) (dm-retrieval-set-hook dm)))
               (setf (dm-retrieval-set-hook dm) nil)))
-           
-           (:retrieved-chunk-hook 
+
+           (:retrieved-chunk-hook
             (if (cdr param)
                 (if (member (cdr param) (dm-retrieved-chunk-hook dm))
-                    (print-warning 
+                    (print-warning
                      "Setting parameter ~s failed because ~s already on the hook."
                      :retrieved-chunk-hook
                      (cdr param))
                   (push (cdr param) (dm-retrieved-chunk-hook dm)))
               (setf (dm-retrieved-chunk-hook dm) nil)))
-           
-           (:chunk-merge-hook 
+
+           (:chunk-merge-hook
             (if (cdr param)
                 (if  (member (cdr param) (dm-chunk-merge-hook dm))
-                    (print-warning 
+                    (print-warning
                      "Setting parameter ~s failed because ~s already on the hook."
                      :chunk-merge-hook
                      (cdr param))
                   (push (cdr param) (dm-chunk-merge-hook dm)))
               (setf (dm-chunk-merge-hook dm) nil)))
-           
-           (:chunk-add-hook 
+
+           (:chunk-add-hook
             (if (cdr param)
                 (if (member (cdr param) (dm-chunk-add-hook dm))
-                    (print-warning 
+                    (print-warning
                      "Setting parameter ~s failed because ~s already on the hook."
                      :chunk-add-hook
                      (cdr param))
                   (push (cdr param) (dm-chunk-add-hook dm)))
               (setf (dm-chunk-add-hook dm) nil)))
            (:nsji (setf (dm-nsji dm) (cdr param)))))
-        (t 
+        (t
          (case param
-           
+
            (:blc (dm-blc dm))
            (:ans (dm-ans dm))
            (:pas (dm-pas dm))
@@ -1543,32 +1557,32 @@
            (:mas (dm-mas dm))
            (:pm (if (dm-mp dm) t nil))
            (:sa (progn
-                  (print-warning "The :SA parameter is no longer used") 
+                  (print-warning "The :SA parameter is no longer used")
                   nil))
            (:act (dm-act dm))
            (:sact (dm-sact dm))
            (:declarative-num-finsts (dm-num-finsts dm))
            (:declarative-finst-span (ms->seconds (dm-finst-span dm)))
-        
+
            (:sim-hook (dm-sim-hook dm))
            (:sji-hook (dm-sji-hook dm))
            (:w-hook (dm-w-hook dm))
-         
+
            (:bl-hook (dm-bl-hook dm))
            (:spreading-hook (dm-spreading-hook dm))
            (:partial-matching-hook (dm-partial-matching-hook dm))
            (:noise-hook (dm-noise-hook dm))
-           
+
            (:activation-offsets (dm-offsets dm))
-           
+
            (:fast-merge (dm-fast-merge dm))
-           
+
            (:declarative-stuffing (dm-stuff dm))
-           
+
            (:retrieval-request-hook (dm-retrieval-request-hook dm))
            (:retrieval-set-hook (dm-retrieval-set-hook dm))
            (:retrieved-chunk-hook (dm-retrieved-chunk-hook dm))
-           
+
            (:chunk-merge-hook (dm-chunk-merge-hook dm))
            (:chunk-add-hook (dm-chunk-add-hook dm))
            (:nsji (dm-nsji dm))))))
@@ -1581,45 +1595,45 @@
 ;;;
 ;;; This function will be called automatically each time a buffer is cleared.
 ;;;
-;;; The parameters are an instance of the module, the name of the buffer that 
+;;; The parameters are an instance of the module, the name of the buffer that
 ;;; was cleared, and the name of the chunk that was in the buffer.
 ;;;
-;;; This module adds that chunk to declarative memory and increments its 
+;;; This module adds that chunk to declarative memory and increments its
 ;;; reference count.  If a matching chunk already exists in declarative memory,
-;;; then those chunks are merged together.  If this is the first occurrence of 
+;;; then those chunks are merged together.  If this is the first occurrence of
 ;;; the chunk, then its initial parameters are set accordingly.
 
 (defun merge-chunk-into-dm (dm buffer chunk &optional (ignore-stuffing nil))
-  
+
   (when (and (dm-stuff dm) (eq buffer 'retrieval) (not ignore-stuffing))
     (unless (dm-stuff-event dm)
       (setf (dm-stuff-event dm)
         (schedule-event-relative 0 'check-declarative-stuffing
-                                 :module 'declarative 
+                                 :module 'declarative
                                  :destination 'declarative
-                                 :output 'low 
+                                 :output 'low
                                  :priority :min
                                  :maintenance t))))
-  
+
   ;; Find any existing matching chunk
 
-  (let ((existing 
+  (let ((existing
          (if (dm-fast-merge dm)
              (gethash (hash-chunk-contents chunk) (dm-chunk-hash-table dm))
            (find chunk (gethash (chunk-chunk-type-fct chunk) (dm-chunks dm))
                  :test #'equal-chunks-fct))))
-        
+
     (if existing
         (progn
-          
+
           (merge-chunks-fct existing chunk)  ;; merging functions handle params
-          
+
           (when (car (dm-chunk-merge-hook dm))
             (dolist (x (dm-chunk-merge-hook dm))
               (funcall x chunk))))
-      
+
       ;; otherwise add it to the list
-      
+
       (add-chunk-into-dm dm chunk))))
 
 ;; add-chunk-into-dm
@@ -1630,53 +1644,53 @@
 ;;;
 
 (defun add-chunk-into-dm (dm chunk)
-  
+
   (push chunk (gethash (chunk-chunk-type-fct chunk) (dm-chunks dm)))
-  
+
   (when (dm-fast-merge dm)
     (let ((key (hash-chunk-contents chunk)))
       (setf (chunk-fast-merge-key chunk) key)
       (setf (gethash key (dm-chunk-hash-table dm)) chunk)))
-  
+
   ;; set the parameters
-  
+
   (setf (chunk-in-dm chunk) t)
-  
+
   (setf (chunk-creation-time chunk) (mp-time-ms))
   (setf (chunk-reference-list chunk) (list (mp-time-ms)))
   (setf (chunk-reference-count chunk) 1)
-  
+
   ;; mark it as invalid for a buffer set now
-  
+
   (setf (chunk-buffer-set-invalid chunk) t)
-  
+
   ;; when spreading activation is on set the fan-out and fan-in values
-  
+
   (when (dm-sa dm)
-    
+
     ;; Increment its fan-out for itself
-    
+
     (incf (chunk-fan-out chunk))
-  
+
     ;; set the fan-in values
-    
+
     (let ((new-fans (remove-if-not 'chunk-p-fct (mapcan #'(lambda (slot)
-                                                            (when (chunk-p-fct 
+                                                            (when (chunk-p-fct
                                                                    (fast-chunk-slot-value-fct chunk slot))
                                                               (list (fast-chunk-slot-value-fct chunk slot))))
-                                                  (chunk-type-slot-names-fct 
+                                                  (chunk-type-slot-names-fct
                                                    (chunk-chunk-type-fct chunk))))))
-      
+
       (dolist (j new-fans)
         (incf (chunk-fan-out j)))
-      
+
       (setf (chunk-fan-in chunk)
         (mapcar (lambda (x) (cons x (count x new-fans))) (remove-duplicates new-fans))))
-  
+
     (aif (assoc chunk (chunk-fan-in chunk))
          (incf (cdr it))
          (push (cons chunk 1) (chunk-fan-in chunk))))
-  
+
   (when (car (dm-chunk-add-hook dm))
     (dolist (x (dm-chunk-add-hook dm))
       (funcall x chunk))))
@@ -1686,27 +1700,27 @@
 ;;; Add-dm-fct
 ;;;
 ;;; User level function for creating chunks and placing them directly into the
-;;; declarative memory list of the declarative memory module of the current 
+;;; declarative memory list of the declarative memory module of the current
 ;;; model.
 ;;;
 ;;; It takes a parameter which is a chunk definition list like define-chunk-fct
-;;; takes.  Those chunks are created and then added to the declarative memory 
+;;; takes.  Those chunks are created and then added to the declarative memory
 ;;; list with the current creation time and 1 reference.
 
 (defmacro add-dm (&rest chunk-list)
   `(add-dm-fct ',chunk-list))
 
 (defun add-dm-fct (chunk-definitions)
-  
+
   ;; Need to find the current instance of the declarative module
-  
-  (let ((dm (get-module declarative)))  
+
+  (let ((dm (get-module declarative)))
 
     ;; if there is one, create the chunks and set the parameters
 
-    (if (dm-p dm)  
+    (if (dm-p dm)
 
-        ;; pass the list of chunk defs off to define-chunks 
+        ;; pass the list of chunk defs off to define-chunks
         ;; to do the creation
 
         (let ((chunks (define-chunks-fct chunk-definitions)))
@@ -1715,21 +1729,21 @@
 
           (dolist (chunk chunks chunks)
             (add-chunk-into-dm dm chunk)))
-          
-       ;; otherwise report a warning to the meta-process because there may not
-       ;; be a current model 
 
-      (print-warning 
-       "Could not create chunks because no declarative module was found"))))       
+       ;; otherwise report a warning to the meta-process because there may not
+       ;; be a current model
+
+      (print-warning
+       "Could not create chunks because no declarative module was found"))))
 
 ;;; merge-dm
 ;;; merge-dm-fct
 ;;;
-;;; User level function for creating chunks and merging them into the declarative 
+;;; User level function for creating chunks and merging them into the declarative
 ;;; memory of the current model.
 ;;;
 ;;; It takes a parameter which is a chunk definition list like define-chunk-fct
-;;; takes.  Those chunks are created and then merged into the declarative memory 
+;;; takes.  Those chunks are created and then merged into the declarative memory
 ;;; of the model in the same way a cleared buffer is:  if the chunk is a match
 ;;; to an existing chunk then that existing chunk gets a new reference, but if
 ;;; there is no matching chunk then that chunk is added as a new element at the
@@ -1742,16 +1756,16 @@
 
 (defun circular-references-dm (bindings)
   (let ((checks (mapcar #'car bindings)))
-   
+
     (dolist (x checks)
       (dolist (y (cdr x))
         (awhen (find y checks :test (lambda (i j) (if (listp (car j))
                                                       (find i (car j))
                                                     (eq i (car j)))))
-               
+
                (setf (cdr x) (append (cdr x) (cdr it))))))
-    
-    (some (lambda (x) 
+
+    (some (lambda (x)
             (if (listp (car x))
                 (some (lambda (z) (find z (cdr x))) (car x))
               (find (car x) (cdr x)))) checks)))
@@ -1763,50 +1777,50 @@
       (aif (position-if (lambda (y) (find (caar x) (cdar y))) result)
            (setf result (splice-into-position-des result it x))
            (push-last x result)))))
-        
+
 
 (defmacro merge-dm (&rest chunk-list)
   `(merge-dm-fct ',chunk-list))
 
 (defun merge-dm-fct (chunk-definitions)
-  
+
   ;; Need to find the current instance of the declarative module
-  
-  (let ((dm (get-module declarative)))  
+
+  (let ((dm (get-module declarative)))
 
     ;; if there is one, create the chunks and set the parameters
 
-    (if (dm-p dm)  
+    (if (dm-p dm)
 
-        ;; pass the list of chunk defs off to define-chunks 
+        ;; pass the list of chunk defs off to define-chunks
         ;; to do the creation
 
         (let* ((chunks (define-chunks-fct chunk-definitions))
-               (ordering (mapcar (lambda (x) 
+               (ordering (mapcar (lambda (x)
                                    (list (cons x (mapcan (lambda (y)
                                                      (when (and (chunk-p-fct y)
                                                                 (find y chunks))
                                                        (list y)))
                                              (mapcar (lambda (z) (fast-chunk-slot-value-fct x z)) (chunk-type-slot-names-fct  (chunk-chunk-type-fct x)))))))
                            chunks)))
-          
+
           (if (circular-references-dm ordering)
               (progn
                 (model-warning "Chunks in call to merge-dm have circular references.")
                 (model-warning "  Because of that there is no safe order for merging and they will be merged in the order provided.")
                 (dolist (chunk chunks chunks)
                   (merge-chunk-into-dm dm nil chunk t)))
-            
+
             (progn
               (setf chunks (mapcar 'caar (sort-for-binding-dm ordering)))
               (dolist (chunk chunks chunks)
                 (merge-chunk-into-dm dm nil chunk t)))))
-          
-       ;; otherwise report a warning to the meta-process because there may not
-       ;; be a current model 
 
-      (print-warning 
-       "Could not create chunks because no declarative module was found"))))  
+       ;; otherwise report a warning to the meta-process because there may not
+       ;; be a current model
+
+      (print-warning
+       "Could not create chunks because no declarative module was found"))))
 
 
 
@@ -1818,26 +1832,26 @@
 ;;; has a buffer called retrieval.
 
 
-(define-module-fct 'declarative 
+(define-module-fct 'declarative
     (list (list 'retrieval nil '(:recently-retrieved :mp-value) '(recently-retrieved)
                  #'(lambda ()
                      (command-output "  recently-retrieved nil: ~S"
-                                     (query-buffer 'retrieval 
+                                     (query-buffer 'retrieval
                                                    '((recently-retrieved . nil))))
                      (command-output "  recently-retrieved t  : ~S"
-                                     (query-buffer 'retrieval 
+                                     (query-buffer 'retrieval
                                                    '((recently-retrieved . t))))
-                               ))) 
+                               )))
   (list (define-parameter :esc :owner nil)
         (define-parameter :er :owner nil)
         (define-parameter :ol :owner nil)
-        
+
         (define-parameter :blc :valid-test #'numberp :default-value 0.0
           :warning "a number" :documentation "Base Level Constant")
         (define-parameter :ans :valid-test #'posnumornil :default-value nil
           :warning "a positive number or nil" :documentation "Activation Noise S")
         (define-parameter :pas :valid-test #'posnumornil :default-value nil
-          :warning "a positive number or nil" 
+          :warning "a positive number or nil"
           :documentation "Permanent Activation noise S")
         (define-parameter :lf :valid-test #'nonneg :default-value 1.0
           :warning "a non-negative number" :documentation "Latency Factor")
@@ -1852,110 +1866,112 @@
         (define-parameter :rt :valid-test #'numberp :default-value 0.0
           :warning "a number" :documentation "Retrieval Threshold")
         (define-parameter :bll :valid-test #'posnumornil :default-value nil
-          :warning "a positive number or nil" :documentation "Base Level Learning")        
+          :warning "a positive number or nil" :documentation "Base Level Learning")
         (define-parameter :mas :valid-test #'numornil :default-value nil
           :warning "a number or nil" :documentation "Maximum Associative Strength")
         (define-parameter :pm :valid-test #'tornil :default-value nil
           :warning "T or nil" :documentation "Depricated - use :mp as both the flag and value instead (like :bll and :mas)")
-        
+
         (define-parameter :declarative-stuffing :valid-test #'posnumornil :default-value nil
           :warning "a positive number or nil" :documentation "Period of declarative buffer stuffing attempts")
-        
+
         (define-parameter :act :valid-test (lambda (val)
-                                             (or (null val) 
-                                                 (eq val t) 
-                                                 (eq val 'high) 
-                                                 (eq val 'medium) 
+                                             (or (null val)
+                                                 (eq val t)
+                                                 (eq val 'high)
+                                                 (eq val 'medium)
                                                  (eq val 'low)))
           :default-value nil
           :warning "T, nil, high, medium, or low" :documentation "Activation Trace")
-        
+
         (define-parameter :sact :valid-test (lambda (val)
-                                              (or (null val) 
-                                                  (eq val t) 
-                                                  (eq val 'high) 
-                                                  (eq val 'medium) 
+                                              (or (null val)
+                                                  (eq val t)
+                                                  (eq val 'high)
+                                                  (eq val 'medium)
                                                   (eq val 'low)))
           :default-value nil
           :warning "T, nil, high, medium, or low" :documentation "Save Activation Trace")
-        
+
         (define-parameter :fast-merge :valid-test #'tornil :default-value t
-          :warning "T or nil" 
+          :warning "T or nil"
           :documentation "Whether or not to use the fast merge mechanism")
-        
-        
+
+
         (define-parameter :declarative-num-finsts
             :valid-test #'posnum :default-value 4
-          :warning "positive number" 
+          :warning "positive number"
           :documentation "Number of declarative finst markers")
-        
-        
+
+
         (define-parameter :declarative-finst-span
             :valid-test #'posnum :default-value 3.0
-          :warning "positive number" 
+          :warning "positive number"
           :documentation "Duration of declarative finst markers in seconds")
 
-        
+
         (define-parameter :sim-hook :valid-test #'fctornil :default-value nil
           :warning "a function or nil" :documentation "Similarity hook")
         (define-parameter :sji-hook :valid-test #'fctornil :default-value nil
           :warning "a function or nil" :documentation "Sji hook")
         (define-parameter :w-hook :valid-test #'fctornil :default-value nil
           :warning "a function or nil" :documentation "Wkj hook")
-        
+
         (define-parameter :bl-hook :valid-test #'fctornil :default-value nil
-          :warning "a function or nil" 
+          :warning "a function or nil"
           :documentation "Baselevel component hook")
-        (define-parameter :spreading-hook :valid-test #'fctornil 
+        (define-parameter :spreading-hook :valid-test #'fctornil
           :default-value nil
-          :warning "a function or nil" 
+          :warning "a function or nil"
           :documentation "Spreading component hook")
-        (define-parameter :partial-matching-hook :valid-test #'fctornil 
+        (define-parameter :partial-matching-hook :valid-test #'fctornil
           :default-value nil
-          :warning "a function or nil" 
+          :warning "a function or nil"
           :documentation "Partial matching component hook")
-        (define-parameter :noise-hook :valid-test #'fctornil 
+        (define-parameter :noise-hook :valid-test #'fctornil
           :default-value nil
           :warning "a function or nil" :documentation "Noise component hook")
-        
-        (define-parameter :activation-offsets :valid-test #'fctornil 
+
+        (define-parameter :activation-offsets :valid-test #'fctornil
           :default-value nil
-          :warning "a function or nil" 
+          :warning "a function or nil"
           :documentation "Add additional activation equation components")
-        
-        (define-parameter :retrieval-request-hook :valid-test #'fctornil 
+
+        (define-parameter :retrieval-request-hook :valid-test #'fctornil
           :default-value nil
-          :warning "a function or nil" 
+          :warning "a function or nil"
           :documentation "Retrieval notification hook")
-        (define-parameter :retrieval-set-hook 
+        (define-parameter :retrieval-set-hook
             :valid-test #'fctornil :default-value nil
-          :warning "a function or nil" 
+          :warning "a function or nil"
           :documentation "Prospective retrievals hook")
-        (define-parameter :retrieved-chunk-hook :valid-test #'fctornil 
+        (define-parameter :retrieved-chunk-hook :valid-test #'fctornil
           :default-value nil
-          :warning "a function or nil" 
+          :warning "a function or nil"
           :documentation "Retrieval completion hook")
-        
-        (define-parameter :chunk-merge-hook :valid-test #'fctornil 
+
+        (define-parameter :chunk-merge-hook :valid-test #'fctornil
           :default-value nil
-          :warning "a function or nil" 
+          :warning "a function or nil"
           :documentation "Hook called when a chunk is merged into dm")
-        (define-parameter :chunk-add-hook :valid-test #'fctornil 
+        (define-parameter :chunk-add-hook :valid-test #'fctornil
           :default-value nil
-          :warning "a function or nil" 
+          :warning "a function or nil"
           :documentation "Hook called when a chunk is added to dm")
-        (define-parameter :nsji :valid-test #'tornil :default-value nil
-          :warning "T or nil" :documentation "Indicate whether S-log(fan) is allowed to return negative values"))
-  
-  :version "1.3" 
-  :documentation 
+        (define-parameter :nsji :valid-test #'(lambda (x)
+                                                (or (tornil x) (eq x 'warn)))
+          :default-value 'warn
+          :warning "T, warn, or nil" :documentation "Indicate whether S-log(fan) is allowed to return negative values"))
+
+  :version "1.3"
+  :documentation
   "The declarative memory module stores chunks from the buffers for retrieval"
-  
+
   ;; The creation function returns a new dm structure
   ;; that doesn't require knowing the current model's name
-  
+
   :creation (lambda (x) (declare (ignore x)) (make-dm))
-    
+
   :reset '(reset-dm-module secondary-reset-dm-module tertiary-reset-dm-module)
   :query 'dm-query-request
   :request 'dm-request
@@ -1971,47 +1987,47 @@
 
 
 (defun compute-activation (dm chunk request)
-  
+
   (let (clear-trace)
-    
+
     (when (dm-act-level (dm-act dm) 'medium)
       (model-output "Computing activation for chunk ~s" chunk))
-    
+
     (when (dm-sact dm)
-    
+
       (unless (dm-current-trace dm)
-        
+
         (setf clear-trace t)
-        
+
         ;; If there's already one for this time use it
-        
+
         (aif (gethash (mp-time) (dm-trace-table dm))
              (setf (dm-current-trace dm) it)
              (progn
                (setf (dm-current-trace dm) (make-sact-trace :esc (dm-esc dm)))
                (setf (gethash (mp-time) (dm-trace-table dm)) (dm-current-trace dm)))))
-    
+
       (setf (dm-current-sact-chunk dm) (make-sact-chunk :name chunk)))
-    
-    
-    (setf (chunk-activation chunk) 
+
+
+    (setf (chunk-activation chunk)
       (+ (base-level-activation dm chunk)
          (spreading-activation dm chunk)
          (partial-matching dm chunk request)
          (activation-noise dm chunk)
          (activation-offsets dm chunk)))
-    
-    
+
+
     (when (dm-sact dm)
       (setf (sact-chunk-total (dm-current-sact-chunk dm)) (chunk-activation chunk))
-      
+
       ;; if this chunk is already recorded don't do so again
       (unless (find chunk (sact-trace-chunks (dm-current-trace dm)) :key 'sact-chunk-name)
         (push-last (dm-current-sact-chunk dm) (sact-trace-chunks (dm-current-trace dm))))
-      
+
       (when clear-trace
         (setf (dm-current-trace dm) nil)))
-    
+
     (when (dm-act-level (dm-act dm) 'low)
       (model-output "Chunk ~s has an activation of: ~f" chunk (chunk-activation chunk)))))
 
@@ -2026,36 +2042,36 @@
                 (model-output "Adding offset from ~a: ~f" x res))
               (incf offset res))))
       offset)))
-                   
+
 (defun base-level-activation (dm chunk)
-  
+
   (when (dm-act-level (dm-act dm) 'medium)
     (model-output "Computing base-level"))
-  
+
   (let ((base-level nil))
-    
+
     (when (dm-bl-hook dm)
       (setf base-level (funcall (dm-bl-hook dm) chunk)))
-    
+
     (cond ((numberp base-level)
-           
+
            (when (dm-sact dm)
              (setf (sact-chunk-bl-style (dm-current-sact-chunk dm)) :hook)
              (setf (sact-chunk-blc (dm-current-sact-chunk dm)) (dm-blc dm)))
-           
+
            (when (dm-act-level (dm-act dm) 'medium)
              (model-output "base-level hook returns: ~f" base-level)))
           (t
-           (setf base-level 
+           (setf base-level
              (cond ((dm-bll dm)
                     (when (dm-sact dm)
                       (setf (sact-chunk-bl-style (dm-current-sact-chunk dm)) :learn)
                       (setf (sact-chunk-blc (dm-current-sact-chunk dm)) (dm-blc dm)))
-                    
+
                     (+ (progn
                          (when (dm-act-level (dm-act dm) 'medium)
                            (model-output "Starting with blc: ~f" (dm-blc dm)))
-                         
+
                          (dm-blc dm))
                        (cond ((zerop (chunk-reference-count chunk))
                               (when (dm-sact dm)
@@ -2067,12 +2083,12 @@
                                                   (chunk-reference-list chunk) (chunk-creation-time chunk)
                                                   (- (dm-bll dm)))))))
                    (t ;; bll nil
-                    
+
                     (when (dm-sact dm)
                       (setf (sact-chunk-bl-style (dm-current-sact-chunk dm)) :simple)
                       (setf (sact-chunk-blc (dm-current-sact-chunk dm)) (dm-blc dm))
                       (setf (sact-chunk-base-level (dm-current-sact-chunk dm)) (chunk-base-level chunk)))
-                    
+
                     (if (chunk-base-level chunk)
                         (progn
                           (when (dm-act-level (dm-act dm) 'medium)
@@ -2082,14 +2098,14 @@
                         (when (dm-act-level (dm-act dm) 'medium)
                           (model-output "Starting with blc: ~f" (dm-blc dm)))
                         (dm-blc dm))))))
-           
-           
+
+
            (when (dm-act-level (dm-act dm) 'medium)
              (model-output "Total base-level: ~f" base-level))))
-    
+
     (when (dm-sact dm)
       (setf (sact-chunk-bl-result (dm-current-sact-chunk dm)) base-level))
-    
+
     (setf (chunk-last-base-level chunk) base-level)))
 
 
@@ -2112,72 +2128,72 @@ of operation is more important.
         (let ((sa nil))
           (when (dm-act-level (dm-act dm) 'medium)
             (model-output "Computing activation spreading from buffers"))
-          
+
           (when (dm-spreading-hook dm)
             (setf sa (funcall (dm-spreading-hook dm) chunk)))
-          
+
           (cond ((numberp sa)
-                 
+
                  (when (dm-sact dm)
                    (setf (sact-chunk-sa (dm-current-sact-chunk dm)) :hook)
-                   (setf (sact-chunk-sa-value (dm-current-sact-chunk dm)) sa))            
-                 
+                   (setf (sact-chunk-sa-value (dm-current-sact-chunk dm)) sa))
+
                  (when (dm-act-level (dm-act dm) 'medium)
                    (model-output "spreading activation hook returns: ~f" sa))
                  sa)
-                
+
                 (t
                  (let ((total-spread 0.0))
                    (dolist (buffer (buffers))
                      (unless (or (zerop (buffer-spread buffer))
-                                 (null (buffer-read buffer))) 
+                                 (null (buffer-read buffer)))
                        (let ((buffer-chunk (buffer-read buffer)))
-                         
+
                          (when (dm-sact dm)
                            (push (list buffer buffer-chunk (buffer-spread buffer))
                                  (sact-chunk-sa-buffers (dm-current-sact-chunk dm))))
-                         
+
                          (when (dm-act-level (dm-act dm) 'medium)
-                           (model-output "  Spreading ~f from buffer ~s chunk ~s" 
+                           (model-output "  Spreading ~f from buffer ~s chunk ~s"
                                          (buffer-spread buffer) buffer buffer-chunk))
-                         
+
                          (let ((js (mapcan #'(lambda (slot)
                                                (when (chunk-p-fct (fast-chunk-slot-value-fct buffer-chunk slot))
                                                  (list (cons (fast-chunk-slot-value-fct buffer-chunk slot) slot))))
                                      (chunk-type-slot-names-fct (chunk-chunk-type-fct (buffer-read buffer))))))
-                           
+
                            (when (dm-act-level (dm-act dm) 'medium)
                              (model-output "    sources of activation are: ~s" (mapcar #'car js)))
-                           
+
                            (dolist (j js)
                              (let* ((sji (compute-sji dm (car j) chunk))
                                     (level (if (dm-w-hook dm)
                                                (let ((val (funcall (dm-w-hook dm) buffer (cdr j))))
                                                  (if (numberp val)
-                                                     (progn 
+                                                     (progn
                                                        (when (dm-act-level (dm-act dm) 'medium)
                                                          (model-output "    Wkj hook returns level ~f" val))
                                                        val)
                                                      (/ (buffer-spread buffer) (length js))))
                                                (/ (buffer-spread buffer) (length js))))
                                     (total (* level sji)))
-                               
+
                                (when (dm-sact dm)
                                  (push-last (list (car j) total level sji)
                                        (car (sact-chunk-sa-buffers (dm-current-sact-chunk dm)))))
-                               
+
                                (when (dm-act-level (dm-act dm) 'medium)
                                  (model-output "    Spreading activation  ~f from source ~s level  ~f times Sji ~f"
                                                total (car j) level sji))
-                               
+
                                (incf total-spread total)))))))
                    (when (dm-act-level (dm-act dm) 'medium)
-                     (model-output "Total spreading activation: ~f" total-spread)) 
-                   
+                     (model-output "Total spreading activation: ~f" total-spread))
+
                    (when (dm-sact dm)
                      (setf (sact-chunk-sa (dm-current-sact-chunk dm)) :full)
                      (setf (sact-chunk-sa-value (dm-current-sact-chunk dm)) total-spread))
-                   
+
                    total-spread))))
       0.0)))
 
@@ -2192,10 +2208,10 @@ of operation is more important.
           (cdr (assoc j (chunk-sjis i) :test #'eq-chunks-fct))
         (aif (assoc j (chunk-fan-in i) :test #'eq-chunks-fct)
              (let ((val (- (dm-mas dm) (log-coerced (chunk-fan-j-to-i j it)))))
-               (if (dm-nsji dm)
+               (if (eq (dm-nsji dm) t)
                    val
                  (progn
-                   (when (minusp val)
+                   (when (and (dm-nsji dm) (minusp val))
                      (model-warning "Calculated Sji value between ~s and ~s is negative, but using a value of 0." j i))
                    (max val 0.0))))
              0.0)))))
@@ -2213,18 +2229,18 @@ of operation is more important.
           (model-output "Computing partial matching component"))
         (let ((pm (when (dm-partial-matching-hook dm)
                     (funcall (dm-partial-matching-hook dm) chunk request))))
-          
-          (cond ((numberp pm) 
-                 
+
+          (cond ((numberp pm)
+
                  (when (dm-sact dm)
                    (setf (sact-chunk-pm (dm-current-sact-chunk dm)) :hook)
                    (setf (sact-chunk-pm-value (dm-current-sact-chunk dm)) pm))
-                 
+
                  (when (dm-act-level (dm-act dm) 'medium)
                    (model-output "partial matching hook returns: ~f" pm))
                  pm)
                 (t
-                 
+
                  (let ((total-sim 0.0))
                    (dolist (k (chunk-spec-slot-spec request))
                      (when (and (or (eq (car k) '=)
@@ -2234,16 +2250,16 @@ of operation is more important.
                          (model-output "  comparing slot ~S" (second k))
                          (model-output "  Requested: ~s ~s  Chunk's slot value: ~s"
                                        (first k) (third k) (fast-chunk-slot-value-fct chunk (second k))))
-                       
-                       (let* ((sim (chunks-similarity dm 
-                                                      (third k) 
+
+                       (let* ((sim (chunks-similarity dm
+                                                      (third k)
                                                       (fast-chunk-slot-value-fct chunk (second k))
                                                       t))
-                              
-                              
-                              (sim-dif (case (car k) 
+
+
+                              (sim-dif (case (car k)
                                          (= (* (dm-mp dm) sim))
-                                         
+
                                          (- (cond ((= sim (dm-ms dm))
                                                    (* (dm-mp dm) (dm-md dm)))
                                                   ; ACT-R 5 doesn't do this, but
@@ -2252,26 +2268,26 @@ of operation is more important.
                                                   ; (* (dm-mp dm) (dm-ms dm)))
                                                   (t
                                                    (when (dm-act-level (dm-act dm) 'medium)
-                                                     (model-output 
+                                                     (model-output
                                                       "  negation test with similarity not ms has no effect"))
                                                    0))))))
-                         
+
                          (when (dm-act-level (dm-act dm) 'medium)
                            (model-output "  effective similarity value is ~f" sim-dif))
-                         
+
                          (when (dm-sact dm)
                            (push-last (list (second k) (first k) (third k) (fast-chunk-slot-value-fct chunk (second k)) sim sim-dif)
                                       (sact-chunk-pm-tests (dm-current-sact-chunk dm))))
-                         
+
                          (incf total-sim sim-dif))))
-                   
+
                    (when (dm-sact dm)
                      (setf (sact-chunk-pm (dm-current-sact-chunk dm)) :full)
                      (setf (sact-chunk-pm-value (dm-current-sact-chunk dm)) total-sim))
-                   
+
                    (when (dm-act-level (dm-act dm) 'medium)
                      (model-output "Total similarity score ~f" total-sim))
-                   
+
                    total-sim)))))
     0.0))
 
@@ -2301,7 +2317,7 @@ of operation is more important.
 (defun activation-noise (dm chunk)
   (let ((noise (when (dm-noise-hook dm)
                    (funcall (dm-noise-hook dm) chunk))))
-                 
+
     (cond ((numberp noise)
            (when (dm-act-level (dm-act dm) 'medium)
              (model-output "noise hook returns: ~f" noise))
@@ -2313,18 +2329,18 @@ of operation is more important.
            (setf noise (if (dm-ans dm)
                            (act-r-noise (dm-ans dm))
                          0.0))
-           
+
            (when (dm-sact dm)
              (setf (sact-chunk-noise (dm-current-sact-chunk dm)) :full)
              (setf (sact-chunk-noise-p (dm-current-sact-chunk dm)) (chunk-permanent-noise chunk))
              (setf (sact-chunk-noise-t (dm-current-sact-chunk dm)) noise))
-           
+
            (when (dm-act-level (dm-act dm) 'medium)
              (model-output "Adding transient noise ~f" noise)
              (model-output "Adding permanent noise ~f" (chunk-permanent-noise chunk)))
-      
+
            (+ noise (chunk-permanent-noise chunk))))))
-    
+
 
 (defun compute-activation-latency (dm activation)
   (* (dm-lf dm)
@@ -2336,18 +2352,18 @@ of operation is more important.
 (defun compute-references (dm n references creation-time minus-decay)
   "Computes generalized decay formula from number and list of references,
    creation time and minus the decay rate."
-  
+
   (when (dm-act-level (dm-act dm) 'medium)
     (model-output "Computing base-level from ~d references ~S" n (mapcar 'ms->seconds references))
     (model-output "  creation time: ~f decay: ~f  Optimized-learning: ~s" (ms->seconds creation-time) (- minus-decay) (dm-ol dm)))
-  
+
   (let ((value 0.0)
         (last-reference 0))
     (when references
       (dolist (reference references)
         (incf value (expt-coerced (max .05 (ms->seconds (- (mp-time-ms) reference))) minus-decay))
         (setf last-reference reference)))
-    
+
     (when (dm-ol dm)
       (let ((denominator (+ 1.0 minus-decay)))
         (if (numberp (dm-ol dm))
@@ -2359,10 +2375,10 @@ of operation is more important.
                                 (- (expt-coerced (max 0 (ms->seconds (- (mp-time-ms) creation-time))) denominator)
                                    (expt-coerced (max 0 (ms->seconds (- (mp-time-ms) last-reference))) denominator)))
                              (* (max .05 (ms->seconds (- last-reference creation-time))) denominator))))
-          
+
           (setf value (/ (* n (expt-coerced (max .05 (ms->seconds (- (mp-time-ms) creation-time))) minus-decay))
                          denominator)))))
-    
+
     (when (dm-sact dm)
       (setf (sact-chunk-base-level (dm-current-sact-chunk dm)) (log-coerced value))
       (setf (sact-chunk-bl-count (dm-current-sact-chunk dm)) n)
@@ -2370,7 +2386,7 @@ of operation is more important.
       (setf (sact-chunk-bl-ct (dm-current-sact-chunk dm)) (ms->seconds creation-time))
       (setf (sact-chunk-decay (dm-current-sact-chunk dm)) (- minus-decay))
       (setf (sact-chunk-ol (dm-current-sact-chunk dm)) (dm-ol dm)))
-    
+
     (when (dm-act-level (dm-act dm) 'medium)
       (model-output "base-level value: ~f" (log-coerced value)))
     (log-coerced value)))

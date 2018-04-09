@@ -12,7 +12,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Filename    : emma.lisp
-;;; Version     : 4.0a1
+;;; Version     : 4.1
 ;;;
 ;;; Description : Implementation of Dario Salvucci's EMMA system for eye
 ;;;             : movements based on subclassing the Vision Module and making
@@ -185,6 +185,13 @@
 ;;;             :   since install-device handles that and it's important that an
 ;;;             :   "old" spot persist to that it can be erased from the previous
 ;;;             :   device.
+;;; 2013.09.26 Dan
+;;;             : * To keep the display code separate from the model actions
+;;;             :   using an after method on update-device to draw the eye-loc
+;;;             :   instead of calling it from set-eye-loc.
+;;; 2014.02.14 Dan [4.1]
+;;;             : * Updated with the changes to the vision module to make
+;;;             :   distance for visual locations be in pixels.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 #+:packaged-actr (in-package :act-r)
@@ -218,10 +225,18 @@
 
 (defmethod set-eye-loc ((eye-mod emma-vis-mod) (newloc vector))
   (setf (eye-loc eye-mod) newloc)
-  (when (show-focus-p (current-device-interface))
-    (device-update-eye-loc (device (current-device-interface)) newloc))
+  ; Do this in the update-device method 
+  ;  (when (show-focus-p (current-device-interface))
+  ;    (device-update-eye-loc (device (current-device-interface)) newloc))
   (when (trace-eye-p eye-mod)
     (push (cons (mp-time) newloc) (eye-trace eye-mod))))
+
+
+(defmethod update-device :after ((devin device-interface) time)
+  (when (show-focus-p devin)
+    (let ((vis-m (get-module :vision)))
+      (when vis-m
+        (device-update-eye-loc (device devin) (eye-loc vis-m))))))
 
 
 ;;; The replacement for *eye-spot* is a slot in the module accessed with
@@ -1123,6 +1138,7 @@ object, which is used to compute the recognition time."))
      :documentation "Whether proc-display should use the features to compare items instead of just the chunk names")
    
    (define-parameter :viewing-distance :owner nil)
+   (define-parameter :pixels-per-inch :owner nil)
    (define-parameter :delete-visicon-chunks
      :valid-test #'tornil 
      :default-value T
@@ -1162,7 +1178,7 @@ object, which is used to compute the recognition time."))
 
    )
   :warning 'warn-vision
-  :version "4.0a2-emma"
+  :version "4.1-emma"
   :documentation "Vision-module with EMMA and chunks for internal object representation"
   :creation #'create-emma-module 
   :reset #'reset-emma-module 

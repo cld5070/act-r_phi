@@ -60,7 +60,7 @@ Schema : 2005.0
 
 <showvalue>
   <row> 14.4 </row><col> 3.0 </col>
-  <name> LM_AminoAcids.Urea </name>
+  <name> LiverMetabolism_AminoAcids.Urea </name>
   <format><decimal> 2 </decimal></format>
   <label> Amino Acid Metabolism </label>
 </showvalue>
@@ -81,7 +81,7 @@ Schema : 2005.0
 
 <showvalue>
   <row> 17.8 </row><col> 3.0 </col>
-  <name> CD_Urea.Outflow </name>
+  <name> CollectingDuct_Urea.Outflow </name>
   <format><decimal> 2 </decimal></format>
   <label> Renal Excretion </label>
 </showvalue>

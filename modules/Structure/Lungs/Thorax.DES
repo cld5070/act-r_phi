@@ -68,8 +68,8 @@ lung.
   <name> LungInflation </name>
   <val>
       0.5
-    * ( RightHemithorax.LungInflation
-    + LeftHemithorax.LungInflation )
+    * ( RightHemithorax.LungInflation 
+    +  LeftHemithorax.LungInflation ) 
   </val>
 </def>
 

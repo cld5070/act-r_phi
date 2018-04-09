@@ -288,7 +288,7 @@
                   
                   (when (utility-trace u)
                     (model-output "  Updating utility of production ~S" (car p-t))
-                    (model-output "   U(n-1) = ~f   R(n) = ~f [~:[~f - ~f seconds since selection~;~f - ~f from reward-hook function~]]" 
+                    (model-output "   U(n-1) = ~f   R(n) = ~f [~:[~f - ~f seconds since selection~;from reward-hook function~]]" 
                                   (production-u (car p-t)) r override value (ms->seconds (- (mp-time-ms) (cdr p-t)))))
                   (linear-update-utility u (car p-t) r)
                   (when (utility-trace u)
@@ -308,25 +308,6 @@
          (if (numberp it) (trigger-reward it) (trigger-reward nil))))
 
 
-;;;Added by Chris Dancy for ACT-RPhi module
-;;Added to add affect params to compiled production
-(defun initialize-affect-for-compiled-production (new-p p1 p2)
- (let* ((sVal1 (production-sValue p1))
-	    (sVal2 (production-sValue p2))
-		(sVal (if (and (numberp sVal1) (numberp sVal2)) (max sVal1 sVal2)
-			  (if (numberp sVal1) sVal1 (if (numberp sVal2) sVal2 nil))))
-		(sFunc (if sVal 'cond nil))
-		(fVal1 (production-fValue p1))
-		(fVal2 (production-fValue p2))
-		(fVal (if (and (numberp fVal1) (numberp fVal2)) (max fVal1 fVal2)
-			(if (numberp fVal1) fVal1 (if (numberp fVal2) fVal2 nil))))
-		(fFunc (if fVal 'cond nil)))
-  (setf (production-sFunction new-p) sFunc)
-  (setf (production-sValue new-p) sVal)
-  (setf (production-fValue new-p) fVal)
-  (setf (production-fFunction new-p) fFunc)))
-
-;Changed to make call to initialize-affect function
 (defun initialize-utility-for-compiled-production (new-p p1 p2)
   (let* ((at1 (production-at p1))
          (at2 (production-at p2))
@@ -339,7 +320,6 @@
                      (and (numberp r1) r1)
                      (and (numberp r2) r2)
                      r1 r2)))
-	(initialize-affect-for-compiled-production new-p p1 p2)
     (setf (production-at new-p) at)
     (setf (production-reward new-p) reward)
     (setf (production-u new-p) (car (no-output (sgp :nu))))))

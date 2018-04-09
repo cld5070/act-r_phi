@@ -59,11 +59,6 @@ By : University Of Mississippi Medical Center
 </def>
 
 <def>
-  <name> N2(%) </name>
-  <val> AirSupply-GasTanks.N2(%) </val>
-</def>
-
-<def>
   <name> CO2(%) </name>
   <val> AirSupply-GasTanks.CO2(%) </val>
 </def>
@@ -81,6 +76,19 @@ By : University Of Mississippi Medical Center
 <def>
   <name> Anesthetic(%) </name>
   <val> AirSupply-GasTanks.Anesthetic(%) </val>
+</def>
+
+
+<def>
+  <name> N2(%) </name>
+  <val> 100 - 
+( AirSupply-GasTanks.O2(%) 
++ AirSupply-GasTanks.CO2(%) 
++ AirSupply-GasTanks.H2O(%) 
++ AirSupply-GasTanks.CO(%) 
++ AirSupply-GasTanks.Anesthetic(%)  )
+
+</val>
 </def>
 
 </true>

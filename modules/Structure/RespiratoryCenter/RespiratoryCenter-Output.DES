@@ -31,6 +31,12 @@ By : University Of Mississippi Medical Center
   <point><x> 10 </x><y> 40 </y><slope>  0 </slope></point>
 </curve>
 
+<curve>
+  <name> MorphineOnRate </name>
+  <point><x>  0 </x><y>  0 </y><slope> 0 </slope></point>
+  <point><x>  0.7 </x><y> -4  </y><slope>  0 </slope></point>
+</curve>
+
 </functions>
 
 <definitions>
@@ -41,8 +47,10 @@ By : University Of Mississippi Medical Center
   <test> RateClampSwitch </test>
   <true> RateClampSetting </true>
   <false>
-      Brain-Function.Effect
+ (     Brain-Function.Effect
     * Rate [ RespiratoryCenter-Integration.TotalDrive ]
+    + MorphineOnRate [ RespiratoryCenter-Chemical.CombinedMorphine ] )
+   MAX 0
   </false>
 </conditional>
 

@@ -72,6 +72,15 @@
 ;;;             : * Eliminating some warnings by adding a declaim for 
 ;;;             :   view-key-event-handler since it's in the uwi file and 
 ;;;             :   removing the setf of title-bar in show/hide-menu-bar.
+;;; 2014.01.24 Dan
+;;;             : * Updated the build-vis-locs-for methods for text and button
+;;;             :   items so that they use the updated build-string-feats to
+;;;             :   deal with newlines in the text.
+;;; 2014.01.27 Dan
+;;;             : * Fixed a bug with the y-coord of the text on buttons
+;;;             :   introduced with the last update.
+;;; 2014.02.10 Dan
+;;;             : * Use a button's foreground slot to get the color feature.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Check the ACT-R packaging switches
@@ -921,7 +930,8 @@
                                              descent (round ascent 2))
                                    :width-fct #'(lambda (str)
                                                   (string-width str font-spec))
-                                   :height ascent :obj self))))))
+                                   :height ascent :obj self
+                                   :line-height (+ ascent descent)))))))
     
     (dolist (x feats)
       (setf (chunk-visual-object x) self))
@@ -946,34 +956,30 @@
                                           value oval
                                           height ,(point-v (view-size self))
                                           width ,(point-h (view-size self))
-                                          color light-gray))))
+                                          color ,(system-color->symbol (capi:simple-pane-foreground self))))))
            
            
            (unless (equal text "")
              (let* ((font-spec (view-font self))
+                    (lines (count #\newline text))
                     (start-y nil)
-                    (accum nil)
-                    (textlines (string-to-lines text))
                     (width-fct #'(lambda (str) (string-width str font-spec))))
                (multiple-value-bind (ascent descent) (font-info font-spec)
                  (setf start-y (+ (point-v (view-position self))
-                                  (round (- btn-height (* (length textlines)
-                                                          (+ ascent descent))) 2)))
-                 (dolist (item textlines (flatten (nreverse accum)))
-                   (push
-                    (build-string-feats vis-mod :text item
-                                        :start-x 
-                                        (+ (point-h (view-position self))
-                                           (round 
-                                            (- btn-width (funcall width-fct item))
-                                            2))
-                                        :y-pos 
-                                        (+ start-y (round (+ ascent descent) 2))
-                                        :width-fct width-fct 
-                                        :height (min ascent btn-height)
-                                        :obj self)
-                    accum)
-                   (incf start-y (+ ascent descent)))))))))
+                                (round (- btn-height (* lines (+ ascent descent))) 2)))
+                 (build-string-feats vis-mod :text text
+                                   :start-x 
+                                   (+ (point-h (view-position self))
+                                           (round btn-width 2))
+                                   :x-fct (lambda (string startx obj)
+                                            (declare (ignore obj))
+                                            (- startx
+                                               (round (funcall width-fct string) 2)))
+                                   :y-pos start-y
+                                   :width-fct width-fct 
+                                   :height (min ascent btn-height) 
+                                   :obj self
+                                     :line-height (+ ascent descent))))))))
     
     (let ((fun (lambda (x y) (declare (ignore x)) (approach-width (car feats) y))))
       (dolist (x (cdr feats))
@@ -1005,27 +1011,19 @@
                 'light-gray))
      (unless (equal text "")
        (let* ((font-spec (view-font self))
+              (lines (count #\newline text))
               (start-y nil)
-              (accum nil)
-              (textlines (string-to-lines text))
               (width-fct #'(lambda (str) (string-width str font-spec))))
          (multiple-value-bind (ascent descent) (font-info font-spec)
            (setf start-y (+ (point-v (view-position self))
-                            (round (- btn-height (* (length textlines)
-                                                    (+ ascent descent))) 2)))
-           (dolist (item textlines (nreverse accum))
-             (push
-              (build-string-feats vis-mod :text item
-                                  :start-x 
-                                  (+ (point-h (view-position self))
-                                     17)
-                                  :y-pos 
-                                  (+ start-y (round (+ ascent descent) 2))
-                                  :width-fct width-fct 
-                                  :height (min ascent btn-height)
-                                  :obj self)
-              accum)
-             (incf start-y (+ ascent descent)))))))))
+                          (round (- btn-height (* lines (+ ascent descent))) 2)))
+           (build-string-feats vis-mod :text text
+                                   :start-x (+ (point-h (view-position self)) 17)
+                                   :y-pos start-y
+                                   :width-fct width-fct 
+                                   :height (min ascent btn-height) 
+                                   :obj self
+                               :line-height (+ ascent descent))))))))
 
 
 ;;; BUILD-FEATURES-FOR      [Method]
@@ -1037,36 +1035,26 @@
                                   (vis-mod vision-module))
   (let ((btn-height (point-v (view-size self)))
         (text (cdialog-item-text self))
-        (feats nil))
-    (setf feats
-          (cons
-           (make-instance 'rect-feature 
-             :x (+ 8 (point-h (view-position self))) :y (py (view-loc self))
-             :width 11 :height 11 :color 'light-gray
-             :screen-obj self)
-           (unless (equal text "")
-             (let* ((font-spec (view-font self))
-                    (start-y nil)
-                    (accum nil)
-                    (textlines (string-to-lines text))
-                    (width-fct #'(lambda (str) (string-width str font-spec))))
-               (multiple-value-bind (ascent descent) (font-info font-spec)
-                 (setf start-y (+ (point-v (view-position self))
-                                  (round (- btn-height (* (length textlines)
-                                                          (+ ascent descent))) 2)))
-                 (dolist (item textlines (nreverse accum))
-                   (push
-                    (build-string-feats vis-mod :text item
-                                        :start-x 
-                                        (+ (point-h (view-position self))
-                                           17)
-                                        :y-pos 
-                                        (+ start-y (round (+ ascent descent) 2))
-                                        :width-fct width-fct 
-                                        :height (min ascent btn-height)
-                                        :obj self)
-                    accum)
-                   (incf start-y (+ ascent descent))))))))
+        (feats (cons
+                (make-instance 'rect-feature 
+                  :x (+ 8 (point-h (view-position self))) :y (py (view-loc self))
+                  :width 11 :height 11 :color 'light-gray
+                  :screen-obj self)
+                (unless (equal text "")
+                  (let* ((font-spec (view-font self))
+                         (lines (count #\newline text))
+                         (start-y nil)
+                         (width-fct #'(lambda (str) (string-width str font-spec))))
+                    (multiple-value-bind (ascent descent) (font-info font-spec)
+                      (setf start-y (+ (point-v (view-position self))
+                                       (round (- btn-height (* lines (+ ascent descent))) 2)))
+                      (build-string-feats vis-mod :text text
+                                          :start-x (+ (point-h (view-position self)) 17)
+                                          :y-pos start-y
+                                          :width-fct width-fct 
+                                          :height (min ascent btn-height) 
+                                          :obj self
+                                          :line-height (+ ascent descent))))))))
     (when (check-box-checked-p self)
       (setf feats
             (cons
@@ -1080,8 +1068,7 @@
                :width 11)               
              
              feats)))
-    feats
-    ))
+    feats))
 
 |#
 
@@ -1114,7 +1101,8 @@
                                                    descent (round ascent 2))
                                          :width-fct #'(lambda (str)
                                                         (string-width str font-spec))
-                                         :height ascent :obj self))
+                                         :height ascent :obj self
+                                         :line-height (+ ascent descent)))
               (color (system-color->symbol (capi:pinboard-object-graphics-arg self :foreground))))
         (dolist (x feats)
           (set-chunk-slot-value-fct x 'color color)
@@ -1136,8 +1124,8 @@
                                                      descent (round ascent 2))
                                            :width-fct #'(lambda (str)
                                                           (string-width str font-spec))
-                                           :height ascent :obj self))
-                
+                                           :height ascent :obj self
+                                           :line-height (+ ascent descent)))
                 (color (system-color->symbol (capi:pinboard-object-graphics-arg self :foreground)))) 
             (dolist (x feats)
               (set-chunk-slot-value-fct x 'color color)

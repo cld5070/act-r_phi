@@ -35,5 +35,7 @@ By : University of Mississippi Medical Center
 <?include Delivery.DES ?>
 <?include Use.DES ?>
 
+<?include KAFraction.DES ?>
+
 </panel>
 

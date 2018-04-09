@@ -48,6 +48,10 @@
 ;;;             :   so that a user method on the rpm-window class gets called.
 ;;;             : * Also changed it to passing a vector of the x-y position 
 ;;;             :   instead of a list so that it works the same as virtuals.
+;;; 2014.02.10  : Dan
+;;;             : * Save the button color in the foreground slot which doesn't
+;;;             :   seem to change the display, but lets the model find it at
+;;;             :   least.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 #+:packaged-actr (in-package :act-r)
@@ -239,7 +243,7 @@
                         :x x :y y
                         :visible-min-width width :visible-min-height height
                         :text text
-                        
+                        :foreground (color-symbol->system-color color)
                         :callback-type :item
                         :callback action
                         ))

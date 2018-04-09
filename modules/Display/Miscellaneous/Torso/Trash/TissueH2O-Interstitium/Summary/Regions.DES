@@ -15,7 +15,7 @@ Schema : 2005.0
    <wide> 30.0 </wide>
    <title> Regions </title>
 
-<structurename> UT_H2O </structurename>
+<structurename> Torso_Upper_H2O </structurename>
 
 <label>
   <row> 1.4 </row><col> 1.0 </col>
@@ -51,7 +51,7 @@ Schema : 2005.0
    <label> Loss </label>
 </showvalue>
 
-<structurename> MT_H2O </structurename>
+<structurename> Torso_Middle_H2O </structurename>
 
 <label>
   <row> 7.4 </row><col> 1.0 </col>
@@ -87,7 +87,7 @@ Schema : 2005.0
    <label> Loss </label>
 </showvalue>
 
-<structurename> LT_H2O </structurename>
+<structurename> Torso_Lower_H2O </structurename>
 
 <label>
   <row> 13.4 </row><col> 1.0 </col>

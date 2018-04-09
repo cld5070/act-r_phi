@@ -39,7 +39,7 @@ By : University Of Mississippi Medical Center
   </yaxis>
 </showgraph>
 
-<structurename> HepaticArtery </structurename>
+<structurename> HepaticArtery-Flow </structurename>
 
 <showvalue>
    <row> 11.8 </row><col> 1.0 </col>

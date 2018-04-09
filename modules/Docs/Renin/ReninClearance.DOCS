@@ -9,92 +9,44 @@ Copyright : 2009
 
 <vardoc>
 <name> ReninClearance.K </name>
-<topic> ReninClearance - Overview </topic>
-<topic> K - DefinitionRC1 </topic>
+<topic> XX </topic>
+<topic> XX </topic>
+<topic> XXXX </topic>
+<seealso> XXX </seealso>
+<seealso> XXX </seealso>
 </vardoc>
 
 <vardoc>
 <name> ReninClearance.Rate </name>
-<topic> Rate - DefinitionRC2 </topic>
+<topic> XXX</topic>
+<topic> XXXX </topic>
+<topic> XXX </topic>
+<seealso> XXX </seealso>
+<seealso> XXXX </seealso>
 </vardoc>
 
 <topicdoc>
-<name> ReninClearance - Overview </name>
-<label> Overview </label>
+<name> XXX</name>
+<label> XXX</label>
 <content>
-
-The liver is the major site of renin inactivation
-
-Human Data
-Christlieb AR, Couch NP, Amsterdam EA, Dobrzinsky SJ,
-Hickler RB. Renin extraction by the human liver.
-Proc Soc Exp Biol Med 128: 821 - 823, 1968.
-
-Devaux C, Menard J, Alexandre JM, Idatte JM, Brisset JM,
-Beuve-Mery P, Fendler JP, Safar M, Weil B, Meyer P,
-Milliez P. Speed of disappearance of plasma renin activity
-and variations in plasma angiotensin after bilateral 
-nephrectomy in 2 hypertensive patients. 
-J Urol. Nephrol (Paris) 74 (4): 341 - 347, 1968.
-
-Hannon RC, Deruyck RP, Joossens JV, Amery AK. 
-Disappearance rate of endogenous renin from the plasma
-after bilateral nephrectomy in humans.
-J Clin Endorinol Metab 29: 1420 - 1424, 1969.
-
-Michelakis AM, Mizukoshi H. Distribution and disappearance
-rate of renin in man and dog. 
-J Clin Endocrinol Metab 33: 27 - 34, 1971
-
-Dog Data
-Heacox R, Harvey AM, Vander AJ. Hepatic inactivation
-of renin. Circulation Res 21: 149 - 152, 1967.
-
-Schneider EG, Davis JO, Robb CA, Baumber JS.
-Hepatic clearance of renin in canine experimental
-models for low- and high-output heart failure.
-Cir Res 24: 213 - 219, 1969.
-
-Johnson JA, Davis JO, Baumber JS, Schneider EG. 
-Effects of hemorrhage and chronic sodium depletion
-on hepatic clearance of renin. 
-Am J Physiol 220: 1677 - 1682, 1971.
-
-Rat Data
-Oates HF, Freeten JA, Stokes GS. Disappearance rate
-of circulating renin after bilateral nephrectomy
-in the rat. 
-Clin Exp Pharmacol Physiol 1: 547 - 549, 1974
 
 </content>
 </topicdoc>
 
 <topicdoc>
-<name> K - DefinitionRC1 </name>
-<label> Definition </label>
+<name> XX </name>
+<label> XXX </label>
 <content>
 
-K is the time constant for renin clearance.
-K is calculated from the half life of renin using 
-the following formula:
-
-e^-kt1/2 = 0.5. 
--kt1/2 = In(0.5)
-k = -In(0.5)/t1/2 or
-k = 0.69/t1/2
-
-Since the half life of renin is approximately 42.75 minutes,
-k = 0.69/42.75 = .0.161
 
 </content>
 </topicdoc>
 
 <topicdoc>
-<name> Rate - DefinitionRC2 </name>
-<label> Definition </label>
+<name> XXX </name>
+<label> XXX </label>
 <content>
 
-Clearance Rate = K*ReninPool.Mass
 
 </content>
 </topicdoc>

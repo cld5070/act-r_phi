@@ -9,15 +9,16 @@ Copyright : 2009
 
 <vardoc>
 <name> Estradiol.[Conc(nG/mL)]</name>
-<topic> Estradiol - Overview </topic>
-<topic> [Conc(nG/mL)] - DefinitionE1 </topic>
-<topic> Estradiol - Physical Units </topic>
-<seealso> Estradiol - Concentration Units </seealso>
+<topic> XX </topic>
+<topic> XX </topic>
+<topic> XXXX </topic>
+<seealso> XXX </seealso>
+<seealso> XXX </seealso>
 </vardoc>
 
 <vardoc>
 <name> Estradiol.[Conc(nMol/L)] </name>
-<topic> [Conc(nMol/L)] - DefinitionE2 </topic>
+<topic> XXX</topic>
 <topic> XXXX </topic>
 <topic> XXX </topic>
 <seealso> XXX </seealso>
@@ -26,7 +27,7 @@ Copyright : 2009
 
 <vardoc>
 <name> Estradiol.Change </name>
-<topic> Change - DefinitionE3 </topic>
+<topic> XXX </topic>
 <topic> XXX </topic>
 <topic> XXX </topic>
 <seealso> XXXX </seealso>
@@ -35,7 +36,7 @@ Copyright : 2009
 
 <vardoc>
 <name> Estradiol.Degradation </name>
-<topic> Degradation - DefinitionE4 </topic>
+<topic> XX </topic>
 <topic> XX </topic>
 <topic> XXXX </topic>
 <seealso> XXX </seealso>
@@ -44,7 +45,7 @@ Copyright : 2009
 
 <vardoc>
 <name> Estradiol.Gain </name>
-<topic> gain - DefinitionE5 </topic>
+<topic> XXX</topic>
 <topic> XXXX </topic>
 <topic> XXX </topic>
 <seealso> XXX </seealso>
@@ -52,11 +53,29 @@ Copyright : 2009
 </vardoc>
 
 <vardoc>
-<name> Estradiol.InitialMass </name>
+<name> Estradiol.InitialConc </name>
 <topic> XXX </topic>
 <topic> XXX </topic>
 <topic> XXX </topic>
 <seealso> XXXX </seealso>
+<seealso> XXXX </seealso>
+</vardoc>
+
+<vardoc>
+<name> Estradiol.InitialConcFemale </name>
+<topic> XX </topic>
+<topic> XX </topic>
+<topic> XXXX </topic>
+<seealso> XXX </seealso>
+<seealso> XXX </seealso>
+</vardoc>
+
+<vardoc>
+<name> Estradiol.InitialConcMale </name>
+<topic> XXX</topic>
+<topic> XXXX </topic>
+<topic> XXX </topic>
+<seealso> XXX </seealso>
 <seealso> XXXX </seealso>
 </vardoc>
 
@@ -122,57 +141,20 @@ Copyright : 2009
 <seealso> XXXX </seealso>
 </vardoc>
 
-<vardoc>
-<name> Estradiol.TargetConc </name>
-<topic> XX </topic>
-<topic> XX </topic>
-<topic> XXXX </topic>
-<seealso> XXX </seealso>
-<seealso> XXX </seealso>
-</vardoc>
-
-<vardoc>
-<name> Estradiol.TargetConcFemale </name>
-<topic> XXX</topic>
-<topic> XXXX </topic>
-<topic> XXX </topic>
-<seealso> XXX </seealso>
-<seealso> XXXX </seealso>
-</vardoc>
-
-
-<vardoc>
-<name> Estradiol.TargetConcMale </name>
-<topic> XXX</topic>
-<topic> XXXX </topic>
-<topic> XXX </topic>
-<seealso> XXX </seealso>
-<seealso> XXXX </seealso>
-</vardoc>
-
 
 <topicdoc>
-<name> Estradiol - Physical Units </name>
-<label> Physical Units </label>
+<name> XXX</name>
+<label> XXX</label>
 <content>
-
-C18-H24-O2; M.W. = 272.4
-
-Plasma levels: nMol/L or nG/mL
-nMol/L * 0.2724 = nG/mL
 
 </content>
 </topicdoc>
 
 <topicdoc>
-<name> Estradiol - Concentration Units </name>
-<label> Concentration Units </label>
+<name> XX </name>
+<label> XXX </label>
 <content>
 
-Basal State: 0.15 nMol/L
-Surge State: 0.80 nMol/L
-Mass: 1.94 nMol 
-Clearance: 0.108 nMol/Min
 </content>
 </topicdoc>
 

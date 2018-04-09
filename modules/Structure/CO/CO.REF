@@ -24,9 +24,9 @@ CO and O2 bind to hemoglobim competitively.
 CO in the blood only has a pCO when O2 is
 trying to displace it.  The relationship is
 
-   SCALE * pCO    Blood CO Conc
-   ----------- = ----------------
-      pO2        Pulm Cap O2 Conc
+   SCALE * pCO             Blood CO Conc
+   -------------------------  = -----------------------------------
+            pO2                 Pulm Cap O2 Conc
 
 where SCALE is 230.
 

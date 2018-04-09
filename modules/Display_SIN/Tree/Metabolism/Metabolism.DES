@@ -1,0 +1,26 @@
+HumMod / Metabolism DES
+
+Created : 2011-07-26
+Last Modified : 2011-07-26
+Author : Tom Coleman
+Copyright : 2011-2011
+By : University of Mississippi Medical Center
+
+<branch>
+  <name> METABOLISM </name>
+  <label> Metabolism </label>
+  <parent> MAINMENU </parent>
+</branch>
+
+<?path Display\Tree\Metabolism\ ?>
+
+<?include Basics.DES ?>
+
+<separatorbar>
+  <parent> METABOLISM </parent>
+</separatorbar>
+
+<?include LiverMetabolism.DES ?>
+<?include LipidDeposits.DES ?>
+
+End

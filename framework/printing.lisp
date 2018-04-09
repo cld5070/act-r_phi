@@ -99,6 +99,16 @@
 ;;;             : * Set suppress-cmds back to nil upon a reset because apparently
 ;;;             :   even with an unwind-protect it's possible for it to get stuck
 ;;;             :   somehow.
+;;; 2013.08.16 Dan
+;;;             : * Fix a problem with CCL and the environment which seems like
+;;;             :   it can only be dealt with here (I don't like implementation
+;;;             :   hacks in the main code).  By default an opened stream is 
+;;;             :   only available to the thread which opens it, but if one sets
+;;;             :   :v or :cmdt to a pathname and then Loads the file through
+;;;             :   the environment in CCL that stream is unavailable to the
+;;;             :   thread which "runs" the model and an error results.  The 
+;;;             :   fix is to specify :sharing :lock in the open command and
+;;;             :   that has to happen here.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -146,7 +156,8 @@
                   (setf (act-r-output-file (printing-module-v module)) t)
                   (open (parse-namestring (cdr param))
                         :direction :output :if-exists :append 
-                        :if-does-not-exist :create))
+                        :if-does-not-exist :create
+                        #+:ccl :sharing #+:ccl :lock))
                  (t 
                   (setf (act-r-output-file (printing-module-v module)) nil)
                   (cdr param)))))
@@ -159,7 +170,8 @@
                   (setf (act-r-output-file (printing-module-c module)) t)
                   (open (parse-namestring (cdr param))
                         :direction :output :if-exists :append 
-                        :if-does-not-exist :create))
+                        :if-does-not-exist :create
+                        #+:ccl :sharing #+:ccl :lock))
                  (t 
                   (setf (act-r-output-file (printing-module-c module)) nil)
                   (cdr param)))))

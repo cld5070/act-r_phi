@@ -52,7 +52,7 @@ By : University of Mississippi Medical Center
 
 <block><name> Dervs </name>
 
-  <def><name> Change </name><val> CD_H2O.Outflow </val></def>
+  <def><name> Change </name><val> CollectingDuct_H2O.Outflow </val></def>
 
 </block>
 

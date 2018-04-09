@@ -9,112 +9,56 @@ Copyright : 2009
 
 <vardoc>
 <name> KAPump.Rate </name>
-<topic> KAPump - Overview </topic>
-<topic> KA - Physical Units </topic>
-<topic> KA - Concentration Units </topic>
+<topic> XX </topic>
+<topic> XX </topic>
+<topic> XXXX </topic>
+<seealso> XXX </seealso>
+<seealso> XXX </seealso>
 </vardoc>
 
 <vardoc>
-<name> KAPump.Setting </name>
-<topic> Setting - DefinitionKA1 </topic>
-<topic> KA - Physical Units </topic>
-<topic> KA - Concentration Units </topic>
+<name> KAPump.setting </name>
+<topic> XXX</topic>
+<topic> XXXX </topic>
+<topic> XXX </topic>
+<seealso> XXX </seealso>
+<seealso> XXXX </seealso>
 </vardoc>
 
 <vardoc>
 <name> KAPump.Switch </name>
-<topic> Switch - DefinitionKA2 </topic>
-<topic> KA - Physical Units </topic>
-<topic> KA - Concentration Units </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<seealso> XXXX </seealso>
+<seealso> XXXX </seealso>
 </vardoc>
 
 <topicdoc>
-<name> KAump - Overview </name>
-<label> Overview </label>
+<name> XXX</name>
+<label> XXX</label>
 <content>
-
-The KAPump enables the model user to change 
-[KA] levels by infusing ketoacids at different 
-rates. Data is taken from a variety of human and 
-animal studies relating infusion rates to plasma 
-concentrations of KA.
-
-When the switch is turned on, the model user sets the 
-rate by changing the setting using the slide bar. 
-
-Dog Data
-Madison LL, Mebane D, Unger RH, Lochner A. The hypoglycemic 
-action of ketones. II Evidence for a stimulatory feedback
-of ketones on the pancreatic beta cells. 
-J Clin Invest 43: 408 - 415, 1964.
-
-Bjorntorp P, Schersten T. Effect of beta-hydroxybutyrate
-on lipid mobilization. Am J Physiol 212: 683 - 687, 1967.
 
 </content>
 </topicdoc>
 
 <topicdoc>
-<name> Switch - DefinitionKA1 </name>
-<label> Definition </label>
+<name> XX </name>
+<label> XXX </label>
 <content>
 
-When the KAPump switch is turned on, the model 
-user can set infusion rates using the sliding bar 
-feature in the KA pump display box. 
 
 </content>
 </topicdoc>
 
 <topicdoc>
-<name> Setting - DefinitionKA2 </name>
-<label> Definition </label>
+<name> XXX </name>
+<label> XXX </label>
 <content>
 
-When the KAPump switch is turned on, the model 
-user can set infusion rates using the sliding bar 
-feature in the KA pump display box. Rates of infusion
-may be increased from 0 in increments of 1, up to 
-10mG/Min; from 10 mG/Min, in increments of 10, up to
-100 mG/Min; and from 100 mG/Min in increments of 100 
-up to 1000 mG/Min. 
 
 </content>
 </topicdoc>
-
-
-<topicdoc>
-<name> KA - Physical Units </name>
-<label> Physical Units </label>
-<content>
-
-Mass mMol
-Plasma Levels mMol/L
-
-</content>
-</topicdoc>
-
-<topicdoc>
-<name> KA - Concentration Units </name>
-<label> Concentration Units </label>
-<content>
-
-The basic mass units for ketoacids are mMol. We
-can then use the mass in osmoles calculations with
-no modification.
-
-We assume an average molecular weight of 102.
-
-1 mMol/L = 10.2 mG/dL
-
-Normal [KA-] is 0.05 mMol/L.
-
-The volume of distribution is ECFV or 15.0 L. Thus,
-the nominal KA mass is 0.75 mMol.
-
-</content>
-</topicdoc>
-
 
   
 End

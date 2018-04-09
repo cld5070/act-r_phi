@@ -22,10 +22,11 @@ By : University Of Mississippi Medical Center
 <var><name> PhEffect </name></var>
 <var><name> PeripheralDrive </name></var>
 <var><name> ChemoreceptorEffect </name></var>
-
+<var><name> MorphineOnGlomus </name></var>
 <parm><name> CentralBase </name><val> 0.6 </val></parm>
 <parm><name> PeripheralBase </name><val> 0.4 </val></parm>
 
+<var><name> CombinedMorphine </name></var>
 </variables>
 
 <functions>
@@ -36,6 +37,12 @@ By : University Of Mississippi Medical Center
   <point><x> 7.20 </x><y> 10.0 </y><slope> 0 </slope></point>
   <point><x> 7.40 </x><y>  1.0 </y><slope> -6.0 </slope></point>
   <point><x> 8.00 </x><y>  0.0 </y><slope> 0 </slope></point>
+</curve>
+
+<curve>
+  <name> MorphineOnGlomus </name>
+  <point><x> 0 </x><y>  1.0 </y><slope> 0 </slope></point>
+  <point><x> 0.7 </x><y> 0.3 </y><slope> 0 </slope></point>
 </curve>
 
 </functions>
@@ -75,9 +82,12 @@ By : University Of Mississippi Medical Center
   <val> PhOnCentralDrive [ pH ] </val>
 </def>
 
+<def><name> CombinedMorphine </name><val> OR.[MR] + ( 0.33 * OR.[M6GR] )  </val></def>
+<def><name> MorphineOnGlomus </name><val> MorphineOnGlomus [ CombinedMorphine ] </val></def>
+
 <def>
   <name> CentralDrive </name>
-  <val> PhEffect * CentralBase </val>
+  <val> MorphineOnGlomus * PhEffect * CentralBase </val>
 </def>
 
 <def>
@@ -87,7 +97,7 @@ By : University Of Mississippi Medical Center
 
 <def>
   <name> PeripheralDrive </name>
-  <val> ChemoreceptorEffect * PeripheralBase </val>
+  <val> ChemoreceptorEffect * MorphineOnGlomus *  PeripheralBase </val>
 </def>
 
 <def>

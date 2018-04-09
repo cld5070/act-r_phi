@@ -13,17 +13,23 @@ By : University of Mississippi Medical Center
    <wide> 30.0 </wide>
    <title> Flow </title>
 
-<structurename> Kidney-ArcuateArtery </structurename>
 
 <showvalue>
   <row> 1.4 </row><col> 1.0 </col>
-  <name> BloodFlow </name>
+  <name> RightKidney-ArcuateArtery.BloodFlow </name>
   <format><integer/></format>
-  <label> Blood Flow </label>
+  <label> Right Blood Flow </label>
+</showvalue>
+
+<showvalue>
+  <row> 2.4 </row><col> 1.0 </col>
+  <name> LeftKidney-ArcuateArtery.BloodFlow </name>
+  <format><integer/></format>
+  <label> Left Blood Flow </label>
 </showvalue>
 
 <showgraph>
-  <row> 2.4 </row><col> 1.0 </col><high> 7 </high><wide> 28 </wide>
+  <row> 3.4 </row><col> 1.0 </col><high> 7 </high><wide> 28 </wide>
   <leftmargin> 6 </leftmargin>
   <xaxis>
     <name> System.X </name>
@@ -32,27 +38,18 @@ By : University of Mississippi Medical Center
   </xaxis>
   <yaxis>
     <yvar>
-      <name> BloodFlow </name>
+      <name> RightKidney-ArcuateArtery.BloodFlow </name>
       <nolabel/>
       <linecolor> BLUE </linecolor>
     </yvar>
-    <scale><min> 800 </min><max> 1200 </max></scale>
+   <yvar>
+      <name> LeftKidney-ArcuateArtery.BloodFlow </name>
+      <nolabel/>
+      <linecolor> GREEN </linecolor>
+    </yvar>
+    <scale><min> 400 </min><max> 600 </max></scale>
   </yaxis>
 </showgraph>
-
-<showvalue>
-  <row> 9.8 </row><col> 1.0 </col>
-  <name> Conductance </name>
-  <format><integer/></format>
-  <label> Conductance </label>
-</showvalue>
-
-<showvalue>
-  <row> 10.8 </row><col> 1.0 </col>
-  <name> PressureGradient </name>
-  <format><decimal> 1 </decimal></format>
-  <label> Pressure Gradient </label>
-</showvalue>
 
 <infobutton>
   <row> 1.2 </row><col> 26.0 </col>

@@ -11,6 +11,8 @@ Schema : DES V1.0
 
 <variables>
 
+<parm><name> Dummy </name><val> 0 </val></parm>
+
 <parm>
   <name> Dose </name>
   <val> 0.0 </val>
@@ -66,6 +68,15 @@ Schema : DES V1.0
   <name> K </name>
   <val> INVERT ( 2.0 * ( Timespan / 60.0 ) ) </val>
 </def>
+
+<onjustchanged>
+  <name> Dummy </name>
+<def><name> Mass </name><val> Mass + ( Dummy * Dose ) </val></def>
+<def><name> TotalDoses </name><val> TotalDoses + Dummy </val></def>
+<def><name> CumulativeDose </name><val> CumulativeDose + ( Dummy * Dose ) </val></def>
+
+<def><name> Dummy </name><val> 0 </val></def>
+</onjustchanged>
 
 </block>
 

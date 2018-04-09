@@ -213,6 +213,16 @@
 ;;;             :   delay seconds pass.
 ;;; 2013.02.26 Dan
 ;;;             : * Fixed a bug with the CCL Mac run-environment.
+;;; 2013.12.18 Dan
+;;;             : * Changed close-connection so that there's a parameter which
+;;;             :   indcates whether or not to send the close message.
+;;;             : * Changed the reception of a goodbye message so that it 
+;;;             :   completely closes down the connection by killing the 
+;;;             :   process as well.
+;;; 2014.09.10 Dan
+;;;             : * Changed the flag on run-environment for LispWorks to
+;;;             :   :lispworks6 instead of 6.0 so that 6.1 also works (and
+;;;             :   presumably any other 6.x they create).
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 #+:packaged-actr (in-package :act-r)
@@ -326,21 +336,24 @@
 
 
 ;;; close-connection
-;;; This function takes one parameter which should be an environment-connection
-;;; and a keywork parameter kill which defaults to t.  If kill is t, then
-;;; it kills the process that is associated with that connection.  The only
-;;; time one wouldn't want to kill the process is if the close comes from
-;;; within the process itself.  It always removes all the handlers in the table 
-;;; that are associated with that stream and then closes the stream.
+;;; This function takes one parameter which should be an environment-connection,
+;;; a keywork parameter kill which defaults to t, and a keyword parameer send which
+;;; defaults to t.  If kill is t, then it kills the process that is associated with 
+;;; that connection.  The only time one wouldn't want to kill the process is if the 
+;;; close comes from within the process itself.  It always removes all the handlers 
+;;; in the table that are associated with that stream and then closes the stream.
+;;; If send is t then it sends the close notice to the Tcl/Tk side.  If the close
+;;; notice came from that side don't need to send one back.
 
-(defun close-connection (connection &key (kill t))
+(defun close-connection (connection &key (kill t)(send t))
   
   (when (and kill (environment-connection-process connection))
     (uni-process-kill (environment-connection-process connection)))
   
-  (uni-without-interrupts
-   (ignore-errors 
-    (uni-send-string (environment-connection-stream connection) "close nil nil<end>")))
+  (when send
+    (uni-without-interrupts
+     (ignore-errors 
+      (uni-send-string (environment-connection-stream connection) "close nil nil<end>"))))
     
     
   (setf (environment-control-connections *environment-control*)
@@ -567,8 +580,9 @@
       (sync
        (setf (environment-connection-sync connection) t))
       (goodbye ;; kill the connection
-       (format t "Environment Closed~%")
-       (close-connection connection :kill nil))
+       (format *error-output* "Environment Closed~%")
+       (finish-output *error-output*)
+       (close-connection connection :kill t :send nil))
       (t 
        (format *error-output* "Invalid command request: ~s~%" cmd-list)))))
 
@@ -655,7 +669,7 @@
     (while (null (start-environment)) (sleep delay))
     (ccl::cd c)))
 
-#+(and :lispworks (or :win32 :win64) (or :lispworks5 :lispworks6.0))
+#+(and :lispworks (or :win32 :win64) (or :lispworks5 :lispworks6))
 (defun run-environment (&optional (delay 5))
   (sys:call-system "\"Start Environment.exe\"" :current-directory (translate-logical-pathname "ACT-R6:environment") :wait nil)
   (sleep delay)

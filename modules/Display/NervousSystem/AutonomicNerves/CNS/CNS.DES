@@ -1,22 +1,24 @@
 HumMod / CNS
 
 Created : 24-Apr-05
-Revised : 2012-02-02
+Revised : 2013-03-20
 Author : Tom Coleman
-Copyright : 2006-2012
+Copyright : 2006-2013
 By : University Of Mississippi Medical Center
 
 <?path Display\NervousSystem\AutonomicNerves\CNS\ ?>
 
-<?include Baroreflex\Baroreflex.DES ?>
-<?include Chemoreceptors\Chemoreceptors.DES ?>
 <?include Cushing\Cushing.DES ?>
-<?include Exercise\Exercise.DES ?>
-<?include Integration\Integration.DES ?>
-<?include LowPressureReceptors\LowPressureReceptors.DES ?>
-<?include Mechanoreceptors\Mechanoreceptors.DES ?>
+<?include Sympathetics\Sympathetics.DES ?>
+<?include Sympathetics-Adrenal\Sympathetics-Adrenal.DES ?>
+<?include Sympathetics-Cardiac\Sympathetics-Cardiac.DES ?>
+<?include Sympathetics-General\Sympathetics-General.DES ?>
+<?include Sympathetics-Mesenteric\Sympathetics-Mesenteric.DES ?>
+<?include Sympathetics-Hepatic\Sympathetics-Hepatic.DES ?>
+<?include Sympathetics-Renal\Sympathetics-Renal.DES ?>
 <?include Metaboreflex\Metaboreflex.DES ?>
-<?include PituitaryNerve\PituitaryNerve.DES ?>
+<?include Nucleus-ADH\Nucleus-ADH.DES ?>
+<?include Nucleus-CRF\Nucleus-CRF.DES ?>
 <?include TrophicFactor\TrophicFactor.DES ?>
 
 End

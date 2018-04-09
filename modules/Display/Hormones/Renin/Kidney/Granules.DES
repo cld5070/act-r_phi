@@ -7,23 +7,30 @@ Copyright : 2006-2012
 By : University Of Mississippi Medical Center
 
 <groupbox>
-   <row> 20.4 </row>
-   <col> 32.0 </col>
-   <high> 17.8 </high>
-   <wide> 30.0 </wide>
+   <row> 26.4 </row>
+   <col> 42.0 </col>
+   <high> 20.8 </high>
+   <wide> 40.0 </wide>
    <title> Granules </title>
 
 <structurename> ReninGranules </structurename>
 
 <showvalue>
    <row> 1.4 </row><col> 1.0 </col>
-   <name> Mass </name>
+   <name> RightReninGranules.Mass </name>
    <format><decimal> 1 </decimal></format>
-   <label> Mass </label>
+   <label> Right Mass </label>
+</showvalue>
+
+<showvalue>
+   <row> 2.4 </row><col> 1.0 </col>
+   <name> LeftReninGranules.Mass </name>
+   <format><decimal> 1 </decimal></format>
+   <label> Left Mass </label>
 </showvalue>
 
 <showgraph>
-  <row> 2.4 </row><col> 1.0 </col><high> 7 </high><wide> 28 </wide>
+  <row> 3.4 </row><col> 1.0 </col><high> 7 </high><wide> 28 </wide>
   <leftmargin> 7 </leftmargin>
   <xaxis>
     <name> System.X </name>
@@ -32,55 +39,80 @@ By : University Of Mississippi Medical Center
   </xaxis>
   <yaxis>
     <yvar>
-      <name> Mass </name>
+      <name> RightReninGranules.Mass </name>
       <nolabel/>
       <linecolor> BLUE </linecolor>
     </yvar>
-    <scale><min> 800000 </min><max> 900000 </max></scale>
+    <yvar>
+      <name> LeftReninGranules.Mass </name>
+      <nolabel/>
+      <linecolor> GREEN </linecolor>
+    </yvar>
+    <scale><min> 400000 </min><max> 450000 </max></scale>
   </yaxis>
 </showgraph>
 
-<showvalue>
-   <row> 10.0 </row><col> 1.0 </col>
-   <name> Change </name>
-   <format><decimal> 1 </decimal></format>
-   <label> Change </label>
-</showvalue>
+<label><row> 12.4 </row><col> 5 </col><text> Left </text></label>
 
 <showvalue>
-   <row> 11.4 </row><col> 1.0 </col>
-   <name> Gain </name>
+   <row> 13.4 </row><col> 2.0 </col>
+   <name> LeftReninGranules.Gain </name>
    <format><decimal> 1 </decimal></format>
    <label> Gain </label>
 </showvalue>
 
 <showvalue>
-   <row> 12.4 </row><col> 3.0 </col>
-   <name> InFlux </name>
+   <row> 14.4 </row><col> 2.0 </col>
+   <name> LeftReninGranules.InFlux </name>
    <format><decimal> 1 </decimal></format>
    <label> InFlux </label>
 </showvalue>
 
 <showvalue>
-   <row> 13.8 </row><col> 1.0 </col>
-   <name> Loss </name>
+   <row> 15.8 </row><col> 2.0 </col>
+   <name> LeftReninGranules.Loss </name>
    <format><decimal> 1 </decimal></format>
    <label> Loss </label>
 </showvalue>
 
 <showvalue>
-   <row> 14.8 </row><col> 3.0 </col>
-   <name> OutFlux </name>
+   <row> 16.8 </row><col> 2.0 </col>
+   <name> LeftReninGranules.OutFlux </name>
    <format><decimal> 1 </decimal></format>
    <label> OutFlux </label>
 </showvalue>
 
+<label><row> 12.4 </row><col> 23 </col><text> Right </text></label>
+
 <showvalue>
-   <row> 16.2 </row><col> 1.0 </col>
-   <name> OutFluxK </name>
-   <format><decimal> 4 </decimal></format>
-   <label> OutFlux K </label>
+   <row> 13.4 </row><col> 19.0 </col>
+   <name> RightReninGranules.Gain </name>
+   <format><decimal> 1 </decimal></format>
+   <label> Gain </label>
 </showvalue>
+
+<showvalue>
+   <row> 14.4 </row><col> 19.0 </col>
+   <name> RightReninGranules.InFlux </name>
+   <format><decimal> 1 </decimal></format>
+   <label> InFlux </label>
+</showvalue>
+
+<showvalue>
+   <row> 15.8 </row><col> 19.0 </col>
+   <name> RightReninGranules.Loss </name>
+   <format><decimal> 1 </decimal></format>
+   <label> Loss </label>
+</showvalue>
+
+<showvalue>
+   <row> 16.8 </row><col> 19.0 </col>
+   <name> RightReninGranules.OutFlux </name>
+   <format><decimal> 1 </decimal></format>
+   <label> OutFlux </label>
+</showvalue>
+
+
 
 <infobutton>
   <row> 1.2 </row>

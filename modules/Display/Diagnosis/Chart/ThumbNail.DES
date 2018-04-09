@@ -1,28 +1,27 @@
 HumMod / ThumbNail
 
 Created : 02-Apr-09
-Last Modified : 2011-03-30
+Revised : 2013-04-04
 Author : Tom Coleman
-Copyright : 2008-2011
+Copyright : 2008-2013
 By : University of Mississippi Medical Center
-Schema : DES V1.0
 
 <showvalue>
-   <row> 2.0 </row><col> 27.0 </col>
+   <row> 2.0 </row><col> 28 </col>
    <name> BMI.BMI </name>
    <format><decimal> 1 </decimal></format>
    <label> BMI </label>
 </showvalue>
 
 <showvalue>
-  <row> 3.0 </row><col> 27.0 </col>
+  <row> 3.0 </row><col> 28 </col>
   <name> Context-Adiposity.Index </name>
   <format><list> Common.Adiposity </list></format>
   <label> Adiposity </label>
 </showvalue>
 
 <showvalue>
-  <row> 4.0 </row><col> 27.0 </col>
+  <row> 4.0 </row><col> 28 </col>
   <name> Context-Muscularity.Index </name>
   <format><list> Common.Muscularity </list></format>
   <label> Muscularity </label>
@@ -38,15 +37,20 @@ Schema : DES V1.0
 </maplist>
 
 <showvalue>
-  <row> 5.4 </row><col> 27.0 </col>
+  <row> 5.0 </row><col> 28 </col>
   <name> Heart-ECG.Now </name>
   <format><list> Heart-ECG.Now </list></format>
   <label> ECG </label>
 </showvalue>
 
+<label>
+  <row> 6.4 </row><col> 28 </col>
+  <text></text>
+</label>
+
 <infobutton>
   <row> 1.8 </row>
-  <col> 58 </col>
+  <col> 52 </col>
   <line> TYPICAL VALUES </line>
   <line>  </line>
   <line> Age = 37 Years </line>

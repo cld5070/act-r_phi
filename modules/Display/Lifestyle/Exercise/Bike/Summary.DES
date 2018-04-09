@@ -22,6 +22,8 @@ By : University of Mississippi Medical Center
   <label> Status </label>
 </showvalue>
 
+<!--  
+
 <maplist>
   <name> Exercise-Bike.Level </name>
   <map><val>   0 </val><img> Resting </img></map>
@@ -33,6 +35,10 @@ By : University of Mississippi Medical Center
   <map><val> 300 </val><img> 300 </img></map>
   <map><val> 350 </val><img> Maximum </img></map>
 </maplist>
+
+
+
+
 
 <slidebar>
   <row> 2.8 </row><col> 1.0 </col>
@@ -57,10 +63,12 @@ By : University of Mississippi Medical Center
    <label> kP M/Min </label>
 </showvalue>
 
+
 <repeatlist>
   <name> Exercise-Bike.RPM </name>
   <repeat><reps> 100 </reps><stepsize> 1 </stepsize></repeat>
 </repeatlist>
+
 
 <slidebar>
   <row> 6.6 </row><col> 1.0 </col>
@@ -116,7 +124,7 @@ By : University of Mississippi Medical Center
   <line> kP M/Min is the very British </line>
   <line> kiloPound-Meters/Min. </line>
 </infobutton>
-
+-->
 </groupbox>
 
 End

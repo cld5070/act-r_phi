@@ -1,9 +1,9 @@
 HumMod / RespiratoryMuscle-Size
 
 Created : 05-Jun-05
-Revised : 2012-09-13
+Revised : 2013-03-01
 Author : Tom Coleman
-Copyright : 2008-2012
+Copyright : 2008-2013
 By : University of Mississippi Medical Center
 
 <structure><name> RespiratoryMuscle-Size </name>
@@ -57,13 +57,6 @@ By : University of Mississippi Medical Center
 <var><name> InitialCellH2O </name></var>
 
 <constant>
-  <name> H2OFractMass </name>
-  <val> 0.79 </val>
-</constant>
-
-<var><name> SolidsFractMass </name></var>
-
-<constant>
   <name> OtherFractSolids </name>
   <val> 0.50 </val>
 </constant>
@@ -75,21 +68,6 @@ By : University of Mississippi Medical Center
 <definitions>
 
 <block><name> Init </name>
-
-<def>
-  <name> InitialLiquidVol </name>
-  <val> H2OFractMass * InitialMass / LiquidDensity </val>
-</def>
-
-<def>
-  <name> SolidsFractMass </name>
-  <val> 1.0 - H2OFractMass </val>
-</def>
-
-<def>
-  <name> InitialSolidMass </name>
-  <val> SolidsFractMass * InitialMass </val>
-</def>
 
 <def>
   <name> InitialOtherMass </name>

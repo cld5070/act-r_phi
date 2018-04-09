@@ -32,7 +32,7 @@ Schema : DES V1.0
 
 <def>
   <name> Effect </name>
-  <val> High[Osm] [ OsmBody.[Osm(mOsm/L)]-CellWall ] </val>
+  <val> High[Osm] [ OsmBody.CellWall(mOsm/L) ] </val>
 </def>
 
 </block>

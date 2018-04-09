@@ -94,7 +94,7 @@ Schema : DES V1.0
 
 <showvalue>
   <row> 17.6 </row><col> 3.0 </col>
-  <name> CD_K.Outflow </name>
+  <name> CollectingDuct_K.Outflow </name>
   <format><decimal> 3 </decimal></format>
   <label> Urine </label>
 </showvalue>

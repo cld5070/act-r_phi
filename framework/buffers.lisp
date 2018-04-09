@@ -227,6 +227,10 @@
 ;;;             :   of valid-slots since a static chunk doesn't need to be 
 ;;;             :   extended again just because it doesn't currently have such
 ;;;             :   a slot.
+;;; 2013.10.18 Dan
+;;;             : * Changed buffer-spread so that it doesn't have to call sgp
+;;;             :   and no-output.  No need for a module to use the external
+;;;             :   interfaces from an internal function.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -1110,7 +1114,7 @@
       (cond ((null buffer)
              (print-warning "buffer-spread called with an invalid buffer name ~S" buffer-name))
             (t
-             (car (no-output (sgp-fct (list (act-r-buffer-parameter-name buffer)))))))))))
+             (buffer-params-handler (get-module buffer-params) (act-r-buffer-parameter-name buffer))))))))
 
 
 (defun buffers-module-name (buffer-name)

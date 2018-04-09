@@ -55,7 +55,7 @@ By : University of Mississippi Medical Center
     <def><name> Urea </name><val> BladderUrea.[Urea(mG/dL)] </val></def>
   </true>
   <false>
-    <page> I can't pee right now. </page>
+<!--    <page> I can't pee right now. </page>-->
   </false>
 </if>
 

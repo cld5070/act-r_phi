@@ -16,6 +16,8 @@ By : University of Mississippi Medical Center
 <parm><name> ExpiratoryReserve(%) </name><val> 21 </val></parm>
 <parm><name> ResidualVolume(%) </name><val> 20</val></parm>
 
+<var><name> RightCapacity </name><val> 2900 </val></var>
+<var><name> LeftCapacity </name><val> 2900 </val></var>
 <var><name> InspiratoryReserve </name></var>
 <var><name> ExpiratoryReserve </name></var>
 <var><name> ResidualVolume </name></var>
@@ -83,6 +85,9 @@ By : University of Mississippi Medical Center
   <name> FunctionalResidualCapacity </name>
   <val> ExpiratoryReserve + ResidualVolume </val>
 </def>
+
+<def><name> RightCapacity </name><val> TotalCapacity / 2 </val></def>
+<def><name> LeftCapacity </name><val> TotalCapacity / 2 </val></def>
 
 </block>
 </definitions>

@@ -60,7 +60,7 @@ Schema : 2005.0
 
 <showvalue>
   <row> 12.2 </row><col> 1.0 </col>
-  <name> CD_SO4.Outflow </name>
+  <name> CollectingDuct_SO4.Outflow </name>
   <format><decimal> 4 </decimal></format>
   <label> Urine Loss </label>
 </showvalue>

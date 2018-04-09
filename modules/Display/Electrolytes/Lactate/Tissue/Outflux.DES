@@ -44,55 +44,62 @@ Schema : DES V1.0
 
 <showvalue>
   <row> 5.4 </row><col> 1.0 </col>
-  <name> Kidney-Lactate.Outflux </name>
+  <name> RightKidney-Lactate.Outflux </name>
   <format><decimal> 3 </decimal></format>
-  <label> Kidney </label>
+  <label> Right Kidney </label>
 </showvalue>
 
 <showvalue>
   <row> 6.4 </row><col> 1.0 </col>
+  <name> LeftKidney-Lactate.Outflux </name>
+  <format><decimal> 3 </decimal></format>
+  <label> Left Kidney </label>
+</showvalue>
+
+<showvalue>
+  <row> 7.4 </row><col> 1.0 </col>
   <name> LeftHeart-Lactate.Outflux </name>
   <format><decimal> 3 </decimal></format>
   <label> Left Heart </label>
 </showvalue>
 
 <showvalue>
-  <row> 7.4 </row><col> 1.0 </col>
+  <row> 8.4 </row><col> 1.0 </col>
   <name> Liver-Lactate.Outflux </name>
   <format><decimal> 3 </decimal></format>
   <label> Liver </label>
 </showvalue>
 
 <showvalue>
-  <row> 8.4 </row><col> 1.0 </col>
+  <row> 9.4 </row><col> 1.0 </col>
   <name> OtherTissue-Lactate.Outflux </name>
   <format><decimal> 3 </decimal></format>
   <label> Other Tissue </label>
 </showvalue>
 
 <showvalue>
-  <row> 9.4 </row><col> 1.0 </col>
+  <row> 10.4 </row><col> 1.0 </col>
   <name> RespiratoryMuscle-Lactate.Outflux </name>
   <format><decimal> 3 </decimal></format>
   <label> Respiratory Muscle </label>
 </showvalue>
 
 <showvalue>
-  <row> 10.4 </row><col> 1.0 </col>
+  <row> 11.4 </row><col> 1.0 </col>
   <name> RightHeart-Lactate.Outflux </name>
   <format><decimal> 3 </decimal></format>
   <label> Right Heart </label>
 </showvalue>
 
 <showvalue>
-  <row> 11.4 </row><col> 1.0 </col>
+  <row> 12.4 </row><col> 1.0 </col>
   <name> SkeletalMuscle-Lactate.Outflux </name>
   <format><decimal> 3 </decimal></format>
   <label> Skeletal Muscle </label>
 </showvalue>
 
 <showvalue>
-  <row> 12.4 </row><col> 1.0 </col>
+  <row> 13.4 </row><col> 1.0 </col>
   <name> Skin-Lactate.Outflux </name>
   <format><decimal> 3 </decimal></format>
   <label> Skin </label>

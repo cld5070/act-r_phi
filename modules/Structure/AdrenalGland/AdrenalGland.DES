@@ -10,6 +10,7 @@ By : University Of Mississippi Medical Center
 
 <?include AdrenalGland-Flow.DES ?>
 <?include AdrenalGland-Size.DES ?>
+<?include AdrenalGland-Insufficiency.DES ?>
 
 <structure><name> AdrenalGland </name>
 
@@ -17,6 +18,7 @@ By : University Of Mississippi Medical Center
 
 <block><name> Parms </name>
   <call> AdrenalGland-Size.Parms </call>
+  <call> AdrenalGland-Insufficiency.Parms </call>
 </block>
 
 </definitions>

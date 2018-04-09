@@ -16,12 +16,6 @@ Schema : DES V1.0
 
 <structurename> PlasmaProtein </structurename>
 
-<showvalue>
-   <row> 1.4 </row><col> 1.0 </col>
-   <name> Degradation </name>
-   <format><decimal> 4 </decimal></format>
-   <label> Degradation </label>
-</showvalue>
 
 <showgraph>
   <row> 2.4 </row><col> 1.0 </col><high> 7 </high><wide> 28 </wide>
@@ -33,23 +27,26 @@ Schema : DES V1.0
   </xaxis>
   <yaxis>
     <yvar>
-      <name> Degradation </name>
+      <name> AlbuminPool.Degradation </name>
       <nolabel/>
       <linecolor> BLUE </linecolor>
     </yvar>
+    <yvar>
+      <name> IgGPool.Degradation </name>
+      <nolabel/>
+      <linecolor> BLACK </linecolor>
+    </yvar>
+    <yvar>
+      <name> AGPPool.Degradation </name>
+      <nolabel/>
+      <linecolor> RED </linecolor>
+    </yvar>
+
     <scale>
       <min> 0 </min><max> 0.02 </max>
     </scale>
   </yaxis>
 </showgraph>
-
-<showvalue>
-   <row> 9.8 </row><col> 1.0 </col>
-   <name> ProteinEffect </name>
-   <format><decimal> 2 </decimal></format>
-   <label> Protein Effect </label>
-</showvalue>
-
 <repeatlist>
   <name> PlasmaProtein.DegradationBasic </name>
   <repeat><reps> 20 </reps><stepsize>  0.001 </stepsize></repeat>
@@ -58,7 +55,7 @@ Schema : DES V1.0
 
 <slidebar>
   <row> 11.2 </row><col> 1.0 </col>
-  <name> DegradationBasic </name>
+  <name> AlbuminPool.DegradationBasic </name>
   <listname> PlasmaProtein.DegradationBasic </listname>
   <label> Basic </label>
 </slidebar>

@@ -17,7 +17,8 @@ Schema : 2005.0
   <call> Brain-Structure.Calc </call>
   <call> Fat-Structure.Calc </call>
   <call> GITract-Structure.Calc </call>
-  <call> Kidney-Structure.Calc </call>
+  <call> LeftKidney-Structure.Calc </call>
+  <call> RightKidney-Structure.Calc </call>
   <call> LeftHeart-Structure.Calc </call>
   <call> Liver-Structure.Calc </call>
   <call> OtherTissue-Structure.Calc </call>

@@ -49,7 +49,7 @@ Schema : DES V1.0
 
 <showvalue>
    <row> 11.0 </row><col> 1.0 </col>
-   <name> GangliaGeneral.NA(Hz) </name>
+   <name> Ganglia-General.NA(Hz) </name>
    <format><decimal> 2 </decimal></format>
    <label> Nerve Activity </label>
 </showvalue>

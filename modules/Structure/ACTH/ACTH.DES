@@ -32,8 +32,12 @@ By : University of Mississippi Medical Center
 <parm><name> ClampSwitch </name><val> FALSE </val></parm>
 <parm><name> ClampSetting </name><val> 0.0 </val></parm>
 
-<var><name> CRF_Effect </name></var>
-<parm><name> Secretion-Basic </name><val> 17.5 </val></parm>
+<var><name> [CRF]Effect </name></var>
+<var><name> [ANP]Effect </name></var>
+
+<var><name> [ADH]Effect </name></var>
+
+<parm><name> Secretion-Basic </name><val> 28.0 </val></parm>
 
 <parm><name> K </name><val> 560 </val></parm>
 
@@ -48,8 +52,37 @@ By : University of Mississippi Medical Center
   <errorlim> 7.5 </errorlim>
 </diffeq>
 
+<diffeq>
+  <name> NormalADH </name>
+  <integralname> NormalADH </integralname>
+  <initialval> 2 </initialval>
+  <dervname> dNormal </dervname>
+  <errorlim> 0.03 </errorlim>
+</diffeq>
+
 </equations>
 
+<functions>
+
+<curve><name> [CRF]Effect </name>
+<point><x>    0 </x><y> 0 </y><slope> 0 </slope></point>
+<point><x>   80 </x><y> 1 </y><slope> 0.015 </slope></point>
+<point><x> 1000 </x><y> 8 </y><slope> 0 </slope></point>
+</curve>
+
+<curve><name> [ANP]Effect </name>
+<point><x>    2 </x><y> 1.33 </y><slope> 0 </slope></point>
+<point><x>   20 </x><y> 1 </y><slope> -0.0025 </slope></point>
+<point><x> 200 </x><y> 0.66 </y><slope> 0 </slope></point>
+</curve>
+
+<curve><name> [ADH]Effect </name>
+<point><x>   0 </x><y> 0 </y><slope> 0 </slope></point>
+<point><x> 0.3 </x><y> 1 </y><slope> 3.0 </slope></point>
+<point><x> 1.2 </x><y> 4 </y><slope> 0 </slope></point>
+</curve>
+
+</functions>
 <definitions>
 
 <block><name> Init </name>
@@ -67,42 +100,66 @@ By : University of Mississippi Medical Center
 </block>
 
 <block><name> Conc </name>
-<if><test> ClampSwitch </test>
-<true>
-  <def><name> [Conc(nG/mL)] </name><val> ClampSetting / 100 </val></def>
-</true>
-<false>
-  <def><name> [Conc(nG/mL)] </name><val> Mass / ECFV.Vol </val></def>
-</false>
-</if>
 
-<def><name> [Conc(nG/dL)] </name><val> 100.0 * [Conc(nG/mL)] </val></def>
-<def><name> [Conc(pMol/L)] </name><val> [Conc(nG/dL)] * NG/DL_TO_PMOL/L </val></def>
+<conditional>
+  <name> [Conc(nG/mL)] </name>
+  <test> ClampSwitch </test>
+  <true> ClampSetting / 100 </true>
+  <false> Mass / ECFV.Vol </false>
+</conditional>
+
+<def>
+  <name> [Conc(nG/dL)] </name>
+  <val> 100 * [Conc(nG/mL)] </val>
+</def>
+
+<def>
+  <name> [Conc(pMol/L)] </name>
+  <val> [Conc(nG/dL)] * NG/DL_TO_PMOL/L </val>
+</def>
+
 </block>
 
 <block><name> Dervs </name>
 
-<def><name> Secretion </name><val> 10.4 </val></def>
-
-<conditional><name> PumpRate </name>
-<test> PumpSwitch </test>
-<true> PumpSetting </true>
-<false> 0 </false>
+<conditional>
+  <name> PumpRate </name>
+  <test> PumpSwitch </test>
+  <true> PumpSetting </true>
+  <false> 0 </false>
 </conditional>
 
 <def>
-  <name> CRF_Effect </name>
-  <val> CorticotropinReleasingFactor.EffectOnACTH * ( ( 0.7 * ( SIN ( ( 3.14 * System.X / 720 ) - 0.1 ) ) + 0.25 ) + ( 0.22 * ( SIN ( ( 2 * 3.14 * System.X / 720 ) - 0.1 ) ) + 0.25 ) + ( 0.07 * ( SIN ( ( 3 * 3.14 * System.X / 720 ) - 0.1 ) ) + 0.25 ) + ( 0.03 * ( SIN ( ( 4 * 3.14 * System.X / 720 ) - 0.1 ) ) + 0.25 ) )</val>
+  <name> [CRF]Effect </name>
+  <val> [CRF]Effect [ CorticotropinReleasingFactor.[CRF(pG/mL)] ] </val>
+</def>
+
+<def>
+  <name> [ANP]Effect </name>
+  <val> [ANP]Effect [ ANPPool.[ANP] ] </val>
+</def>
+
+
+<def><name> dNormal </name><val> 0.01 * ( ADHPool.Log10Conc - NormalADH ) </val></def>
+
+<def>
+  <name> [ADH]Effect </name>
+  <val> [ADH]Effect [ ADHPool.Log10Conc ] </val>
 </def>
 
 <def>
   <name> Secretion </name>
-  <val> Secretion-Basic * CRF_Effect </val>
+  <val>
+      Secretion-Basic
+    * [CRF]Effect
+    * [ANP]Effect    
+    * Brain-Function.Effect
+  </val>   <!--   * [ADH]Effect -->
 </def>
 
 <def><name> Degradation </name><val> K * [Conc(nG/mL)] </val></def>
 
-<def><name> Gain </name><val> Secretion + PumpRate </val></def>
+<def><name> Gain </name><val> Secretion + PumpRate + ACTHTest.Loss</val></def>
 <def><name> Loss </name><val> Degradation </val></def>
 
 <def><name> Change </name><val> Gain - Loss </val></def>

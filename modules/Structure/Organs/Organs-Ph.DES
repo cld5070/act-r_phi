@@ -17,7 +17,8 @@ Schema : 2005.0
   <call> Brain-Ph.CalcSID </call>
   <call> Fat-Ph.CalcSID </call>
   <call> GITract-Ph.CalcSID </call>
-  <call> Kidney-Ph.CalcSID </call>
+  <call> LeftKidney-Ph.CalcSID </call>
+  <call> RightKidney-Ph.CalcSID </call>
   <call> LeftHeart-Ph.CalcSID </call>
   <call> Liver-Ph.CalcSID </call>
   <call> OtherTissue-Ph.CalcSID </call>
@@ -32,7 +33,8 @@ Schema : 2005.0
   <call> Brain-Ph.CalcPh </call>
   <call> Fat-Ph.CalcPh </call>
   <call> GITract-Ph.CalcPh </call>
-  <call> Kidney-Ph.CalcPh </call>
+  <call> LeftKidney-Ph.CalcPh </call>
+  <call> RightKidney-Ph.CalcPh </call>
   <call> LeftHeart-Ph.CalcPh </call>
   <call> Liver-Ph.CalcPh </call>
   <call> OtherTissue-Ph.CalcPh </call>

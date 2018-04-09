@@ -21,9 +21,9 @@ Schema : DES V1.0
 
 <var><name> Degradation </name></var>
 
-<parm><name> InflowK </name><val> 464.0 </val></parm>
-<parm><name> OutflowK </name><val> 0.880 </val></parm>
-<parm><name> DegradationK </name><val> 0.0000053 </val></parm>
+<parm><name> InflowK </name><val> 464 </val></parm>464
+<parm><name> OutflowK </name><val> 0.88 </val></parm>0.88
+<parm><name> DegradationK </name><val> 0.0000063 </val></parm>0.0000053
 
 <var><name> Mass(G) </name></var>
 
@@ -34,7 +34,7 @@ Schema : DES V1.0
 <diffeq>
   <name> Mass </name>
   <integralname> Mass </integralname>
-  <initialval> 6000000.0 </initialval>
+  <initialval> 7000000.0 </initialval>6
   <dervname> Change </dervname>
   <errorlim> 60000.0 </errorlim>
 </diffeq>
@@ -53,6 +53,8 @@ Schema : DES V1.0
 <block><name> Dervs </name>
 
 <def><name> Inflow </name><val> InflowK * AAPool.[AA] </val></def>
+
+
 <def><name> Outflow </name><val> OutflowK * [Protein] </val></def>
 <def><name> Degradation </name><val> DegradationK * Mass </val></def>
 

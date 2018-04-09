@@ -10,9 +10,6 @@ By : University Of Mississippi Medical Center
 
 <variables>
 
-<parm><name> BasicReab </name><val> 0.9 </val></parm>
-<var><name> FractionalReab </name></var>
-
 
 <var><name> Inflow </name></var>
 <var><name> Reab </name></var>
@@ -20,44 +17,18 @@ By : University Of Mississippi Medical Center
 
 <var><name> Excretion </name></var>
 
-<var><name> [PTH]Effect </name></var>
-
 </variables>
-
-<functions>
-
-<curve>
-  <name> [PTH]Effect </name>
-  <point><x>  0 </x><y> 0 </y><slope> 0 </slope></point>
-  <point><x> 40 </x><y> 1 </y><slope> 0.05 </slope></point>
-  <point><x> 80 </x><y> 2 </y><slope> 0 </slope></point>
-</curve>
-
-</functions>
 
 <definitions>
 <block><name> Calc </name>
-
-<def>
-  <name> [PTH]Effect </name>
-  <val> [PTH]Effect [ ParathyroidHormone.[Conc(pG/mL)] ] </val>
-</def>
-
-<copy><from> BasicReab </from><to> FractReab.Normal </to></copy>
-<copy><from> [PTH]Effect </from><to> FractReab.Effects </to></copy>
-
-<call> FractReab.GetFract </call>
-
-<copy><from> FractReab.Fract </from><to> FractionalReab </to></copy>
-
 <def>
   <name> Inflow </name>
-  <val> NephronCalciumProximal.Outflow </val>
+  <val> LeftNephronCalciumDistal.Inflow + RightNephronCalciumDistal.Inflow </val>
 </def>
 
 <def>
   <name> Reab </name>
-  <val> FractionalReab * Inflow </val>
+  <val> ( LeftNephronCalciumDistal.Inflow  * LeftNephronCalciumDistal.FractionalReab ) +  ( RightNephronCalciumDistal.Inflow  * RightNephronCalciumDistal.FractionalReab ) </val>
 </def>
 
 <def>

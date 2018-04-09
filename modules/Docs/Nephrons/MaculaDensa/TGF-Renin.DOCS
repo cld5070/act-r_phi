@@ -9,7 +9,7 @@ Copyright : 2009
 
 <vardoc>
 <name> TGF-Renin.A2Effect </name>
-<topic> A2Effect - Overview </topic>
+<topic> XX </topic>
 <topic> XX </topic>
 <topic> XXXX </topic>
 <seealso> XXX </seealso>
@@ -18,7 +18,7 @@ Copyright : 2009
 
 <vardoc>
 <name> TGF-Renin.ANPEffect </name>
-<topic> ANPEffect - Overview </topic>
+<topic> XXX</topic>
 <topic> XXXX </topic>
 <topic> XXX </topic>
 <seealso> XXX </seealso>
@@ -81,39 +81,28 @@ Copyright : 2009
 
 
 <topicdoc>
-<name> ANPEffect - Overview </name>
-<label> Overview </label>
+<name> XXX</name>
+<label> XXX</label>
 <content>
-
-Kurtz A, della Bruna R, Pfeilschifter J, Taugner A, Bauer C.
-Atrial natriuretic peptide inhibits renin release from
-juxtaglomerular cells by a cGMP- mediated process.
-Proc Natl Acad Sci USA 83: 4769 - 4773, 1986.
-
-</content>
-</topicdoc>
-
-<topicdoc>
-<name> FurosemideEffect - Overview </name>
-<label> Overview </label>
-<content>
-
-He XR, Greenberg SG, Briggs JP, Schnerman J. Effects
-of furosemide and verapamil on the NaCl dependency
-of macula densa-mediated renin secretion. 
-Hypertension 26: 137 - 142, 1995.
 
 
 </content>
 </topicdoc>
 
 <topicdoc>
-<name> A2Effect - Overview </name>
-<label> Overview </label>
+<name> XX </name>
+<label> XXX </label>
 <content>
-Barrett GL, Morgan TO, Smith M. Influence of angiotensin II (AII)
-and angiotensin I (AI) on renal renin synthesis and release.
-Clin Exp Hypertens A. 10: 1279 - 1282, 1988.
+
+
+</content>
+</topicdoc>
+
+<topicdoc>
+<name> XXX </name>
+<label> XXX </label>
+<content>
+
 
 </content>
 </topicdoc>

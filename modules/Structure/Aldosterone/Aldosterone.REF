@@ -1,11 +1,10 @@
 HumMod / Aldosterone Reference
 
 Created : 07-Apr-05
-Last Modified : 26-Jan-10
+Revised : 2013-03-19
 Author : Tom Coleman
-Copyright : 2006-2010
-Solver : DES 2005
-Schema : 2005.0
+Copyright : 2006-2013
+By : University Of Mississippi Medical Center
 
 Molecular weight of aldo is 360.4.
 Thus 1 pMol = 360.4 pG.
@@ -20,7 +19,7 @@ water (43,000 mL).
 
 Aldo is cleared by the liver.
 Extraction coefficient ~ 0.78,
-working on sphanchnic blood flow.
+working on splanchnic blood flow.
 
 nG/dL = 0.036 * pMol/L.
 

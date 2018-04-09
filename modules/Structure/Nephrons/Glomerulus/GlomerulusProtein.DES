@@ -11,28 +11,22 @@ Schema : DES V1.0
 
 <variables>
 
-<var><name> Rate </name></var>
-<var><name> [Protein] </name></var>
 
 <parm><name> Perm </name><val> 0.0 </val></parm>
+<var><name> LeftPerm </name></var>
+<var><name> RightPerm </name></var>
 
 </variables>
 
 <definitions>
 
-<block><name> Calc </name>
+<block><name> Parms </name>
 
-<def><name> [Protein] </name><val> PlasmaProtein.[Protein] </val></def>
-<def><name> Rate </name><val> [Protein] * Perm </val></def>
-
-</block>
-
-<block><name> Failed </name>
-
-<def><name> [Protein] </name><val> 0.0 </val></def>
-<def><name> Rate </name><val> 0.0 </val></def>
+<def><name> LeftPerm </name><val> Perm MAX LeftGlomerulusProtein.Perm </val></def>
+<def><name> RightPerm </name><val> Perm MAX RightGlomerulusProtein.Perm </val></def>
 
 </block>
+
 
 </definitions>
 </structure>

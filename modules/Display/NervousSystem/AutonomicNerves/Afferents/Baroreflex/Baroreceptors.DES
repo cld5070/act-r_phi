@@ -124,7 +124,7 @@ By : University Of Mississippi Medical Center
 
 <slidebar>
   <row> 25.4 </row><col> 5.0 </col>
-  <name> Tau </name>
+  <name> TauTarget </name>
   <listname> Baroreflex.Tau </listname>
   <label> Tau </label>
 </slidebar>

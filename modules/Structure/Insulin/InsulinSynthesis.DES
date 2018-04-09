@@ -15,6 +15,45 @@ By : University Of Mississippi Medical Center
   <val> 20.0 </val>
 </parm>
 
+<parm>
+  <name> ME_A </name>
+  <val> 200.0 </val>
+</parm>
+
+<parm>
+  <name> ME_m </name>
+  <val> 4.25 </val>
+</parm>
+
+<parm>
+  <name> ME_S </name>
+  <val> 1150.0 </val>
+</parm>
+
+<var>
+  <name> K </name>
+</var>
+
+<var>
+  <name> A </name>
+</var>
+
+<var>
+  <name> S </name>
+</var>
+
+<var>
+  <name> m </name>
+</var>
+
+<var>
+  <name> TargetSynthesis </name>
+</var>
+
+<var>
+  <name> sizeModification </name>
+</var>
+
 <var>
   <name> MassEffect </name>
 </var>
@@ -35,15 +74,13 @@ By : University Of Mississippi Medical Center
 
 <equations>
 
-<delay>
-  <name> Delay </name>
-  <outputname> Delay </outputname>
+<diffeq>
+  <name> Synthesis </name>
+  <integralname> Synthesis </integralname>
   <initialval> 17.0 </initialval>
-  <inputname> SteadyState </inputname>
-  <rateconstname> K </rateconstname>
-  <dervname> Derv </dervname>
+  <dervname> dSynthesis </dervname>
   <errorlim> 0.17 </errorlim>
-</delay>
+</diffeq>
 
 </equations>
 
@@ -59,6 +96,13 @@ By : University Of Mississippi Medical Center
 </functions>
 
 <definitions>
+<block><name> Init </name>
+
+<def><name> A </name><val> ME_A * sizeModification </val></def>
+<def><name> S </name><val> ME_S * sizeModification </val></def>
+<def><name> m </name><val> ME_m  </val></def>
+
+</block>
 <block><name> Parms </name>
 
 <def>
@@ -69,23 +113,23 @@ By : University Of Mississippi Medical Center
 </block>
 
 <block><name> Dervs </name>
-
+<!--
 <def>
   <name> MassEffect </name>
   <val> MassEffect [ InsulinStorage.Mass ] </val>
 </def>
+-->
 
 <def>
-  <name> SteadyState </name>
-  <val> MassEffect </val>
+  <name> MassEffect </name>
+  <val> A * ( S ^ m ) / ( ( InsulinStorage.Mass ^ m ) + ( S ^ m ) ) </val>
 </def>
 
-<conditional>
-  <name> Rate </name>
-  <test> Clamp </test>
-  <true> Level </true>
-  <false> Delay </false>
-</conditional>
+<def><name> TargetSynthesis </name><val> MassEffect * Pancreas-BetaCells.DamageMultiplier </val></def>
+<def><name> dSynthesis </name><val> K * ( TargetSynthesis - Synthesis ) </val></def>
+
+<def><name> Rate </name>
+  <val> ( Level * Clamp ) + ( ( NOT Clamp ) + ( Synthesis * Pancreas-BetaCells.DamageMultiplier ) ) </val></def>
 
 </block>
 

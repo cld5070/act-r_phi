@@ -45,21 +45,21 @@ Schema : DES V1.0
 
 <showvalue>
    <row> 11.8 </row><col> 1.0 </col>
-   <name> UT_LymphProtein.Rate </name>
+   <name> Torso_Upper_LymphProtein.Rate </name>
    <format><decimal> 4 </decimal></format>
    <label> Upper Torso </label>
 </showvalue>
 
 <showvalue>
    <row> 12.8 </row><col> 1.0 </col>
-   <name> MT_LymphProtein.Rate </name>
+   <name> Torso_Middle_LymphProtein.Rate </name>
    <format><decimal> 4 </decimal></format>
    <label> Middle Torso </label>
 </showvalue>
 
 <showvalue>
    <row> 13.8 </row><col> 1.0 </col>
-   <name> LT_LymphProtein.Rate </name>
+   <name> Torso_Lower_LymphProtein.Rate </name>
    <format><decimal> 4 </decimal></format>
    <label> Lower Torso </label>
 </showvalue>

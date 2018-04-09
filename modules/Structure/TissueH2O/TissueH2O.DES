@@ -8,9 +8,9 @@ By : University of Mississippi Medical Center
 
 <?path Structure\TissueH2O\ ?>
 
-<?include UT_H2O.DES ?>
-<?include MT_H2O.DES ?>
-<?include LT_H2O.DES ?>
+<?include Torso_Upper_H2O.DES ?>
+<?include Torso_Middle_H2O.DES ?>
+<?include Torso_Lower_H2O.DES ?>
 
 <?include CapillaryWater\CapillaryWater.DES ?>
 <?include CapillaryProtein\CapillaryProtein.DES ?>
@@ -36,25 +36,25 @@ By : University of Mississippi Medical Center
 <var><name> Gain </name></var>
 <var><name> Loss </name></var>
 
-<constant><name> LT_SizeFract </name><val> 0.30 </val></constant>
-<constant><name> MT_SizeFract </name><val> 0.50 </val></constant>
-<constant><name> UT_SizeFract </name><val> 0.20 </val></constant>
+<constant><name> Torso_Lower_SizeFract </name><val> 0.315 </val></constant>.3
+<constant><name> Torso_Middle_SizeFract </name><val> 0.47 </val></constant>.5
+<constant><name> Torso_Upper_SizeFract </name><val> 0.215 </val></constant>.2
 
-<constant><name> LT_CalsFract </name><val> 0.20 </val></constant>
-<constant><name> MT_CalsFract </name><val> 0.50 </val></constant>
-<constant><name> UT_CalsFract </name><val> 0.30 </val></constant>
+<constant><name> Torso_Lower_CalsFract </name><val> 0.20 </val></constant>
+<constant><name> Torso_Middle_CalsFract </name><val> 0.50 </val></constant>
+<constant><name> Torso_Upper_CalsFract </name><val> 0.30 </val></constant>
 
-<constant><name> LT_SweatFract </name><val> 0.33 </val></constant>
-<constant><name> MT_SweatFract </name><val> 0.34 </val></constant>
-<constant><name> UT_SweatFract </name><val> 0.33 </val></constant>
+<constant><name> Torso_Lower_SweatFract </name><val> 0.33 </val></constant>
+<constant><name> Torso_Middle_SweatFract </name><val> 0.34 </val></constant>
+<constant><name> Torso_Upper_SweatFract </name><val> 0.33 </val></constant>
 
-<constant><name> LT_SkinFract </name><val> 0.33 </val></constant>
-<constant><name> MT_SkinFract </name><val> 0.34 </val></constant>
-<constant><name> UT_SkinFract </name><val> 0.33 </val></constant>
+<constant><name> Torso_Lower_SkinFract </name><val> 0.33 </val></constant>
+<constant><name> Torso_Middle_SkinFract </name><val> 0.34 </val></constant>
+<constant><name> Torso_Upper_SkinFract </name><val> 0.33 </val></constant>
 
-<constant><name> LT_LungFract </name><val> 0.0 </val></constant>
-<constant><name> MT_LungFract </name><val> 1.0 </val></constant>
-<constant><name> UT_LungFract </name><val> 0.0 </val></constant>
+<constant><name> Torso_Lower_LungFract </name><val> 0.0 </val></constant>
+<constant><name> Torso_Middle_LungFract </name><val> 1.0 </val></constant>
+<constant><name> Torso_Upper_LungFract </name><val> 0.0 </val></constant>
 
 </variables>
 
@@ -62,45 +62,28 @@ By : University of Mississippi Medical Center
 
 <block><name> Init </name>
 
-<def><name> InitialVol </name>
-  <val>
-      Bone-Size.InitialLiquidVol
-    + Brain-Size.InitialLiquidVol
-    + Fat-Size.InitialLiquidVol
-    + GITract-Size.InitialLiquidVol
-    + Kidney-Size.InitialLiquidVol
-    + LeftHeart-Size.InitialLiquidVol
-    + Liver-Size.InitialLiquidVol
-    + OtherTissue-Size.InitialLiquidVol
-    + RespiratoryMuscle-Size.InitialLiquidVol
-    + RightHeart-Size.InitialLiquidVol
-    + SkeletalMuscle-Size.InitialLiquidVol
-    + Skin-Size.InitialLiquidVol
-  </val>
-</def>
-
 <def>
   <name> Vol </name>
   <val> InitialVol </val>
 </def>
 
-<call> UT_H2O.Init </call>
-<call> MT_H2O.Init </call>
-<call> LT_H2O.Init </call>
+<call> Torso_Upper_H2O.Init </call>
+<call> Torso_Middle_H2O.Init </call>
+<call> Torso_Lower_H2O.Init </call>
 
 </block>
 
 <block><name> CalcVol </name>
 
-<call> UT_H2O.Calc </call>
-<call> MT_H2O.Calc </call>
-<call> LT_H2O.Calc </call>
+<call> Torso_Upper_H2O.Calc </call>
+<call> Torso_Middle_H2O.Calc </call>
+<call> Torso_Lower_H2O.Calc </call>
 
 <def><name> Vol </name>
   <val>
-      UT_H2O.Vol
-    + MT_H2O.Vol
-    + LT_H2O.Vol
+      Torso_Upper_H2O.Vol
+    + Torso_Middle_H2O.Vol
+    + Torso_Lower_H2O.Vol
   </val>
 </def>
 
@@ -126,23 +109,23 @@ By : University of Mississippi Medical Center
 
 <call> InterstitialProtein.Dervs </call>
 
-<call> UT_H2O.Dervs </call>
-<call> MT_H2O.Dervs </call>
-<call> LT_H2O.Dervs </call>
+<call> Torso_Upper_H2O.Dervs </call>
+<call> Torso_Middle_H2O.Dervs </call>
+<call> Torso_Lower_H2O.Dervs </call>
 
 <def><name> Gain </name>
   <val>
-      UT_H2O.Gain
-    + MT_H2O.Gain
-    + LT_H2O.Gain
+      Torso_Upper_H2O.Gain
+    + Torso_Middle_H2O.Gain
+    + Torso_Lower_H2O.Gain
   </val>
 </def>
 
 <def><name> Loss </name>
   <val>
-      UT_H2O.Loss
-    + MT_H2O.Loss
-    + LT_H2O.Loss
+      Torso_Upper_H2O.Loss
+    + Torso_Middle_H2O.Loss
+    + Torso_Lower_H2O.Loss
   </val>
 </def>
 

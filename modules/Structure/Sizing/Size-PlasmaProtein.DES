@@ -11,7 +11,11 @@ By : University Of Mississippi Medical Center
 <definitions>
 
 <block><name> Calc </name>
-  <call> PlasmaProtein.Init </call>
+  <call> AlbuminPool.Init </call>
+  <call> IgGPool.Init </call>
+  <call> AGPPool.Init </call>
+  <call> HetaPool.Init </call>
+
 </block>
 
 </definitions>

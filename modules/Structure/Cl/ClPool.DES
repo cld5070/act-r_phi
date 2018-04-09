@@ -1,11 +1,10 @@
 HumMod / ClPool
 
 Created : 06-Apr-05
-Last Modified : 26-Jan-10
+Revised : 2013-03-05
 Author : Tom Coleman
-Copyright : 2006-2010
+Copyright : 2006-2013
 By : University Of Mississippi Medical Center
-Schema : DES V1.0
 
 <structure><name> ClPool </name>
 
@@ -16,10 +15,9 @@ Schema : DES V1.0
 
 <var><name> [Cl-] </name></var>
 <var><name> [Cl-(mEq/L)] </name></var>
-<var><name> [Cl-(mEq/L)-Initial] </name></var>
 
-<var><name> Target[Cl-] </name><val> 0.106 </val></var>
 <var><name> InitialMass </name></var>
+<var><name> [Cl-(mEq/L)-Initial] </name></var>
 
 </variables>
 
@@ -37,9 +35,12 @@ Schema : DES V1.0
 <definitions>
 
 <block><name> Init </name>
-  <def><name> InitialMass </name><val> Target[Cl-] * ECFV.Vol </val></def>
-  <def><name> Mass </name><val> InitialMass </val></def>
-  <def><name> [Cl-(mEq/L)-Initial] </name><val> 1000.0 * Target[Cl-] </val></def>
+
+<def>
+  <name> Mass </name>
+  <val> InitialMass </val>
+</def>
+
 </block>
 
 <block><name> CalcConc </name>
@@ -62,7 +63,7 @@ Schema : DES V1.0
 
 <def><name> Loss </name>
   <val>  
-      CD_Cl.Outflow
+      CollectingDuct_Cl.Outflow
     + SweatDuct.ClOutflow
     + Hemorrhage.ClRate
     + DialyzerActivity.Cl-Flux

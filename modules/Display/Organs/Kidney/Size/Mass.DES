@@ -10,16 +10,11 @@ Schema : DES V1.0
 <groupbox>
    <row> 2.0 </row>
    <col> 32.0 </col>
-   <high> 12.4 </high>
+   <high> 12.9 </high>
    <wide> 30.0 </wide>
    <title> Mass </title>
 
-<showvalue>
-   <row> 1.4 </row><col> 1.0 </col>
-   <name> Kidney-Size.Mass </name>
-   <format> <integer/> </format>
-   <label> Mass </label>
-</showvalue>
+
 
 <showgraph>
   <row> 2.4 </row><col> 1.0 </col><high> 7 </high><wide> 28 </wide>
@@ -31,29 +26,74 @@ Schema : DES V1.0
   </xaxis>
   <yaxis>
     <yvar>
-      <name> Kidney-Size.Mass </name>
+      <name> RightKidney-Size.Mass </name>
       <nolabel/>
       <linecolor> BLUE </linecolor>
     </yvar>
-    <scale>
-      <min> 300 </min><max> 400 </max>
+    <yvar>
+      <name> LeftKidney-Size.Mass </name>
+      <nolabel/>
+      <linecolor> GREEN </linecolor>
+    </yvar>    <scale>
+      <min> 150 </min><max> 200 </max>
     </scale>
   </yaxis>
 </showgraph>
 
-<showvalue>
-   <row> 9.8 </row><col> 1.0 </col>
-   <name> Kidney-Size.LiquidMass </name>
-   <format> <integer/> </format>
-   <label> Liquids </label>
-</showvalue>
 
-<showvalue>
-   <row> 10.8 </row><col> 1.0 </col>
-   <name> Kidney-Size.SolidMass</name>
-   <format> <integer/> </format>
-   <label> Solids </label>
-</showvalue>
+<showtable>
+<row> 9.8 </row><col> 1 </col>
+
+<column>
+<indent> 0 </indent>
+<fieldwidth> 7 </fieldwidth>
+<justify> LEFT </justify>
+
+<textcell> </textcell>
+<textcell> Liquids</textcell>
+<textcell> Solids </textcell>
+
+</column>
+
+<column>
+<indent> 7.0 </indent>
+<fieldwidth> 6.0 </fieldwidth>
+<justify> RIGHT </justify>
+
+<textcell> Left </textcell>
+
+<valuecell>
+  <name> LeftKidney-Size.LiquidMass  </name>
+  <format><decimal> 3 </decimal></format>
+</valuecell>
+
+<valuecell>
+   <name> LeftKidney-Size.SolidMass</name>
+  <format><decimal> 3 </decimal></format>
+</valuecell>
+
+</column>
+
+<column>
+<indent> 17.0 </indent>
+<fieldwidth> 6.0 </fieldwidth>
+<justify> RIGHT </justify>
+
+<textcell> Right </textcell>
+
+<valuecell>
+  <name> RightKidney-Size.LiquidMass  </name>
+  <format><decimal> 3 </decimal></format>
+</valuecell>
+
+<valuecell>
+   <name> RightKidney-Size.SolidMass </name>
+  <format><decimal> 3 </decimal></format>
+</valuecell>
+
+</column>
+</showtable>
+
 
 <infobutton>
   <row> 1.2 </row>

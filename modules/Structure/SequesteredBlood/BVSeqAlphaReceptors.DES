@@ -28,12 +28,12 @@ By : University Of Mississippi Medical Center
 
 <def>
   <name> NeuralAgonism </name>
-  <val> GangliaGeneral.NA(Hz) </val>
+  <val> Ganglia-General.NA(Hz) </val>
 </def>
 
 <def>
   <name> HumoralAgonism </name>
-  <val> AlphaPool.Effect </val>
+  <val> Alpha1Pool.Effect </val>
 </def>
 
 <def>
@@ -48,7 +48,7 @@ By : University Of Mississippi Medical Center
   <name> Activity </name>
   <test> Switch </test>
   <true> Setting </true>
-  <false> TotalAgonism * AlphaBlockade.Effect </false>
+  <false> TotalAgonism </false>
 </conditional>
 
 </block>

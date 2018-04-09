@@ -1,11 +1,10 @@
 HumMod / OrganFlow
 
 Created : 21-Oct-04
-Last Modified : 26-Jan-10
+Revised : 2013-03-09
 Author : Tom Coleman
-Copyright : 2006-2010
+Copyright : 2006-2013
 By : University Of Mississippi Medical Center
-Schema : DES V1.0
 
 <structure><name> OrganFlow </name>
 
@@ -32,7 +31,7 @@ Schema : DES V1.0
 <def><name> HepaticVeinFlow </name>
   <val>
       GITract-Flow.BloodFlow
-    + HepaticArtery.BloodFlow
+    + HepaticArtery-Flow.BloodFlow
   </val>
 </def>
 
@@ -42,7 +41,8 @@ Schema : DES V1.0
    + Bone-Flow.BloodFlow
    + Brain-Flow.BloodFlow
    + Fat-Flow.BloodFlow
-   + Kidney-Flow.BloodFlow
+   + LeftKidney-Flow.BloodFlow
+   + RightKidney-Flow.BloodFlow
    + OtherTissue-Flow.BloodFlow
    + RespiratoryMuscle-Flow.BloodFlow
    + SkeletalMuscle-Flow.BloodFlow

@@ -15,8 +15,9 @@ Schema : DES V1.0
   <name> Rate </name>
 </var>
 
+<var><name> K </name></var>
 <parm>
-  <name> K </name>
+  <name> KTarget </name>
   <val> 0.0161 </val>
 </parm>
 
@@ -25,10 +26,12 @@ Schema : DES V1.0
 <definitions>
 <block><name> Dervs </name>
 
+<def><name> K </name><val> KTarget </val></def>
 <def>
   <name> Rate </name>
   <val> K * ReninPool.Mass </val>
 </def>
+<!-- at mass=9000, clearance should be 145/minute-->
 
 </block>
 

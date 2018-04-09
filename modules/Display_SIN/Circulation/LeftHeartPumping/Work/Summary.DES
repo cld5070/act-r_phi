@@ -1,0 +1,87 @@
+HumMod / Summary
+
+Created : 2011-08-10
+Revised : 2012-02-13
+Author : Tom Coleman
+Copyright : 2011-2012
+By : University of Mississippi Medical Center
+
+<structurename> LeftHeartPumping-Work </structurename>
+
+<groupbox>
+   <row> 2.0 </row>
+   <col> 1.0 </col>
+   <high> 16.2 </high>
+   <wide> 30.0 </wide>
+   <title> Summary </title>
+
+<showvalue>
+   <row> 1.4 </row><col> 1.0 </col>
+   <name> Work </name>
+   <format><integer/></format>
+   <label> Work </label>
+</showvalue>
+
+<showgraph>
+  <row> 2.4 </row><col> 1.0 </col><high> 7 </high><wide> 28 </wide>
+  <leftmargin> 7 </leftmargin>
+  <xaxis>
+    <name> System.X </name>
+    <label> Time </label>
+    <scale><min> 0 </min><max> 2 </max></scale>
+  </xaxis>
+  <yaxis>
+    <yvar>
+      <name> Work </name>
+      <nolabel/>
+      <linecolor> BLUE </linecolor>
+    </yvar>
+    <scale>
+      <min> 500000 </min><max> 600000 </max>
+    </scale>
+  </yaxis>
+</showgraph>
+
+<radiobuttons>
+  <row> 9.8 </row><col> 1.0 </col>
+  <name> ClampSwitch </name>
+  <listname> Common.Switch </listname>
+  <label> Clamp </label>
+</radiobuttons>
+
+<repeatlist>
+  <name> Clamp </name>
+  <repeat><reps> 100 </reps><stepsize> 1000 </stepsize></repeat>
+</repeatlist>
+
+<slidebar>
+  <row> 11.2 </row><col> 1.0 </col>
+  <name> ClampSetting </name>
+  <listname> Clamp </listname>
+  <label> Level </label>
+</slidebar>
+
+<showvalue>
+   <row> 12.6 </row><col> 1.0 </col>
+   <name> Heart-Ventricles.Rate </name>
+   <format><decimal> 1 </decimal></format>
+   <label> Heart Rate </label>
+</showvalue>
+
+<showvalue>
+   <row> 13.6 </row><col> 1.0 </col>
+   <name> LeftHeartPumping-Pumping.StrokeVolume </name>
+   <format><decimal> 1 </decimal></format>
+   <label> Stroke Volume </label>
+</showvalue>
+
+<showvalue>
+   <row> 14.6 </row><col> 1.0 </col>
+   <name> SystemicArtys.Pressure </name>
+   <format><decimal> 1 </decimal></format>
+   <label> Arterial Pressure </label>
+</showvalue>
+
+</groupbox>
+
+End

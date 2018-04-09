@@ -16,6 +16,10 @@ Schema : DES V1.0
 </var>
 
 <var>
+  <name> sizeModification </name>
+</var>
+
+<var>
   <name> [T4-T3]Effect </name>
 </var>
 
@@ -58,6 +62,7 @@ Schema : DES V1.0
   <name> [TSH] </name>
   <val>
       Base
+    * sizeModification
     * [T4-T3]Effect
     * TemperatureEffect
   </val>

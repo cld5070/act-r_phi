@@ -130,6 +130,9 @@
 ;;;             :   to a spec which says "= <that slot> nil" because for statics
 ;;;             :   not having a slot is the same as having a slot with an explict
 ;;;             :   value of nil.
+;;; 2014.02.14 Dan
+;;;             : * Fixed a bug in test-chunk-slots with how it tests variables
+;;;             :   between slots that was broken with the 13/3/13 change.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -345,18 +348,18 @@
                               ;; If the slot is full make that the binding
                               (setf (cdr (assoc value bindings)) content)
                             ;; otherwise we've failed to match the spec
-                            (return-from test-chunk-slots nil)))))
-               ;; first encounter with this variable
-               (if (eq modifier '=)
-                   ;; if it's got a value in the slot make that the binding
-                   (multiple-value-bind (content exists) (gethash slot slots)
-                     (if (and exists content)
-                         (push (cons value content) bindings)
-                       (return-from test-chunk-slots nil)))
-                 ;; otherwise save this test and just create an empty binding
-                 (progn
-                   (push (cons value nil) bindings)
-                   (push x rest))))
+                            (return-from test-chunk-slots nil))))
+                 ;; first encounter with this variable
+                 (if (eq modifier '=)
+                     ;; if it's got a value in the slot make that the binding
+                     (multiple-value-bind (content exists) (gethash slot slots)
+                       (if (and exists content)
+                           (push (cons value content) bindings)
+                         (return-from test-chunk-slots nil)))
+                   ;; otherwise save this test and just create an empty binding
+                   (progn
+                     (push (cons value nil) bindings)
+                     (push x rest)))))
               ((keywordp slot)
                ;; skip keywords i.e. request parameters
                )

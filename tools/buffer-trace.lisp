@@ -73,6 +73,9 @@
 ;;;             : * Changed add-buffer-trace-notes to return the notes passed
 ;;;             :   instead of the event that gets scheduled and check to make
 ;;;             :   sure the buffer is a valid name.
+;;; 2013.09.18 Dan
+;;;             : * Fixing it so that setting the buffer-trace param returns the
+;;;             :   value that was set.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -642,7 +645,8 @@ CG-USER(86): (do-experiment)
             
             (if (cdr param)
                 (no-output (sgp-fct (list :trace-filter 'disable-event-trace)))
-              (no-output (sgp-fct (list :trace-filter nil)))))
+              (no-output (sgp-fct (list :trace-filter nil))))
+            (cdr param))
            
            (:save-buffer-trace 
              (setf (btm-save btm) (cdr param))

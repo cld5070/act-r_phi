@@ -67,7 +67,7 @@ Schema : 2005.0
 
 <showvalue>
   <row> 15.4 </row><col> 3.0 </col>
-  <name> LM_Glucose.Release </name>
+  <name> LiverMetabolism_Glucose.Release </name>
   <format><decimal> 1 </decimal></format>
   <label> Liver Release </label>
 </showvalue>
@@ -109,7 +109,7 @@ Schema : 2005.0
 
 <showvalue>
   <row> 21.8 </row><col> 3.0 </col>
-  <name> LM_Glucose.Uptake </name>
+  <name> LiverMetabolism_Glucose.Uptake </name>
   <format><decimal> 1 </decimal></format>
   <label> Liver Uptake </label>
 </showvalue>

@@ -17,7 +17,8 @@ Schema : 2005.0
   <call> Brain-Size.ScaleH2O </call>
   <call> Fat-Size.ScaleH2O </call>
   <call> GITract-Size.ScaleH2O </call>
-  <call> Kidney-Size.ScaleH2O </call>
+  <call> LeftKidney-Size.ScaleH2O </call>
+  <call> RightKidney-Size.ScaleH2O </call>
   <call> LeftHeart-Size.ScaleH2O </call>
   <call> Liver-Size.ScaleH2O </call>
   <call> OtherTissue-Size.ScaleH2O </call>

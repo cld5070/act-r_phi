@@ -19,7 +19,8 @@
 ;;;             : This file contains the code that handles passing
 ;;;             : the virtual windows out through Tk - the visible
 ;;;             : virtuals, and the AGI support.
-;;; Bugs        : 
+;;; Bugs        : [ ] What should happen if a button goes away between when the
+;;;             :     model initiates an action and finishes it?
 ;;; 
 ;;; Todo        :   
 ;;; ----- History -----
@@ -108,6 +109,12 @@
 ;;;             : * Instead of redefining visible-virtuals-available? here the
 ;;;             :   function in the virtual's uwi file now calls check-with-environment-for-visible-virtuals
 ;;;             :   which is defined here instead.
+;;; 2013.07.18 Dan
+;;;             : * Fixed a potential bug in vv-click-event-handler because
+;;;             :   the button could be removed between the model's click 
+;;;             :   initiation and execution in which case it can't send
+;;;             :   the update to the environment.  Probably shouldn't eval
+;;;             :   the action either, but I'm not fixing that now.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 #+:packaged-actr (in-package :act-r)
@@ -167,7 +174,7 @@
   (declare (ignore where))
   (when (functionp (action-function btn))
     (funcall (action-function btn) btn))
-  (when (model-generated-action) 
+  (when (and (model-generated-action) (view-container btn))
     (send-env-window-update (list 'click (id (view-container btn)) (id btn)))))
 
 

@@ -67,6 +67,15 @@
 ;;;             : * Noted the bug about :on-click under Linux, which isn't an
 ;;;             :   issue for now since the Linux interface doesn't work for a
 ;;;             :   model anyway.
+;;; 2013.01.23 Dan
+;;;             : * Added a before method on virtual-key-down for button-panes 
+;;;             :   because sometimes those seem to get the key presses instead
+;;;             :   of the "key catcher" so pass the press "up" to the window
+;;;             :   in those cases too.
+;;; 2014.04.09 Dan
+;;;             : * Call rpm-window-click-event-handler with a position vector
+;;;             :   because that matches what the get-mouse-coordinates method
+;;;             :   returns.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 #+:packaged-actr (in-package :act-r)
@@ -90,8 +99,8 @@
   (declare (ignore buttons))
   (when (null cur-pos)
       (setf cur-pos (cg:cursor-position device)))
-    (rpm-window-click-event-handler device (list (position-x cur-pos)
-                                                 (position-y cur-pos))))
+    (rpm-window-click-event-handler device (vector (position-x cur-pos)
+                                                   (position-y cur-pos))))
 
 (defmethod rpm-window-click-event-handler ((device rpm-real-window) position)
   (declare (ignore position))
@@ -239,6 +248,12 @@
 #-(version>= 6 1) (defmethod virtual-key-down :before ((catcher cg::lisp-group-box-pane) buttons key-code)
   (when (subtypep (type-of (cg:parent catcher)) 'rpm-window)
     (virtual-key-down (cg:parent catcher) buttons key-code)))
+
+
+#+(version>= 8 0) (defmethod virtual-key-down :before ((catcher cg::button-pane) buttons key-code)
+  (when (subtypep (type-of (cg:parent catcher)) 'rpm-window)
+    (virtual-key-down (cg:parent catcher) buttons key-code)))
+
 
 
 (defun make-rpm-window (&key (visible nil) (class nil) (title "RPM Window") (width 100) (height 100) (x 0 ) (y 0))

@@ -21,7 +21,7 @@ By : University of Mississippi Medical Center
 <stabledelay>
   <name> [HCO3] </name>
   <outputname> [HCO3] </outputname>
-  <initialval> 0.0240 </initialval>
+  <initialval> 0.02340 </initialval>.024
   <inputname> [HCO3-SteadyState] </inputname>
   <rateconstname> K </rateconstname>
   <dervname> Change </dervname>

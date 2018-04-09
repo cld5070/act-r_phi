@@ -78,7 +78,7 @@ By : University of Mississippi Medical Center
 
 
 <def><name> GutFAAbsorption </name><val> FFA_TO_GLY * GILumenFat.Absorption </val></def>
-<def><name> LiverFARelease </name><val> FFA_TO_GLY * LM_FattyAcids.Release </val></def>
+<def><name> LiverFARelease </name><val> FFA_TO_GLY * LiverMetabolism_FattyAcids.Release </val></def>
 
 <def><name> TriglycerideHydrolysis </name><val> TriglycerideHydrolysis.GlycerolRate </val></def>
 

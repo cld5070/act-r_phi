@@ -1,0 +1,184 @@
+HumMod / Kidney-Metabolism
+
+Created : 31-Mar-05
+Revised : 2012-08-06
+Author : Tom Coleman
+Copyright : 2006-2012
+By : University Of Mississippi Medical Center
+
+<structure><name> Kidney-Metabolism </name>
+
+<variables>
+
+<var><name> TotalCalsUsed </name></var>
+<var><name> BasalCalsUsed </name></var>
+<var><name> InitialBasalCalsUsed </name></var>
+
+<constant><name> BasalCalsUsed((Cal/Min)/G) </name><val> 0.1420 </val></constant>
+
+<parm><name> CalMultiplier </name><val> 1.0 </val></parm>
+
+<var><name> ProximalTubuleCals </name></var>
+<var><name> LoopOfHenleCals </name></var>
+<var><name> DistalTubuleCals </name></var>
+
+<constant><name> CalPerNa+(Meq/Min) </name><val> 3.6 </val></constant>
+
+<var><name> AerobicCals </name></var>
+<var><name> AnaerobicCals </name></var>
+
+<var><name> O2Need </name></var>
+<var><name> O2Lack </name></var>
+<var><name> O2Use </name></var>
+
+<var><name> Vein[O2] </name></var>
+<var><name> AerobicFraction </name></var>
+
+</variables>
+
+<equations>
+
+<impliciteq>
+  <name> VeinPO2 </name>
+  <startname> VeinPO2 </startname>
+  <initialval> 60.0 </initialval>
+  <endname> VeinPO2End </endname>
+  <errorlim> 0.60 </errorlim>
+  <searchmin> 0.0 </searchmin>
+  <searchmaxname> SearchMax </searchmaxname>
+</impliciteq>
+
+</equations>
+
+<functions>
+
+<curve>
+  <name> PO2OnAerobicFraction </name>
+  <point><x>  2.0 </x><y> 0.0 </y><slope> 0 </slope></point>
+  <point><x> 20.0 </x><y> 1.0 </y><slope> 0 </slope></point>
+</curve>
+
+</functions>
+
+<definitions>
+
+<block><name> ScaleCals </name>
+
+<def>
+  <name> InitialBasalCalsUsed </name>
+  <val>
+       CalMultiplier
+     * BasalCalsUsed((Cal/Min)/G)
+     * Kidney-Size.InitialMass
+  </val>
+</def>
+
+</block>
+
+<block><name> CalcCals </name>
+
+<def>
+  <name> BasalCalsUsed </name>
+  <val>
+       CalMultiplier
+     * BasalCalsUsed((Cal/Min)/G)
+     * Kidney-Size.Mass
+  </val>
+</def>
+
+<def>
+  <name> ProximalTubuleCals </name>
+  <val> CalPerNa+(Meq/Min) * PT_Na.Reab </val>
+</def>
+
+<def>
+  <name> LoopOfHenleCals </name>
+  <val> CalPerNa+(Meq/Min) * LH_Na.Reab </val>
+</def>
+
+<def>
+  <name> DistalTubuleCals </name>
+  <val> CalPerNa+(Meq/Min) * DT_Na.Reab </val>
+</def>
+
+<def>
+  <name> TotalCalsUsed </name>
+  <val>
+    ( BasalCalsUsed
+    * Thyroid.Effect
+    * HeatMetabolism.Core
+    * Kidney-Structure.Effect )
+    + ProximalTubuleCals
+    + LoopOfHenleCals
+    + DistalTubuleCals
+  </val>
+</def>
+
+<def>
+  <name> O2Need </name>
+  <val> Metabolism-Tools.CalToO2 * TotalCalsUsed </val>
+</def>
+
+<def>
+  <name> SearchMax </name>
+  <val> PO2Artys.Pressure </val>
+</def>
+
+<implicitmath><name> VeinPO2 </name>
+
+<def>
+  <name> AerobicFraction </name>
+  <val> PO2OnAerobicFraction [ VeinPO2 ] </val>
+</def>
+
+<def>
+  <name> O2Use </name>
+  <val> Kidney-Metabolism.O2Need * AerobicFraction </val>
+</def>
+
+<conditional>
+  <name> Vein[O2] </name>
+  <test> Kidney-Flow.BloodFlow GT 0.0 </test>
+  <true> O2Artys.[O2] - ( O2Use / Kidney-Flow.BloodFlow ) </true>
+  <false> 0.0 </false>
+</conditional>
+
+<copy>
+  <from> Vein[O2] </from>
+  <to> HgbTissue.[O2] </to>
+</copy>
+
+<call> HgbTissue.O2ToPO2 </call>
+
+<copy>
+  <from> HgbTissue.pO2 </from>
+  <to> VeinPO2End </to>
+</copy>
+
+</implicitmath>
+
+</block>
+
+<block><name> SplitCals </name>
+
+<def>
+  <name> O2Lack </name>
+  <val> O2Need - O2Use </val>
+</def>
+
+<def>
+  <name> AerobicCals </name>
+  <val> Metabolism-Tools.O2ToCal * O2Use </val>
+</def>
+
+<def>
+  <name> AnaerobicCals </name>
+  <val> Metabolism-Tools.O2ToCal * O2Lack </val>
+</def>
+
+</block>
+</definitions>
+
+</structure>
+
+End

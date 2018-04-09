@@ -38,7 +38,7 @@ By : University of Mississippi Medical Center
 
 <block><name> Dervs </name>
 
-  <def><name> Change </name><val> CD_Cl.Outflow </val></def>
+  <def><name> Change </name><val> CollectingDuct_Cl.Outflow </val></def>
 
 </block>
 

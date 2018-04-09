@@ -1,11 +1,10 @@
 HumMod / UreaCell
 
 Created : 28-May-05
-Last Modified : 26-Jan-10
+Revised : 2013-03-05
 Author : Tom Coleman
-Copyright : 2008-2010
+Copyright : 2008-2013
 By : University of Mississippi Medical Center
-Schema : DES V1.0
 
 <structure><name> UreaCell </name>
 
@@ -23,6 +22,8 @@ Schema : DES V1.0
 
 <var><name> Osmoles </name></var>
 
+<var><name> InitialMass </name></var>
+
 </variables>
 
 <equations>
@@ -30,14 +31,22 @@ Schema : DES V1.0
 <diffeq>
   <name> Mass </name>
   <integralname> Mass </integralname>
-  <initialval> 10150.0 </initialval>
   <dervname> Change </dervname>
-  <errorlim> 101.0 </errorlim>
+  <errorlim> 65 </errorlim>
 </diffeq>
 
 </equations>
 
 <definitions>
+
+<block><name> Init </name>
+
+<def>
+  <name> Mass </name>
+  <val> InitialMass </val>
+</def>
+
+</block>
 
 <block><name> CalcOsmoles </name>
   <def><name> Osmoles </name><val> MG_TO_MOSM * Mass </val></def>

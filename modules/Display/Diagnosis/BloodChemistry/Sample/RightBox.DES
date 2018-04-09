@@ -71,24 +71,24 @@ By : University Of Mississippi Medical Center
 </showvalue>
 
 <showvalue>
-   <row> 10.2 </row><col> 3 </col>
+   <row> 10.6 </row><col> 1.0 </col>
+   <name> WeakAnions </name>
+   <format><decimal> 1 </decimal></format>
+   <label> Weak </label>
+</showvalue>
+
+<showvalue>
+   <row> 11.6 </row><col> 3 </col>
    <name> [SO4--] </name>
    <format><decimal> 1 </decimal></format>
    <label> [SO4--] </label>
 </showvalue>
 
 <showvalue>
-   <row> 11.2 </row><col> 3 </col>
+   <row> 12.6 </row><col> 3 </col>
    <name> [PO4--] </name>
    <format><decimal> 1 </decimal></format>
    <label> [PO4--] </label>
-</showvalue>
-
-<showvalue>
-   <row> 12.6 </row><col> 1.0 </col>
-   <name> WeakAnions </name>
-   <format><decimal> 1 </decimal></format>
-   <label> Weak </label>
 </showvalue>
 
 <showvalue>

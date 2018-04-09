@@ -32,7 +32,6 @@ By : University Of Mississippi Medical Center
 
 <constant><name> MW </name><val> 180.0 </val></constant>
 
-<var><name> Target[Glucose] </name><val> 1.10 </val></var>
 <var><name> InitialMass </name></var>
 
 </variables>
@@ -40,7 +39,7 @@ By : University Of Mississippi Medical Center
 <equations>
 
 <diffeq>
-  <name> Mass </name>
+  <name> Mass </name><!-- in mg -->
   <integralname> Mass </integralname>
   <dervname> Change </dervname>
   <errorlim> 165.0 </errorlim>
@@ -50,15 +49,19 @@ By : University Of Mississippi Medical Center
 
 <definitions>
 
+<block><name> Init </name>
+
+<def>
+  <name> Mass </name>
+  <val> InitialMass </val>
+</def>
+
+</block>
+
 <block><name> CalcOsmoles </name>
 
 <def><name> Osmoles </name><val> Mass / MW </val></def>
 
-</block>
-
-<block><name> Init </name>
-  <def><name> InitialMass </name><val> Target[Glucose] * ECFV.Vol </val></def>
-  <def><name> Mass </name><val> InitialMass </val></def>
 </block>
 
 <block><name> CalcConc </name>
@@ -81,7 +84,7 @@ By : University Of Mississippi Medical Center
 <def><name> Gain </name>
   <val>
       GILumenCarbohydrates.Absorption
-    + LM_Glucose.Release
+    + LiverMetabolism_Glucose.Release
     + GlucosePump.Rate
   </val>
 </def>
@@ -89,7 +92,7 @@ By : University Of Mississippi Medical Center
 <def><name> Loss </name>
   <val>
       Metabolism-Glucose.TotalUptake
-    + LM_Glucose.Uptake
+    + LiverMetabolism_Glucose.Uptake
     + NephronGlucose.Spillover
     + GlucoseDecomposition.Rate
   </val>

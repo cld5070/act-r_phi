@@ -1,0 +1,46 @@
+HumMod / DietGoalElectrolytes
+
+Created : 07-Apr-05
+Last Modified : 2011-08-01
+Author : Tom Coleman
+Copyright : 2006-2011
+By : University Of Mississippi Medical Center
+
+<structure><name> DietGoalElectrolytes </name>
+
+<variables>
+
+<parm>
+  <name> Na+_mMol/Day </name>
+  <val> 180.0 </val>
+</parm>
+
+<parm>
+  <name> Cl-_mMol/Day </name>
+  <val> 200.0 </val>
+</parm>
+
+<parm>
+  <name> K+_mMol/Day </name>
+  <val> 70.0 </val>
+</parm>
+
+<parm>
+  <name> Ca++_mMol/Day </name>
+  <val> 30.0 </val>
+</parm>
+
+<parm>
+  <name> PO4---_mMol/Day </name>
+  <val> 30.0 </val>
+</parm>
+
+<parm>
+  <name> SO4--_mMol/Day </name>
+  <val> 50.0 </val>
+</parm>
+
+</variables>
+</structure>
+
+End

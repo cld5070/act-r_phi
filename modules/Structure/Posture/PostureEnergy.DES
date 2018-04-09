@@ -10,7 +10,7 @@ By : University of Mississippi Medical Center
 
 <variables>
 
-<var><name> Cals </name></var>
+<var><name> Cals </name><val> 0 </val></var>
 
 <parm><name> Lying </name><val> 0 </val></parm>
 <parm><name> Sitting </name><val> 250 </val></parm>

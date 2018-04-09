@@ -11,21 +11,26 @@ Schema : 2005.0
 <groupbox>
    <row> 2.0 </row>
    <col> 1.0 </col>
-   <high> 18.8 </high>
+   <high> 28.8 </high>
    <wide> 30.0 </wide>
    <title> Pressure Change </title>
 
-<structurename> Kidney-Myogenic </structurename>
-
 <showvalue>
    <row> 1.4 </row><col> 1.0 </col>
-   <name> PressureChange(Steady-State) </name>
+   <name> RightKidney-Myogenic.PressureChange(Steady-State) </name>
    <format><decimal> 2 </decimal></format>
-   <label> Change (Steady-State) </label>
+   <label> Right Change (Steady-State) </label>
+</showvalue>
+
+<showvalue>
+   <row> 2.4 </row><col> 1.0 </col>
+   <name> LeftKidney-Myogenic.PressureChange(Steady-State) </name>
+   <format><decimal> 2 </decimal></format>
+   <label> Left Change (Steady-State) </label>
 </showvalue>
 
 <showgraph>
-  <row> 2.4 </row><col> 1.0 </col><high> 9 </high><wide> 28 </wide>
+  <row> 3.4 </row><col> 1.0 </col><high> 9 </high><wide> 28 </wide>
   <leftmargin> 6 </leftmargin>
   <xaxis>
     <name> System.X </name>
@@ -34,19 +39,25 @@ Schema : 2005.0
   </xaxis>
   <yaxis>
     <yvar>
-      <name> PressureChange(Steady-State) </name>
+      <name> RightKidney-Myogenic.PressureChange(Steady-State)  </name>
       <nolabel/>
       <linecolor> BLUE </linecolor>
     </yvar>
+    <yvar>
+      <name> LeftKidney-Myogenic.PressureChange(Steady-State) </name>
+      <nolabel/>
+      <linecolor> GREEN </linecolor>
+    </yvar>
+
     <scale><min> -10 </min><max> +10 </max><inc> 10 </inc></scale>
   </yaxis>
 </showgraph>
 
 <radiobuttons>
   <row> 11.8 </row><col> 1.0 </col>
-  <name> Clamp </name>
+  <name> RightKidney-Myogenic.Clamp </name>
   <listname> Common.Switch </listname>
-  <label> Clamp </label>
+  <label> Right Clamp </label>
 </radiobuttons>
 
 <repeatlist>
@@ -57,16 +68,16 @@ Schema : 2005.0
 
 <slidebar>
   <row> 13.2 </row><col> 1.0 </col>
-  <name> Level </name>
+  <name> RightKidney-Myogenic.Level </name>
   <listname> Kidney-Myogenic.Level </listname>
-  <label> Level </label>
+  <label> Right Level </label>
 </slidebar>
 
 <showvalue>
    <row> 14.6 </row><col> 1.0 </col>
-   <name> AdaptedPressure </name>
+   <name> RightKidney-Myogenic.AdaptedPressure </name>
    <format><decimal> 1 </decimal></format>
-   <label> Adapted Pressure </label>
+   <label> Right Adapted Pressure </label>
 </showvalue>
 
 <repeatlist>
@@ -76,16 +87,52 @@ Schema : 2005.0
 
 <slidebar>
   <row> 15.8 </row><col> 3.0 </col>
-  <name> Tau </name>
+  <name> RightKidney-Myogenic.Tau </name>
   <listname> Kidney-Myogenic.Tau </listname>
-  <label> Tau </label>
+  <label> Right Tau </label>
 </slidebar>
 
 <showvalue>
    <row> 17.2 </row><col> 1.0 </col>
-   <name> InterlobarPressure </name>
+   <name> RightKidney-Myogenic.InterlobarPressure </name>
    <format><decimal> 1 </decimal></format>
-   <label> Interlobar Pressure </label>
+   <label> Right Interlobar Pressure </label>
+</showvalue>
+
+
+<radiobuttons>
+  <row> 18.8 </row><col> 1.0 </col>
+  <name> LeftKidney-Myogenic.Clamp </name>
+  <listname> Common.Switch </listname>
+  <label> Left Clamp </label>
+</radiobuttons>
+
+<slidebar>
+  <row> 20.2 </row><col> 1.0 </col>
+  <name> LeftKidney-Myogenic.Level </name>
+  <listname> Kidney-Myogenic.Level </listname>
+  <label> Left Level </label>
+</slidebar>
+
+<showvalue>
+   <row> 21.6 </row><col> 1.0 </col>
+   <name> LeftKidney-Myogenic.AdaptedPressure </name>
+   <format><decimal> 1 </decimal></format>
+   <label> Left Adapted Pressure </label>
+</showvalue>
+
+<slidebar>
+  <row> 23.0 </row><col> 3.0 </col>
+  <name> LeftKidney-Myogenic.Tau </name>
+  <listname> Kidney-Myogenic.Tau </listname>
+  <label> LeftTau </label>
+</slidebar>
+
+<showvalue>
+   <row> 24.4 </row><col> 1.0 </col>
+   <name> LeftKidney-Myogenic.InterlobarPressure </name>
+   <format><decimal> 1 </decimal></format>
+   <label> Left Interlobar Pressure </label>
 </showvalue>
 
 <infobutton>

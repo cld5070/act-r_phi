@@ -10,7 +10,6 @@ Copyright : 2009
 <vardoc>
 <name> CarotidSinus.Level </name>
 <topic> CarotidSinus - Overview </topic>
-<topic> Level - DefinitionCS1 </topic>
 <seealso> CarotidSinus.Pressure </seealso>
 
 </vardoc>
@@ -18,16 +17,15 @@ Copyright : 2009
 <vardoc>
 <name> CarotidSinus.Pressure </name>
 <topic> Pressure - Overview </topic>
-<topic> Pressure - DefinitionCS2 </topic>
+<topic> Pressure - Values </topic>
 <seealso> CarotidSinus.Level </seealso>
 <seealso> RegionalPressure.Carotid </seealso>
-<seealso> Baroreflex.PressureChange </seealso>
-<seealso> Baroreflex.SinusPressure </seealso>
+<seealso> Baroreflex </seealso>
 </vardoc>
 
 <vardoc>
 <name> CarotidSinus.Switch </name>
-<topic> Switch - DefinitionCS1 </topic>
+<topic> CarotidSinus - Overview </topic>
 </vardoc>
 
 <topicdoc>
@@ -67,21 +65,12 @@ J Physiol 209: 257-293, 1970.
 </topicdoc>
 
 <topicdoc>
-<name> Level - DefinitionCS1 </name>
-<label> Definition </label>
-<content>
-
-
-</content>
-</topicdoc>
-
-<topicdoc>
-<name> Pressure - DefinitionCS2 </name>
-<label> Definition </label>
+<name> Pressure </name>
+<label> Pressure - Overview </label>
 <content>
 
 Carotid sinus pressure is aortic pressure plus the
-hydrostatic gradient. Units are mmHg
+hydrostatic gradient.Units are mmHg
 
 </content>
 </topicdoc>

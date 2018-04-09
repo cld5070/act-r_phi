@@ -15,7 +15,7 @@ By : University of Mississippi Medical Center
 
 <showvalue>
    <row> 1.4 </row><col> 1.0 </col>
-   <name> HepaticArtery.PlasmaFlow </name>
+   <name> HepaticArtery-Flow.PlasmaFlow </name>
    <format><integer/></format>
    <label> Plasma Flow </label>
 </showvalue>

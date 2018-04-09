@@ -42,8 +42,8 @@ Schema : DES V1.0
 
 <curve>
   <name> PhOnFunction </name>
-  <point><x> 6.6 </x><y> 0.0 </y><slope> 0 </slope></point>
-  <point><x> 6.7 </x><y> 1.0 </y><slope> 0 </slope></point>
+  <point><x> 6.25 </x><y> 0.0 </y><slope> 0 </slope></point>
+  <point><x> 6.5 </x><y> 1.0 </y><slope> 0 </slope></point>
 </curve>
 
 <curve>

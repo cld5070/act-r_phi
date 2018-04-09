@@ -9,7 +9,7 @@ Copyright : 2009
 
 <vardoc>
 <name> PeripheralResistance.TPR </name>
-<topic> PeripheralResistance - DefinitionPR1 </topic>
+<topic> PeripheralResistance - Overview </topic>
 <topic> PeripheralResistance - Physical Units </topic>
 <topic> PeripheralResistance - Concentration Units </topic>
 <seealso> CardiacOutput.Flow </seealso>
@@ -45,12 +45,12 @@ A typical value is 0.017mmHg/(ml/Min)
 </topicdoc>
 
 <topicdoc>
-<name> PeripheralResistance - DefinitionPR1 </name>
-<label> Definition </label>
+<name> PeripheralResistance - Overview </name>
+<label> Overview </label>
 <content>
 
 Resistance is the impediment to blood flow in a 
-vessel. Total peripheral resistance (TPR) is the 
+vessel. Total peripheral resistance is the 
 resistance to flow of the entire systemic circulation.
 
 </content>

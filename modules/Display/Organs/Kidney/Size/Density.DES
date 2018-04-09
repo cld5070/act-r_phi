@@ -8,7 +8,7 @@ By : University Of Mississippi Medical Center
 Schema : DES V1.0
 
 <groupbox>
-   <row> 14.8 </row>
+   <row> 15.8 </row>
    <col> 32.0 </col>
    <high> 6.4 </high>
    <wide> 30.0 </wide>
@@ -16,24 +16,72 @@ Schema : DES V1.0
 
 <showvalue>
    <row> 1.4 </row><col> 1.0 </col>
-   <name> Kidney-Size.Density </name>
+   <name> RightKidney-Size.Density </name>
    <format><decimal> 3 </decimal></format>
-   <label> Organ </label>
+   <label> Right Kidney </label>
 </showvalue>
 
 <showvalue>
-   <row> 2.8 </row><col> 3 </col>
-   <name> Kidney-Size.LiquidDensity </name>
+   <row> 2.4 </row><col> 21.0 </col>
+   <name> LeftKidney-Size.Density </name>
    <format><decimal> 3 </decimal></format>
-   <label> Liquids </label>
+   <label> Left Kidney </label>
 </showvalue>
 
-<showvalue>
-   <row> 3.8 </row><col> 3 </col>
-   <name> Kidney-Size.SolidDensity</name>
-   <format><decimal> 3 </decimal></format>
-   <label> Solids </label>
-</showvalue>
+
+
+<showtable>
+<row> 3.8 </row><col> 3 </col>
+
+<column>
+<indent> 0 </indent>
+<fieldwidth> 7 </fieldwidth>
+<justify> LEFT </justify>
+
+<textcell> </textcell>
+<textcell> Liquids</textcell>
+<textcell> Solids </textcell>
+
+</column>
+
+<column>
+<indent> 7.0 </indent>
+<fieldwidth> 6.0 </fieldwidth>
+<justify> RIGHT </justify>
+
+<textcell> Left </textcell>
+
+<valuecell>
+   <name> LeftKidney-Size.LiquidVol</name>
+  <format><decimal> 3 </decimal></format>
+</valuecell>
+
+<valuecell>
+   <name> LeftKidney-Size.SolidVol</name>
+  <format><decimal> 3 </decimal></format>
+</valuecell>
+
+</column>
+
+<column>
+<indent> 17.0 </indent>
+<fieldwidth> 6.0 </fieldwidth>
+<justify> RIGHT </justify>
+
+<textcell> Right </textcell>
+
+<valuecell>
+   <name> RightKidney-Size.LiquidMass</name>
+  <format><decimal> 3 </decimal></format>
+</valuecell>
+
+<valuecell>
+   <name> RightKidney-Size.SolidMass</name>
+  <format><decimal> 3 </decimal></format>
+</valuecell>
+
+</column>
+</showtable>
 
 <infobutton>
   <row> 1.2 </row>

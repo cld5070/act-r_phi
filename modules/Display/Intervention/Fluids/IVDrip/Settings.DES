@@ -9,7 +9,7 @@ By : University of Mississippi Medical Center
 <groupbox>
    <row> 2.0 </row>
    <col> 1.0 </col>
-   <high> 29.6 </high>
+   <high> 40.6 </high>
    <wide> 30.0 </wide>
    <title> Settings </title>
 
@@ -43,6 +43,11 @@ By : University of Mississippi Medical Center
   <repeat><reps>   7 </reps><stepsize> 100.0 </stepsize></repeat>
 </repeatlist>
 
+<repeatlist>
+  <name> RL </name>
+  <repeat><reps> 1 </reps><stepsize>   1.0 </stepsize></repeat>
+</repeatlist>
+
 <label>
   <row> 4.2 </row><col> 1.0 </col>
   <text> Clinical Saline </text>
@@ -57,6 +62,7 @@ By : University of Mississippi Medical Center
   <map><val> 345 </val><img> 2% </img></map>
   <map><val> 520 </val><img> 3% </img></map>
   <map><val> 860 </val><img> 5% </img></map>
+  <map><val> 1720 </val><img> 10% </img></map>
 </maplist>
 
 <slidebar>
@@ -158,29 +164,36 @@ By : University of Mississippi Medical Center
 
 <label>
   <row> 24.2 </row><col> 1.0 </col>
-  <text> Protein </text>
+  <text> Ringer's Lactate</text>
 </label>
 
 <slidebar>
   <row> 25.4 </row><col> 2.0 </col>
-  <name> [Protein] </name>
-  <listname> Conc </listname>
-  <label> [Protein] </label>
+  <name> [LactatedRingers] </name>
+  <listname> RL </listname>
+  <label> Ringers Lactate </label>
 </slidebar>
 
 <showvalue>
   <row> 26.6 </row><col> 2.0 </col>
-  <name> ProteinRate </name>
+  <name> LRRate </name>
   <format><decimal> 2 </decimal></format>
   <label> Rate </label>
 </showvalue>
 
-<showvalue>
-  <row> 28.0 </row><col> 1.0 </col>
-  <name> [Osm] </name>
-  <format><decimal> 1 </decimal></format>
-  <label> [Osm] </label>
-</showvalue>
+<repeatlist>
+  <name> TempAddition </name>
+  <repeat><reps> 21 </reps><stepsize>   1.0 </stepsize></repeat>
+</repeatlist>
+
+<slidebar>
+  <row> 28.4 </row><col> 2.0 </col>
+  <name> HeatIVDrip.TempAmend </name>
+  <listname> TempAddition </listname>
+  <label> Amend Temperature (deg C) </label>
+</slidebar>
+
+
 
 <infobutton>
   <row> 1.2 </row>
@@ -207,3 +220,4 @@ By : University of Mississippi Medical Center
 </groupbox>
 
 End
+

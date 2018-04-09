@@ -1,13 +1,13 @@
 HumMod / FluidVolume
 
 Created : 2010-05-24
-Last Modified : 2010-05-24
+Revised : 2013-02-21
 Author : Tom Coleman
-Copyright : 2010-2010
+Copyright : 2010-2013
 By : University of Mississippi Medical Center
 
 <groupbox>
-   <row> 20.6 </row>
+   <row> 22.6 </row>
    <col> 32.0 </col>
    <high> 13.4 </high>
    <wide> 30.0 </wide>

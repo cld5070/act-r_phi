@@ -42,11 +42,6 @@ Copyright : 2009
 </vardoc>
 
 <vardoc>
-<name> AldoPool.Clamp </name>
-<topic> Clamp - AP8Definition </topic>
-</vardoc>
-
-<vardoc>
 <name> AldoPool.Gain </name>
 <topic> Gain - AP2Definition </topic>
 <seealso> AldoSecretion.Rate </seealso>
@@ -58,11 +53,6 @@ Copyright : 2009
 <topic> InitialMass - AP3Definition </topic>
 <seealso> BodyH2O.InitialMass </seealso>
 <seealso> AldoPool.Target[Aldo] </seealso>
-</vardoc>
-
-<vardoc>
-<name> AldoPool.Level </name>
-<topic> Level - AP9Definition </topic>
 </vardoc>
 
 <vardoc>
@@ -162,7 +152,7 @@ J Endocrinology 81: 79P - 91P, 1079.
 
 The initial mass or the initial circulating pool is the 
 Target[Aldo] multiplied by the initial volume of distribution. 
-In the case of aldosterone, the volume of distribution is body 
+In the case of adosterone, the volume of distribution is body 
 water.
 
 InitialMass = Target[Aldo]*BodyH2O.InitialVol
@@ -257,34 +247,6 @@ respectively.
 PMOLTONG is a constant used to convert aldosterone concentrations
 expressed in pMol/L to concentrations expressed in nG/dL.
 nG/dL = 0.036 * pMol/L.
-
-</content>
-</topicdoc>
-
-<topicdoc>
-<name> Clamp - AP8Definition </name>
-<label> Definition </label>
-<content>
-
-The Clamp enables the model user to fix Aldo plasma levels.
-The model user turns the clamp to "on" in the Aldosterone 
-Pool display box. The plasma level is set by using the 
-sliding bar. 
-
-</content>
-</topicdoc>
-
-<topicdoc>
-<name> Level - AP9Definition </name>
-<label> Definition </label>
-<content>
-
-The Aldo clamp feature enables the model user to 
-fix plasma aldo levels. When the clamp switch is 
-turned "on", the user can set the aldosterone level
- using the sliding bar in the Aldo Pool display box. 
-Levels can be increased in increments of 10 from 
-0.0 up to 1000pMol/L. 
 
 </content>
 </topicdoc>

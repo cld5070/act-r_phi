@@ -14,12 +14,12 @@ By : University Of Mississippi Medical Center
 <var><name> Loss </name></var>
 
 <var><name> [K+] </name></var>
+<var><name> [K+]-Initial </name></var>
+
 <var><name> [K+(mEq/L)] </name></var>
-<var><name> [K+(mEq/L)-Initial] </name></var>
+<var><name> [K+(mEq/L)-Initial]</name></var>
 
 <parm><name> CaptiveMass </name><val> 2180.0 </val></parm>
-
-<var><name> Target[K+] </name><val> 0.142 </val></var>
 <var><name> InitialMass </name></var>
 
 </variables>
@@ -38,9 +38,17 @@ By : University Of Mississippi Medical Center
 <definitions>
 
 <block><name> Init </name>
-  <def><name> InitialMass </name><val> Target[K+] * CellH2O.InitialVol </val></def>
-  <def><name> Mass </name><val> InitialMass </val></def>
-  <def><name> [K+(mEq/L)-Initial] </name><val> 1000.0 * Target[K+] </val></def>
+
+<def>
+  <name> Mass </name>
+  <val> InitialMass </val>
+</def>
+
+<def>
+  <name> [K+]-Initial </name>
+  <val> [K+(mEq/L)-Initial] / 1000 </val>
+</def>
+
 </block>
 
 <block><name> Conc </name>

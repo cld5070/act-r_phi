@@ -1,7 +1,7 @@
 HumMod / Sizing-OrganMass DES
 
 Created : 2012-03-10
-Revised : 2012-03-21
+Revised : 2013-03-01
 Author : Tom Coleman
 Copyright : 2012-2012
 By : University of Mississippi Medical Center
@@ -10,8 +10,6 @@ By : University of Mississippi Medical Center
 
 <variables>
 
-<var><name> Installed </name><val> FALSE </val></var>
-
 <var><name> BaseMass(G) </name></var>
 <var><name> FatMass(G) </name></var>
 <var><name> SkeletalMuscleMass(G) </name></var>
@@ -19,15 +17,18 @@ By : University of Mississippi Medical Center
 <var><name> CheckSum_Mass </name></var>
 <var><name> CheckSum_Percent </name></var>
 
+<var><name> OtherTissue_Percent   </name></var>
+
 <constant><name> Bone_Percent              </name><val> 41.2 </val></constant>
 <constant><name> Brain_Percent             </name><val>  5.8 </val></constant>
 <constant><name> GITract_Percent           </name><val>  4.9 </val></constant>
-<constant><name> Kidney_Percent            </name><val>  1.3 </val></constant>
-<constant><name> LeftHeart_Percent         </name><val>  1.1 </val></constant>
+<constant><name> RightKidney_Percent            </name><val>  0.73 </val></constant>
+<constant><name> LeftKidney_Percent            </name><val>  0.57 </val></constant>
+
+<parm><name> LeftHeart_Percent         </name><val>  1.1 </val></parm>
 <constant><name> Liver_Percent             </name><val>  7.5 </val></constant>
-<constant><name> OtherTissue_Percent       </name><val> 13.5 </val></constant>
 <constant><name> RespiratoryMuscle_Percent </name><val> 13.8 </val></constant>
-<constant><name> RightHeart_Percent        </name><val>  0.2 </val></constant>
+<parm><name> RightHeart_Percent        </name><val>  0.2 </val></parm>
 <constant><name> Skin_Percent              </name><val> 10.7 </val></constant>
 
 <constant><name> AdrenalGland_Percent   </name><val> 0.058 </val></constant>
@@ -38,7 +39,9 @@ By : University of Mississippi Medical Center
 <var><name> Bone_Mass </name></var>
 <var><name> Brain_Mass </name></var>
 <var><name> GITract_Mass </name></var>
-<var><name> Kidney_Mass </name></var>
+<var><name> LeftKidney_Mass </name></var>
+<var><name> RightKidney_Mass </name></var>
+
 <var><name> LeftHeart_Mass </name></var>
 <var><name> Liver_Mass </name></var>
 <var><name> OtherTissue_Mass </name></var>
@@ -76,12 +79,31 @@ By : University of Mississippi Medical Center
 </def>
 
 <def>
+  <name> OtherTissue_Percent </name>
+  <val>
+   100 -
+    (  Bone_Percent
+    + Brain_Percent
+    + GITract_Percent
+    + LeftKidney_Percent
+    + RightKidney_Percent
+    + LeftHeart_Percent
+    + Liver_Percent
+    + RespiratoryMuscle_Percent
+    + RightHeart_Percent
+    + Skin_Percent )
+  </val>
+</def>
+
+
+<def>
   <name> CheckSum_Percent </name>
   <val>
       Bone_Percent
     + Brain_Percent
     + GITract_Percent
-    + Kidney_Percent
+    + LeftKidney_Percent
+    + RightKidney_Percent
     + LeftHeart_Percent
     + Liver_Percent
     + OtherTissue_Percent
@@ -109,8 +131,13 @@ By : University of Mississippi Medical Center
 </def>
 
 <def>
-  <name> Kidney_Mass </name>
-  <val> ( Kidney_Percent / 100 ) * BaseMass(G) </val>
+  <name> LeftKidney_Mass </name>
+  <val> ( LeftKidney_Percent / 100 ) * BaseMass(G) </val>
+</def>
+
+<def>
+  <name> RightKidney_Mass </name>
+  <val> ( RightKidney_Percent / 100 ) * BaseMass(G) </val>
 </def>
 
 <def>
@@ -149,7 +176,8 @@ By : University of Mississippi Medical Center
       Bone_Mass
     + Brain_Mass
     + GITract_Mass
-    + Kidney_Mass
+    + LeftKidney_Mass
+    + RightKidney_Mass
     + LeftHeart_Mass
     + Liver_Mass
     + OtherTissue_Mass
@@ -160,100 +188,14 @@ By : University of Mississippi Medical Center
 </def>
 
 <def>
-  <name> Bone-Size.InitialMass </name>
-  <val> Bone_Mass </val>
-</def>
-
-<call> Bone-Size.Init </call>
-
-<def>
-  <name> Brain-Size.InitialMass </name>
-  <val> Brain_Mass </val>
-</def>
-
-<call> Brain-Size.Init </call>
-
-<def>
-  <name> GITract-Size.InitialMass </name>
-  <val> GITract_Mass </val>
-</def>
-
-<call> GITract-Size.Init </call>
-
-<def>
-  <name> Kidney-Size.InitialMass </name>
-  <val> Kidney_Mass </val>
-</def>
-
-<call> Kidney-Size.Init </call>
-
-<def>
-  <name> LeftHeart-Size.InitialMass </name>
-  <val> LeftHeart_Mass </val>
-</def>
-
-<call> LeftHeart-Size.Init </call>
-
-<def>
-  <name> Liver-Size.InitialMass </name>
-  <val> Liver_Mass </val>
-</def>
-
-<call> Liver-Size.Init </call>
-
-<def>
-  <name> OtherTissue-Size.InitialMass </name>
-  <val> OtherTissue_Mass </val>
-</def>
-
-<call> OtherTissue-Size.Init </call>
-
-<def>
-  <name> RespiratoryMuscle-Size.InitialMass </name>
-  <val> RespiratoryMuscle_Mass </val>
-</def>
-
-<call> RespiratoryMuscle-Size.Init </call>
-
-<def>
-  <name> RightHeart-Size.InitialMass </name>
-  <val> RightHeart_Mass </val>
-</def>
-
-<call> RightHeart-Size.Init </call>
-
-<def>
-  <name> Skin-Size.InitialMass </name>
-  <val> Skin_Mass </val>
-</def>
-
-<call> Skin-Size.Init </call>
-
-<!-- ============== Fat & Muscle ============== -->
-
-<def>
   <name> Fat_Mass </name>
   <val> FatMass(G) </val>
 </def>
 
 <def>
-  <name> Fat-Size.InitialMass </name>
-  <val> Fat_Mass </val>
-</def>
-
-<call> Fat-Size.Init </call>
-
-<def>
   <name> SkeletalMuscle_Mass </name>
   <val> SkeletalMuscleMass(G) </val>
 </def>
-
-<def>
-  <name> SkeletalMuscle-Size.InitialMass </name>
-  <val> SkeletalMuscle_Mass </val>
-</def>
-
-<call> SkeletalMuscle-Size.Init </call>
 
 <!-- =============== Endocrine =============== -->
 
@@ -303,11 +245,6 @@ By : University of Mississippi Medical Center
 </def>
 
 <call> ThyroidGland-Size.Init </call>
-
-<def>
-  <name> Installed </name>
-  <val> TRUE </val>
-</def>
 
 </block>
 

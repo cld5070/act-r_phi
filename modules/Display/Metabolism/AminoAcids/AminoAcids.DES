@@ -1,39 +1,14 @@
 HumMod / AminoAcids
 
-Created : 07-Jun-05
-Last Modified : 26-Jan-10
+Created : 2013-02-18
+Revised : 2013-02-18
 Author : Tom Coleman
-Copyright : 2006-2010
-By : University Of Mississippi Medical Center
-Schema : DES V1.0
-
-<panel><name> Metabolism_AminoAcids </name>
-
-<showbitmap>
-  <row> 0.3 </row>
-  <col> 1.0 </col>
-  <name> Metabolism </name>
-</showbitmap>
-
-<label>
-  <row> 0.3 </row>
-  <col> 4.5 </col>
-  <text> Amino Acids </text>
-</label>
-
-<showclock>
-  <row> 0.3 </row><col> 32.0 </col>
-  <name> System.X </name>
-  <ampm/>
-  <secs/>
-  <days/>
-</showclock>
+Copyright : 2013-2013
+By : Tom Coleman
 
 <?path Display\Metabolism\AminoAcids\ ?>
 
-<?include Concentration.DES ?>
-<?include Balance.DES ?>
-
-</panel>
+<?include Pooled\Pooled.DES ?>
+<?include ECFV\ECFV.DES ?>
 
 End

@@ -11,7 +11,7 @@ Schema : DES V1.0
 
 <variables>
 
-<parm><name> Temp(F) </name><val> 72.0 </val></parm>
+<parm><name> Temp(F) </name><val> 72 </val></parm>
 <var><name> Temp(C) </name></var>
 <var><name> Temp(K) </name></var>
 

@@ -161,6 +161,9 @@
 ;;;             : * Changed the environment data cache to an equalp hashtable
 ;;;             :   since the keys are now a cons of the handler name and the
 ;;;             :   window to prevent issues with multi-environment settings.
+;;; 2013.12.12 Dan
+;;;             : * Actually changed the :bold-scale parameter to 1 like it
+;;;             :   said in the 2.0 update.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -208,13 +211,13 @@
 ;;;
 ;;; Parameters:
 ;;;
-;;; :bold-scale (default .75)
+;;; :bold-scale (default 1.0)
 ;;;
 ;;;  The scale parameter used in the computation of the positive component of the BOLD response.
 ;;;
 ;;; :bold-exp (default 6)
 ;;;
-;;;  The exponenet parameter used in the computation of the positive component of the BOLD response.
+;;;  The exponent parameter used in the computation of the positive component of the BOLD response.
 ;;;
 ;;; :neg-bold-scale (default 1)
 ;;;
@@ -222,7 +225,7 @@
 ;;;
 ;;; :bold-exp (default 15)
 ;;;
-;;;  The exponenet parameter used in the computation of the negative component of the BOLD response.
+;;;  The exponent parameter used in the computation of the negative component of the BOLD response.
 ;;;
 ;;; :bold-positive (default 1)
 ;;;
@@ -554,13 +557,13 @@
     (define-parameter :bold-scale
       :valid-test #'numberp
       :warning "a number"
-      :default-value 0.75
+      :default-value 1.0
       :documentation "Scale parameter for computing the BOLD response.")
     (define-parameter :bold-exp
       :valid-test #'integerp
       :warning "an integer"
       :default-value 6
-      :documentation "Exponenet parameter for computing the BOLD response.")
+      :documentation "Exponent parameter for computing the BOLD response.")
     
     (define-parameter :neg-bold-scale
       :valid-test #'numberp
@@ -571,7 +574,7 @@
       :valid-test #'integerp
       :warning "an integer"
       :default-value 15
-      :documentation "Exponenet parameter for computing a negative component of the BOLD response.")
+      :documentation "Exponent parameter for computing a negative component of the BOLD response.")
     
     (define-parameter :bold-positive
       :valid-test #'nonneg

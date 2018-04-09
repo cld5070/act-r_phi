@@ -21,7 +21,7 @@ By : University of Mississippi Medical Center
 
 <var><name> Absorption </name></var>
 <var><name> Conduction </name></var>
-<var><name> Convection </name></var>
+<var><name> Convection </name></var> 
 <var><name> ConvectionFood </name></var>
 <var><name> ConvectionH2O </name></var>
 
@@ -41,7 +41,7 @@ By : University of Mississippi Medical Center
 <diffeq>
   <name> Mass </name>
   <integralname> Mass </integralname>
-  <initialval> 310.0 </initialval>
+  <initialval> 310 </initialval>310
   <dervname> Change </dervname>
   <errorlim> 3.1 </errorlim>
 </diffeq>
@@ -50,11 +50,15 @@ By : University of Mississippi Medical Center
 
 <definitions>
 
+<block><name> Initialize </name>
+  <def><name> Mass </name><val> 310 </val></def>  310 * ( ( ( GILumenCarbohydrates.Mass + GILumenFat.Mass + GILumenProtein.Mass ) * 0.001 * SpecificHeat.Food(kCal/G) ) + ( GILumenH2O.Mass * SpecificHeat.Water(kCal/G)  ) )
+</block>
+
 <block><name> Temperature </name>
 
 <def>
   <name> DegK </name>
-  <val> 1000 * Mass / GILumenVolume.Mass </val>
+  <val> 310 </val> 1000 * Mass / GILumenVolume.Mass 
 </def>
 
 <def>
@@ -133,7 +137,7 @@ By : University of Mississippi Medical Center
 
 <def>
   <name> Gain </name>
-  <val> Intake </val>
+  <val> Intake + HeatCore.FluxToGI </val>
 </def>
 
 <def>
@@ -143,7 +147,7 @@ By : University of Mississippi Medical Center
 
 <def>
   <name> Change </name>
-  <val> Gain - Loss </val>
+  <val> 0 </val> Gain - Loss
 </def>
 
 </block>

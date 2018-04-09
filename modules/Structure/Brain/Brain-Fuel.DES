@@ -1,9 +1,9 @@
 HumMod / Brain-Fuel
 
 Created : 2012-02-17
-Revised : 2012-10-31
+Revised : 2013-02-10
 Author : Tom Coleman
-Copyright : 2012-2012
+Copyright : 2012-2013
 By : University of Mississippi Medical Center
 
 <structure><name> Brain-Fuel </name>
@@ -23,10 +23,8 @@ By : University of Mississippi Medical Center
 <var><name> LacDelivered(Cals/Min) </name></var>
 <var><name> TotalDelivered(Cals/Min) </name></var>
 
-<parm><name> KAPreference </name><val> 90 </val></parm>
-<constant><name> Scale </name><val> 0.222 </val></constant>
-
-<var><name> KAFraction </name></var>
+<var><name> KADeliveredFraction </name></var>
+<var><name> KAUsedFraction </name></var>
 
 <var><name> AerobicGlucoseUsed(Cals/Min) </name></var>
 <var><name> AnaerobicGlucoseUsed(Cals/Min) </name></var>
@@ -67,13 +65,24 @@ By : University of Mississippi Medical Center
 
 </equations>
 
+<functions>
+
+<curve>
+  <name> KAFraction </name>
+  <point><x> 0.0 </x><y> 0.0 </y><slope> 0.0 </slope></point>
+  <point><x> 0.5 </x><y> 0.7 </y><slope> 1.0 </slope></point>
+  <point><x> 1.0 </x><y> 1.0 </y><slope> 0.0 </slope></point>
+</curve>
+
+</functions>
+
 <definitions>
 
 <block><name> Dervs </name>
 
 <def>
   <name> GlucoseAvailable </name>
-  <val> 90 </val>
+  <val> 30 </val>90
 </def>
 
 <def>
@@ -140,18 +149,23 @@ By : University of Mississippi Medical Center
 </def>
 
 <def>
-  <name> KAFraction </name>
+  <name> KADeliveredFraction </name>
   <val> KADelivered(Cals/Min) / TotalDelivered(Cals/Min) </val>
 </def>
 
 <def>
+  <name> KAUsedFraction </name>
+  <val> KAFraction [ KADeliveredFraction ] </val>
+</def>
+
+<def>
   <name> KAUsed(Cals/Min) </name>
-  <val> ( 0.01 * KAPreference * KAFraction * Scale * Brain-Metabolism.AerobicCals ) MIN KADelivered(Cals/Min) </val>
+  <val> ( KAUsedFraction * Brain-Metabolism.AerobicCals ) MIN KADelivered(Cals/Min) </val>
 </def>
 
 <def>
   <name> AerobicGlucoseUsed(Cals/Min) </name>
-  <val> Brain-Metabolism.AerobicCals - ( KAUsed(Cals/Min) + LacUsed(Cals/Min) ) MIN GlucoseDelivered(Cals/Min) </val>
+  <val> ( Brain-Metabolism.AerobicCals - ( KAUsed(Cals/Min) + LacUsed(Cals/Min) ) ) MIN GlucoseDelivered(Cals/Min) </val>
 </def>
 
 <def>
@@ -236,7 +250,6 @@ By : University of Mississippi Medical Center
 <def><name> LacGradient </name><val> 0 </val></def>
 <def><name> LacUsed(Cals/Min) </name><val> 0 </val></def>
 
-<def><name> KAFraction </name><val> 0 </val></def>
 <def><name> KAUsed(Cals/Min) </name><val> 0 </val></def>
 
 <def><name> AerobicGlucoseUsed(Cals/Min) </name><val> 0 </val></def>

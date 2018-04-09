@@ -19,7 +19,6 @@ Copyright : 2009
 
 <vardoc>
 <name> EPOPump.Setting </name>
-<topic> Setting - DefinitionEPOP1 </topic>
 <topic> EPOPump - Overview </topic>
 <topic> EPO - Physical Units  </topic>
 <topic> EPO - Concentration Units  </topic>
@@ -28,7 +27,6 @@ Copyright : 2009
 
 <vardoc>
 <name> EPOPump.Switch </name>
-<topic> Switch - DefinitionEPOP2 </topic>
 <topic> EPOPump - Overview  </topic>
 <topic> EPO - Physical Units  </topic>
 <topic> EPO - Concentration Units  </topic>
@@ -129,36 +127,6 @@ Influence of disappearance rate and distribution
 space on plasma concentration of erthropoietin 
 in normal rats. J Lab Clin Med 65:967-975, 1965
 
-
-</content>
-</topicdoc>
-
-<topicdoc>
-<name> Switch - DefinitionEPOP1 </name>
-<label> Definition </label>
-<content>
-
-When the EPOPump switch is turned on, the model 
-user can set infusion rates using the sliding bar 
-feature in the EPOPump display box. 
-
-</content>
-</topicdoc>
-
-<topicdoc>
-<name> Setting - DefinitionEPOP2 </name>
-<label> Definition </label>
-<content>
-
-When the EPOPump switch is turned on, the model 
-user can set infusion rates using the sliding bar 
-feature in the EPOPump display box. Rates of infusion
-may be increased from 0 U/Min, in increments of 0.1, up to 
-1.0 U/Min; from 1.0 U/min, in increments of 1, up to 10 U/Min,
-from 10 U/Min, in increments of 10, up to 100 U/Min; and 
-from 100 U/Min, in increments of 100, up to 1000 U/Min.
-
-normal EPO secretion is 0.67 U/Min  
 
 </content>
 </topicdoc>

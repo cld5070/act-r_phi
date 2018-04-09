@@ -11,10 +11,9 @@ Schema : DES V1.0
 
 <variables>
 
-<parm>
+<var>
   <name> Total </name>
-  <val> 2400000 </val>
-</parm>
+</var>
 
 <var>
   <name> Total(xNormal) </name>
@@ -25,10 +24,10 @@ Schema : DES V1.0
   <val> 2400000 </val>
 </constant>
 
-<parm>
+
+<var>
   <name> Filtering(%) </name>
-  <val> 100.0 </val>
-</parm>
+</var>
 
 <var>
   <name> Filtering(xNormal) </name>
@@ -39,6 +38,12 @@ Schema : DES V1.0
 <definitions>
 <block><name> Calc </name>
 
+
+<def>
+  <name> Total </name>
+  <val> LeftKidney-NephronCount.Total + RightKidney-NephronCount.Total   </val>
+</def>
+
 <def>
   <name> Total(xNormal) </name>
   <val> Total / Normal </val>
@@ -46,7 +51,7 @@ Schema : DES V1.0
 
 <def>
   <name> Filtering(xNormal) </name>
-  <val> 0.01 * Filtering(%) * Total(xNormal) </val>
+  <val> 0.01 * 0.5 * ( LeftKidney-NephronCount.Filtering(%) + RightKidney-NephronCount.Filtering(%)  ) * Total(xNormal) </val>
 </def>
 
 </block>

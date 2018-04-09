@@ -34,7 +34,7 @@ By : University of Mississippi Medical Center
 
 <def>
   <name> TotalEffect </name>
-  <val> RadiationEffect + MetaboreflexEffect </val>
+  <val> ( RadiationEffect + MetaboreflexEffect ) </val>
 </def>
 
 </block>

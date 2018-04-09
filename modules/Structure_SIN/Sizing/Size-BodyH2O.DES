@@ -1,0 +1,30 @@
+HumMod / Size-BodyH2O DES
+
+Created : 14-Dec-08
+Revised : 2012-02-11
+Author : Tom Coleman
+Copyright : 2008-2012
+
+<structure><name> Size-BodyH2O </name>
+
+<definitions>
+
+<block><name> Calc </name>
+
+  <call> TissueH2O.Init </call>
+  <call> ExternalH2O.Init </call>
+  <call> BodyH2O.Init </call>
+  <call> ECFV.Init </call>
+  <call> ICFV.Init </call>
+  <call> InterstitialWater.Init </call>
+  <call> CellH2O.Init </call>
+  <call> InterstitialProtein.Init </call>
+
+  <call> Organs-ScaleH2O.ScaleH2O </call>
+
+</block>
+
+</definitions>
+</structure>
+
+End

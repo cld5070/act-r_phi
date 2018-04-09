@@ -61,6 +61,8 @@ By : University of Mississippi Medical Center
        InsulinSecretion.Rate
      + InsulinPump.Rate
      + InsulinInjection.AbsorbRate(mU/Min)
+     + InsulinReceptors-General.Unbinding
+     + InsulinReceptors-Liver.Unbinding
   </val>
 </def>
 

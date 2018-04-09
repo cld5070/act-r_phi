@@ -13,7 +13,7 @@ By : University of Mississippi Medical Center
    <wide> 61.0 </wide>
    <title> Upper Torso </title>
 
-<structurename> UT_H2O </structurename>
+<structurename> Torso_Upper_H2O </structurename>
 
 <label>
   <row> 1.4 </row><col> 1.0 </col>
@@ -30,28 +30,28 @@ By : University of Mississippi Medical Center
 
 <showvalue>
    <row> 4.2 </row><col> 1.0 </col>
-   <name> UT_InterstitialWater.Vol </name>
+   <name> Torso_Upper_InterstitialWater.Vol </name>
    <format><integer/></format>
    <label> Interstitial H2O </label>
 </showvalue>
 
 <showvalue>
    <row> 5.2 </row><col> 1.0 </col>
-   <name> CellH2O.UT_Vol </name>
+   <name> CellH2O.Torso_Upper_Vol </name>
    <format><integer/></format>
    <label> Cell H2O </label>
 </showvalue>
 
 <showvalue>
    <row> 6.6 </row><col> 1.0 </col>
-   <name> UT_CapillaryWater.Rate </name>
+   <name> Torso_Upper_CapillaryWater.Rate </name>
    <format><decimal> 1 </decimal></format>
    <label> Capillary Leak </label>
 </showvalue>
 
 <showvalue>
    <row> 7.6 </row><col> 1.0 </col>
-   <name> UT_LymphWater.Rate </name>
+   <name> Torso_Upper_LymphWater.Rate </name>
    <format><decimal> 1 </decimal></format>
    <label> Lymph Flow </label>
 </showvalue>
@@ -91,7 +91,7 @@ By : University of Mississippi Medical Center
   <color> DARKRED </color>
 </label>
 
-<structurename> UT_InterstitialProtein </structurename>
+<structurename> Torso_Upper_InterstitialProtein </structurename>
 
 <showvalue>
    <row> 2.8 </row><col> 34.0 </col>
@@ -114,7 +114,7 @@ By : University of Mississippi Medical Center
    <label> COP </label>
 </showvalue>
 
-<structurename> UT_CapillaryProtein </structurename>
+<structurename> Torso_Upper_CapillaryProtein </structurename>
 
 <showvalue>
    <row> 6.6 </row><col> 34.0 </col>
@@ -123,7 +123,7 @@ By : University of Mississippi Medical Center
    <label> Capillary Leak </label>
 </showvalue>
 
-<structurename> UT_LymphProtein </structurename>
+<structurename> Torso_Upper_LymphProtein </structurename>
 
 <showvalue>
    <row> 7.6 </row><col> 34.0 </col>

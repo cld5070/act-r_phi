@@ -103,7 +103,7 @@ By : University of Mississippi Medical Center
 
 <slidebar>
   <row> 20.0 </row><col> 1.0 </col>
-  <name> Basic </name>
+  <name> BasicTarget </name>
   <listname> Basic </listname>
   <label> Basic </label>
 </slidebar>

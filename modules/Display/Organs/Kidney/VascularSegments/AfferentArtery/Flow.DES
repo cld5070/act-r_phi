@@ -7,23 +7,29 @@ Copyright : 2008-2012
 By : University of Mississippi Medical Center
 
 <groupbox>
-   <row> 29.8 </row>
+   <row> 33 </row>
    <col> 1.0 </col>
-   <high> 12.4 </high>
+   <high> 13.4 </high>
    <wide> 30.0 </wide>
    <title> Flow </title>
 
-<structurename> Kidney-AfferentArtery </structurename>
 
 <showvalue>
   <row> 1.4 </row><col> 1.0 </col>
-  <name> BloodFlow </name>
+  <name> RightKidney-AfferentArtery.BloodFlow </name>
   <format><integer/></format>
-  <label> Blood Flow </label>
+  <label> Right Blood Flow </label>
+</showvalue>
+
+<showvalue>
+  <row> 2.4 </row><col> 1.0 </col>
+  <name> LeftKidney-AfferentArtery.BloodFlow </name>
+  <format><integer/></format>
+  <label> Left Blood Flow </label>
 </showvalue>
 
 <showgraph>
-  <row> 2.4 </row><col> 1.0 </col><high> 7 </high><wide> 28 </wide>
+  <row> 3.4 </row><col> 1.0 </col><high> 7 </high><wide> 28 </wide>
   <leftmargin> 6 </leftmargin>
   <xaxis>
     <name> System.X </name>
@@ -32,28 +38,32 @@ By : University of Mississippi Medical Center
   </xaxis>
   <yaxis>
     <yvar>
-      <name> BloodFlow </name>
+      <name> RightKidney-AfferentArtery.BloodFlow </name>
       <nolabel/>
       <linecolor> BLUE </linecolor>
     </yvar>
-    <scale><min> 800 </min><max> 1200 </max></scale>
+    <yvar>
+      <name> LeftKidney-AfferentArtery.BloodFlow </name>
+      <nolabel/>
+      <linecolor> GREEN </linecolor>
+    </yvar>    <scale><min> 400 </min><max> 600 </max></scale>
   </yaxis>
 </showgraph>
 
 <showvalue>
-  <row> 9.8 </row><col> 1.0 </col>
-  <name> Conductance </name>
+  <row> 10.8 </row><col> 1.0 </col>
+  <name> RightKidney-AfferentArtery.PressureGradient </name>
   <format><decimal> 1 </decimal></format>
-  <label> Conductance </label>
+  <label> R Pressure Gradient </label>
 </showvalue>
+
 
 <showvalue>
-  <row> 10.8 </row><col> 1.0 </col>
-  <name> PressureGradient </name>
+  <row> 11.8 </row><col> 1.0 </col>
+  <name> LeftKidney-AfferentArtery.PressureGradient </name>
   <format><decimal> 1 </decimal></format>
-  <label> Pressure Gradient </label>
+  <label> L Pressure Gradient </label>
 </showvalue>
-
 <infobutton>
   <row> 1.2 </row><col> 26.0 </col>
   <line>  </line>

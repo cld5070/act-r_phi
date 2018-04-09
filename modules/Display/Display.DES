@@ -6,6 +6,7 @@ Author : Tom Coleman
 Copyright : 2008-2012
 By : University of Mississippi Medical Center
 
+
 <?path Display\ ?>
 
 <display>
@@ -23,6 +24,7 @@ By : University of Mississippi Medical Center
 <?include BodyFluids\BodyFluids.DES ?>
 <?include Circulation\Circulation.DES ?>
 <?include Diagnosis\Diagnosis.DES ?>
+
 <?include Electrolytes\Electrolytes.DES ?>
 <?include Heat\Heat.DES ?>
 <?include Hormones\Hormones.DES ?>
@@ -34,6 +36,7 @@ By : University of Mississippi Medical Center
 <?include Organs\Organs.DES ?>
 <?include Respiration\Respiration.DES ?>
 <?include Trauma\Trauma.DES ?>
+<?include Pathology\Pathology.DES ?>
 
 <?include Context\Context.DES ?>
 <?include Sizing\Sizing.DES ?>

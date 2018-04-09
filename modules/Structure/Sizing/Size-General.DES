@@ -34,7 +34,8 @@ Schema : DES V1.0
       Bone-Size.InitialMass
     + Brain-Size.InitialMass
     + GITract-Size.InitialMass
-    + Kidney-Size.InitialMass
+    + RightKidney-Size.InitialMass
+    + LeftKidney-Size.InitialMass
     + LeftHeart-Size.InitialMass
     + Liver-Size.InitialMass
     + OtherTissue-Size.InitialMass

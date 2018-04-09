@@ -98,8 +98,8 @@ By : University of Mississippi Medical Center
 </valuecell>
 
 <valuecell>
-  <name> CorticotropinReleasingFactor.EffectOnACTH </name>
-  <format><decimal> 1 </decimal></format>
+  <name> CorticotropinReleasingFactor.[CRF(pG/mL)] </name>
+  <format><integer/></format>
 </valuecell>
 
 <valuecell>
@@ -167,7 +167,7 @@ By : University of Mississippi Medical Center
 <textcell> pG/mL </textcell>
 <textcell> pMol/L </textcell>
 <textcell> nG/mL </textcell>
-<textcell> x Normal </textcell>
+<textcell> pG/mL </textcell>
 <textcell> uG/dL </textcell>
 <textcell> mU/mL </textcell>
 <textcell> pG/mL </textcell>

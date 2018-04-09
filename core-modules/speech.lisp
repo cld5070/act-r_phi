@@ -100,6 +100,9 @@
 ;;;             :   the lower level sound creation code which has been changed
 ;;;             :   over to using ms internally to avoid having to do math on
 ;;;             :   times in seconds.
+;;; 2014.02.12 Dan
+;;;             : * The request chunk-types are no longer subtypes of speech-command
+;;;             :   since that wasn't actually used for anything.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 #+:packaged-actr (in-package :act-r)
@@ -231,8 +234,8 @@
   (reset-pm-module instance)
     
   (chunk-type speech-command)
-  (chunk-type (speak (:include speech-command)) string)
-  (chunk-type (subvocalize (:include speech-command)) string)
+  (chunk-type speak string)
+  (chunk-type subvocalize string)
   
   (unless (chunk-type-p pm-constant)
     (chunk-type pm-constant))

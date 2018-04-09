@@ -82,7 +82,7 @@ By : University of Mississippi Medical Center
 
 <slidebar>
   <row> 19.2 </row><col> 1.0 </col>
-  <name> Stiffness </name>
+  <name> StiffnessTarget </name>
   <listname> Stiffness </listname>
   <label> Stiffness </label>
 </slidebar>

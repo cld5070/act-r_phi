@@ -30,8 +30,14 @@ Schema : DES V1.0
 
 -----------------------------------------
 
+<showbitmap>
+  <row> 0.3 </row>
+  <col> 28 </col>
+  <name> Clock </name>
+</showbitmap>
+
 <showclock>
-  <row> 0.3 </row><col> 27.0 </col>
+  <row> 0.3 </row><col> 31.5 </col>
   <name> System.X </name>
   <ampm/><secs/><days/>
 </showclock>

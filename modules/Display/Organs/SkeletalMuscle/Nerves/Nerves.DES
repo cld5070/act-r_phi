@@ -32,6 +32,7 @@ Schema : DES V1.0
 <?path Display\Organs\SkeletalMuscle\Nerves\ ?>
 
 <?include AlphaReceptors.DES ?>
+<?include BetaReceptors.DES ?>
 
 </panel>
 

@@ -19,6 +19,10 @@ By : University of Mississippi Medical Center
 
 <definitions>
 
+<block><name> Init </name>
+  <call> GILumenHeat.Init </call>
+</block>
+
 <block><name> Conc </name>
   <call> GILumenElectrolytes.Conc </call>
   <call> GILumenFood.Conc </call>

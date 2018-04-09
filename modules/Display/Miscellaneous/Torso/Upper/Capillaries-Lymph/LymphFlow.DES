@@ -15,7 +15,7 @@ Schema : 2005.0
    <wide> 30.0 </wide>
    <title> Lymph Flow </title>
 
-<structurename> UT_LymphWater </structurename>
+<structurename> Torso_Upper_LymphWater </structurename>
 
 <showvalue>
    <row> 1.4 </row><col> 1.0 </col>
@@ -54,7 +54,7 @@ Schema : 2005.0
   <leftmargin> 6 </leftmargin>
 
   <xaxis>
-    <name> UT_InterstitialWater.Pressure </name>
+    <name> Torso_Upper_InterstitialWater.Pressure </name>
     <label> Pressure </label>
     <scale>
       <min> -14 </min><max> 6 </max><inc> 2 </inc>
@@ -72,7 +72,7 @@ Schema : 2005.0
 </showcurve>
 
 <repeatlist>
-  <name> UT_LymphWater.NormalRate </name>
+  <name> Torso_Upper_LymphWater.NormalRate </name>
   <repeat><reps> 200 </reps><stepsize>  0.01 </stepsize></repeat>
   <repeat><reps>   8 </reps><stepsize>  0.10 </stepsize></repeat>
 </repeatlist>
@@ -80,7 +80,7 @@ Schema : 2005.0
 <slidebar>
   <row> 22.0 </row><col> 1.0 </col>
   <name> NormalRate </name>
-  <listname> UT_LymphWater.NormalRate </listname>
+  <listname> Torso_Upper_LymphWater.NormalRate </listname>
   <label> Normal </label>
 </slidebar>
 

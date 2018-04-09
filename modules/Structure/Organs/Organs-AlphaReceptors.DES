@@ -14,7 +14,8 @@ By : University of Mississippi Medical Center
   <call> Bone-AlphaReceptors.Calc </call>
   <call> Fat-AlphaReceptors.Calc </call>
   <call> GITract-AlphaReceptors.Calc </call>
-  <call> Kidney-AlphaReceptors.Calc </call>
+  <call> LeftKidney-AlphaReceptors.Calc </call>
+  <call> RightKidney-AlphaReceptors.Calc </call>
   <call> LeftHeart-AlphaReceptors.Calc </call>
   <call> Liver-AlphaReceptors.Calc </call>
   <call> OtherTissue-AlphaReceptors.Calc </call>

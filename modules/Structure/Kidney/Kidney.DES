@@ -1,36 +1,19 @@
 HumMod / Kidney
 
 Created : 21-Oct-04
-Revised : 2012-11-02
+Revised : 2013-02-16
 Author : Tom Coleman
-Copyright : 2004-2012
+Copyright : 2004-2013
 By : University of Mississippi Medical Center
 
-<?path Structure\Kidney\ ?>
 
-<?include Kidney-EfferentArtery.DES ?>
-<?include Kidney-AfferentArtery.DES ?>
-<?include Kidney-ArcuateArtery.DES ?>
+<?path Structure ?>
+<?include RightKidney\RightKidney.DES ?>
+<?include LeftKidney\LeftKidney.DES ?>
+<?include Kidney\Kidney-NephronCount.DES ?>
+<?include Kidney\Kidney-Size.DES ?>
+<?include Kidney\Kidney-Flow.DES ?>
+<?include Kidney\Kidney-Metabolism.DES ?>
+<?include Kidney\Kidney-Pressure.DES ?>
 
-<?include Kidney-Pressure.DES ?>
-<?include Kidney-Flow.DES ?>
-<?include Kidney-Size.DES ?>
-<?include Kidney-Function.DES ?>
-
-<?include Kidney-CO2.DES ?>
-<?include Kidney-Lactate.DES ?>
-<?include Kidney-Ph.DES ?>
-
-<?include Kidney-Fuel.DES ?>
-<?include Kidney-Metabolism.DES ?>
-<?include Kidney-AlphaReceptors.DES ?>
-<?include Kidney-BetaReceptors.DES ?>
-<?include Kidney-Structure.DES ?>
-
-<?include Kidney-NephronCount.DES ?>
-<?include Kidney-ProximalTubuleO2.DES ?>
-
-<?include Kidney-Myogenic.DES ?>
-<?include Kidney-Zones\Kidney-Zones.DES ?>
-
-End
+<?include Kidney\Kidney-Fuel.DES ?>

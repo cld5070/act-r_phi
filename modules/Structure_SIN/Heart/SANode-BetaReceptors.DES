@@ -1,0 +1,58 @@
+HumMod / SANode-BetaReceptors
+
+Created : 31-Mar-05
+Revised : 2012-07-22
+Author : Tom Coleman
+Copyright : 2006-2012
+By : University Of Mississippi Medical Center
+
+<structure><name> SANode-BetaReceptors </name>
+
+<variables>
+
+<var><name> Activity </name></var>
+<var><name> TotalAgonism </name></var>
+<var><name> NeuralAgonism </name></var>
+<var><name> HumoralAgonism </name></var>
+
+<parm><name> Switch </name><val> FALSE </val></parm>
+<parm><name> Setting </name><val> 0.0 </val></parm>
+
+<constant><name> NEURALK </name><val> 0.50 </val></constant>
+<constant><name> HUMORALK </name><val> 0.25 </val></constant>
+
+</variables>
+
+<definitions>
+<block><name> Calc </name>
+
+<def>
+  <name> NeuralAgonism </name>
+  <val> GangliaGeneral.NA(Hz) </val>
+</def>
+
+<def>
+  <name> HumoralAgonism </name>
+  <val> BetaPool.Effect </val>
+</def>
+
+<def>
+  <name> TotalAgonism </name>
+  <val>
+      ( NEURALK * NeuralAgonism )
+    + ( HUMORALK * HumoralAgonism )
+  </val>
+</def>
+
+<conditional>
+  <name> Activity </name>
+  <test> Switch </test>
+  <true> Setting </true>
+  <false> TotalAgonism * BetaBlockade.Effect </false>
+</conditional>
+
+</block>
+</definitions>
+</structure>
+
+End

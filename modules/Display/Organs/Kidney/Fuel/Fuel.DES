@@ -1,9 +1,9 @@
-HumMod / Selection
+HumMod / Fuel
 
 Created : 2012-02-14
-Revised : 2012-02-14
+Revised : 2013-02-08
 Author : Tom Coleman
-Copyright : 2012-2012
+Copyright : 2012-2013
 By : University of Mississippi Medical Center
 
 <panel><name> Kidney-Fuel </name>
@@ -35,6 +35,7 @@ By : University of Mississippi Medical Center
 <?include Delivery.DES ?>
 <?include Use.DES ?>
 <?include InsulinEffect.DES ?>
+<?include FAFraction.DES ?>
 
 </panel>
 

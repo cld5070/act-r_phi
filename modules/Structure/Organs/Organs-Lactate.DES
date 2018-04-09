@@ -17,7 +17,8 @@ Schema : 2005.0
   <call> Brain-Lactate.CalcConc </call>
   <call> Fat-Lactate.CalcConc </call>
   <call> GITract-Lactate.CalcConc </call>
-  <call> Kidney-Lactate.CalcConc </call>
+  <call> LeftKidney-Lactate.CalcConc </call>
+  <call> RightKidney-Lactate.CalcConc </call>
   <call> LeftHeart-Lactate.CalcConc </call>
   <call> Liver-Lactate.CalcConc </call>
   <call> OtherTissue-Lactate.CalcConc </call>
@@ -32,7 +33,8 @@ Schema : 2005.0
   <call> Brain-Lactate.CalcDervs </call>
   <call> Fat-Lactate.CalcDervs </call>
   <call> GITract-Lactate.CalcDervs </call>
-  <call> Kidney-Lactate.CalcDervs </call>
+  <call> LeftKidney-Lactate.CalcDervs </call>
+  <call> RightKidney-Lactate.CalcDervs </call>
   <call> LeftHeart-Lactate.CalcDervs </call>
   <call> Liver-Lactate.CalcDervs </call>
   <call> OtherTissue-Lactate.CalcDervs </call>

@@ -10,19 +10,26 @@ Schema : DES V1.0
 <groupbox>
    <row> 2.0 </row>
    <col> 1.0 </col>
-   <high> 11.4 </high>
+   <high> 13.4 </high>
    <wide> 30.0 </wide>
    <title> Blood Flow </title>
 
 <showvalue>
    <row> 1.4 </row><col> 1.0 </col>
-   <name> Kidney-Flow.BloodFlow </name>
+   <name> RightKidney-Flow.BloodFlow </name>
    <format> <integer/> </format>
-   <label> Flow </label>
+   <label> Right Flow </label>
+</showvalue>
+
+<showvalue>
+   <row> 2.4 </row><col> 1.0 </col>
+   <name> LeftKidney-Flow.BloodFlow </name>
+   <format> <integer/> </format>
+   <label> Left Flow </label>
 </showvalue>
 
 <showgraph>
-  <row> 2.4 </row><col> 1.0 </col><high> 7 </high><wide> 28 </wide>
+  <row> 3.4 </row><col> 1.0 </col><high> 7 </high><wide> 28 </wide>
   <leftmargin> 4 </leftmargin>
   <xaxis>
     <name> System.X </name>
@@ -31,21 +38,33 @@ Schema : DES V1.0
   </xaxis>
   <yaxis>
     <yvar>
-      <name> Kidney-Flow.BloodFlow </name>
+      <name> RightKidney-Flow.BloodFlow </name>
       <nolabel/>
       <linecolor> BLUE </linecolor>
     </yvar>
+    <yvar>
+      <name> LeftKidney-Flow.BloodFlow </name>
+      <nolabel/>
+      <linecolor> GREEN </linecolor>
+    </yvar>
     <scale>
-      <min> 1100 </min><max> 1200 </max><inc> 100 </inc>
+      <min> 500 </min><max> 600 </max><inc> 50 </inc>
     </scale>
   </yaxis>
 </showgraph>
 
 <showvalue>
-   <row> 9.8 </row><col> 1.0 </col>
-   <name> Kidney-Pressure.PressureGradient </name>
+   <row> 10.8 </row><col> 1.0 </col>
+   <name> RightKidney-Pressure.PressureGradient </name>
    <format> <integer/> </format>
-   <label> Pressure Gradient </label>
+   <label> Right Pressure Gradient </label>
+</showvalue>
+
+<showvalue>
+   <row> 11.8 </row><col> 1.0 </col>
+   <name> LeftKidney-Pressure.PressureGradient </name>
+   <format> <integer/> </format>
+   <label> Left Pressure Gradient </label>
 </showvalue>
 
 <infobutton>

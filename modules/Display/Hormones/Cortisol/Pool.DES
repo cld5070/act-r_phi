@@ -1,15 +1,15 @@
 HumMod | Pool
 
 Created : 2012-01-29
-Revised : 2012-01-29
+Revised : 2013-03-18
 Author : Tom Coleman
-Copyright : 2012-2012
+Copyright : 2012-2013
 By : University Of Mississippi Medical Center
 
 <groupbox>
    <row> 2.0 </row>
    <col> 1.0 </col>
-   <high> 23.6 </high>
+   <high> 26.6 </high>
    <wide> 30.0 </wide>
    <title> Pool </title>
 
@@ -32,25 +32,18 @@ By : University Of Mississippi Medical Center
   </xaxis>
   <yaxis>
     <yvar>
-      <name> [Conc(nMol/L)] </name>
+      <name> [Conc(uG/dL)] </name>
       <nolabel/>
       <linecolor> BLUE </linecolor>
     </yvar>
     <scale>
-      <min> 276 </min><max> 828 </max><inc> 276 </inc>
+      <min> 10 </min><max> 30 </max><inc> 10 </inc>
     </scale>
   </yaxis>
 </showgraph>
 
-<showvalue>
-   <row> 9.8 </row><col> 1.0 </col>
-   <name> [Conc(nMol/L)] </name>
-   <format><decimal> 1 </decimal></format>
-   <label> [Conc (nMol/L)] </label>
-</showvalue>
-
 <radiobuttons>
-  <row> 11.2 </row><col> 1.0 </col>
+  <row> 10.0 </row><col> 1 </col>
   <name> ClampSwitch </name>
   <listname> Common.Switch </listname>
   <label> Clamp Switch </label>
@@ -62,48 +55,78 @@ By : University Of Mississippi Medical Center
 </repeatlist>
 
 <slidebar>
-  <row> 12.6 </row><col> 1.0 </col>
+  <row> 11.4 </row><col> 1 </col>
   <name> ClampSetting </name>
   <listname> Clamp </listname>
   <label> Setting </label>
 </slidebar>
 
 <showvalue>
-   <row> 14.0 </row><col> 1.0 </col>
-   <name> [ACTH]Effect </name>
-   <format><decimal> 1 </decimal></format>
-   <label> [ACTH] Effect </label>
+   <row> 12.8 </row><col> 1.0 </col>
+   <name> [Conc(nMol/L)] </name>
+   <format><integer/></format>   <label> [Conc (nMol/L)] </label>
 </showvalue>
 
-<showcurve>
-  <row> 15.0 </row><col> 1.0 </col><high> 7 </high><wide> 28 </wide>
+<showvalue>
+   <row> 14.2 </row><col> 1 </col>
+   <name> Mass </name>
+   <format><integer/></format>
+   <label> Mass (uG) </label>
+</showvalue>
+
+<showgraph>
+  <row> 15.2 </row><col> 1 </col><high> 7 </high><wide> 28 </wide>
   <leftmargin> 6 </leftmargin>
-
   <xaxis>
-    <name> ACTH.[Conc(nG/dL)] </name>
-    <label> [ACTH] </label>
-    <scale><min> 0 </min><max> 20 </max></scale>
+    <name> System.X </name>
+    <label> Time </label>
+    <scale><min> 0 </min><max> 2 </max></scale>
   </xaxis>
-
   <yaxis>
-    <label> Effect </label>
-    <scale><min> 0 </min><max> 5 </max></scale>
+    <yvar>
+      <name> Mass </name>
+      <nolabel/>
+      <linecolor> BLUE </linecolor>
+    </yvar>
+    <scale>
+      <min> 2000 </min><max> 4000 </max><inc> 1000 </inc>
+    </scale>
   </yaxis>
-
-  <curvename> [ACTH]Effect </curvename>
-</showcurve>
+</showgraph>
 
 <showvalue>
-   <row> 22.0 </row><col> 1.0 </col>
-   <name> ACTH.[Conc(nG/dL)] </name>
+   <row> 22.4 </row><col> 1 </col>
+   <name> Change </name>
    <format><decimal> 1 </decimal></format>
-   <label> [ACTH] </label>
+   <label> Change </label>
 </showvalue>
 
 <showvalue>
- <row> 25.0 </row><col> 1.0 </col>
- <name> Secretion-Sleep-Hom </name>
+   <row> 23.8 </row><col> 1 </col>
+   <name> Gain </name>
+   <format><decimal> 1 </decimal></format>
+   <label> Gain </label>
 </showvalue>
+
+<showvalue>
+   <row> 24.8 </row><col> 1 </col>
+   <name> Loss </name>
+   <format><decimal> 1 </decimal></format>
+   <label> Loss </label>
+</showvalue>
+
+<infobutton>
+  <row> 1.2 </row>
+  <col> 26.0 </col>
+
+  <line> Cortisol is more formally called hydrocortisone. </line>
+  <line>  </line>
+  <line> MW = 362.5 </line>
+  <line> C21-H30-O5 </line>
+  <line>  </line>
+  <line> uG/dL * 27.6 = nMol/L </line>
+  <line>  </line>
+</infobutton>
 
 </groupbox>
 

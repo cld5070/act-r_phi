@@ -15,7 +15,7 @@ Schema : DES V1.0
 <constant><name> LYING    </name><val> 1.0 </val></constant>
 <constant><name> SITTING  </name><val> 2.0 </val></constant>
 <constant><name> STANDING </name><val> 3.0 </val></constant>
-<constant><name> TILTED   </name><val> 4.0 </val></constant>
+<constant><name> TILTING   </name><val> 4.0 </val></constant>
 
 <parm>
   <name> Restraint </name>
@@ -64,7 +64,7 @@ Schema : DES V1.0
   <if>
   <test> DailyPlannerControl.Switch </test>
   <true>
-    <message> The daily planner is controlling posture now. </message>
+ <!--   <message> The daily planner is controlling posture now. </message>-->
     <def><name> Request </name><val> LastValidRequest </val></def>
     <exitblock/>
   </true>
@@ -73,7 +73,7 @@ Schema : DES V1.0
   <if>
   <test> Brain-Function.Comatose </test>
   <true>
-    <message> Subject is comatose and can't change posture. </message>
+ <!--   <message> Subject is comatose and can't change posture. </message>-->
     <def><name> Request </name><val> LastValidRequest </val></def>
     <exitblock/>
   </true>

@@ -16,13 +16,20 @@ Schema : DES V1.0
 
 <showvalue>
    <row> 1.4 </row><col> 1.0 </col>
-   <name> [Lac-(mEq/L)] </name>
+   <name> RightKidney-Lactate.[Lac-(mEq/L)] </name>
    <format><decimal> 1 </decimal></format>
-   <label> [Lac- (mEq/L)] </label>
+   <label> Right [Lac- (mEq/L)] </label>
+</showvalue>
+
+<showvalue>
+   <row> 2.4 </row><col> 1.0 </col>
+   <name> LeftKidney-Lactate.[Lac-(mEq/L)] </name>
+   <format><decimal> 1 </decimal></format>
+   <label> Left [Lac- (mEq/L)] </label>
 </showvalue>
 
 <showgraph>
-  <row> 2.4 </row><col> 1.0 </col><high> 7 </high><wide> 28 </wide>
+  <row> 3.4 </row><col> 1.0 </col><high> 6 </high><wide> 28 </wide>
   <leftmargin> 4 </leftmargin>
   <xaxis>
     <name> System.X </name>
@@ -31,9 +38,14 @@ Schema : DES V1.0
   </xaxis>
   <yaxis>
     <yvar>
-      <name> [Lac-(mEq/L)] </name>
+      <name> RightKidney-Lactate.[Lac-(mEq/L)] </name>
       <nolabel/>
       <linecolor> BLUE </linecolor>
+    </yvar>
+    <yvar>
+      <name> LeftKidney-Lactate.[Lac-(mEq/L)] </name>
+      <nolabel/>
+      <linecolor> GREEN </linecolor>
     </yvar>
     <scale>
       <min> 0 </min><max> 2 </max>
@@ -41,54 +53,97 @@ Schema : DES V1.0
   </yaxis>
 </showgraph>
 
-<showvalue>
-  <row> 9.8 </row><col> 1.0 </col>
-  <name> [Lac-(mG/dL)] </name>
-  <format><decimal> 1 </decimal></format>
-  <label> [Lac- (mG/dL)] </label>
-</showvalue>
+<showtable>
+<row> 9.8 </row><col> 1 </col>
 
-<showvalue>
-  <row> 11.2 </row><col> 1.0 </col>
-  <name> Mass </name>
-  <format><decimal> 2 </decimal></format>
-  <label> Mass (mEq) </label>
-</showvalue>
+<column>
+<indent> 0 </indent>
+<fieldwidth> 7 </fieldwidth>
+<justify> LEFT </justify>
 
-<showvalue>
-  <row> 12.2 </row><col> 3 </col>
-  <name> Change </name>
+<textcell> </textcell>
+<textcell> [Lac-(mG/dL)] </textcell>
+<textcell> Mass </textcell>
+<textcell> Change </textcell>
+<textcell> Made </textcell>
+<textcell> Used</textcell>
+<textcell> Outflux </textcell>
+
+</column>
+
+<column>
+<indent> 7.0 </indent>
+<fieldwidth> 8.0 </fieldwidth>
+<justify> RIGHT </justify>
+
+<textcell> Left </textcell>
+<valuecell>
+  <name> LeftKidney-Lactate.[Lac-(mG/dL)]</name>
   <format><decimal> 3 </decimal></format>
-  <label> Change </label>
-</showvalue>
+</valuecell>
 
-<showvalue>
-  <row> 13.6 </row><col> 1.0 </col>
-  <name> Made </name>
+<valuecell>
+  <name> LeftKidney-Lactate.Mass  </name>
   <format><decimal> 3 </decimal></format>
-  <label> Made </label>
-</showvalue>
+</valuecell>
 
-<showvalue>
-  <row> 14.6 </row><col> 1.0 </col>
-  <name> Used </name>
+<valuecell>
+  <name> LeftKidney-Lactate.Change  </name>
   <format><decimal> 3 </decimal></format>
-  <label> Used </label>
-</showvalue>
+</valuecell>
 
-<showvalue>
-  <row> 15.6 </row><col> 1.0 </col>
-  <name> Outflux </name>
+<valuecell>
+  <name> LeftKidney-Lactate.Made</name>
   <format><decimal> 3 </decimal></format>
-  <label> Outflux </label>
-</showvalue>
+</valuecell>
 
-<showvalue>
-  <row> 17.0 </row><col> 1.0 </col>
-  <name> DC </name>
-  <format><decimal> 1 </decimal></format>
-  <label> Diffusion Coefficient </label>
-</showvalue>
+<valuecell>
+  <name> LeftKidney-Lactate.Used</name>
+  <format><decimal> 3 </decimal></format>
+</valuecell>
+
+<valuecell>
+  <name> LeftKidney-Lactate.Outflux</name>
+  <format><decimal> 3 </decimal></format>
+</valuecell>
+</column>
+
+<column>
+<indent> 15.0 </indent>
+<fieldwidth> 8.0 </fieldwidth>
+<justify> RIGHT </justify>
+<textcell> Right </textcell>
+<valuecell>
+  <name> RightKidney-Lactate.[Lac-(mG/dL)]</name>
+  <format><decimal> 3 </decimal></format>
+</valuecell>
+
+<valuecell>
+  <name> RightKidney-Lactate.Mass  </name>
+  <format><decimal> 3 </decimal></format>
+</valuecell>
+
+<valuecell>
+  <name> RightKidney-Lactate.Change  </name>
+  <format><decimal> 3 </decimal></format>
+</valuecell>
+
+<valuecell>
+  <name> RightKidney-Lactate.Made</name>
+  <format><decimal> 3 </decimal></format>
+</valuecell>
+
+<valuecell>
+  <name> RightKidney-Lactate.Used</name>
+  <format><decimal> 3 </decimal></format>
+</valuecell>
+
+<valuecell>
+  <name> RightKidney-Lactate.Outflux</name>
+  <format><decimal> 3 </decimal></format>
+</valuecell>
+</column>
+</showtable>
 
 <infobutton>
   <row> 1.2 </row>

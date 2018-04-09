@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
 <var><name> Initial_Mass </name></var>
 
 <parm><name> p50 </name><val> 32.0 </val></parm>
-<parm><name> k' </name><val> 0.760 </val></parm>
+<parm><name> k </name><val> 0.760 </val></parm>
 
 <var><name> K_CO2 </name></var>
 
@@ -48,7 +48,7 @@ By : University Of Mississippi Medical Center
 <definitions>
 <block><name> Init </name>
 
-<def><name> K_CO2 </name><val> k' * Initial_[SID] </val></def>
+<def><name> K_CO2 </name><val> k * Initial_[SID] </val></def>
 
 <copy><from> p50 </from><to> CO2_pCO2_To_[HCO3].p50 </to></copy>
 <copy><from> K_CO2 </from><to> CO2_pCO2_To_[HCO3].K </to></copy>
@@ -80,7 +80,7 @@ By : University Of Mississippi Medical Center
   <val> 1000.0 * [HCO3] </val>
 </def>
 
-<def><name> K_CO2 </name><val> k' * GITract-Ph.[SID] </val></def>
+<def><name> K_CO2 </name><val> k * GITract-Ph.[SID] </val></def>
 
 <copy><from> p50 </from><to> CO2_[HCO3]_To_pCO2.p50 </to></copy>
 <copy><from> K_CO2 </from><to> CO2_[HCO3]_To_pCO2.K </to></copy>
@@ -176,7 +176,7 @@ By : University Of Mississippi Medical Center
 
 <block><name> MapperBlock </name>
 
-<def><name> K_CO2 </name><val> k' * GITract-Ph.[SID] </val></def>
+<def><name> K_CO2 </name><val> k * GITract-Ph.[SID] </val></def>
 
 <copy><from> p50 </from><to> CO2_pCO2_To_[HCO3].p50 </to></copy>
 <copy><from> K_CO2 </from><to> CO2_pCO2_To_[HCO3].K </to></copy>

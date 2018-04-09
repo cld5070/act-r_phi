@@ -1,0 +1,20 @@
+HumMod / Size-RightHeartPumping DES
+
+Created : 2011-08-10
+Last Modified : 2011-08-10
+Author : Tom Coleman
+Copyright : 2011-2011
+By : University of Mississippi Medical Center
+
+<structure><name> Size-RightHeartPumping </name>
+
+<definitions>
+
+<block><name> Calc </name>
+  <call> RightHeartPumping.Init </call>
+</block>
+
+</definitions>
+</structure>
+
+End

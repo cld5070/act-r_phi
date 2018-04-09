@@ -16,7 +16,8 @@ Schema : 2005.0
   <call> Bone-Function.Calc </call>
   <call> Fat-Function.Calc </call>
   <call> GITract-Function.Calc </call>
-  <call> Kidney-Function.Calc </call>
+  <call> LeftKidney-Function.Calc </call>
+  <call> RightKidney-Function.Calc </call>
   <call> LeftHeart-Function.Calc </call>
   <call> Liver-Function.Calc </call>
   <call> OtherTissue-Function.Calc </call>
@@ -31,7 +32,8 @@ Schema : 2005.0
   <call> Brain-Function.Wrapup </call>
   <call> Fat-Function.Wrapup </call>
   <call> GITract-Function.Wrapup </call>
-  <call> Kidney-Function.Wrapup </call>
+  <call> LeftKidney-Function.Wrapup </call>
+  <call> RightKidney-Function.Wrapup </call>
   <call> LeftHeart-Function.Wrapup </call>
   <call> Liver-Function.Wrapup </call>
   <call> OtherTissue-Function.Wrapup </call>

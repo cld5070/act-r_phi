@@ -60,7 +60,7 @@ By : University Of Mississippi Medical Center
 </case>
 
 <case>
-<test> Status.Posture EQ PostureControl.TILTED </test>
+<test> Status.Posture EQ PostureControl.TILTING </test>
 
 <def><name> FractGz </name><val> SIN ( ( TiltTable.Degrees * System.Pi ) / 180.0 ) </val></def>
 <def><name> LegArtyFractGz </name><val> FractGz </val></def>

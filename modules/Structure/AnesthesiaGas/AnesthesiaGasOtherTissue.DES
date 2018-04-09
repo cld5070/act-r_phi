@@ -1,39 +1,23 @@
-HumMod / AnesthesiaGasOtherTissue
+/* HumMod / AnesthesiaGasOtherTissue
 
-Created : 03-Jun-06
-Last Modified : 26-Jan-10
-Author : Tom Coleman
-Copyright : 2006-2010
-By : University Of Mississippi Medical Center
-Schema : DES V1.0
+   Created : 2014-02-27
+   Revised : 2014-02-27
+   Author : Tom Coleman
+   Copyright : 2014-2014
+   By : Tom Coleman
+*/
 
 <structure><name> AnesthesiaGasOtherTissue </name>
 
 <variables>
 
-<var>
-  <name> [Tissue] </name>
-</var>
+<var><name> [Tissue] </name></var>
+<var><name> pTissue </name></var>
+<var><name> [Vein] </name></var>
+<var><name> pVein </name></var>
+<var><name> Uptake </name></var>
 
-<var>
-  <name> pTissue </name>
-</var>
-
-<var>
-  <name> [Vein] </name>
-</var>
-
-<var>
-  <name> pVein </name>
-</var>
-
-<var>
-  <name> Uptake </name>
-</var>
-
-<var>
-  <name> VascCond </name>
-</var>
+<var><name> VascCond </name></var>
 
 </variables>
 

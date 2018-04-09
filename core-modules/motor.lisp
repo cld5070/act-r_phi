@@ -193,6 +193,17 @@
 ;;;             : * Replaced pm-warning calls with model-warning.
 ;;; 2011.05.17 Dan
 ;;;             : * Replaced queue-command calls with schedule-event-relative.
+;;; 2013.10.01 Dan
+;;;             : * Update move-cursor so that incremental movements with a
+;;;             :   noisy location are still a straight line to fix an issue 
+;;;             :   reported by Melissa Gallagher.
+;;; 2014.02.12 Dan
+;;;             : * The request chunk-types are no longer subtypes of motor-command
+;;;             :   since that wasn't actually used for anything.
+;;; 2014.04.24 Dan
+;;;             : * Added a create-motor-module function instead of using a
+;;;             :   lambda in the definition so that it can be changed for
+;;;             :   easier extension of the module.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;
@@ -710,7 +721,6 @@
   (unless (or (check-jam mtr-mod) (check-specs (or loc object) device))
     (let ((r-theta nil)
           (feat nil) 
-          (w nil)
           (vision (get-module :vision)))
       
       (setf feat  ;; always refer back to the visicon chunks if possible
@@ -733,14 +743,16 @@
       (setf r-theta (xy-to-polar (eff-cursor-loc mtr-mod) (xy-loc feat)))
       (if (= 0 (vr r-theta))        ; r=0 is a no-op 
           (model-warning "Move-cursor action aborted because cursor is at requested target ~S" (if object object loc))
-        (progn
-          (setf w (approach-width feat (vtheta r-theta)))
+        (let* ((w (approach-width feat (vtheta r-theta)))
+               (noisy-target-cords (noisy-loc? mtr-mod (xy-loc feat) w))
+               (r-theta-new (xy-to-polar (eff-cursor-loc mtr-mod) noisy-target-cords)))
+          
           (prepare-movement mtr-mod
                             (make-instance 'cursor-ply
-                              :r (pm-pixels-to-angle (vr r-theta))
-                              :theta (vtheta r-theta)
+                              :r (pm-pixels-to-angle (vr r-theta-new))
+                              :theta (vtheta r-theta-new)
                               :target-width w
-                              :target-coords (noisy-loc? mtr-mod (xy-loc feat) w)
+                              :target-coords noisy-target-cords
                               :control-order (device->order device))))))))
 
 
@@ -1075,18 +1087,18 @@
 (defun reset-motor-module (instance)
    
   (chunk-type motor-command)
-  (chunk-type (click-mouse (:include motor-command)))
-  (chunk-type (hand-to-mouse (:include motor-command)))
-  (chunk-type (hand-to-home (:include motor-command)))
-  (chunk-type (move-cursor (:include motor-command)) object loc device)
-  (chunk-type (peck (:include motor-command)) hand finger r theta)
-  (chunk-type (peck-recoil (:include motor-command)) hand finger r theta)
-  (chunk-type (point-hand-at-key (:include motor-command)) hand to-key)
-  (chunk-type (press-key (:include motor-command)) key)
-  (chunk-type (punch (:include motor-command)) hand finger)
+  (chunk-type click-mouse)
+  (chunk-type hand-to-mouse)
+  (chunk-type hand-to-home)
+  (chunk-type move-cursor object loc device)
+  (chunk-type peck hand finger r theta)
+  (chunk-type peck-recoil hand finger r theta)
+  (chunk-type point-hand-at-key hand to-key)
+  (chunk-type press-key key)
+  (chunk-type punch hand finger)
   
-  (chunk-type (prepare (:include motor-command)) style hand finger r theta)
-  (chunk-type (execute (:include motor-command)))
+  (chunk-type prepare style hand finger r theta)
+  (chunk-type execute)
   
   ;; Moved so that extensions which define new motor
   ;; commands can specialize the reset method to add the 
@@ -1152,6 +1164,9 @@
         (peck-fitts-coeff motor))
       )))
 
+(defun create-motor-module (model-name)
+  (declare (ignore model-name)) 
+  (make-instance 'motor-module))
 
 (define-module-fct :motor 
     (list (list 'manual nil nil '(modality preparation execution processor last-command)
@@ -1204,13 +1219,11 @@
    )
   :version "2.3"
   :documentation "Module to provide a model with virtual hands"
-  :creation #'(lambda (x) 
-                (declare (ignore x)) (make-instance 'motor-module))
-  :reset #'reset-motor-module
-  :query #'query-motor-module
+  :creation 'create-motor-module
+  :reset 'reset-motor-module
+  :query 'query-motor-module
   :request 'pm-module-request
-  :params #'params-motor-module
-  )
+  :params 'params-motor-module)
 
 ;;;; ---------------------------------------------------------------------- ;;;;
 ;;;; Other toplevel commands

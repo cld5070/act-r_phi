@@ -1,9 +1,9 @@
 HumMod / SkeletalMuscle-Metabolism
 
 Created : 31-Mar-05
-Revised : 2012-11-02
+Revised : 2013-02-09
 Author : Tom Coleman
-Copyright : 2006-2012
+Copyright : 2006-2013
 By : University Of Mississippi Medical Center
 
 <structure><name> SkeletalMuscle-Metabolism </name>
@@ -60,7 +60,7 @@ By : University Of Mississippi Medical Center
 
 <def>
   <name> ShiveringCals </name>
-  <val> HeatShivering.Cals </val>
+  <val> HeatShivering.SkeletalCals </val>
 </def>
 
 <def>

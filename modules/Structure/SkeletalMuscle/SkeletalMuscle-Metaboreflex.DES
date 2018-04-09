@@ -32,7 +32,7 @@ Schema : DES V1.0
 <curve>
   <name> PhOnNerveActivity </name>
   <point><x> 6.5 </x><y> 5.0 </y><slope> 0 </slope></point>
-  <point><x> 6.9 </x><y> 0.0 </y><slope> 0 </slope></point>
+  <point><x> 6.9 </x><y> 0.0 </y><slope> 0 </slope></point>6.9
 </curve>
 
 </functions>

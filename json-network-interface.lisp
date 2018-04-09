@@ -37,7 +37,7 @@
     (dolist (lst lst-of-lsts)
       (cond ((eql :obj (first lst))
              (let ((typ  (read-from-string (cdr (first (rest lst)))))
-                   (slots (rest (rest lst)))) 
+                   (slots (rest (rest lst))))
                (let ((type-expression `(isa ,typ)))
                  (dolist (s slots)
                    (let ((name-values (subseq s 2)))
@@ -74,7 +74,7 @@
                     (model (jsown:val o "model"))
                     (method (jsown:val o "method"))
                     (params (jsown:val o "params")))
-               (cond 
+               (cond
                 ((string= method "disconnect")
                  (return))
                 ((string= method "trigger-event")
@@ -131,7 +131,7 @@
   (write-string string (jstream instance))
   (write-char #\return (jstream instance))
   (write-char #\linefeed (jstream instance))
-  (handler-case 
+  (handler-case
    (force-output (jstream instance))
    (ccl:socket-error () (return-from send-raw))))
 
@@ -139,7 +139,7 @@
   (let ((mid (format nil "~a" (current-model))))
     (send-raw instance (jsown:to-json (jsown:new-js ("model" mid) ("method" method) ("params" params))))
     (if sync
-        (bordeaux-threads:with-recursive-lock-held 
+        (bordeaux-threads:with-recursive-lock-held
             ((sync-lock instance))
           (bordeaux-threads:condition-wait (sync-cond instance) (sync-lock instance))))))
 
@@ -222,12 +222,12 @@
         (setf (jstream instance) (usocket:socket-stream (socket instance)))
         (setf (thread instance) (bordeaux-threads:make-thread #'(lambda () (read-stream instance))))
         (install-device instance))
-    (usocket:connection-refused-error () 
+    (usocket:connection-refused-error ()
       (progn
         (print-warning "Connection refused. Is remote environment server running?")
         (cleanup instance)
         (return-from connect)))
-    (usocket:timeout-error () 
+    (usocket:timeout-error ()
       (progn
         (print-warning "Timeout. Is remote environment server running?")
         (cleanup instance)
@@ -251,7 +251,7 @@
 
 (defun jni-register-event-hook (event hook)
   (setf (gethash event (event-hooks (get-module json-interface))) hook))
-  
+
 (defun params-json-netstring-module (instance param)
   (if (consp param)
       (let ((hostname (jni-hostname instance))

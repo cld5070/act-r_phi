@@ -45,7 +45,7 @@ Eur J Clin Invest 10:401-406, 1980
 
 In a study of six normal humans, plasma metabolic clearance
 rate of epinephrine was 52/kg/min. Mean body weight 
-was 78.7Kg for a clearance of 4.1L/Min
+was 78.7Kg for a clearnce of 4.1L/Min
 
 Clutter WE, Bier DM, Shah SD and Cryer PE
 Epinephrine plasma metabolic clearance rates and 
@@ -134,8 +134,8 @@ If we raise e to an unspecified power using a variable,
 we have an exponential function. An example might be e^x.
 
 The exponential function gets attention when is noted 
-that its derivative with respect to x is again the 
-exponential function. This can be denoted as
+that its derivative with respect to x is again the exponential 
+function. This can be denoted as
 
 	d(e^x)/dx = e^x
 

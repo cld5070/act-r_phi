@@ -1,9 +1,9 @@
 HumMod / ContractileProtein
 
 Created : 2011-08-10
-Last Modified : 2011-08-11
+Revised : 2013-02-25
 Author : Tom Coleman
-Copyright : 2011-2011
+Copyright : 2011-2013
 By : University of Mississippi Medical Center
 
 <panel><name> LeftHeartPumping-ContractileProtein </name>
@@ -28,7 +28,7 @@ By : University of Mississippi Medical Center
 
 <?path Display\Circulation\LeftHeartPumping\ContractileProtein\ ?>
 
-<?include Summary.DES ?>
+<?include Box.DES ?>
 
 </panel>
 

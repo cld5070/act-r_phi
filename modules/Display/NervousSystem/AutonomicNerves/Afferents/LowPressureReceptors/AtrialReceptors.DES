@@ -35,6 +35,11 @@ Schema : DES V1.0
       <label> NA </label>
       <linecolor> BLUE </linecolor>
     </yvar>
+    <yvar>
+      <name> LowPressureReceptors.test </name>
+      <label> old NA </label>
+      <linecolor> BLACK </linecolor>
+    </yvar>
     <scale>
       <min> 0 </min><max> 2 </max><inc> 1 </inc>
     </scale>
@@ -110,7 +115,7 @@ Schema : DES V1.0
 <slidebar>
   <row> 23.8 </row><col> 1.0 </col>
   <wide> 8 </wide>
-  <name> LowPressureReceptors.Tau </name>
+  <name> LowPressureReceptors.TauTarget </name>
   <listname> LowPressureReceptors.Tau </listname>
   <label> Time Constant </label>
 </slidebar>

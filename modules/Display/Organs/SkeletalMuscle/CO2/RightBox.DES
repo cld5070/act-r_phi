@@ -71,23 +71,23 @@ By : University Of Mississippi Medical Center
 </slidebar>
 
 <repeatlist>
-  <name> k' </name>
+  <name> k </name>
   <firstval> 0.3 </firstval>
   <repeat><reps> 40 </reps><stepsize> .01 </stepsize></repeat>
 </repeatlist>
 
 <slidebar>
   <row> 15.8 </row><col> 1.0 </col>
-  <name> k' </name>
-  <listname> k' </listname>
-  <label> k' </label>
+  <name> k </name>
+  <listname> k </listname>
+  <label> k </label>
 </slidebar>
 
 <infobutton>
   <row> 1.2 </row>
   <col> 26.0 </col>
 
-  <line> [HCO3] = k' * [SID] * (pCO2/(p50 + pCO2)) </line>
+  <line> [HCO3] = k * [SID] * (pCO2/(p50 + pCO2)) </line>
   <line>  </line>
   <line>  </line>
 </infobutton>

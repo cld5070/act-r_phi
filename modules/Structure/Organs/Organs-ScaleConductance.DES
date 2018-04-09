@@ -16,7 +16,8 @@ By : University of Mississippi Medical Center
   <call> Brain-Flow.Init </call>
   <call> Fat-Flow.Init </call>
   <call> GITract-Flow.Init </call>
-  <call> Kidney-Flow.Init </call>
+  <call> LeftKidney-Flow.Init </call>
+  <call> RightKidney-Flow.Init </call>
   <call> LeftHeart-Flow.Init </call>
   <call> OtherTissue-Flow.Init </call>
   <call> RespiratoryMuscle-Flow.Init </call>

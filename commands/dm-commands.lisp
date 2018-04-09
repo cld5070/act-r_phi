@@ -175,6 +175,20 @@
 ;;;             : * Added the whynot-dm command that can be used to output info
 ;;;             :   about how a chunk (or chunks) compared to the last retrieval
 ;;;             :   request which occurred.
+;;; 2013.07.15 Dan
+;;;             : * Sort the whynot-dm return value based on the retrieval-activation
+;;;             :   of the chunks.
+;;;             : * Added the simulate-retrieval-request command which takes a chunk-spec
+;;;             :   description and then prints a stripped down activation trace of
+;;;             :   what would happen if that request were made at this time (with
+;;;             :   no side effects) and returns the list of matching chunks sorted
+;;;             :   by activation.
+;;; 2013.07.16 Dan
+;;;             : * Realized that I forgot the -fct on the simulate-retrieval-request
+;;;             :   function.
+;;; 2013.07.18 Dan
+;;;             : * and then I failed to update the return-from calls within the
+;;;             :   simulate-retrieval-request-fct function until now.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -1127,9 +1141,213 @@
                                     (command-output "~s did not match the request" chunk)))))
                        (command-output "Chunk ~s is not in the model's declarative memory." chunk))
                    (command-output "~s does not name a chunk in the current model." chunk)))
-               (last-request-matches last))))
+               (sort (copy-list (last-request-matches last)) (lambda (x y) 
+                                                               (if (= (chunk-retrieval-activation x)
+                                                                      (chunk-retrieval-activation y))
+                                                                   (let ((p1 (position x (last-request-best last)))
+                                                                         (p2 (position y (last-request-best last))))
+                                                                     (or (and p1 p2 (< p1 p2))
+                                                                         (and p1 (null p2))))
+                                                                 (> (chunk-retrieval-activation x)
+                                                                    (chunk-retrieval-activation y))))))))
     (print-warning "Whynot-dm called with no current model.")))
 
+
+(defmacro simulate-retrieval-request (&rest spec)
+  `(simulate-retrieval-request-fct ',spec))
+
+(defun simulate-retrieval-request-fct (spec-list)
+  (let ((dm (get-module declarative)))
+    (if dm
+        (let ((seed (car (no-output (sgp :seed))))
+              (finsts (dm-finsts dm))
+              (act (dm-act dm))
+              (temp-mp nil))
+          (unwind-protect 
+            (let ((request (define-chunk-spec-fct spec-list)))
+              (if (act-r-chunk-spec-p request)
+                  
+                  (let* ((ct (chunk-spec-chunk-type request))
+                         (chunk-list (apply #'append 
+                                            (mapcar #'(lambda (x) 
+                                                        (gethash x (dm-chunks dm)))
+                                              (chunk-type-subtypes-fct ct)))))
+    
+                    (when (member :recently-retrieved (chunk-spec-slots request))
+                      (let ((recent (chunk-spec-slot-spec request :recently-retrieved)))
+                        (cond ((> (length recent) 1)
+                               (print-warning "Invalid retrieval request.")
+                               (print-warning ":recently-retrieved parameter used more than once.")
+                               (return-from simulate-retrieval-request-fct))
+                              ((not (or (eq '- (caar recent)) (eq '= (caar recent))))
+                               (print-warning "Invalid retrieval request.")
+                               (print-warning ":recently-retrieved parameter's modifier can only be = or -.")
+                               (return-from simulate-retrieval-request-fct))
+                              ((not (or (eq t (third (car recent)))
+                                        (eq nil (third (car recent)))
+                                        (and (eq 'reset (third (car recent)))
+                                             (eq '= (caar recent)))))
+                               (print-warning "Invalid retrieval request.")
+                               (print-warning ":recently-retrieved parameter's value can only be t, nil or reset.")
+                               (return-from simulate-retrieval-request-fct))
+                              
+                              (t ;; it's a valid request
+               
+                               ;; remove any old finsts 
+               
+                               (remove-old-dm-finsts dm)
+                               
+                               (if (eq 'reset (third (car recent)))
+                                   (setf (dm-finsts dm) nil)
+                 
+                                 (cond ((or (and (eq t (third (car recent)))   ;; = request t
+                                                 (eq (caar recent) '=)) 
+                                            (and (null (third (car recent)))   ;; - request nil
+                                                 (eq (caar recent) '-)))
+                        
+                                        ;; only those chunks marked are available
+                                        (setf chunk-list (mapcar #'car (dm-finsts dm)))
+                                        
+                                        (command-output "Only recently retrieved chunks: ~s" chunk-list))
+                                       (t
+                        
+                                        (command-output "Removing recently retrieved chunks:")
+                        
+                                        (setf chunk-list 
+                                          (remove-if #'(lambda (x)
+                                                         (when (member x (dm-finsts dm) 
+                                                                       :key #'car
+                                                                       :test #'eq-chunks-fct)
+                                                           (command-output "~s" x)
+                                                           t))
+                                                     chunk-list)))))))))
+    
+                    (when (member :mp-value (chunk-spec-slots request))
+                      (let ((mp-value (chunk-spec-slot-spec request :mp-value)))
+                        (cond ((> (length mp-value) 1)
+                               (print-warning "Invalid retrieval request.")
+                               (print-warning ":mp-value parameter used more than once.")
+                               (return-from simulate-retrieval-request-fct))
+                              ((not (eq '= (caar mp-value)))
+                               (print-warning "Invalid retrieval request.")
+                               (print-warning ":mp-value parameter's modifier can only be =.")
+                               (return-from simulate-retrieval-request-fct))
+                              ((not (numornil (third (car mp-value))))
+                               (print-warning "Invalid retrieval request.")
+                               (print-warning ":mp-value parameter's value can only be nil or a number.")
+                               (return-from simulate-retrieval-request-fct))
+                              (t ;; it's a valid request
+                               (setf temp-mp (list (dm-mp dm)))
+                               (setf (dm-mp dm) (third (car mp-value)))))))
+                    
+                    
+                    (setf request (strip-request-parameters-from-chunk-spec request))
+                    
+                    ;; don't print the activation trace info (should it still?, but if so
+                    ;; what to do about which 'trace' to use since this is a command it
+                    ;; should go to the command stream but activation computations go to
+                    ;; the model stream...
+                    
+                    (setf (dm-act dm) nil)
+                    
+                    (let ((best-val nil)
+                          (best nil)
+                          (chunk-set 
+                           (cond ((or (null (dm-esc dm)) (null (dm-mp dm)))
+                                  (let ((found nil))
+                                    (dolist (name chunk-list found)
+                                      (if (match-chunk-spec-p name request)
+                                          (progn
+                                            (command-output "Chunk ~s matches" name)
+                                            (push-last name found))
+                                        (command-output "Chunk ~s does not match" name)))))
+                                 (t
+                                  ;; with esc and pm on then want to use
+                                  ;; everything that fits the general pattern:
+                                  ;; correct type
+                                  ;; slots with a binding not nil
+                                  ;; empty slots are empty
+                                  ;; >, <, >=, and <= tests met
+                        
+                                  (let* ((matches (find-matching-chunks 
+                                                   (define-chunk-spec-fct 
+                                                       (append (list 'isa (chunk-spec-chunk-type request))
+                                                               (mapcan #'(lambda (x)
+                                                                           (cond ((eq (car x) '=)
+                                                                                  (if (third x)
+                                                                                      (list '- (second x) nil)
+                                                                                    (list '= (second x) nil)))
+                                                                                 ((eq (car x) '-)
+                                                                                  (unless (third x) x))
+                                                                                 ;;; make sure the comparison tests match
+                                                                                 (t x)))
+                                                                 (chunk-spec-slot-spec request))))
+                                                   :chunks chunk-list))
+                                         (non-matches (set-difference chunk-list matches)))
+                                    
+                                    (dolist (c non-matches)
+                                      (command-output "Chunk ~s does not match" c))
+                                    matches)))))
+            
+                      (if (dm-esc dm)
+                          (dolist (x chunk-set)
+                            (compute-activation dm x request)
+                            
+                            (cond ((null best-val)
+                                   (setf best-val (chunk-activation x))
+                                   (push x best)
+                                   (command-output "Chunk ~s has the current best activation ~f" x best-val))
+                                  ((= (chunk-activation x) best-val)
+                                   (push x best)
+                                   (command-output "Chunk ~s matches the current best activation ~f" x best-val))
+                                  ((> (chunk-activation x) best-val)
+                                   (setf best-val (chunk-activation x))
+                                   (setf best (list x))
+                                   (command-output "Chunk ~s is now the current best with activation ~f" x best-val))
+                                  (t
+                                  (command-output "Chunk ~s has activation ~f" x (chunk-activation x)))))
+                        (setf best chunk-set))
+                      
+                      (when (> (length best) 1)
+                        (if (dm-er dm)
+                            (let ((b (random-item best)))
+                              (setf best (cons b (remove b best))))
+                          (setf best (sort best #'string<))))
+            
+                      (cond ((or (null best) 
+                                 (and (dm-esc dm)
+                                      (< best-val (dm-rt dm))))
+                             (if (null best)
+                               (command-output "No matching chunk found retrieval failure"))
+                             (progn
+                               (setf best nil)
+                               (command-output "No chunk above the retrieval threshold: ~f" (dm-rt dm))))
+                   
+                            ((= (length best) 1)
+                   
+                             (command-output "Chunk ~s with activation ~f is the best" (car best) (chunk-activation (car best))))
+                            (t
+                             (let ((best1 (car best)))
+                               (command-output "Chunk ~s chosen among the chunks with activation ~f" best1 (chunk-activation best1)))))
+                      (sort chunk-set (lambda (x y) 
+                                        (if (= (chunk-activation x)
+                                               (chunk-activation y))
+                                            (let ((p1 (position x best))
+                                                  (p2 (position y best)))
+                                              (or (and p1 p2 (< p1 p2))
+                                                  (and p1 (null p2))))
+                                          (> (chunk-activation x)
+                                             (chunk-activation y)))))))
+                (print-warning "Invalid request specification passed to simulate-retrieval-request.")))
+                      
+                      
+            (progn ;; restore the parameters that were cleared/saved
+              (no-output (sgp-fct (list :seed seed)))
+              (setf (dm-finsts dm) finsts)
+              (setf (dm-act dm) act)
+              (when temp-mp
+                (setf (dm-mp dm) (car temp-mp))))))
+      (print-warning "No declarative memory module available.  Simulate-retrieval-request cannot perform the request."))))
 
 #|
 This library is free software; you can redistribute it and/or

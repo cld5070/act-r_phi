@@ -17,13 +17,20 @@ By : University of Mississippi Medical Center
 
 <showvalue>
   <row> 1.4 </row><col> 1.0 </col>
-  <name> Conductance </name>
+  <name> RightKidney-ArcuateArtery.Conductance </name>
+  <format><integer/></format>
+  <label> Conductance </label>
+</showvalue>
+
+<showvalue>
+  <row> 2.4 </row><col> 1.0 </col>
+  <name> LeftKidney-ArcuateArtery.Conductance </name>
   <format><integer/></format>
   <label> Conductance </label>
 </showvalue>
 
 <showgraph>
-  <row> 2.4 </row><col> 1.0 </col><high> 7 </high><wide> 28 </wide>
+  <row> 3.4 </row><col> 1.0 </col><high> 7 </high><wide> 28 </wide>
   <leftmargin> 6 </leftmargin>
   <xaxis>
     <name> System.X </name>
@@ -32,16 +39,21 @@ By : University of Mississippi Medical Center
   </xaxis>
   <yaxis>
     <yvar>
-      <name> Conductance </name>
+      <name> RightKidney-ArcuateArtery.Conductance </name>
       <nolabel/>
       <linecolor> BLUE </linecolor>
     </yvar>
-    <scale><min> 400 </min><max> 500 </max></scale>
+   <yvar>
+      <name> LeftKidney-ArcuateArtery.Conductance </name>
+      <nolabel/>
+      <linecolor> GREEN </linecolor>
+    </yvar>
+    <scale><min> 200 </min><max> 250 </max></scale>
   </yaxis>
 </showgraph>
 
 <showbargraph>
-  <row> 9.8 </row><col> 1.0 </col><high> 3.0 </high><wide> 28 </wide>
+  <row> 10.8 </row><col> 1.0 </col><high> 3.0 </high><wide> 28 </wide>
   <leftmargin> 11 </leftmargin>
   <title> Effect </title>
   <showinitialvalues/>
@@ -55,45 +67,38 @@ By : University of Mississippi Medical Center
 
 <showvalue>
   <row> 13.2 </row><col> 1.0 </col>
-  <name> Stenosis </name>
+  <name> RightKidney-ArcuateArtery.Stenosis </name>
   <format><list> Stenosis </list></format>
-  <label> Stenosis </label>
+  <label> Right Stenosis </label>
 </showvalue>
 
 <showvalue>
-  <row> 14.6 </row><col> 1.0 </col>
-  <name> BasicConductance </name>
+  <row> 14.2 </row><col> 1.0 </col>
+  <name> LeftKidney-ArcuateArtery.Stenosis </name>
+  <format><list> Stenosis </list></format>
+  <label> LeftStenosis </label>
+</showvalue>
+
+<showvalue>
+  <row> 15.6 </row><col> 1.0 </col>
+  <name> LeftKidney-ArcuateArtery.BasicConductance </name>
   <format><integer/></format>
   <label> Basic Conductance </label>
 </showvalue>
 
 <slidebar>
-  <row> 16.0 </row><col> 3.0 </col>
-  <name> Multiplier </name>
+  <row> 17.0 </row><col> 3.0 </col>
+  <name>  RightKidney-ArcuateArtery.Multiplier </name>
   <listname> Common.Multiplier </listname>
   <label> X </label>
 </slidebar>
 
-<showvalue>
-  <row> 17.4 </row><col> 3.0 </col>
-  <name> NominalConductance </name>
-  <format><integer/></format>
-  <label> Nominal </label>
-</showvalue>
-
-<showvalue>
-  <row> 18.4 </row><col> 3.0 </col>
-  <name> Conductance(/G) </name>
-  <format><decimal> 5 </decimal></format>
-  <label> /G </label>
-</showvalue>
-
-<showvalue>
-  <row> 19.4 </row><col> 3.0 </col>
-  <name> Kidney-Size.InitialMass </name>
-  <format><integer/></format>
-  <label> Mass </label>
-</showvalue>
+<slidebar>
+  <row> 18.5 </row><col> 3.0 </col>
+  <name>  LeftKidney-ArcuateArtery.Multiplier </name>
+  <listname> Common.Multiplier </listname>
+  <label> X </label>
+</slidebar>
 
 <infobutton>
   <row> 1.2 </row><col> 26.0 </col>

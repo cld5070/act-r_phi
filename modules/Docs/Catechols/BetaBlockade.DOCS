@@ -10,13 +10,13 @@ Copyright : 2009
 <vardoc>
 <name> BetaBlockade.Block(%)</name>
 <topic> Adrenergic Receptor Overview  </topic>
-<topic> Block(%) - DefinitionBB1 </topic>
+<topic> BetaBlockade - Overview </topic>
 <seealso> BetaPool.Effect </seealso>
 </vardoc>
 
 <vardoc>
 <name> BetaBlockade.Effect </name>
-<topic> Effect - DefinitionBB2 </topic>
+<topic> BetaBlockade - Overview </topic>
 </vardoc>
 
 
@@ -72,27 +72,9 @@ receptors in the given effector organ
 </topicdoc>
 
 <topicdoc>
-<name> Block(%) - DefinitionBB1 </name>
-<label> Definition </label>
+<name> BetaBlockade - Overview </name>
+<label> Beta Blockade - Overview </label>
 <content>
-
-The model user can block the effect of beta receptor stimulation.
-Reeptor blockade is applied at individual organs. Effect is
-1.0 when there is no blockade. For example,a 16% blockade results 
-in an effect of 0.84.
-There are a number of drugs known as beta antagonists which can 
-be used clinically to cause beta blockade. These include 
-propranolol and metoprolol.
-
-</content>
-</topicdoc>
-
-<topicdoc>
-<name> Effect - DefinitionBB2 </name>
-<label> Definition </label>
-<content>
-
-Effect = 1.0 - (Block(%)/100)
 
 The model user can block the effect of beta receptor stimulation.
 Reeptor blockade is applied at individual organs. Effect is

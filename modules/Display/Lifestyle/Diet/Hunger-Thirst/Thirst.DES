@@ -10,7 +10,7 @@ By : University of Mississippi Medical Center
    <row> 2.0 </row>
    <col> 32.0 </col>
    <high> 12.4 </high>
-   <wide> 30.0 </wide>
+   <wide> 62.0 </wide>
    <title> Thirst </title>
 
 <structurename> DietThirst </structurename>
@@ -27,13 +27,12 @@ By : University of Mississippi Medical Center
   <leftmargin> 7 </leftmargin>
 
   <xaxis>
-    <name> OsmBody.[Osm(mOsm/L)]-Osmoreceptors </name>
+    <name> OsmBody.Osmoreceptors(mOsm/L) </name>
     <label> [Osm] </label>
     <scale>
       <min> 230 </min><max> 320 </max><inc> 10 </inc>
     </scale>
   </xaxis>
-
   <yaxis>
     <label> Thirst </label>
     <scale>
@@ -46,7 +45,7 @@ By : University of Mississippi Medical Center
 
 <showvalue>
    <row> 9.8 </row><col> 1.0 </col>
-   <name> OsmBody.[Osm(mOsm/L)]-Osmoreceptors </name>
+   <name> OsmBody.Osmoreceptors(mOsm/L) </name>
    <format><decimal> 1 </decimal></format>
    <label> [Osm-Osmoreceptors] </label>
 </showvalue>
@@ -57,6 +56,32 @@ By : University of Mississippi Medical Center
 
   <line> Thirst is typically ~2 L/Day. </line>
 </infobutton>
+
+<showvalue>
+   <row> 1.4 </row><col> 35 </col>
+   <name> DietIntakeH2O.Rate(mL/Min) </name>
+   <format><decimal> 2 </decimal></format>
+   <label> Water Intake (mL/Min) </label>
+</showvalue>
+
+<showgraph>
+  <row> 2.6 </row><col> 30 </col><high> 7 </high><wide> 28 </wide>
+  <leftmargin> 6 </leftmargin>
+  <xaxis>
+    <name> System.X </name>
+    <label> Time </label>
+    <scale><min> 0 </min><max> 2 </max></scale>
+  </xaxis>
+  <yaxis>
+    <yvar>
+      <name> DietIntakeH2O.Rate(mL/Min) </name><label> Intake </label>
+      <linecolor> BLUE </linecolor>
+    </yvar>
+    <scale>
+      <min> 0 </min><max> 2 </max><inc> 1 </inc>
+    </scale>
+  </yaxis>
+</showgraph>
 
 </groupbox>
 

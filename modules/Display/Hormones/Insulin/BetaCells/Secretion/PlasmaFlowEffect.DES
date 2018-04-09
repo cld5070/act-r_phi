@@ -13,6 +13,8 @@ By : University of Mississippi Medical Center
    <wide> 30.0 </wide>
    <title> Plasma Flow Effect </title>
 
+<structurename> InsulinSecretion </structurename>
+
 <showvalue>
    <row> 1.4 </row><col> 1.0 </col>
    <name> PlasmaFlowEffect </name>

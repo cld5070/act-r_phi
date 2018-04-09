@@ -15,7 +15,7 @@ Schema : 2005.0
    <wide> 30.0 </wide>
    <title> Capillary Leak </title>
 
-<structurename> MT_CapillaryWater </structurename>
+<structurename> Torso_Middle_CapillaryWater </structurename>
 
 <showvalue>
    <row> 1.4 </row><col> 1.0 </col>
@@ -43,14 +43,14 @@ Schema : 2005.0
 </showgraph>
 
 <repeatlist>
-  <name> MT_CapillaryWater.Perm </name>
+  <name> Torso_Middle_CapillaryWater.Perm </name>
   <repeat><reps> 100 </reps><stepsize>  0.01 </stepsize></repeat>
 </repeatlist>
 
 <slidebar>
   <row> 11.6 </row><col> 1.0 </col>
   <name> Perm </name>
-  <listname> MT_CapillaryWater.Perm </listname>
+  <listname> Torso_Middle_CapillaryWater.Perm </listname>
   <label> Perm </label>
 </slidebar>
 
@@ -70,14 +70,14 @@ Schema : 2005.0
 
 <showvalue>
    <row> 15.0 </row><col> 3.0 </col>
-   <name> MT_InterstitialWater.Pressure </name>
+   <name> Torso_Middle_InterstitialWater.Pressure </name>
    <format><decimal> 1 </decimal></format>
    <label> Interstitial Pressure </label>
 </showvalue>
 
 <showvalue>
    <row> 16.0 </row><col> 3.0 </col>
-   <name> MT_InterstitialProtein.COP </name>
+   <name> Torso_Middle_InterstitialProtein.COP </name>
    <format><decimal> 1 </decimal></format>
    <label> Interstitial COP </label>
 </showvalue>

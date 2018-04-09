@@ -10,7 +10,7 @@ Copyright : 2009
  </structurename>
 
 <vardoc>
-<name> DietGoalElectrolytes.Cl-_mMol/Day</name>
+<name> DietGoalElectrolytes.Cl-_mEq/Day</name>
 <topic> XX </topic>
 <topic> XX </topic>
 <topic> XXXX </topic>
@@ -19,7 +19,7 @@ Copyright : 2009
 </vardoc>
 
 <vardoc>
-<name> DietGoalElectrolytes.K+_mMol/Day </name>
+<name> DietGoalElectrolytes.K+_mEq/Day </name>
 <topic> XXX</topic>
 <topic> XXXX </topic>
 <topic> XXX </topic>
@@ -28,7 +28,7 @@ Copyright : 2009
 </vardoc>
 
 <vardoc>
-<name> DietGoalElectrolytes.Na+_mMol/Day </name>
+<name> DietGoalElectrolytes.Na+_mEq/Day </name>
 <topic> XXX </topic>
 <topic> XXX </topic>
 <topic> XXX </topic>

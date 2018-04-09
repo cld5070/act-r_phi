@@ -10,9 +10,9 @@ By : University Of Mississippi Medical Center
 
 <variables>
 
-<parm><name> Carbo_kCal/Day </name><val> 900.0 </val></parm>
-<parm><name> Fat_kCal/Day </name><val> 800.0 </val></parm>
-<parm><name> Protein_kCal/Day </name><val> 500.0 </val></parm>
+<parm><name> Carbo_kCal/Day </name><val> 920.0 </val></parm>900
+<parm><name> Fat_kCal/Day </name><val> 820.0 </val></parm>800
+<parm><name> Protein_kCal/Day </name><val> 510.0 </val></parm>500
 <var><name> Total_kCal/Day </name></var>
 <var><name> Carbo_G/Day </name></var>
 <var><name> Fat_G/Day </name></var>

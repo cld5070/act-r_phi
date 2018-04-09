@@ -23,8 +23,8 @@ By : University Of Mississippi Medical Center
 <curve>
   <name> NA(Hz) </name>
   <point><x> 0.0 </x><y> 8.0 </y><slope> 0 </slope></point>
-  <point><x> 1.5 </x><y> 2.0 </y><slope> -2.0 </slope></point>
-  <point><x> 4.5 </x><y> 0.0 </y><slope> 0 </slope></point>
+  <point><x> 1.5 </x><y> 2.0 </y><slope> -1.0 </slope></point>
+  <point><x> 4.5 </x><y> 0.5 </y><slope> 0 </slope></point>
 </curve>
 
 </functions>
@@ -37,7 +37,7 @@ By : University Of Mississippi Medical Center
   <name> NA(Hz) </name>
   <test> Clamp </test>
   <true> Level </true>
-  <false> NA(Hz) [ SympsCNS.NA(Hz) ] </false>
+  <false> NA(Hz) [ Sympathetics-Cardiac.NA(Hz) ] </false>
 </conditional>
 
 <def>

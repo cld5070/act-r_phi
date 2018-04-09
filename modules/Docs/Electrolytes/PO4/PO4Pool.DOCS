@@ -33,7 +33,7 @@ Copyright : 2009
 <vardoc>
 <name> PO4Pool.Gain </name>
 <topic> Gain - PO4P2Definition </topic>
-<seealso> DietIntakeElectrolytes.PO4---_mMol/L </seealso>
+<seealso> DietIntakeElectrolytes.PO4--mEq/L </seealso>
 </vardoc>
 
 <vardoc>

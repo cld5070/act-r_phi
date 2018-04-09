@@ -1,11 +1,10 @@
 HumMod / Bladder
 
 Created : 18-Apr-05
-Last Modified : 26-Jan-10
+Revised : 2013-02-01
 Author : Tom Coleman
-Copyright : 2006-2010
+Copyright : 2006-2013
 By : University Of Mississippi Medical Center
-Schema : DES V1.0
 
 <panel><name> Bladder </name>
 
@@ -30,6 +29,7 @@ Schema : DES V1.0
 <?path Display\Organs\Bladder\ ?>
 
 <?include Voiding.DES ?>
+<?include Proteinuria.DES ?>
 <?include Composition.DES ?>
 
 </panel>

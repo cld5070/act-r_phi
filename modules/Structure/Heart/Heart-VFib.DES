@@ -14,12 +14,21 @@ Schema : 2005.0
 
 <var><name> Is_Fibrillating </name><val> FALSE </val></var>
 <timervar><name> ElapsedTime </name><val> UNDEFINED </val></timervar>
-
+<parm><name> VFib </name><val> 0 </val></parm>
 </variables>
 
 <definitions>
 
 <block><name> Wrapup </name>
+
+<if>
+ <test> VFib </test>
+  <true>
+    <call> RequestStart </call>
+    <def><name> VFib </name><val> FALSE </val></def>
+  </true>
+</if>
+    
 
 <if>
 <test> Heart-Asystole.Is_Asystole </test>
@@ -69,7 +78,7 @@ Schema : 2005.0
 <if>
 <test> Heart-Asystole.Is_Asystole </test>
 <true>
-  <page> Heart is asystole. It can't fibrillate. </page>
+<!--  <page> Heart is asystole. It can't fibrillate. </page>-->
   <exitblock/>
 </true>
 </if>

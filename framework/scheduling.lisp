@@ -349,6 +349,7 @@
 (defun run-sched-queue (mp stop-condition &key (real-time nil))
   "The internal function that steps through events sending them to be
     executed until a condtion is met"
+  
   (cannot-define-model
    (unwind-protect 
        (let ((event-count 0)

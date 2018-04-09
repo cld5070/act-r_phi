@@ -1,18 +1,18 @@
-HumMod / EPO
+/* HumMod / EPO
 
-Created : 21-Oct-04
-Last Modified : 26-Jan-10
-Author : Tom Coleman
-Copyright : 2006-2010
-By : University Of Mississippi Medical Center
-Schema : DES V1.0
+   Created : 2014-03-03
+   Revised : 2014-03-03
+   Author : Tom Coleman
+   Copyright : 2014-2014
+   By : Tom Coleman
+*/
 
 <?path Structure\EPO\ ?>
 
 <?include EPOPool.DES ?>
 <?include EPOPump.DES ?>
-<?include EPOClearance.DES ?>
 <?include EPOSecretion.DES ?>
+<?include EPODisposal.DES ?>
 
 <structure><name> EPO </name>
 
@@ -20,7 +20,10 @@ Schema : DES V1.0
 
 <block><name> Parms </name>
 
+  <call> EPOPool.Parms </call>
   <call> EPOPump.Parms </call>
+  <call> EPOSecretion.Parms </call>
+  <call> EPODisposal.Parms </call>
 
 </block>
 
@@ -33,7 +36,7 @@ Schema : DES V1.0
 <block><name> Dervs </name>
 
   <call> EPOSecretion.Dervs </call>
-  <call> EPOClearance.Dervs </call>
+  <call> EPODisposal.Dervs </call>
   <call> EPOPool.Dervs </call>
 
 </block>
@@ -41,4 +44,4 @@ Schema : DES V1.0
 </definitions>
 </structure>
 
-End
+/* End */

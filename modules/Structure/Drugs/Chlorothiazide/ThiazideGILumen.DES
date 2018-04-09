@@ -18,7 +18,7 @@ Schema : DES V1.0
 
 <constant>
   <name> PERM </name>
-  <val> 0.01 </val>
+  <val> 0.1 </val>0.01
 </constant>
 
 <var>

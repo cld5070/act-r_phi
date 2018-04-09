@@ -1,9 +1,9 @@
 HumMod / LeftHeartPumping
 
 Created : 2010-05-24
-Revised : 2012-02-03
+Revised : 2013-02-25
 Author : Tom Coleman
-Copyright : 2010-2011
+Copyright : 2010-2013
 By : University of Mississippi Medical Center
 
 <branch>
@@ -43,12 +43,6 @@ By : University of Mississippi Medical Center
 <leaf>
   <name> LeftHeartPumping-ContractileProtein </name>
   <label> Contractile Protein </label>
-  <parent> LeftHeartPumping </parent>
-</leaf>
-
-<leaf>
-  <name> LeftHeartPumping-Work </name>
-  <label> Work </label>
   <parent> LeftHeartPumping </parent>
 </leaf>
 

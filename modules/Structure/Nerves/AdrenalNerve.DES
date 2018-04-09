@@ -1,38 +1,21 @@
 HumMod / AdrenalNerve
 
 Created : 23-Jun-06
-Last Modified : 26-Jan-10
+Revised : 2013-03-07
 Author : Tom Coleman
-Copyright : 2006-2010
+Copyright : 2006-2013
 By : University Of Mississippi Medical Center
-Schema : DES V1.0
 
 <structure><name> AdrenalNerve </name>
 
 <variables>
 
-<var>
-  <name> NA(Hz) </name>
-</var>
+<var><name> NA(Hz) </name></var>
+<var><name> NA </name></var>
 
-<var>
-  <name> NA </name>
-</var>
-
-<parm>
-  <name> Switch </name>
-  <val> FALSE </val>
-</parm>
-
-<parm>
-  <name> Setting </name>
-  <val> 0.0 </val>
-</parm>
-
-<parm>
-  <name> Block(%) </name>
-  <val> 0.0 </val>
-</parm>
+<parm><name> Switch </name><val> FALSE </val></parm>
+<parm><name> Setting </name><val> 0.0 </val></parm>
+<parm><name> Block(%) </name><val> 0.0 </val></parm>
 
 </variables>
 
@@ -44,7 +27,7 @@ Schema : DES V1.0
   <name> NA(Hz) </name>
   <test> Switch </test>
   <true> Setting </true>
-  <false> SympsCNS.NA(Hz) * ( 1.0 - ( Block(%) / 100.0 ) ) </false>
+  <false> Ganglia-Adrenal.NA(Hz) * ( 1.0 - ( Block(%) / 100.0 ) ) </false>
 </conditional>
 
 <def>

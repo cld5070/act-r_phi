@@ -16,17 +16,21 @@ By : University of Mississippi Medical Center
 <var><name> TargetMotionWatts </name></var>
 <var><name> TargetHeatWatts </name></var>
 
+<var><name> DPTargetWork </name></var>
+<var><name> DPTargetAerobics </name></var>
+
 <constant><name> WattsToCals </name><val> 14.34 </val></constant>
 
 <var><name> TotalCals </name></var>
 <var><name> MotionCals </name></var>
 <var><name> HeatCals </name></var>
 
-<parm><name> EnergyTau </name><val> 0.2 </val></parm>
+<parm><name> EnergyTau </name><val> 1.5 </val></parm>
 <parm><name> ContractionsTau </name><val> 0.2 </val></parm>
 
 <parm><name> StandardEfficiency </name><val> 0.22 </val></parm>
 <var><name> Efficiency </name></var>
+<whitenoise><name> random </name><lowerlim> -1 </lowerlim><upperlim> 1 </upperlim></whitenoise>
 
 </variables>
 
@@ -52,6 +56,30 @@ By : University of Mississippi Medical Center
   <errorlim> 0.5 </errorlim>
 </delay>
 
+<diffeq>
+  <name> DPWork </name>
+  <integralname> DPWork </integralname>
+  <initialval> 0.0 </initialval>
+  <dervname> dWork </dervname>
+  <errorlim> 0.05 </errorlim>
+</diffeq>
+
+<diffeq>
+  <name> DPAerobics </name>
+  <integralname> DPAerobics </integralname>
+  <initialval> 0.0 </initialval>
+  <dervname> dAerobics </dervname>
+  <errorlim> 0.05 </errorlim>
+</diffeq>
+
+<diffeq>
+  <name> randomeffect </name>
+  <integralname> randomeffect </integralname>
+  <initialval> 0.0 </initialval>
+  <dervname> drandom </dervname>
+  <errorlim> 0.05 </errorlim>
+</diffeq>
+
 </equations>
 
 <definitions>
@@ -73,6 +101,28 @@ By : University of Mississippi Medical Center
 </block>
 
 <block><name> Calc </name>
+
+<def><name> drandom </name><val> 0.25 * ( random - randomeffect ) * 0</val></def>
+<def>
+  <name> DPTargetWork </name>
+  <val> DailyPlannerControl.WorkLevel </val>
+</def>
+
+<def>
+  <name> DPTargetAerobics </name>
+  <val> DailyPlannerControl.AerobicsLevel </val>
+</def>
+
+<def>
+  <name> dWork </name>
+  <val> 0.25 * ( DPTargetWork - DPWork ) </val>
+</def>
+
+<def>
+  <name> dAerobics </name>
+  <val> 0.25 * ( DPTargetAerobics - DPAerobics ) </val>
+</def>
+
 
 <testcase>
 
@@ -132,7 +182,7 @@ By : University of Mississippi Medical Center
 </def>
 <def>
   <name> TargetTotalWatts </name>
-  <val> DailyPlannerControl.WorkLevel / Efficiency </val>
+  <val> DPWork + randomeffect / Efficiency </val>
 </def>
 <def>
   <name> TargetContractionRate </name>
@@ -148,7 +198,7 @@ By : University of Mississippi Medical Center
 </def>
 <def>
   <name> TargetTotalWatts </name>
-  <val> DailyPlannerControl.AerobicsLevel / Efficiency </val>
+  <val> DPAerobics + randomeffect / Efficiency </val>
 </def>
 <def>
   <name> TargetContractionRate </name>

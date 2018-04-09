@@ -51,7 +51,7 @@ Schema : DES V1.0
 </radiobuttons>
 
 <repeatlist>
-  <name> AdrenalNerve.Setting </name>
+  <name> Setting </name>
   <repeat><reps> 29 </reps><stepsize> 0.1 </stepsize></repeat>
   <repeat><reps>  7 </reps><stepsize> 1.0 </stepsize></repeat>
 </repeatlist>
@@ -59,7 +59,7 @@ Schema : DES V1.0
 <slidebar>
   <row> 11.2 </row><col> 1.0 </col>
   <name> Setting </name>
-  <listname> AdrenalNerve.Setting </listname>
+  <listname> Setting </listname>
   <label> Setting </label>
 </slidebar>
 
@@ -72,7 +72,7 @@ Schema : DES V1.0
 
 <showvalue>
    <row> 14.4 </row><col> 1.0 </col>
-   <name> SympsCNS.NA(Hz) </name>
+   <name> Sympathetics-Adrenal.NA(Hz) </name>
    <format><decimal> 2 </decimal></format>
    <label> Pre-nucleus NA (Hz) </label>
 </showvalue>

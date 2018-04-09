@@ -66,7 +66,7 @@ By : University Of Mississippi Medical Center
   <leftmargin> 4 </leftmargin>
 
   <xaxis>
-    <name> SympsCNS.NA(Hz) </name>
+    <name> Sympathetics-General.NA(Hz) </name>
     <label> Symps (Hz) </label>
     <scale><min> 0 </min><max> 5 </max></scale>
   </xaxis>
@@ -81,7 +81,7 @@ By : University Of Mississippi Medical Center
 
 <showvalue>
    <row> 19.6 </row><col> 1.0 </col>
-   <name> SympsCNS.NA(Hz) </name>
+   <name> Sympathetics-General.NA(Hz) </name>
    <format><decimal> 1 </decimal></format>
    <label> Pre-nucleus NA (Hz) </label>
 </showvalue>

@@ -12,5 +12,6 @@ Schema : DES V1.0
 <?include GlucosePool.DES ?>
 <?include GlucoseDecomposition.DES ?>
 <?include GlucosePump.DES ?>
+<?include OGTT.DES ?>
 
 End

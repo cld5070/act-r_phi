@@ -53,6 +53,9 @@
 ;;;             :   now since the BOLD tools use it too.
 ;;; 2011.06.01 Dan
 ;;;             : * Removed some global vars that are no longer needed.
+;;; 2014.05.06 Dan
+;;;             : * Fixed a bug with parse-trace-list which could happen when
+;;;             :   production breaks cause 'bad' production events to be recorded.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -251,6 +254,7 @@
               (push (list 'rectangle (gt-rect-start z) y (aif (gt-rect-end z) it (mp-time-ms)) (+ y y-inc) 
                           
                           (if (and (eq x 'production)
+                                   (gt-rect-request z)
                                    (production-color (read-from-string (gt-rect-request z)))
                                    (stringp (production-color (read-from-string (gt-rect-request z)))))
                               (production-color (read-from-string (gt-rect-request z)))
@@ -266,10 +270,11 @@
                         (+ x-coord (nth buffer-index widths-list)) (aif (gt-rect-end z) it (mp-time-ms))  
                                                 
                         (if (and (eq x 'production)
-                                   (production-color (read-from-string (gt-rect-request z)))
-                                   (stringp (production-color (read-from-string (gt-rect-request z)))))
-                              (production-color (read-from-string (gt-rect-request z)))
-                            (nth buffer-index color-list)) 
+                                 (gt-rect-request z)
+                                 (production-color (read-from-string (gt-rect-request z)))
+                                 (stringp (production-color (read-from-string (gt-rect-request z)))))
+                            (production-color (read-from-string (gt-rect-request z)))
+                          (nth buffer-index color-list)) 
                         
                         (gt-rect-request z) (gt-rect-chunk z) 
                         (if (gt-rect-notes z)

@@ -24,6 +24,10 @@ Schema : DES V1.0
 <var><name> KRate </name></var>
 <var><name> ClRate </name></var>
 
+<parm><name> AlbFrac </name><val> 0.66 </val></parm>
+<parm><name> IgGFrac </name><val> 0.33 </val></parm>
+<parm><name> AGPFrac </name><val> 0.01 </val></parm>
+
 <var><name> Units </name></var>
 
 </variables>

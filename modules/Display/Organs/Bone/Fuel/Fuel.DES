@@ -1,7 +1,7 @@
 HumMod / Fuel
 
 Created : 2012-02-17
-Revised : 2012-02-17
+Revised : 2012-11-05
 Author : Tom Coleman
 Copyright : 2012-2012
 By : University of Mississippi Medical Center
@@ -34,7 +34,9 @@ By : University of Mississippi Medical Center
 
 <?include Delivery.DES ?>
 <?include Use.DES ?>
+
 <?include InsulinEffect.DES ?>
+<?include FAFraction.DES ?>
 
 </panel>
 

@@ -16,6 +16,9 @@ By : University Of Mississippi Medical Center
 <parm><name> Multiplier </name><val> 1.0 </val></parm>
 <var><name> NominalConductance </name></var>
 <constant><name> Conductance(/G) </name><val> 0.00112 </val></constant>
+<parm><name> Clamp </name><val> FALSE </val></parm>
+<parm><name> Level </name><val> 0.0 </val></parm>
+
 
 <var><name> A2Effect </name></var>
 <var><name> SympsEffect </name></var>
@@ -40,7 +43,7 @@ By : University Of Mississippi Medical Center
   <startname> PO2 </startname>
   <initialval> 40.0 </initialval>
   <endname> PO2End </endname>
-  <errorlim> 0.40 </errorlim>
+  <errorlim> 1.40 </errorlim>
   <searchmin> 0.0 </searchmin>
   <searchmaxname> SearchMax </searchmaxname>
 </impliciteq>
@@ -67,6 +70,8 @@ By : University Of Mississippi Medical Center
   <name> PO2Effect </name>
   <point><x> 10 </x><y> 2.0 </y><slope> 0 </slope></point>
   <point><x> 20 </x><y> 1.0 </y><slope> 0 </slope></point>
+  <point><x> 42 </x><y> 1.0 </y><slope> 0 </slope></point>
+  <point><x> 55 </x><y> 0.2 </y><slope> 0 </slope></point>
 </curve>
 
 <curve>
@@ -166,9 +171,10 @@ By : University Of Mississippi Medical Center
   <val> PO2Effect [ PO2 ] </val>
 </def>
 
-<def>
-  <name> Conductance </name>
-  <val>
+<conditional><name> Conductance </name>
+<test> Clamp </test>
+<true> Level </true>
+<false> 
       BasicConductance
     * A2Effect
     * SympsEffect
@@ -179,8 +185,8 @@ By : University Of Mississippi Medical Center
     * OtherTissue-Vasculature.Effect
     * SympsDilateEffect
     * LocalTempEffect
-  </val>
-</def>
+</false>
+</conditional>
 
 <def>
   <name> BloodFlow </name>

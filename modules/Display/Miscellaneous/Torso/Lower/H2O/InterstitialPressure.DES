@@ -15,7 +15,7 @@ Schema : 2005.0
    <wide> 30.0 </wide>
    <title> Interstitial Pressure </title>
 
-<structurename> LT_InterstitialWater </structurename>
+<structurename> Torso_Lower_InterstitialWater </structurename>
 
 <showvalue>
    <row> 1.4 </row><col> 1.0 </col>
@@ -33,7 +33,7 @@ Schema : 2005.0
     <name> Vol </name>
     <label> Volume </label>
     <scale>
-      <min> 0 </min><max> 6000 </max><inc> 1000 </inc>
+      <min> 0 </min><max> 10000 </max><inc> 1000 </inc>
     </scale>
   </xaxis>
 

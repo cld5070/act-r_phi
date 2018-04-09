@@ -12,12 +12,15 @@ By : University Of Mississippi Medical Center
 <?include Pancreas-Glucagon.DES ?>
 <?include Pancreas-Insulin.DES ?>
 <?include Pancreas-Size.DES ?>
+<?include Pancreas-BetaCells.DES ?>
+
 
 <structure><name> Pancreas </name>
 
 <definitions>
 
 <block><name> Parms </name>
+  <call> Pancreas-BetaCells.Parms </call>
   <call> Pancreas-Size.Parms </call>
 </block>
 

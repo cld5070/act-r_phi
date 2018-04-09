@@ -20,6 +20,7 @@ Schema : DES V1.0
 <definitions>
 
 <block><name> Parms </name>
+  <call> ThiazideSingleDose.Parms </call>
   <call> ThiazideDailyDose.Parms </call>
 </block>
 

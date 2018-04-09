@@ -9,16 +9,20 @@ Copyright : 2009
 
 <vardoc>
 <name> ANPClearance.K </name>
-<topic> ANPClearance - Overview </topic>
+<topic> ANP - Overview </topic>
 <topic> ANP - Physical Units </topic>
 <topic> ANP - Concentration Units </topic>
-<topic> K - DefinitionANPC1 </topic>
+<seealso> ECFV Sodium </seealso>
+<seealso> BloodVolume </seealso>
 </vardoc>
 
 <vardoc>
 <name> ANPClearance.Rate </name>
-<topic> Rate - DefinitionANPC2 </topic>
-<seealso> ANPPool.Mass </seealso>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<seealso> XXXX </seealso>
+<seealso> XXXX </seealso>
 </vardoc>
 
 
@@ -30,6 +34,10 @@ Copyright : 2009
 [Plasma]    pG/mL or pMol/L
 Fluxes      pMol/Min
 
+
+Notice that pico (10^-12)
+gram/Mol units are used.
+
 </content>
 </topicdoc>
 
@@ -38,103 +46,69 @@ Fluxes      pMol/Min
 <label> Concentration Units </label>
 <content>
 
+ANP concentrations have been expressed in
+
+   pG/mL
+   pMol/L
+   
+
 A typical concentration is 20pMol/L
 1pMol/L = 3pG/mL
 
-Normal ANP Secretion Rate is 67pMol/min.
-Clearance Rate is 67 pMol/Min 
-Right Heart Secretion Rate: 41pMol/Min and 
-Left Heart Secretion Rate: 26pMol/min 
+
+Normal ANP secretion rate is 67pMol/min. 
+The right heart secretes 41pMol/Min and 
+the left heart 26pMol/min 
 
 </content>
 </topicdoc>
 
 <topicdoc>
-<name> ANPClearance - Overview </name>
+<name> ANP - Overview </name>
 <label> Overview </label>
 <content>
 
-ANP is eliminated from the circulation by almost every tissue
-by a combination of receptor mediated binding, by uptake and
-metabolism by target tissues and by degradation by enzymes,
-notably endopeptidases, and excretion into non plasma fluids 
-such as urine. The majority of ANP clearance probably involves
-a receptor-mediated endocytosis. Two main types of ANP-specific 
-receptors have been identified - guanylate-cyclase-linked receptors 
-and a receptor thought to have a clearance function. The latter 
-(the clearance ANP receptors) comprise the largest population of 
-receptors and they appear to serve as a powerful mechanism 
-to clear ANP from the circulaton. 
+ANP is a potent natriuretic peptide involved in hormonal regulation of extracellular fluid volume and blood pressure homeostasis. It is secreted by the atrial walls of the heart in response to stretch, which can occur from excess blood volume.
+ANP acts on the kidneys to cause small increases in glomerular filtration rate (GFR) and decreases in in sodium reabsorption by the collecting ducts. 
 
-The relative contributions of different organs to the extraction 
-of ANP clearance have been studied systematically in both 
-experimental animals and humans. The lungs, kidneys and liver 
-are all important for ANP clearance. 
+ ANP is a 28 amino acid protein
+   of molecular weight 3060.
 
-Review
-Ruskoaho H. Atrial natriuretic peptide: synthesis, release
-and metabolism. Pharmacological Reviews 44: 479 - 602, 1992.
+   1 pMol/L = 3 pG/mL
 
-Rat Data
-Almeida FA, Suzuki M, Scarborough RM, Lewicki JA, Maack T.
-Clearance function of type C receptors of atrial natriuretic
-factor in rats. Am J physiol 256: R469 - R475, 1989.
+   A typical arterial blood level
+   is 20 pMol/L.
 
-Widimsky J Jr, Debinski W, Kuchel O, Buu NT. ANF disappearance
-and tissue distribution in rats. 
-Am J Physiol 258: H13 - H139, 1990.
+   Data is from Lohmeier, but I don't
+   have the reference.
 
-Chiu PJ, Tetzloff G, Romano MT, Foster CJ, Sybertz EJ.
-Influence of C-ANF receptor and neutral endopeptidase
-on pharmacokinetics of ANF in rats.
-Am J Physiol 260: R208 - R216, 1991.
+      RAP    [ANP]
+      mmHg   pG/mL
+      ----   -----
+        1     110
+        6     500
+       10     750
 
-Human Data
-Yandle TG, Richards AM, Nicholls MG, Cuneo R, Espiner EA, 
-Livesey JH. Metabolic clearance rate and plasma half life 
-of alpha-human atrial natriuretic peptide in man. 
-Life Sciences 38: 1827 - 1833, 1986.
+The integral ANPPool.Mass jitters at Dx ~ 9. I'll try a backward
+Euler integral here.
 
-Hollister AS, Rodeheffer RJ, White FJ, Potts JR, Imada T, 
-Inagami T. Clearance of atrial natriuretic factor by lung,
-liver, and kidney in human subjects and the dog.
-J Clin Invest. 83: 623 - 628, 1989.
+  Change = Gain - Loss
+  Loss = K * Mass
 
-Dog Data
-Hollister AS, Rodeheffer RJ, White FJ, Potts JR, Imada T, 
-Inagami T. Clearance of atrial natriuretic factor by lung,
-liver, and kidney in human subjects and the dog.
-J Clin Invest. 83: 623 - 628, 1989.
+With a backward Euler,
 
-Brandt RR, Redfield MM, Aarhus LL, Lewicki JA, Burnett JC Jr.
-Clearance receptor-mediated control of atrial natriuretic
-factor in experimental congestive heart failure.
-Am J Physiol 266: R936 - R943, 1994.
+  Change = F1 - F2 * Integral
+
+so
+
+  F1 = Gain
+  F2 = K
+
 
 </content>
 </topicdoc>
 
-<topicdoc>
-<name> K - DefinitionANPC1 </name>
-<label> Definition </label>
-<content>
-
-K is the time constant for ANP Clearance. 
-
-</content>
-</topicdoc> 
-  
-<topicdoc>
-<name> Rate - DefinitionANPC2 </name>
-<label> Definition </label>
-<content>
-
-Clearance rate is calculated using the following formula;
-
-Rate = K * ANPPool.Mass
-
-</content>
-</topicdoc>   
+   
      
 
 End

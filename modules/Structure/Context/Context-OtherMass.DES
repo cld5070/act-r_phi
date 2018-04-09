@@ -14,7 +14,7 @@ By : University of Mississippi Medical Center
 <parm><name> PlusMinus </name><val> 0 </val></parm>
 
 <constant><name> MALE_SMALL     </name><val> 19.0 </val></constant>
-<constant><name> MALE_NORMAL    </name><val> 26.0 </val></constant>
+<parm><name> MALE_NORMAL    </name><val> 26.0 </val></parm>
 <constant><name> MALE_LARGE     </name><val> 32.0 </val></constant>
 <constant><name> MALE_VERYLARGE </name><val> 46.0 </val></constant>
 

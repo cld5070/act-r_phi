@@ -9,122 +9,56 @@ Copyright : 2009
 
 <vardoc>
 <name> A2Pump.Rate </name>
-<topic> A2Pump - Overview </topic>
-<topic> A2 - Physical Units </topic>
-<topic> A2 - Concentration Units </topic>
+<topic> XX </topic>
+<topic> XX </topic>
+<topic> XXXX </topic>
+<seealso> XXX </seealso>
+<seealso> XXX </seealso>
 </vardoc>
 
 <vardoc>
 <name> A2Pump.Setting </name>
-<topic> Setting - DefinitionA21 </topic>
-<topic> A2 - Physical Units </topic>
-<topic> A2 - Concentration Units </topic>
+<topic> XXX</topic>
+<topic> XXXX </topic>
+<topic> XXX </topic>
+<seealso> XXX </seealso>
+<seealso> XXXX </seealso>
 </vardoc>
 
 <vardoc>
 <name> A2Pump.Switch </name>
-<topic> Switch - DefinitionA22 </topic>
-<topic> A2 - Physical Units </topic>
-<topic> A2 - Concentration Units </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<seealso> XXXX </seealso>
+<seealso> XXXX </seealso>
 </vardoc>
 
-
 <topicdoc>
-<name> A2Pump - Overview </name>
-<label> Overview </label>
+<name> XXX</name>
+<label> XXX</label>
 <content>
-
-The A2Pump enables the model user to change 
-[A2] levels by infusing angiotensinII at different 
-rates. Data is taken from a variety of human and 
-animal studies relating infusion rates to plasma 
-concentrations of A2.
-
-When the switch is turned on, the model user sets the 
-rate by changing the setting using the slide bar. 
-
-Dog Data
-Reid IA, Brooks VL, Rudolph CD, Keil LC. Analysis of the 
-actions of angiotensin on the central nervous system of
-conscious dogs. Am J Physiol 243: R82 - R91, 1982. 
-
-Human Data
-Oelkers W, Brown JJ, Fraser R, Lever AF, Morton JJ, 
-Robertson JI. Sensitization of the adrenal cortex to 
-angiotensin II in sodium-deplete man.
-Circ Res 40: 69 - 77, 1974. 
-
-Deheneffe J, Cuesta V, Briggs JD, Brown JJ, Fraser R, 
-Lever AF, Morton JJ, Robertson JI, Tree M. response
-of aldosterone and blood pressure to angiotensin II
-infusion in anephric man. Effect of sodium deprivation.
-Circ Res 39: 183 - 190, 1976.
-
-Cachovan M, Brod J, Bahlmann J, Sippel R, Celsen B, 
-Hundeshagen H. The effect of intravenous angiotensin II
-on the peripheral circulation with particular reference
-to its bearing on general haemodynamics. 
-Clin Sci & Mol Med 51: 219s - 221s, 1976.
-
-Oelkers W, Schoneshofer M, Schultze G, Bauer B. Effect of
-prolonged low-dose Infusions of ile5-Angiotensin II on 
-blood pressure, aldosterone and electrolyte excretion in
-sodium replete man. Klin Wochenschr 56: 37 - 41, 1978. 
 
 </content>
 </topicdoc>
 
 <topicdoc>
-<name> Switch - DefinitionA22 </name>
-<label> Definition </label>
+<name> XX </name>
+<label> XXX </label>
 <content>
 
-When the A2pump switch is turned on, the model 
-user can set infusion rates using the sliding bar 
-feature in the A2 pump display box. 
 
 </content>
 </topicdoc>
 
 <topicdoc>
-<name> Setting - DefinitionA21 </name>
-<label> Definition </label>
+<name> XXX </name>
+<label> XXX </label>
 <content>
 
-When the A2Pump switch is turned on, the model 
-user can set infusion rates using the sliding bar 
-feature in the A2Pump display box. Infusion rates are 
-on a logarithmic scale. Rates of infusion may be 
-increased from 0, in increments of 10, up to 100; 
-from 100 in increments of 100 up to 1000; and from 
-1000 in increments of 1000, up to 10,000 nG/Min. 
 
 </content>
 </topicdoc>
 
-<topicdoc>
-<name> A2 - Physical Units </name>
-<label> Physical Units </label>
-<content>
-
-[Plasma]  pG/mL; pMol/L
-Plasma Mass nG
-
-</content>
-</topicdoc>
-
-<topicdoc>
-<name> A2 - Concentration Units </name>
-<label> Concentration Units </label>
-<content>
-   
-A typical A2 plasma concentration is 10 pG/ml
-(recumbent level). 
-To change from pG to pMol multiply by 0.956
-1.046 pG/mL = 1.0 pMol/L
-
-</content>
-</topicdoc>
-
- 
+  
 End

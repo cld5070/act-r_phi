@@ -11,22 +11,24 @@ Schema : DES V1.0
    <row> 12.2 </row>
    <col> 32.0 </col>
    <high> 9.8 </high>
-   <wide> 30.0 </wide>
+   <wide> 60.0 </wide>
    <title> Fuel Effect </title>
 
+<label><row> 1.4 </row><col> 15 </col><text> Left </text></label>
+
 <showvalue>
-   <row> 1.4 </row><col> 1.0 </col>
-   <name> Kidney-Structure.FuelEffect </name>
+   <row> 2.4 </row><col> 1.0 </col>
+   <name> LeftKidney-Structure.FuelEffect </name>
    <format><decimal> 2 </decimal></format>
    <label> Damage Rate </label>
 </showvalue>
 
 <showcurve>
-  <row> 2.6 </row><col> 1.0 </col><high> 5 </high><wide> 28 </wide>
+  <row> 3.6 </row><col> 1.0 </col><high> 7 </high><wide> 28 </wide>
   <leftmargin> 5 </leftmargin>
 
   <xaxis>
-    <name> Kidney-Fuel.FractUseDelay </name>
+    <name> LeftKidney-Fuel.FractUseDelay </name>
     <label> Fuel Use </label>
     <scale>
       <min> 0 </min><max> 1 </max>
@@ -40,15 +42,41 @@ Schema : DES V1.0
     </scale>
   </yaxis>
 
-  <curvename> Kidney-Structure.FuelOnStructure </curvename>
+  <curvename> LeftKidney-Structure.FuelOnStructure </curvename>
 </showcurve>
 
+==========
+
+<label><row> 1.4 </row><col> 45 </col><text> Right </text></label>
+
 <showvalue>
-   <row> 8.2 </row><col> 1.0 </col>
-   <name> Kidney-Fuel.FractUseDelay </name>
-   <format><decimal> 1 </decimal></format>
-   <label> Fractional Use </label>
+   <row> 2.4 </row><col> 31.0 </col>
+   <name> RightKidney-Structure.FuelEffect </name>
+   <format><decimal> 2 </decimal></format>
+   <label> Damage Rate </label>
 </showvalue>
+
+<showcurve>
+  <row> 3.6 </row><col> 31.0 </col><high> 7 </high><wide> 28 </wide>
+  <leftmargin> 5 </leftmargin>
+
+  <xaxis>
+    <name> RightKidney-Fuel.FractUseDelay </name>
+    <label> Fuel Use </label>
+    <scale>
+      <min> 0 </min><max> 1 </max>
+    </scale>
+  </xaxis>
+
+  <yaxis>
+    <nolabel/>
+    <scale>
+      <min> 0 </min><max> 0.05 </max>
+    </scale>
+  </yaxis>
+
+  <curvename> RightKidney-Structure.FuelOnStructure </curvename>
+</showcurve>
 
 <infobutton>
   <row> 1.2 </row>

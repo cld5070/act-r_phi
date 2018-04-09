@@ -23,7 +23,7 @@ Schema : DES V1.0
 <def>
   <name> Flux </name>
   <val>
-       CD_H2O.Outflow
+       CollectingDuct_H2O.Outflow
      * HeatCore.Temp(K)
      * SpecificHeat.Water(kCal/G)
   </val>

@@ -147,7 +147,7 @@ By : University of Mississippi Medical Center
 
 <def>
   <name> Urine </name>
-  <val> NephronCalciumDistal.Excretion </val>
+  <val> LeftNephronCalciumDistal.Excretion +  RightNephronCalciumDistal.Excretion  </val>
 </def>
 
 <def>

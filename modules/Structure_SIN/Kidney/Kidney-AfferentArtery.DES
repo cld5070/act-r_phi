@@ -1,0 +1,122 @@
+HumMod / Kidney-AfferentArtery DES
+
+Created : 16-Nov-04
+Revised : 2012-02-19
+Author : Tom Coleman
+Copyright : 2006-2012
+By : University Of Mississippi Medical Center
+
+<structure><name> Kidney-AfferentArtery </name>
+
+<variables>
+
+<var><name> Conductance </name></var>
+
+<var><name> BasicConductance </name></var>
+<parm><name> Multiplier </name><val> 1.0 </val></parm>
+<var><name> NominalConductance </name></var>
+<constant><name> Conductance(/G) </name><val> 0.08883 </val></constant>
+
+<parm><name> Clamp </name><val> FALSE </val></parm>
+<parm><name> Level </name><val> 0.0 </val></parm>
+
+<var><name> TGFEffect </name></var>
+<var><name> SympEffect </name></var>
+<var><name> MyogenicEffect </name></var>
+
+<var><name> PressureGradient </name></var>
+<var><name> BloodFlow </name></var>
+
+</variables>
+
+<functions>
+
+<curve>
+  <name> TGFEffect </name>
+  <point><x> 0.0 </x><y> 1.2 </y><slope> 0.0 </slope></point>
+  <point><x> 1.3 </x><y> 1.0 </y><slope> -0.4 </slope></point>
+  <point><x> 3.0 </x><y> 0.6 </y><slope> 0.0 </slope></point>
+</curve>
+
+<curve>
+  <name> SympEffect </name>
+  <point><x> 1.5 </x><y> 1.0 </y><slope> 0.0 </slope></point>
+  <point><x> 7.0 </x><y> 0.9 </y><slope> 0.0 </slope></point>
+</curve>
+
+<curve>
+  <name> MyogenicEffect </name>
+  <point><x> -20.0 </x><y> 1.2 </y><slope> 0.0 </slope></point>
+  <point><x>   0.0 </x><y> 1.0 </y><slope> -0.02 </slope></point>
+  <point><x>  20.0 </x><y> 0.8 </y><slope> 0.0 </slope></point>
+</curve>
+
+</functions>
+
+<definitions>
+
+<block><name> Init </name>
+
+<def>
+  <name> NominalConductance </name>
+  <val> Conductance(/G) * Kidney-Size.InitialMass </val>
+</def>
+
+</block>
+
+<block><name> Calc </name>
+
+<def>
+  <name> BasicConductance </name>
+  <val> NominalConductance * Multiplier </val>
+</def>
+
+<def>
+  <name> TGFEffect </name>
+  <val> TGFEffect [ TGF-Vascular.Signal ] </val>
+</def>
+
+<def>
+  <name> SympEffect </name>
+  <val> SympEffect [ Kidney-AlphaReceptors.Activity ] </val>
+</def>
+
+<def>
+  <name> MyogenicEffect </name>
+  <val> MyogenicEffect [ Kidney-MyogenicDelay.PressureChange ] </val>
+</def>
+
+<conditional><name> Conductance </name>
+<test> Clamp </test>
+<true> Level </true>
+<false>
+    BasicConductance
+  * Kidney-NephronCount.Total(xNormal)
+  * TGFEffect
+  * SympEffect
+  * MyogenicEffect
+  * Anesthesia.VascularConductance
+  * Viscosity.ConductanceEffect
+</false>
+</conditional>
+
+</block>
+
+<block><name> Wrapup </name>
+
+<def>
+  <name> PressureGradient </name>
+  <val> Kidney-ArcuateArtery.Pressure - GlomerulusFiltrate.Pressure </val>
+</def>
+
+<def>
+  <name> BloodFlow </name>
+  <val> PressureGradient * Conductance </val>
+</def>
+
+</block>
+
+</definitions>
+</structure>
+
+End

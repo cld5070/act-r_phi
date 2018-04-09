@@ -248,6 +248,9 @@
 ;;;             :   by attend-sound to set the offset and duration of the chunk
 ;;;             :   in the aural-location buffer if it's still there when the 
 ;;;             :   attended sound stops.
+;;; 2013.10.02 Dan
+;;;             : * Commented out the optimize proclaim since that persists and
+;;;             :   may or may not be useful anyway.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 #+:packaged-actr (in-package :act-r)
@@ -260,8 +263,8 @@
 ;#+:allegro (eval-when (:compile-toplevel :Load-toplevel :execute)
 ;             (setf *enable-package-locked-errors* nil))
 
-(eval-when (:compile-toplevel :Load-toplevel :execute)
-  (proclaim '(optimize (speed 3) (space 0))))
+;(eval-when (:compile-toplevel :Load-toplevel :execute)
+;  (proclaim '(optimize (speed 3) (space 0))))
 
 (declaim (ftype (function (t) t) get-articulation-time))
 

@@ -243,7 +243,7 @@ define different levels of severity.
 <content>
 
 Loss is defined as a negative change in mass of epinephrine
-and is a function of clearance rate.
+and is a function of clearance rate and ECFV.
 
 Goldstein DS, Eisenhofer G, Kopin IJ. Sources and
 significance of plasma levels of catechols and their
@@ -273,17 +273,22 @@ Initial Mass = Target[Epi]*ECFV.Vol
 <label> Definition </label>
 <content>
 
-Mass is the calculated amount of epinephrine at any 
-any given time. Change in the Epi pool or mass is a 
-function of both gains and losses in epinephrine over time. 
-Gains may occur from increased secretion due to increased 
-sympathetic nerve stimulation; from infusion of epinephrine
+EpiPOOL
+The Epi Pool or mass is a function of Epi Secretion, 
+Epi Clearance and the volume of distribution. 
+Since the volume of distribution for epinephrine is 
+the ECFV (15,000 mL), the typical circulating pool
+is 600nG or 600,000pG. This is the initial mass of Epi.
+
+Changes in the Epi pool or mass are a function of both 
+gains and losses in epinephrine over time. Gains may 
+occur from increased secretion due to increased sympathetic 
+nerve stimulation; from infusion of epinephrine
 using the epi pump feature of the model and/or increases 
 from a pheochromocytoma.  
 Changes in the pool are calculated in the model using two 
 mathematical variables, F1 and F2, which integrate gains and 
-losses over time. A Backward Euler integral is used in this
-calculation because it gives a more stable solution set.  
+losses over time.
 
 Fitzgerald GA, Barnes P, Hamilton CA, Dollery CT.
 Circulating Adrenaline and blood pressure: the
@@ -303,21 +308,8 @@ J Pharmacol Exp Ther 305(3):800-811, 2003
 <label> Definition </label>
 <content>
 
-During startup, the model user defines the particular 
-traits of the HumMod patient. These are gender, body size, 
-age, muscularity and adiposity. All of these traits 
-influence body volumes, most notably the extracellular 
-fluid volume (ECFV). The assumption is made that
-while volumes may change with traits, concentrations do 
-not. At startup,initial volumes,especially ECFV and plasma 
-volume are calculated. A target concentration is specified 
-- in this case Target[Epi]. 
-
-The initial mass or circulating pool is the Target[Epi] 
-multiplied by the initial volume of distribution, in 
-this case the ECFV.
- 
-Initial Mass = Target[Epi]*ECFV.InitialVol(L)
+The target[Epi] is the plasma concentration of epinephrine
+and under normal conditions is 40pG/mL.
 
 </content>
 </topicdoc>

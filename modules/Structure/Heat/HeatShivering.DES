@@ -1,11 +1,10 @@
 HumMod / HeatShivering
 
 Created : 27-Mar-05
-Last Modified : 26-Jan-10
+Revised : 2013-02-09
 Author : Tom Coleman
-Copyright : 2006-2010
+Copyright : 2006-2013
 By : University Of Mississippi Medical Center
-Schema : DES V1.0
 
 <structure><name> HeatShivering </name>
 
@@ -14,6 +13,12 @@ Schema : DES V1.0
 <var><name> Cals </name></var>
 <var><name> NerveEffect </name></var>
 
+<var><name> SkeletalCals </name></var>
+<var><name> RespiratoryCals </name></var>
+
+<var><name> SkeletalFraction </name><val> 0.8 </val></var>
+<var><name> RespirratoryFraction </name></var>
+
 </variables>
 
 <functions>
@@ -21,7 +26,7 @@ Schema : DES V1.0
 <curve>
   <name> NerveEffect </name>
   <point><x> 0.0 </x><y>  0.0 </y><slope> 0 </slope></point>
-  <point><x> 4.0 </x><y> 70.0 </y><slope> 0 </slope></point>
+  <point><x> 4.0 </x><y> 5000.0 </y><slope> 0 </slope></point>
 </curve>
 
 </functions>
@@ -35,8 +40,31 @@ Schema : DES V1.0
 </def>
 
 <def>
+  <name> SkeletalCals </name>
+  <val>
+       NerveEffect
+     * SkeletalFraction
+     * SkeletalMuscle-Structure.Effect
+  </val>
+</def>
+
+<def>
+  <name> RespirratoryFraction </name>
+  <val> 1.0 - SkeletalFraction </val>
+</def>
+
+<def>
+  <name> RespiratoryCals </name>
+  <val>
+       NerveEffect
+     * RespirratoryFraction
+     * RespiratoryMuscle-Structure.Effect
+  </val>
+</def>
+
+<def>
   <name> Cals </name>
-  <val> NerveEffect * SkeletalMuscle-Structure.Effect </val>
+  <val> SkeletalCals + RespiratoryCals </val>
 </def>
 
 </block>

@@ -17,7 +17,7 @@ By : University Of Mississippi Medical Center
 
 <showvalue>
   <row> 1.4 </row><col> 1.0 </col>
-  <name> CO.Uptake </name>
+  <name> Uptake </name>
   <format><decimal> 3 </decimal></format>
   <label> Uptake </label>
 </showvalue>
@@ -32,7 +32,7 @@ By : University Of Mississippi Medical Center
   </xaxis>
   <yaxis>
     <yvar>
-      <name> CO.Uptake </name>
+      <name> Uptake </name>
       <nolabel/>
       <linecolor> BLUE </linecolor>
     </yvar>
@@ -58,7 +58,7 @@ By : University Of Mississippi Medical Center
 
 <showvalue>
   <row> 12.2 </row><col> 1.0 </col>
-  <name> CO.Permeability </name>
+  <name> Permeability </name>
   <format><decimal> 1 </decimal></format>
   <label> Permeability </label>
 </showvalue>

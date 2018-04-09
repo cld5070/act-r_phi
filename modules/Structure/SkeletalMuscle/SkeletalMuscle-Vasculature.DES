@@ -36,8 +36,10 @@ Schema : DES V1.0
 <curve>
   <name> PO2OnStimulus </name>
   <point><x> 41 </x><y> 1.2 </y><slope> 0 </slope></point>
-  <point><x> 51 </x><y> 1.0 </y><slope> -0.03 </slope></point>
-  <point><x> 61 </x><y> 0.8 </y><slope> 0 </slope></point>
+  <point><x> 45 </x><y> 0.4 </y><slope> -0.07 </slope></point> <!-- 51   1   -.03  -->
+
+  <point><x> 51 </x><y> 0 </y><slope> 0 </slope></point><!-- 61   0.8   0  -->
+
 </curve>
 
 </functions>

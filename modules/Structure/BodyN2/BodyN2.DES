@@ -24,7 +24,7 @@ By : University Of Mississippi Medical Center
   <integralname> Mass </integralname>
   <initialval> 640 </initialval>
   <dervname> Change </dervname>
-  <errorlim> 6.4 </errorlim>
+  <errorlim> 10 </errorlim>
   <dxmaxname> DxMax </dxmaxname>
 </stablediffeq>
 
@@ -40,6 +40,8 @@ By : University Of Mississippi Medical Center
   <def><name> pN2 </name><val> [N2] / Solubility </val></def>
 </block>
 
+<!--  
+
 <block><name> Dervs </name>
   <copy>
     <from> Lung_N2.Loss </from>
@@ -50,16 +52,29 @@ By : University Of Mississippi Medical Center
     <from> BTPS_To_STPD.V2 </from>
     <to> Change </to>
   </copy>
+-->
+
+<block><name> Dervs </name>
+  <copy>
+    <from> Lung_N2.Loss </from>
+    <to> BTPS_To_STPD.V1 </to>
+  </copy>
+  <call> BTPS_To_STPD.Calc </call>
+
+ <def><name> Change </name><val> 0 </val></def>
+
 
   <def>
     <name> DxMax </name>
     <val>
         0.5
-      * BodyVolume.Total
+* BodyVolume.Total
       * Solubility
-      / Lung_N2.DiffusingCapacity
+      / Lung_N2.DiffusingCapacity / 10 
+
     </val>
   </def>
+0.5       
 </block>
 
 </definitions>

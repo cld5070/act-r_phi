@@ -64,7 +64,7 @@ Schema : 2005.0
 
 <block><name> Dervs </name>
 
-<def><name> RenalLoss </name><val> CD_Creatinine.Outflow </val></def>
+<def><name> RenalLoss </name><val> CollectingDuct_Creatinine.Outflow </val></def>
 <def><name> ExtrarenalLoss </name><val> 0.02 * [Creatinine(mG/dL)] </val></def>
 
 <def><name> Gain </name><val> CreatineCells.CreatineToCreatinine </val></def>

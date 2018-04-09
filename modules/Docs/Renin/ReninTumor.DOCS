@@ -9,113 +9,56 @@ Copyright : 2009
 
 <vardoc>
 <name> ReninTumor.Rate </name>
-<topic> ReninTumor - Overview </topic>
-<topic> Rate - DefinitionRT1 </topic>
-<topic> Renin - Physical Units </topic>
-<topic> Renin - Concentration Units </topic>
+<topic> XX </topic>
+<topic> XX </topic>
+<topic> XXXX </topic>
+<seealso> XXX </seealso>
+<seealso> XXX </seealso>
 </vardoc>
 
 <vardoc>
 <name> ReninTumor.Setting </name>
-<topic> Setting - DefinitionRT2 </topic>
+<topic> XXX</topic>
+<topic> XXXX </topic>
+<topic> XXX </topic>
+<seealso> XXX </seealso>
+<seealso> XXXX </seealso>
 </vardoc>
 
 <vardoc>
 <name> ReninTumor.Switch </name>
-<topic> Switch - DefinitionRT3 </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<seealso> XXXX </seealso>
+<seealso> XXXX </seealso>
 </vardoc>
 
 <topicdoc>
-<name> ReninTumor - Overview </name>
-<label> Overview </label>
+<name> XXX</name>
+<label> XXX</label>
 <content>
 
-A juxtaglomerular cell tumor of the kidney is a rare renal
-neoplasm that was first described by Robertson et al in 
-1976. This tumor secretes large amounts of renin and patients 
-present with hypertension, hyperaldosteronism and hypokalamia.
-
-Robertson PW, Klidjian A, Harding LK, Walters G, Lee MR,
-Robb-Smith AH. Hypertension due to a renin-secreting 
-renal tumor. Am J Med 43: 963 - 976, 1967.
-
-Conn JW, Cohen EL, Lucas CP, McDonald WJ, Mayor GH, 
-Blough WM Jr, Eveland WC, Bookstein JJ, Lapides J. 
-Primary reninism. Hypertension,hyperreninemia, and 
-secondary aldosteronism due to renin-producing
-juxtaglomerular cell tumors.
-Arch Intern Med 130: 682 - 696, 1972.
-
-Orjavik OS, Fauchald P, Hovig T, Oystese B, Brodwall EK
-Renin-secreting renal tumor with severe hypertension. case
-report with tumor renin analysis, histpathological and
-ultrastructural studies. Acta Med Scand 197: 329 - 335, 1975.
-
-Baruch D, Corvol P, Alhenc-Gelas F, Dufloux MA, Guyenne TT,
-Gaux JC, Raynaud A, Brisset JM, Duclos JM, Menard J.
-Diagnosis and traetment of renin-secreting tumors. Report
-of three cases. Hypertension 6: 760 - 766, 1984.
-
-Martin SA, Mynderse LA, Lager DJ, Cheville JC. 
-Juxtaglomerular cell tumor: a clinicopathologic study of 
-four cases and review of the literature.
-Am J Clin Pathol 116: 854 - 863, 2001.
 
 </content>
 </topicdoc>
 
 <topicdoc>
-<name> Renin - Physical Units </name>
-<label> Physical Units </label>
+<name> XX </name>
+<label> XXX </label>
 <content>
-
-A Goldblatt unit (GU) is 1 nG A1/Hr
-Plasma levels are expressed in GU/mL
-Fluxes & Secretion Rate GU/Min
 
 </content>
 </topicdoc>
 
 <topicdoc>
-<name> Renin - Concentration Units </name>
-<label> Concentration Units </label>
+<name> XXX </name>
+<label> XXX </label>
 <content>
 
 
 </content>
 </topicdoc>
 
- <topicdoc>
-<name> Setting - DefinitionRT1 </name>
-<label> Definition</label>
-<content>
-
-The model user can create a renin - secreting tumor by turning
-the switch "on" in the Circulating Renin - Tumor display box. 
-Rates of renin secretion can be set from 0 GU/Min up to 100
-GU/Min in increments of 10; from 100 to 1000 GU/MIn in increments
-of 100 and from 1000 to 10,000 GU/Min in increments of 1000. 
-This is achieved using the sliding bar feature in the display 
-box.    
-
-</content>
-</topicdoc>
-
-<topicdoc>
-<name> Switch - DefinitionRT2 </name>
-<label> Definition </label>
-<content>
-
-The model user can create a renin - secreting tumor by turning
-the switch "on" in the Circulating Renin - Tumor display box. 
-Rates of renin secretion can be set from 0 GU/Min up to 100
-GU/Min in increments of 10; from 100 to 1000 GU/MIn in increments
-of 100 and from 1000 to 10,000 GU/Min in increments of 1000. 
-This is achieved using the sliding bar feature in the display 
-box.    
-
-
-</content>
-</topicdoc>
-
+   
 End

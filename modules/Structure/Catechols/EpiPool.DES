@@ -26,7 +26,7 @@ Schema : DES V1.0
 <equations>
 
 <backwardeuler>
-  <name> Mass </name>
+  <name> Mass </name><!-- ng -->
   <integralname> Mass </integralname>
   <f1name> F1 </f1name>
   <f2name> F2 </f2name>
@@ -70,6 +70,7 @@ Schema : DES V1.0
        EpiSecretion.Rate
      + EpiPump.Rate
      + Pheochromocytoma.EpiRate
+     - EpiBolus.Change
   </val>
 </def>
 

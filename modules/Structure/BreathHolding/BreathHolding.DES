@@ -14,7 +14,7 @@ By : University Of Mississippi Medical Center
 
 <var><name> StartTime </name><val> 0 </val></var>
 <var><name> ElapsedTime </name><val> 0 </val></var>
-
+<var><name> Restarting </name><val> FALSE </val></var>
 </variables>
 
 <definitions>
@@ -26,7 +26,7 @@ By : University Of Mississippi Medical Center
 <if>
 <test> Breathing.Type EQ Breathing.BREATHHOLDING </test>
 <true>
-  <page> This subject is already holding. </page>
+<!-- <page> This subject is already holding. </page>-->
   <exitblock/>
 </true>
 </if>
@@ -34,7 +34,7 @@ By : University Of Mississippi Medical Center
 <if>
 <test> Breathing.Type NE Breathing.SPONTANEOUS </test>
 <true>
-  <page> Can't breath hold just now. </page>
+<!--  <page> Can't breath hold just now. </page>-->
   <exitblock/>
 </true>
 </if>
@@ -52,6 +52,7 @@ By : University Of Mississippi Medical Center
 <if>
 <test> Breathing.Type NE Breathing.BREATHHOLDING </test>
 <true>
+    <def><name> Restarting </name><val> FALSE </val></def>
   <exitblock/>
 </true>
 </if>
@@ -61,8 +62,10 @@ By : University Of Mississippi Medical Center
 <if>
 <test> PO2Artys.Pressure LE HypoxicThreshold</test>
 <true>
+  <def><name> Restarting </name><val> TRUE </val></def>
+
   <call> Stop </call>
-  <page> I had to breathe. I couldn't go on. </page>
+ <page> I had to breathe. I couldn't go on. </page>
 </true>
 </if>
 </block>

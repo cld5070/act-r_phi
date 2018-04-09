@@ -56,7 +56,7 @@ Schema : DES V1.0
   </def>
   <def>
     <name> LungInflation </name>
-    <val> Thorax.PressureOnInflation [ Pressure ] </val>
+    <val> ( 1 - ( RightPleuralCavity.TotalVolume / LungVolumes.RightCapacity ) ) * Thorax.PressureOnInflation [ Pressure ]  </val>
   </def>
 
   </false>

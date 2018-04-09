@@ -67,7 +67,7 @@ Schema : DES V1.0
 
 <showvalue>
    <row> 12.6 </row><col> 1.0 </col>
-   <name> AlphaBlockade.Block(%) </name>
+   <name> Alpha1Pool.Block(%) </name>
    <format><integer/></format>
    <label> Receptor Blockade (%) </label>
 </showvalue>

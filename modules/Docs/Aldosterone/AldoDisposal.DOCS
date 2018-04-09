@@ -4,69 +4,61 @@ Last Modified : 27-Mar-09
 Author : Tom Coleman
 Copyright : 2009
 
-<structurename> AldoDisposal </structurename>
 
 <vardoc>
 <name> AldoDisposal.Clearance </name>
-<topic> Clearance - Overview </topic>
-<topic> Clearance - DefinitionAD1 </topic>
+<topic> AldoDisposal - Overview </topic>
+<topic> Clearance - AD1Definition </topic>
 <seealso> OrganFlow.HepaticVeinFlow </seealso>
 </vardoc>
 
 <vardoc>
 <name> AldoDisposal.Degradation </name>
-<topic> Degradation - DefinitionAD2 </topic>
+<topic> Degradation - AD2Definition </topic>
 </vardoc>
 
 <vardoc>
 <name> AldoDisposal.DegradeK </name>
-<topic> DegradeK - DefinitionAD3 </topic>
+<topic> DegradeK - AD3Definition </topic>
 </vardoc>
 
 <vardoc>
 <name> AldoDisposal.ExtractK </name>
-<topic> ExtractK - DefinitionAD4 </topic>
+<topic> ExtractK - AD4Definition </topic>
 </vardoc>
 
 <vardoc>
 <name> AldoDisposal.Rate </name>
-<topic> Rate - DefinitionAD5 </topic>
+<topic> Rate - AD5Definition </topic>
 </vardoc>
 
 <topicdoc>
-<name> Clearance - Overview </name>
+<name> AldoDisposal - Overview </name>
 <label> Overview  </label>
 <content>
 
-Aldosterone is degraded mainly in the liver and 
-conjugated especially to glucuronic acid and, 
-to a lesser extent, sulfates. About 25 per 
-cent of these conjugates are excreted in the bile 
-and then in the feces. The remaining conjugates formed 
+The liver is the main site of biological inactivation
+of aldosterone. Aldosterone is degraded mainly 
+in the liver and conjugated especially to glucuronic 
+acid and, to a lesser extent, sulfates. About 25 per 
+cent of these conjugates are excreted in the bile and 
+then in the feces. The remaining conjugates formed 
 by the liver enter the circulation but are not 
 bound to plasma proteins, are highly soluble in 
 the plasma, and are therefore filtered readily 
 by the kidneys and excreted in the urine. 
 
-Aldosterone disposal is therefore a combination of
-clearance rate and degradation rate. 
+The metabolic clearance of aldosterone is about 
+1620L/day in a normal supine man, a figure quite 
+similar to hepatic blood flow. When hepatic
+blood flow is reduced there is a marked increase 
+in the plasma level of aldosterone. Postural changes 
+have an effect on the rate of aldosterone
+removal because they also affect splanchnic blood 
+flow. The metabolic clearance rate in the upright 
+position is half that in the supine. 
 
-Clearance rate is affected by liver blood flow and by 
-the liver extraction coefficient - the percentage of 
-a substance removed in a single passage through an 
-organ or tissue, in this case the liver. If hepatic 
-blood flow is compromised, plasma levels of aldosterone 
-are markedly increased. Any factor affecting hepatic blood 
-flow will also affect aldosterone disposal. For example, 
-postural changes affect hepatic blood flow and the metabolic 
-clearance of aldosterone in the upright position is half 
-of that in the supine position.    
-
-Degradation rate is a function of the time constant
-for degradation and the mass of aldosterone available. 
-Changes in liver function may affect the ability of 
-the organ to degrade aldosterone. This has been 
-demonstrated in patients with hepatic cirrhosis. 
+The half life of aldosterone is 30 minutes.
 
 Coppage WS Jr., Island DP, Cooner AE, Liddle GW.
 The metabolism of aldosterone in normal subjects and 
@@ -87,73 +79,50 @@ J Clin Invest. 40: 72 - 80, 1961.
 </topicdoc>
 
 <topicdoc>
-<name> Clearance - DefinitionAD1 </name>
+<name> Clearance - AD1Definition </name>
 <label> Definition </label>
 <content>
 
 Clearance is defined as the rate of removal of aldosterone
 from the circulation in a single passage through the liver. 
-It is dependent on the ExtractK, the liver extraction 
-coefficient and on liver blood flow. 
-
+It is dependent on the ExtractK, the rate constant of 
+liver extraction
 </content>
 </topicdoc>
 
 <topicdoc>
-<name> Degradation - DefinitionAD2 </name>
+<name> Degradation - AD2Definition </name>
 <label> Definition </label>
 <content>
-
-Degradation is the rate at which aldosterone is broken down
-into its metabolites in the liver. It is a function of the
-rate constant for degradation (degradeK) and the amount
-of aldosterone available - AldoPool.Mass
 
 
 </content>
 </topicdoc>
 
 <topicdoc>
-<name> DegradeK - DefinitionAD3 </name>
+<name> DegradeK - AD3Definition </name>
 <label> Definition </label>
 <content>
 
-DegradeK is the rate constant for degradation of aldosterone 
-into its metabolites. DegradeK is a parameter with a value 
-of 0.00070.
 
 </content>
 </topicdoc>
 
 
 <topicdoc>
-<name> ExtractK - DefinitionAD4 </name>
+<name> ExtractK - AD4Definition </name>
 <label> Definition </label>
 <content>
 
-Extract K is the the liver extraction coefficient
-for aldosterone. The extraction coefficient of a 
-substance is the percentage of that substance removed
-from blood or plasma in a single passage through a 
-tissue or organ, in this case the liver. it is calculated 
-by subtracting the venous concentration from the arterial 
-concentration, and dividing thsi value by the arterial
-blood concentration. the extraction ratioo is multiplied
-by organ blood flow to generate teh organ clearance rate
-Extract K is a parameter which can be altered using the 
-sliding bar in the aldosterone disposal display box. 
-Normal values are 0.78  
 
 </content>
 </topicdoc>
 
 <topicdoc>
-<name> Rate - DefinitionAD5 </name>
+<name> Rate - AD5Definition </name>
 <label> Definition </label>
 <content>
 
-Disposal rate of aldosterone is defined as clearance 
-plus degradation
 
 </content>
 </topicdoc>

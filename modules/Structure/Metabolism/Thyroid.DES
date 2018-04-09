@@ -22,7 +22,7 @@ Schema : DES V1.0
 <curve>
   <name> Effect </name>
   <point><x>  0 </x><y> 0.7 </y><slope> 0 </slope></point>
-  <point><x>  8 </x><y> 1.0 </y><slope> 0.4 </slope></point>
+  <point><x>  8 </x><y> 1.0 </y><slope> 0.04 </slope></point>
   <point><x> 40 </x><y> 1.5 </y><slope> 0 </slope></point>
 </curve>
 

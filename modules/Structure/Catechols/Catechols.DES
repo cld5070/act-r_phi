@@ -11,6 +11,7 @@ Schema : DES V1.0
 
 <?include NEPool.DES ?>
 <?include EpiPool.DES ?>
+<?include Acetylcholine.DES ?>
 
 <?include NEPump.DES ?>
 <?include EpiPump.DES ?>
@@ -21,11 +22,22 @@ Schema : DES V1.0
 <?include NEClearance.DES ?>
 <?include EpiClearance.DES ?>
 
+<?include EpiBolus.DES ?>
+<?include NEBolus.DES ?>
+
+<!--
 <?include AlphaPool.DES ?>
 <?include BetaPool.DES ?>
+-->
 
+<?include Alpha1Pool.DES ?>
+<?include Beta1Pool.DES ?>
+<?include Beta2Pool.DES ?>
+
+<!--
 <?include AlphaBlockade.DES ?>
 <?include BetaBlockade.DES ?>
+-->
 
 <?include Pheochromocytoma.DES ?>
 
@@ -35,11 +47,14 @@ Schema : DES V1.0
 
 <block><name> Parms </name>
 
+<!--
   <call> AlphaBlockade.Parms </call>
   <call> BetaBlockade.Parms </call>
-
+-->
   <call> NEPump.Parms </call>
   <call> EpiPump.Parms </call>
+  <call> EpiBolus.Parms </call>
+  <call> NEBolus.Parms </call>
 
 </block>
 
@@ -48,8 +63,13 @@ Schema : DES V1.0
   <call> EpiPool.CalcConc </call>
   <call> NEPool.CalcConc </call>
 
+<!--
   <call> AlphaPool.Calc </call>
   <call> BetaPool.Calc </call>
+-->
+  <call> Alpha1Pool.Calc </call>
+  <call> Beta1Pool.Calc </call>
+  <call> Beta2Pool.Calc </call>
 
 </block>
 
@@ -62,9 +82,11 @@ Schema : DES V1.0
   <call> EpiClearance.Dervs </call>
 
   <call> Pheochromocytoma.Dervs </call>
-
+  <call> EpiBolus.Dervs </call>
+  <call> NEBolus.Dervs </call>
   <call> EpiPool.Dervs </call>
   <call> NEPool.Dervs </call>
+  <call> Acetylcholine.Calc </call>
 
 </block>
 

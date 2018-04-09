@@ -20,6 +20,10 @@ Schema : DES V1.0
 </var>
 
 <var>
+  <name> FlowEffect </name>
+</var>
+
+<var>
   <name> TemperatureDifference </name>
 </var>
 
@@ -39,6 +43,12 @@ Schema : DES V1.0
   <point><x> 4.0 </x><y> 0.2 </y><slope> 0 </slope></point>
 </curve>
 
+<curve>
+  <name> FlowEffect </name>
+  <point><x> 250.0 </x><y> 1.0 </y><slope> 0 </slope></point>
+  <point><x> 1250.0 </x><y> 6 </y><slope> 0 </slope></point>
+</curve>
+
 </functions>
 
 <definitions>
@@ -50,13 +60,18 @@ Schema : DES V1.0
 </def>
 
 <def>
+  <name> FlowEffect </name>
+  <val> FlowEffect [ Skin-Flow.BloodFlow ] </val>
+</def>
+
+<def>
   <name> TemperatureDifference </name>
   <val> HeatSkin.Temp(K) - AmbientTemperature.Temp(K) </val>
 </def>
 
 <def>
   <name> Flux </name>
-  <val> K * ClothesEffect * TemperatureDifference </val>
+  <val> K * ClothesEffect * TemperatureDifference * FlowEffect </val>
 </def>
 
 </block>

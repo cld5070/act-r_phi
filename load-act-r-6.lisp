@@ -1,22 +1,22 @@
 ;;;  -*- mode: LISP; Syntax: COMMON-LISP;  Base: 10 -*-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; 
+;;;
 ;;; Author      : Dan Bothell
 ;;; Copyright   : (c) 2004 Dan Bothell
 ;;; Availability: Covered by the GNU LGPL, see LGPL.txt
-;;; Address     : Department of Psychology 
+;;; Address     : Department of Psychology
 ;;;             : Carnegie Mellon University
 ;;;             : Pittsburgh, PA 15213-3890
 ;;;             : db30@andrew.cmu.edu
-;;; 
-;;; 
+;;;
+;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; 
+;;;
 ;;; Filename    : load-act-r-6.lisp
 ;;; Version     : 1.0
-;;; 
+;;;
 ;;; Description : Top level loader for the whole ACT-R 6 system.
-;;; 
+;;;
 ;;; Bugs        : ???
 ;;;
 ;;; To do       : [-] Test in a variety of Lisps for issues with the
@@ -26,7 +26,7 @@
 ;;;             :     the ones I put toghether...
 ;;;             : [x] Use compile-file-pathname instead of always adding a new
 ;;;             :     entry for *.fasl-pathname*.
-;;; 
+;;;
 ;;; ----- History -----
 ;;;
 ;;; 2004.10.26 Dan
@@ -66,7 +66,7 @@
 ;;;             :   where modules was and then moved modules to after the
 ;;;             :   devices.
 ;;;             : * Now, there's basically a directory to auto-load in all
-;;;             :   resonable locations, and I can better distribute files 
+;;;             :   resonable locations, and I can better distribute files
 ;;;             :   that were all jammed into tools.
 ;;;             : * Updated the version to 1.0.
 ;;; 2005.08.16 Dan
@@ -80,7 +80,7 @@
 ;;; 2005.10.18 Dan
 ;;;             : * Added the logical host setup for CMUCL.
 ;;;             : * Moved the smart-load function here and generalized it so
-;;;             :   that framework and core-modules don't need to have 
+;;;             :   that framework and core-modules don't need to have
 ;;;             :   their own special versions.
 ;;;             : * Also converted those specific loaders to essentially just
 ;;;             :   file lists now.
@@ -108,8 +108,8 @@
 ;;;             : * Added the switches so that it'll load under CMUCL in OS X
 ;;;             :   (with ppc).
 ;;; 2006.06.29 Dan
-;;;             : * Added components provided by Don Morrison to allow it to be 
-;;;             :   loaded into CLisp v2.38 - the CLisp logical host, tighter 
+;;;             : * Added components provided by Don Morrison to allow it to be
+;;;             :   loaded into CLisp v2.38 - the CLisp logical host, tighter
 ;;;             :   handling of the logical pathnames in general (other Lisps
 ;;;             :   didn't mind logical namestrings in places where a pathname
 ;;;             :   designator was required), and a shadowing of the CLisp
@@ -164,55 +164,44 @@
 ;;;             : * Added ABCL to the list for logical translation.
 ;;; 2011.04.28 Dan
 ;;;             : * Define *file-list* here and just set it in the other loaders.
+;;; 2012.01.04 Dan
+;;;             : * Added another directory to the tree: user-loads.  That will
+;;;             :   always go last and there will never be any distributed files
+;;;             :   in it.  The .lisp files in it will be loaded in order based
+;;;             :   on file name and is for users to add initialization or model
+;;;             :   files to as needed.
+;;;             : * Removed the old info under general docs.
+;;; 2012.05.07 Dan
+;;;             : * Make the ACL device support dependent on the Windows version
+;;;             :   only and print a warning for the others.
+;;; 2012.08.24 Dan
+;;;             : * Added the switches to load the new ccl-cocoa device and
+;;;             :   removed the mcl device.
+;;; 2013.08.09 Dan
+;;;             : * Fixed a problem with the shadowing of functions in SBCL and
+;;;             :   CLisp when the current package wasn't :cg-user.
+;;; 2013.10.07 Dan
+;;;             : * Added another feature switch to be tested :actr-fast.  When
+;;;             :   it's on the features list set the optimize settings for faster
+;;;             :   compiled code.
+;;; 2013.12.19 Dan
+;;;             : * Added an :ecl switch to the logical path definitions.
+;;; 2014.06.16 Dan
+;;;             : * Added a use :ccl to the :act-r package for CCL.
+;;; 2014.07.15 Dan
+;;;             : * Added the additional keyword :ACT-R to the features list as
+;;;             :   a general indicator that some version of ACT-R has been
+;;;             :   loaded.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
-;;; 
+;;;
 ;;; Using logical pathnames a directory structure for ACT-R 6 can be created
 ;;; that allows users to add or remove files from a specific directory within
 ;;; the system, and through the use of require and provide also remove the
 ;;; need to edit a "load order" file.
 ;;;
-;;; The organization has 5 directories in the act-r6 directory: 
-;;;  - framework contains the core code of the system which has its own
-;;;              load file and is not supposed to be modified by users
-;;;  - devices contains folders to hold the specific device interface and uwi
-;;;            files for a particular lisp
-;;;            each supported lisp should have a directory in the device
-;;;            directory that contains one or two files which should be 
-;;;            named device.lisp and uwi.lisp.   The device.lisp file should
-;;;            contain the appropriate device interface methods and the 
-;;;            uwi.lisp
-;;;            file should contain the specific GUI functions that support
-;;;            the AGI (ACT-R GUI interface) calls.
-;;;
-;;;           NOTE: This is one thing that will require changing this
-;;;                 load file to add the specific switch and directory name for
-;;;                 a new device definition set.
-;;;  - support this is where one should place files that may be needed by 
-;;;            a particular module or for other special purposes.  These files
-;;;            are only loaded when made explicit (or implicit with require).
-;;;  - core-modules this is where the core modules of the system are located.
-;;;            These modules are referenced explicitly in the loader and 
-;;;            if they exist are loaded in a specified order.  They consist
-;;;            of the modules that were part of ACT-R 5 (though not always
-;;;            implemented that way): Declarative, Goal, Procedural, Vision,
-;;;            Motor, Audio, and Speech.  They are loaded in that order if
-;;;            they exist.
-;;;  - modules this is where any other modules of the system are to be placed.
-;;;            All files with a .lisp extension in this folder will be loaded
-;;;            in no particular order.  Thus, there should be no dependencies
-;;;            among these modules.  Any code that may be needed by more than
-;;;            one module should go in the support directory where it can
-;;;            be indicated with a require in the module file.
-;;;          
-;;;   See the declarative (in modules) and central-parameters (in support)
-;;;   or vision (in modules) and dmi (in support) for examples of the require/
-;;;   provide usage.  
-;;;   
-;;;   NOTE: require isn't necessairily going to compile the required file,
-;;;   so using the require-compiled function below is recommended.
-;;;
+;;; See the reference manual for details about the directories provided.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Public API:
@@ -238,7 +227,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Design Choices:
-;;; 
+;;;
 ;;; The idea is for a system where people can just drop in new modules without
 ;;; having to edit or change any of the existing code.  In practice, that
 ;;; may not work all the time (with things like name conflicts) but should
@@ -248,11 +237,11 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; 
+;;;
 ;;; The code
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;(load (merge-pathnames "quicklisp.lisp" (make-pathname :directory (pathname-directory *LOAD-TRUENAME*))))
 
+;;----Added by Chris Dancy, xml libraries needed for physiology module
 ;;Load sxml files
 (load (merge-pathnames "sxml/package.lisp" *LOAD-TRUENAME*))
 (load (merge-pathnames "sxml/dom.lisp" *LOAD-TRUENAME*))
@@ -260,18 +249,13 @@
 (load (merge-pathnames "sxml/sxml-dom.lisp" *LOAD-TRUENAME*))
 (load (merge-pathnames "sxml/xml.lisp" *LOAD-TRUENAME*))
 (load (merge-pathnames "sxml/xml-struct-dom.lisp" *LOAD-TRUENAME*))
+;;----
 
-#-quicklisp
-;(let ((quicklisp-init (merge-pathnames "modules/quicklisp/setup.lisp" (make-pathname :directory (pathname-directory *LOAD-TRUENAME*)))))
-;  (when (probe-file quicklisp-init)
-;    (load quicklisp-init)))
-	
 
-;(ql:quickload "s-xml")
-
-#+:packaged-actr (make-package :act-r 
-                               :use '("COMMON-LISP-USER" 
+#+:packaged-actr (make-package :act-r
+                               :use '("COMMON-LISP-USER"
                                       "COMMON-LISP"
+                                      #+:ccl "CCL"
                                       #+:allegro "EXCL"
                                       #+:allegro-ide "COMMON-GRAPHICS-USER"
                                       #+:common-graphics "COMMON-GRAPHICS-USER"))
@@ -280,7 +264,7 @@
 ;;; Basically a hack for ACL 7 so that I don't have to touch every file!
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  
+
   #+(and :allegro :ide (not :allegro-ide))
     (push :allegro-ide *features*))
 
@@ -289,20 +273,24 @@
 #-(or (not :clean-actr) :packaged-actr :ALLEGRO-IDE) (in-package :cl-user)
 
 
-#+:act-r-6.0 (error "The ACT-R 6 load file should only be loaded once.")
-#-:act-r-6.0 (pushnew :act-r-6.0 *features*)
+#+:act-r (error "Only one version of ACT-R should be loaded at a time.")
+#-:act-r (progn (pushnew :act-r *features*) (pushnew :act-r-6.0 *features*))
 
 
 ;; Clisp has an implementation-specific function execute that conflicts with
 ;; the generic function execute in ACT-R, so shadow it
-#+:clisp (defpackage "COMMON-LISP-USER" (:shadow "EXECUTE"))
+#+:clisp (eval `(defpackage ,(package-name *package*) (:shadow "EXECUTE")))
 
 ;; SBCL has a function called reset we need to shadow and there's an issue
 ;; with their defconstat because it throws an error if you compile and then
 ;; load a file (it's fine with the compiled file later, but that first time
 ;; is a problem).
 
-#+:sbcl (defpackage "COMMON-LISP-USER" (:shadow "RESET" "DEFCONSTANT"))
+#+(and :sbcl (not :win32))
+  (eval `(defpackage ,(package-name *package*) (:shadow "RESET" "DEFCONSTANT")))
+#+(and :sbcl :win32)
+  (eval `(defpackage ,(package-name *package*) (:shadow "RESET" "DEFCONSTANT" "DIRECTORY")))
+
 #+:sbcl (defmacro defconstant (name value &optional documentation)
           `(sb-c::%defconstant ',name ,value ',documentation (sb-c:source-location)))
 
@@ -310,9 +298,7 @@
 ;;; directory command so this hacks around that for now sufficiently to load
 ;;; the ACT-R files...
 
-#+(and :sbcl :win32) 
-  (defpackage "COMMON-LISP-USER" (:shadow "DIRECTORY"))
-#+(and :sbcl :win32) 
+#+(and :sbcl :win32)
 (eval-when (:load-toplevel :execute)
   (defun directory (pathname &key)
     ;(format t "Calling the new directory for ~S~%" pathname)
@@ -322,13 +308,13 @@
                                         :directory (pathname-directory pathname)
                                         :defaults "*.*"))
                (new-val (cl::directory new-path))
-               (res (remove-if-not (lambda (x) 
+               (res (remove-if-not (lambda (x)
                                      (string-equal (pathname-type x) (pathname-type pathname)))
                                    new-val)))
           ;(format t "Returning ~S from directory of new-path: ~s which returns ~s.~%" res new-path new-val)
           res)
       (cl::directory pathname))))
-    
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Create the logical host "ACT-R6" relative to the current location
 
@@ -344,29 +330,29 @@
                          (directory-namestring *load-truename*) "**:"))))
 
 #+:lispworks (setf (logical-pathname-translations "ACT-R6")
-               (list (list "**;*.*" 
+               (list (list "**;*.*"
                            (concatenate 'string
                              (format nil "~A" (make-pathname
-                                               :host 
+                                               :host
                                                (pathname-host *load-truename*)
-                                               :directory 
-                                               (pathname-directory 
-                                                *load-truename*))) 
+                                               :directory
+                                               (pathname-directory
+                                                *load-truename*)))
                              "**/*.*"))))
 
 ;; just copied the lispworks one for now...
 #+:cmu (setf (logical-pathname-translations "ACT-R6")
-               (list (list "**;*.*" 
+               (list (list "**;*.*"
                            (concatenate 'string
                              (format nil "~A" (make-pathname
-                                               :host 
+                                               :host
                                                (pathname-host *load-truename*)
-                                               :directory 
-                                               (pathname-directory 
-                                                *load-truename*))) 
+                                               :directory
+                                               (pathname-directory
+                                                *load-truename*)))
                              "**/*.*"))))
 
-#+(or :clisp :sbcl :openmcl :abcl) (setf (logical-pathname-translations "ACT-R6")
+#+(or :clisp :sbcl :openmcl :abcl :ecl) (setf (logical-pathname-translations "ACT-R6")
                       `(("**;*.*" ,(namestring (merge-pathnames "**/*.*" *load-truename*)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -374,17 +360,17 @@
 ;;; in the currently supported systems
 
 (unless (boundp '*.lisp-pathname*)
-  (defvar *.lisp-pathname* 
+  (defvar *.lisp-pathname*
       (make-pathname :type "lisp")))
 
 (unless (boundp '*.fasl-pathname*)
-  (defvar *.fasl-pathname* 
+  (defvar *.fasl-pathname*
       (let ((type (pathname-type (compile-file-pathname "dummy.lisp"))))
-        (if (and type (not (string-equal type "lisp"))) 
+        (if (and type (not (string-equal type "lisp")))
           (make-pathname :type type)
-        
+
         ;; If it can't figure it out automatically resort to predefined value
-        
+
         #+:allegro (make-pathname :type "fasl")
         #+:sbcl (make-pathname :type "fasl")
         #+:clisp (make-pathname  :type "fas")
@@ -399,6 +385,15 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; When :actr-fast is on the features list then set the switches for fastest
+;;; compiled code.
+
+#+:actr-fast (eval-when (:compile-toplevel :load-toplevel :execute)
+               (proclaim '(optimize (speed 3) (safety 1) (space 0) (debug 0))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Define some functions for compiling and loading files
 
 ;;; compile-and-load (pathname)
@@ -407,18 +402,18 @@
 ;;;          has a type specified, then it is ignored and the defaults
 ;;;          of lisp for source and system-dependent binary types are
 ;;;          used.
-;;; 
+;;;
 ;;; If a source file (.lisp) exists for the specified pathname then if there
 ;;; is no binary file (determined by *.fasl-pathname*), the binary is
-;;; older than the source file, or the feature :act-r-recompile is set then 
-;;; compile the source file into a binary and load it.  
+;;; older than the source file, or the feature :act-r-recompile is set then
+;;; compile the source file into a binary and load it.
 ;;;
 ;;; Based on the smart-load function from the ACT-R loader.
 
 
 ;;; Specific loader for the newer MCL 5/5.1
 
-#+(and :ccl-4.3.5 :ccl-5.0) 
+#+(and :ccl-4.3.5 :ccl-5.0)
 (defun compile-and-load (pathname)
   (when (pathname-type pathname) ;; throw away the type to allow for
                                  ;; the merging with a binary type
@@ -428,7 +423,7 @@
                                       :device (pathname-device pathname)
                                       :name (pathname-name pathname)))
       (error "To compile a file it must have a .lisp extension")))
-  
+
   (let* ((srcpath (merge-pathnames pathname *.lisp-pathname*))
          (binpath (merge-pathnames pathname *.fasl-pathname*)))
     (unless (probe-file srcpath)
@@ -438,8 +433,8 @@
               (> (file-write-date srcpath) (file-write-date binpath)))
       (compile-file srcpath :output-file binpath :external-format :unix))
     (load binpath)))
-  
-#-(and :ccl-4.3.5 :ccl-5.0) 
+
+#-(and :ccl-4.3.5 :ccl-5.0)
 (defun compile-and-load (pathname)
   (when (pathname-type pathname) ;; throw away the type to allow for
                                  ;; the merging with a binary type
@@ -449,7 +444,7 @@
                                       :device (pathname-device pathname)
                                       :name (pathname-name pathname)))
       (error "To compile a file it must have a .lisp extension")))
-  
+
   (let* ((srcpath (merge-pathnames pathname *.lisp-pathname*))
          (binpath (merge-pathnames pathname *.fasl-pathname*)))
     (unless (probe-file srcpath)
@@ -459,28 +454,28 @@
               (> (file-write-date srcpath) (file-write-date binpath)))
       (compile-file srcpath :output-file binpath))
     (load binpath)))
-  
+
 
 
 ;;; SMART-LOAD      [Function]
 ;;; Date        : 99.12.21
-;;; Description : Loads binary version of a specified file.  Of course, the 
-;;;             : said binary version might not exist or be older than the 
-;;;             : source version, in which case the source file is compiled 
+;;; Description : Loads binary version of a specified file.  Of course, the
+;;;             : said binary version might not exist or be older than the
+;;;             : source version, in which case the source file is compiled
 ;;;             : before loading.
 ;;;             : Updated to add an option parameter to determine whether
 ;;;             : to just warn of a missing file or to throw an error.
 
 
 (defun smart-load (this-files-dir file &optional (error? nil))
-  "Loads binary <file> in directory <this-files-dir> or compiles and loads 
+  "Loads binary <file> in directory <this-files-dir> or compiles and loads
    source version"
-  (let* ((srcpath (merge-pathnames  
+  (let* ((srcpath (merge-pathnames
                    (merge-pathnames file *.lisp-pathname*)
                    this-files-dir))
          )
     (if (not (probe-file srcpath))
-        (if error? 
+        (if error?
             (error "File ~S does not exist" srcpath)
           (format *error-output* "File ~S does not exist" srcpath)))
     (compile-and-load srcpath)))
@@ -504,7 +499,7 @@
 (defmacro require-compiled (code-module pathname)
   `(eval-when (:compile-toplevel :load-toplevel :execute)
      (unless (member ,code-module *modules* :test #'string=)
-       (compile-and-load (translate-logical-pathname ,pathname)))))                       
+       (compile-and-load (translate-logical-pathname ,pathname)))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -518,8 +513,8 @@
 
 #+:allegro (when (or (eq :case-sensitive-lower *current-case-mode*)
                      (eq :case-sensitive-upper *current-case-mode*))
-             (unless 
-                 (yes-or-no-p 
+             (unless
+                 (yes-or-no-p
                   "WARNING: you are using a case sensitive Lisp.  ACT-R may not load or run correctly.  Continue anyway?")
                (break)))
 
@@ -536,7 +531,7 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; Load the core modules 
+;;; Load the core modules
 
 (smart-load (translate-logical-pathname "ACT-R6:core-modules;") "core-loader.lisp")
 
@@ -544,7 +539,7 @@
   (smart-load (translate-logical-pathname "ACT-R6:core-modules;") the-file))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; 
+;;;
 ;;; First, load any additional extensions.
 
 (dolist (file (directory (translate-logical-pathname "ACT-R6:commands;*.lisp")))
@@ -552,19 +547,22 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; Indicate that there is a device available so that it can be loaded 
+;;; Indicate that there is a device available so that it can be loaded
 ;;; When a new device is added it should be included with a switch below
 
 (defvar *device-interface-pathname* nil)
 
 ;;; Here are the devices that are defined
 
-#+:allegro-ide (setf *device-interface-pathname* "ACT-R6:devices;acl;")
+#+(and :allegro-ide :mswindows) (setf *device-interface-pathname* "ACT-R6:devices;acl;")
 
-#+:digitool (setf *device-interface-pathname* "ACT-R6:devices;mcl;")
+#+(and :allegro-ide (not :mswindows)) (print-warning "Native ACL device not available for Mac or Linux versions because~%they lack the commands for controlling the mouse and keyboard as described here~%http://www.franz.com/support/documentation/6.2/doc/cggtk-relnotes.html#2.3~%")
+
+;; #+:digitool (setf *device-interface-pathname* "ACT-R6:devices;mcl;")
 
 #+:lispworks (setf *device-interface-pathname* "ACT-R6:devices;lw;")
 
+#+(and :clozure :darwin :apple-objc :ccl-1.8) (setf *device-interface-pathname* "ACT-R6:devices;ccl-cocoa;")
 
 ;;; Load the virtual device
 
@@ -575,21 +573,21 @@
 
 (when *device-interface-pathname*
   (if (probe-file (merge-pathnames *device-interface-pathname* "device.lisp"))
-      (compile-and-load (merge-pathnames *device-interface-pathname* 
+      (compile-and-load (merge-pathnames *device-interface-pathname*
                                          "device.lisp"))
-    (format t 
+    (format t
         "################~%#### No Device file found in ~S ####~%##############"
       *device-interface-pathname*))
   (if (probe-file (merge-pathnames *device-interface-pathname* "uwi.lisp"))
-      (compile-and-load (merge-pathnames *device-interface-pathname* 
+      (compile-and-load (merge-pathnames *device-interface-pathname*
                                          "uwi.lisp"))
-    (format t 
+    (format t
         "#################~%#### No uwi file found in ~S ####~%################"
       *device-interface-pathname*)))
-  
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; After the modules and devices files are done load any files in the 
+;;; After the modules and devices files are done load any files in the
 ;;; modules, tools and then finally the other-files drectories.
 
 (dolist (file (directory (translate-logical-pathname "ACT-R6:modules;*.lisp")))
@@ -610,6 +608,13 @@
 (mp-print-versions )
 (format t "~%######### Loading of ACT-R 6 is complete #########~%")
 
+
+(let ((d (directory (translate-logical-pathname "ACT-R6:user-loads;*.lisp"))))
+  (when d
+    (format t "~%######### Loading user files #########~%")
+    (dolist (file (sort d 'string< :key (lambda (x) (string (pathname-name x)))))
+      (compile-and-load file))
+    (format t "~%######### User files loaded #########~%")))
 
 
 #|

@@ -64,13 +64,13 @@ By : University of Mississippi Medical Center
 <def>
   <name> Loss </name>
   <val>
-     CD_H2O.Outflow
+     CollectingDuct_H2O.Outflow
    + CapillaryWater.Rate
    + ExcessLungWater.Flux
    + PeritoneumSpace.Gain
    + Hemorrhage.PlasmaRate
    + Pericardium-Hemorrhage.PlasmaFlow
-
+   + DialyzerActivity.UltrafiltrationRate
   </val>
 </def>
 

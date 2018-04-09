@@ -72,7 +72,7 @@ By : University of Mississippi Medical Center
 
 <def>
   <name> IntakeLoading </name>
-  <val> OralH2OGlucoseLoad.GlucoseRate </val>
+  <val> OralH2OGlucoseLoad.GlucoseRate + OGTT.Loss</val>
 </def>
 
 <def>

@@ -12,9 +12,9 @@ know as corticotropin.
 MW = 4540
 39 amino acids
 
-[ACTH] = 5 nG/dL or 11 pMol/L
+[ACTH] = 30 pG/mL or 3 nG/dL or 11 pMol/L
 
-nG/dL * 2.2 = pMol/L
+nG/dL * 2.20 = pMol/L
 
 Volume of distribution = 15000 (ECFV, assumed).
 
@@ -30,6 +30,9 @@ Clearance = K * [ACTH]
 K = 560
 
 [Cortisol] may go up 4x as [ACTH] goes up 4x.
+
+With maximum stimulation [ACTH] can go up to 150
+pG/mL from a base of 30.
 
 milli = 10^-3
 micro = 10^-6

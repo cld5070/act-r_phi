@@ -10,6 +10,7 @@ By : University of Mississippi Medical Center
 
 <?include Acidosis\Acidosis.DES ?>
 <?include A-VFistula\A-VFistula.DES ?>
+<?include BluntInjury\BluntInjury.DES ?>
 <?include Hemorrhage\Hemorrhage.DES ?>
 <?include MyocardialInfarction\MyocardialInfarction.DES ?>
 <?include Pericardium\Pericardium.DES ?>

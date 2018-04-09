@@ -50,7 +50,7 @@ By : University Of Mississippi Medical Center
 
 <showvalue>
    <row> 6.8 </row><col> 3 </col>
-   <name> HepaticArtery.BloodFlow </name>
+   <name> HepaticArtery-Flow.BloodFlow </name>
    <format><integer/></format>
    <label> Hepatic Artery </label>
 </showvalue>
@@ -92,41 +92,48 @@ By : University Of Mississippi Medical Center
 
 <showvalue>
    <row> 13.2 </row><col> 3 </col>
-   <name> Kidney-Flow.BloodFlow </name>
+   <name> LeftKidney-Flow.BloodFlow </name>
    <format><integer/></format>
-   <label> Kidney </label>
+   <label> Left Kidney </label>
 </showvalue>
 
 <showvalue>
    <row> 14.2 </row><col> 3 </col>
+   <name> RightKidney-Flow.BloodFlow </name>
+   <format><integer/></format>
+   <label> Right Kidney </label>
+</showvalue>
+
+<showvalue>
+   <row> 15.2 </row><col> 3 </col>
    <name> OtherTissue-Flow.BloodFlow </name>
    <format><integer/></format>
    <label> Other Tissue </label>
 </showvalue>
 
 <showvalue>
-   <row> 15.2 </row><col> 3 </col>
+   <row> 16.2 </row><col> 3 </col>
    <name> RespiratoryMuscle-Flow.BloodFlow </name>
    <format><integer/></format>
    <label> Respiratory Muscle </label>
 </showvalue>
 
 <showvalue>
-   <row> 16.2 </row><col> 3 </col>
+   <row> 17.2 </row><col> 3 </col>
    <name> SkeletalMuscle-Flow.BloodFlow </name>
    <format><integer/></format>
    <label> Skeletal Muscle </label>
 </showvalue>
 
 <showvalue>
-   <row> 17.2 </row><col> 3 </col>
+   <row> 18.2 </row><col> 3 </col>
    <name> Skin-Flow.BloodFlow </name>
    <format><integer/></format>
    <label> Skin </label>
 </showvalue>
 
 <showvalue>
-   <row> 18.6 </row><col> 1 </col>
+   <row> 19.6 </row><col> 1 </col>
    <name> OrganFlow.TotalFlow </name>
    <format><integer/></format>
    <label> Total </label>

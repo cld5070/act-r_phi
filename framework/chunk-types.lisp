@@ -148,6 +148,39 @@
 ;;;             :   static subtypes of the root type not getting slots.
 ;;; 2013.05.30 Dan
 ;;;             : * Cleaned up an unused variable in chunk-type-fct.
+;;; 2013.08.12 Dan
+;;;             : * Added chunk-type-possible-slot-names command since that's
+;;;             :   needed by the new procedural pre-checking code.
+;;; 2013.10.25 Dan
+;;;             : * Adjust how static chunk-types are created.  No longer create
+;;;             :   the whole graph up front and instead create new static types
+;;;             :   on the fly.  
+;;; 2013.11.04 Dan
+;;;             : * Make sure that a static gets the possible slots from its 
+;;;             :   children as well as parents since it could be created in the
+;;;             :   "middle" of the hierarchy now.
+;;; 2014.02.12 Dan
+;;;             : * Added another option for :show-static-subtype-names so that
+;;;             :   it will show the type name as long as it wasn't generated
+;;;             :   automatically (defined).  To support that now set the
+;;;             :   user-defined slot of a chunk-type to nil when it is generated
+;;;             :   automatically and added the canonical-chunk-type-name
+;;;             :   function to handle determining which name to use based on the
+;;;             :   setting of :show-static-subtype-names.
+;;; 2014.02.13 Dan
+;;;             : * Switching the default behavior for chunk-types to be static,
+;;;             :   and reenabled the :static-default system parameter to do so.
+;;; 2014.02.26 Dan
+;;;             : * Fixed a bug with chunk-type specification because specifying
+;;;             :   a slot both with and without a default value was allowed and
+;;;             :   resulted in two slots with the same name.
+;;; 2014.06.13 Dan
+;;;             : * Changing the default for :static-default back to nil.  I
+;;;             :   think they create as many issues as they solve and another
+;;;             :   alternative is being explored.
+;;; 2014.12.17 Dan
+;;;             : * Changed the declaim for get-module-fct since CMUCL actually
+;;;             :   cares about the return value spec.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -178,20 +211,20 @@
 
 
 (declaim (ftype (function (t) t) new-chunk-type-size))
-(declaim (ftype (function (t) t) get-module-fct))
+(declaim (ftype (function (t) (values t t)) get-module-fct))
 (declaim (ftype (function () t) current-model))
 (declaim (ftype (function (t) t) get-chunk))
 (declaim (ftype (function (&optional t) t) new-name-fct))
 
 
-(defvar *default-static-type-setting* nil)
+(defvar *default-static-type-setting* t)
 
-#|
-(create-system-parameter :static-default :valid-test 'tornil :default-value nil 
+
+(create-system-parameter :static-default :valid-test 'tornil :default-value nil
                          :warning "T or nil"
                          :documentation "Whether or not all chunk-types are static by default" 
                          :handler (simple-system-param-handler *default-static-type-setting*))
-|#
+
 
 (defvar *static-type-naming-hook* nil)
 
@@ -203,9 +236,10 @@
 
 (defvar *show-static-names* nil)
 
-(create-system-parameter :show-static-subtype-names :valid-test 'tornil :default-value nil 
-                         :warning "T or nil"
-                         :documentation "Whether chunks of a static type show their true name or just the root name"
+(create-system-parameter :show-static-subtype-names :valid-test (lambda (x) (or (tornil x) (eq x 'defined)))
+                         :default-value 'defined 
+                         :warning "T, defined, or nil"
+                         :documentation "Whether chunks of a static type show their true name, a user defined type name, or always the root name"
                          :handler (simple-system-param-handler *show-static-names*))
 
 (defun get-chunk-type (name)
@@ -221,12 +255,7 @@
   `(chunk-type-fct ',name-and-slots))
 
 
-(defun list-to-power-set (list)
-  (if (null list)
-      (list nil)
-    (let ((sub (list-to-power-set (cdr list))))
-      (append (mapcar (lambda (x) (cons (car list) x)) sub)
-              sub))))
+
 
 (defun new-static-chunk-type-name (root-name new-slots)
   (let ((possible-name 
@@ -244,8 +273,16 @@
 
 (defun static-chunk-sub-type-exists (slot-list root-type)
   (let ((new-slots (set-difference slot-list (mapcar 'chunk-type-slot-name (act-r-chunk-type-slots root-type)))))
-    (when (every (lambda (x) (find x (act-r-chunk-type-indices root-type))) new-slots)
-      (gethash (static-chunk-type-slot-key new-slots root-type) (act-r-chunk-type-subtree root-type)))))
+    (if (every (lambda (x) (find x (act-r-chunk-type-indices root-type))) new-slots)
+        (or (gethash (static-chunk-type-slot-key new-slots root-type) (act-r-chunk-type-subtree root-type))
+            (let* ((type-name (chunk-type-fct `((,(new-static-chunk-type-name (act-r-chunk-type-name root-type) new-slots) (:include ,(act-r-chunk-type-name root-type))) ,@new-slots)))
+                   (type (get-chunk-type type-name)))
+              (setf (act-r-chunk-type-user-defined type) nil)
+              type-name))
+      (let* ((type-name (chunk-type-fct `((,(new-static-chunk-type-name (act-r-chunk-type-name root-type) new-slots) (:include ,(act-r-chunk-type-name root-type))) ,@new-slots)))
+                   (type (get-chunk-type type-name)))
+              (setf (act-r-chunk-type-user-defined type) nil)
+              type-name))))
 
 
 (defun chunk-type-fct (name-and-slots)
@@ -314,7 +351,7 @@
                  (return-from chunk-type-fct 
                    (print-warning "Unacceptable slot specification ~S for chunk-type ~S.  Chunk-type not created." slot name))))
              
-             (unless (= (length slots) (length (remove-duplicates slots)))
+             (unless (= (length slots) (length (remove-duplicates (mapcar 'chunk-type-slot-name slots))))
                (return-from chunk-type-fct 
                  (print-warning "Duplicate slot specifications in ~S for chunk-type ~S.  Chunk-type not created." slots name)))
              
@@ -338,7 +375,7 @@
                          
                          (dolist (slot slots)
                            (push-last slot (act-r-chunk-type-slots ct))
-
+                           
                            (let ((s (chunk-type-slot-name slot)))
                              (push s (act-r-chunk-type-possible-slots ct))
                              (vector-push-extend s (act-r-chunk-type-indices ct))))
@@ -352,23 +389,23 @@
                          name)
                      
                      ;; It's a subtype of a static type so it needs to 
-                     ;; essentially extend the parent for each of the new slots
-                     ;; being added after checking to see if such a type already exists
-                     
+                     ;; determine which other subtypes of that static are
+                     ;; parents and children of the new type
                      
                      (let* ((root-type (get-chunk-type static))
                             
                             (slot-names (remove-duplicates (mapcar 'chunk-type-slot-name (append slots (act-r-chunk-type-slots super-type)))))
-                            (new-slots (set-difference slot-names (mapcar 'chunk-type-slot-name (act-r-chunk-type-slots root-type)))))
+                            (new-slots (set-difference slot-names (mapcar 'chunk-type-slot-name (act-r-chunk-type-slots root-type))))
+                            )
                        
                        
                        ;; If it's in the table punt                        
                        
-                       (when (static-chunk-sub-type-exists slot-names root-type)
+                       (when (and (every (lambda (x) (find x (act-r-chunk-type-indices root-type))) new-slots)
+                                  (gethash (static-chunk-type-slot-key new-slots root-type) (act-r-chunk-type-subtree root-type)))
                          (return-from chunk-type-fct 
                            (print-warning "A static subtype already exists of the type ~s with the slots ~s.  Chunk-type ~s not created." static slot-names name)))
                        
-                                              
                        ;; first step needs to be putting the slots on the index list
                        ;; so that the key can be created
                        
@@ -381,27 +418,28 @@
                        (setf (gethash (static-chunk-type-slot-key new-slots root-type) (act-r-chunk-type-subtree root-type)) name)
                        
                        
-                       ;; set the supertypes list based on all the possible parent types
-                       ;; creating the parents as needed first
+                       ;; set the supertypes and subtypes lists based on all the possible relatives
+                       ;; i.e. the parents parents and children
                        
-                       (setf (act-r-chunk-type-supertypes ct) nil)
-                       
-                       (dolist (possible-parent (sort (list-to-power-set new-slots) #'< :key 'length))
-                         (let ((parent (aif (static-chunk-sub-type-exists possible-parent root-type)
-                                            it
-                                            (chunk-type-fct `((,(new-static-chunk-type-name static possible-parent) (:include ,static)) ,@possible-parent)))))
-
-                         (push parent (act-r-chunk-type-supertypes ct))))
-                       
+                       (dolist (possible-relative (act-r-chunk-type-subtypes root-type))
+                         (unless (set-difference (chunk-type-slot-names-fct possible-relative) slot-names)
+                           (push-last possible-relative (act-r-chunk-type-supertypes ct)))
+                         (unless (set-difference slot-names (chunk-type-slot-names-fct possible-relative))
+                           (push possible-relative (act-r-chunk-type-subtypes ct))))
                        
                        ;; set the parents' subtypes
                        
                        (dolist (parent (cdr (act-r-chunk-type-supertypes ct)))
-                         (push name (act-r-chunk-type-subtypes (get-chunk-type parent))))                                           
-                                             
+                         (push name (act-r-chunk-type-subtypes (get-chunk-type parent))))
+                       
+                       ;; set the childrens' supertypes
+                       
+                       (dolist (child (butlast (act-r-chunk-type-subtypes ct)))
+                         (push-last name (act-r-chunk-type-supertypes (get-chunk-type child))))
+                       
                        
                        ;; push the new slot names for this type onto all of the possible-slots lists 
-               
+                       
                        (dolist (type-name (act-r-chunk-type-supertypes ct))
                          (let ((type (if (eq type-name name) ct (get-chunk-type type-name))))
                            (dolist (s slot-names)
@@ -411,10 +449,9 @@
                        ;; make the check for new possible size
                        
                        (new-chunk-type-size (length (act-r-chunk-type-indices ct)))
-               
+                       
                        ;; now add the parent slots to this type
                        ;; maintaining order for consistency
-                       
                        
                        (dolist (parent-slot (act-r-chunk-type-slots (if super-type super-type root-type)))
                          (aif (find (chunk-type-slot-name parent-slot) slots :key 'chunk-type-slot-name :test 'eq)
@@ -423,6 +460,13 @@
                                 (setf slots (remove it slots :test 'eq)))
                               (push-last parent-slot (act-r-chunk-type-slots ct))))
                        
+                       ;; also have to add any possible slots for children of this type
+                       (dolist (child (butlast (act-r-chunk-type-subtypes ct)))
+                         (dolist (child-possible (act-r-chunk-type-possible-slots (get-chunk-type child)))
+                           (unless (find child-possible (act-r-chunk-type-possible-slots ct))
+                             (push-last child-possible (act-r-chunk-type-possible-slots ct)))))
+                       
+                       
                        ;; add the new slots
                        
                        (dolist (slot slots)
@@ -430,7 +474,7 @@
                        
                        (setf (gethash name (act-r-model-chunk-types-table (current-model-struct))) ct)
                        name)))
-   
+               
                ;; Normal chunk-type 
                (let ((ct (make-act-r-chunk-type 
                           :name name 
@@ -490,6 +534,7 @@
                  
                  (setf (gethash name (act-r-model-chunk-types-table (current-model-struct))) ct)
                  name))))))))
+
 
 
 (defun chunk-type-slot-name (slot)
@@ -663,6 +708,19 @@
     (when ct
       (possible-slot-name slot ct))))
 
+(defmacro chunk-type-possible-slot-names (chunk-type-name)
+  "Macro to return the list of possible slot names for a given chunk-type"
+  `(chunk-type-possible-slot-names-fct ',chunk-type-name))
+
+(defun chunk-type-possible-slot-names-fct (chunk-type-name)
+  "Function to return the list of possible slot names for a given chunk-type"
+  (let ((ct (get-chunk-type chunk-type-name)))
+    (if ct 
+      (values (mapcar #'chunk-type-slot-name (act-r-chunk-type-possible-slots ct)) t)
+      (values nil nil))))
+
+
+
 (defun extend-chunk-type-slots (chunk-type-name slot-name &optional chunk-name)
   (let ((ct (get-chunk-type chunk-type-name)))
     (if ct
@@ -673,54 +731,53 @@
               ((keywordp slot-name)
                (model-warning "~s cannot be used as a slot name because it is a keyword." slot-name))
               (t
-               (unless (possible-slot-name slot-name ct)
-                 (if (act-r-chunk-type-static ct)
-                     
-                     (let* ((root (act-r-chunk-type-static ct))
-                            (root-type (get-chunk-type root))
-                            (slot-names (cons slot-name (mapcar 'chunk-type-slot-name (act-r-chunk-type-slots ct))))
-                            (new-slots (set-difference slot-names (mapcar 'chunk-type-slot-name (act-r-chunk-type-slots root-type)))))
-                                              
-                       ;; Just create a new type with the additional slot because that does all the work
-                       
-                       (let ((new-type (chunk-type-fct `((,(new-static-chunk-type-name root new-slots) (:include ,chunk-type-name)) ,@(act-r-chunk-type-slots (get-chunk-type chunk-type-name)) ,slot-name))))
-                         
-                         ;; If there's a chunk to change then just smash its type
-                         
-                         (when chunk-name
-                           (let ((chunk (get-chunk chunk-name)))
-                             (setf (act-r-chunk-chunk-type chunk) (get-chunk-type new-type))))
-                         
-                         slot-name))
-               
-                   ;; normal chunk-type extension which basically
-                   ;; propagates the change to all chunks of the type
-                   ;; and the current chunk doesn't matter
+               (if (act-r-chunk-type-static ct)
                    
-                   (progn
-                     (push-last slot-name (act-r-chunk-type-slots ct))
-                     (push-last slot-name (act-r-chunk-type-extended-slots ct))
+                   (let* ((root (act-r-chunk-type-static ct))
+                          (root-type (get-chunk-type root))
+                          (slot-names (cons slot-name (mapcar 'chunk-type-slot-name (act-r-chunk-type-slots ct))))
+                          ;; this creates the type if needed or returns an existing subtype
+                          (new-type (static-chunk-sub-type-exists slot-names root-type)))
                      
-                     ;; push the new slot onto all of the possible-slots lists 
+                     ;; If there's a chunk to change then just smash its type
                      
-                     (dolist (type-name (act-r-chunk-type-supertypes ct))
-                       (let ((type (get-chunk-type type-name)))
-                         (unless (find slot-name (act-r-chunk-type-possible-slots type) :test 'eq)
-                           (push-last slot-name (act-r-chunk-type-possible-slots type)))))
+                     (when chunk-name
+                       (let ((chunk (get-chunk chunk-name)))
+                         (setf (act-r-chunk-chunk-type chunk) (get-chunk-type new-type))))
                      
-                     ;; Now add it to the index table which will affect all types in the "family"
+                     slot-name)
+                 
+                 ;; normal chunk-type extension which basically
+                 ;; propagates the change to all chunks of the type
+                 ;; and the current chunk doesn't matter
+                 
+                 (unless (possible-slot-name slot-name ct)
+                   
+                   (push-last slot-name (act-r-chunk-type-slots ct))
+                   (push-last slot-name (act-r-chunk-type-extended-slots ct))
+                   
+                   ;; push the new slot onto all of the possible-slots lists 
+                   
+                   (dolist (type-name (act-r-chunk-type-supertypes ct))
+                     (let ((type (get-chunk-type type-name)))
+                       (unless (find slot-name (act-r-chunk-type-possible-slots type) :test 'eq)
+                         (push-last slot-name (act-r-chunk-type-possible-slots type)))))
+                   
+                   ;; Now add it to the index table which will affect all types in the "family"
+                   
+                   (unless (find slot-name (act-r-chunk-type-indices ct) :test 'eq) 
+                     (vector-push-extend slot-name (act-r-chunk-type-indices ct))
                      
-                     (unless (find slot-name (act-r-chunk-type-indices ct) :test 'eq) 
-                       (vector-push-extend slot-name (act-r-chunk-type-indices ct))
-                       
-                       ;; pass that along to check for possible max size change
-                       (new-chunk-type-size (length (act-r-chunk-type-indices ct))))
-                     
-                     ;; extend all the children as well
-                     ;; results in some duplicae 
-                     (dolist (sub-type (remove chunk-type-name (act-r-chunk-type-subtypes ct)))
-                       (extend-chunk-type-slots sub-type slot-name))
-                     slot-name)))))
+                     ;; pass that along to check for possible max size change
+                     (new-chunk-type-size (length (act-r-chunk-type-indices ct))))
+                   
+                   ;; extend all the children as well
+                   ;; and let that do the check for existence instead of here
+                   ;; which results in some unneeded funcalls
+                   
+                   (dolist (sub-type (butlast (act-r-chunk-type-subtypes ct)))
+                     (extend-chunk-type-slots sub-type slot-name))
+                   slot-name))))
       
       (model-warning "~s does not name a chunk-type so it cannot be extended." chunk-type-name))))
 
@@ -737,6 +794,13 @@
   (let ((ct (get-chunk-type chunk-type-name)))
     (when ct
       (act-r-chunk-type-static ct))))
+
+(defun canonical-chunk-type-name (chunk-type)
+  (if (or (null (act-r-chunk-type-static chunk-type)) 
+          (eq *show-static-names* t)
+          (and *show-static-names* (act-r-chunk-type-user-defined chunk-type)))
+      (act-r-chunk-type-name chunk-type)
+    (act-r-chunk-type-static chunk-type)))
 
 
 #|

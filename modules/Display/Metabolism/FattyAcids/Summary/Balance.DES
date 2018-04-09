@@ -95,7 +95,7 @@ Schema : 2005.0
 
 <showvalue>
   <row> 19.8 </row><col> 3.0 </col>
-  <name> LM_Ketoacids.FattyAcidUse </name>
+  <name> LiverMetabolism_Ketoacids.FattyAcidUse </name>
   <format><decimal> 1 </decimal></format>
   <label> Ketoacid Synthesis </label>
 </showvalue>

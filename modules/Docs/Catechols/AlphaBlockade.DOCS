@@ -10,15 +10,15 @@ Copyright : 2009
 <vardoc>
 <name> AlphaBlockade.Block(%)</name>
 <topic> Adrenergic Receptor Overview </topic>
-<topic> Block(%) - DefinitionAB1 </topic>
+<topic> AlphaBlockade - Overview </topic>
 <seealso> AlphaPool.Effect </seealso>
 </vardoc>
 
 <vardoc>
 <name> AlphaBlockade.Effect </name>
-<topic> Effect - DefinitionAB2 </topic>
 <topic> AlphaBlockade - Overview </topic>
 </vardoc>
+
 
 <topicdoc>
 <name> Adrenergic Receptor Overview </name>
@@ -67,35 +67,19 @@ receptors in the given effector organ
    20th century. In: The Adrenergic Receptors in the 21st century.
    Edited by DM Perez. Totowa:Humana, 2005, Pg 3-21
 
+
 </content>
 </topicdoc>
 
 <topicdoc>
-<name> Block(%) - DefinitionAB1 </name>
-<label> Definition </label>
+<name> AlphaBlockade - Overview </name>
+<label> Alpha Blockade - Overview </label>
 <content>
 
 The model user can block the effect of alpha receptor stimulation.
 Receptor blockade is applied at individual organs. Effect is
 1.0 when there is no blockade. For example,a 16% blockade results 
 in an effect of 0.84.
-There are a number of drugs known as alpha antagonists which can 
-be used clinically to cause alpha blockade. These include
-phentolamine, prazosin and yohimbine. 
-
-</content>
-</topicdoc>
-
-<topicdoc>
-<name> Effect - DefinitionAB2 </name>
-<label> Definition </label>
-<content>
-
-The model user can block the effect of alpha receptor stimulation.
-Receptor blockade is applied at individual organs. 
-Effect = 1.0 - (Block(%)/100)
-Effect is 1.0 when there is no blockade. For example,a 16% blockade 
-results in an effect of 0.84.
 There are a number of drugs known as alpha antagonists which can 
 be used clinically to cause alpha blockade. These include
 phentolamine, prazosin and yohimbine. 

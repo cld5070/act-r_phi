@@ -1,9 +1,9 @@
 HumMod / LacPool
 
 Created : 02-Apr-05
-Revised : 2012-03-12
+Revised : 2013-03-05
 Author : Tom Coleman
-Copyright : 2006-2012
+Copyright : 2006-2013
 By : University Of Mississippi Medical Center
 
 <structure><name> LacPool </name>
@@ -12,11 +12,10 @@ By : University Of Mississippi Medical Center
 
 <var><name> [Lac-] </name></var>
 <var><name> [Lac-(mEq/L)] </name></var>
-<var><name> [Lac-(mEq/L)-Initial] </name></var>
 <var><name> [Lac-(mG/dL)] </name></var>
 
 <var><name> InitialMass </name></var>
-<parm><name> Target[Lac-] </name><val> 0.001 </val></parm>
+<var><name> [Lac-(mEq/L)-Initial] </name></var>
 
 <parm><name> PumpSwitch </name><val> FALSE </val></parm>
 <parm><name> PumpSetting </name><val> 0.0 </val></parm>
@@ -39,9 +38,12 @@ By : University Of Mississippi Medical Center
 <definitions>
 
 <block><name> Init </name>
-  <def><name> InitialMass </name><val> Target[Lac-] * ECFV.Vol </val></def>
-  <def><name> Mass </name><val> InitialMass </val></def>
-  <def><name> [Lac-(mEq/L)-Initial] </name><val> 1000 * Target[Lac-] </val></def>
+
+<def>
+  <name> Mass </name>
+  <val> InitialMass </val>
+</def>
+
 </block>
 
 <block><name> Parms </name>
@@ -83,7 +85,8 @@ By : University Of Mississippi Medical Center
     + Brain-Lactate.Outflux
     + Fat-Lactate.Outflux
     + GITract-Lactate.Outflux
-    + Kidney-Lactate.Outflux
+    + RightKidney-Lactate.Outflux
+    + LeftKidney-Lactate.Outflux
     + LeftHeart-Lactate.Outflux
     + Liver-Lactate.Outflux
     + OtherTissue-Lactate.Outflux
@@ -91,7 +94,7 @@ By : University Of Mississippi Medical Center
     + RightHeart-Lactate.Outflux
     + SkeletalMuscle-Lactate.Outflux
     + Skin-Lactate.Outflux
-
+    + IVDrip.LacRate
     + PumpRate
   </val>
 </def>

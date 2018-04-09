@@ -71,7 +71,7 @@ By : University Of Mississippi Medical Center
 
 <slidebar>
   <row> 15.8 </row><col> 3.0 </col>
-  <name> LargeMultiplier </name>
+  <name> LargeMultiplierTarget </name>
   <listname> Common.Multiplier </listname>
   <label> X </label>
 </slidebar>
@@ -156,7 +156,7 @@ By : University Of Mississippi Medical Center
 
 <slidebar>
   <row> 32.8 </row><col> 3.0 </col>
-  <name> SmallMultiplier </name>
+  <name> SmallMultiplierTarget </name>
   <listname> Common.Multiplier </listname>
   <label> X </label>
 </slidebar>

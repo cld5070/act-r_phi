@@ -1,11 +1,9 @@
 HumMod / Lactate
 
 Created : 12-Dec-05
-Last Modified : 26-Jan-10
-Author : Tom Coleman
-Copyright : 2008-2010
+Revised : 2013-03-28Author : Tom Coleman
+Copyright : 2008-2013
 By : University of Mississippi Medical Center
-Schema : DES V1.0
 
 <panel><name> OtherTissue-Lactate </name>
 
@@ -18,7 +16,7 @@ Schema : DES V1.0
 <label>
   <row> 0.3 </row>
   <col> 4.5 </col>
-  <text> Other Tissue - Lactate </text>
+  <text> Other Tissue | Lactate </text>
 </label>
 
 <showclock>
@@ -34,7 +32,6 @@ Schema : DES V1.0
 <?path Display\Organs\OtherTissue\Lactate\ ?>
 
 <?include TissueLactate.DES ?>
-<?include Technical.DES ?>
 <?include LactateMade.DES ?>
 <?include LactateUsed.DES ?>
 

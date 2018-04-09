@@ -63,7 +63,7 @@ Schema : DES V1.0
 <infobutton>
   <row> 1.2 </row><col> 26.0 </col>
 
-  <line> I used Fick's principle to calculate changes in blood concentration </line>
+  <line> I used Ficks principle to calculate changes in blood concentration </line>
   <line> caused by GI tract absorption and metabolism. The result is the portal </line>
   <line> vein concentration. </line>
 </infobutton>

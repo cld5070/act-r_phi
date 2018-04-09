@@ -9,15 +9,16 @@ Copyright : 2009
 
 <vardoc>
 <name> A2Pool.[A2(pG/mL)] </name>
-<topic> Renin Angiotensin System - Overview </topic>
-<topic> A2Pool - Physical Units </topic>
-<topic> A2Pool - Concentration Units </topic>
-<topic> [A2(pG/mL)] - DefinitionA2P1 </topic>
+<topic> XX </topic>
+<topic> XX </topic>
+<topic> XXXX </topic>
+<seealso> XXX </seealso>
+<seealso> XXX </seealso>
 </vardoc>
 
 <vardoc>
 <name> A2Pool.[A2(pMol/L)] </name>
-<topic> [A2(pMol/L)] - DefinitionA2P2 </topic>
+<topic> XXX</topic>
 <topic> XXXX </topic>
 <topic> XXX </topic>
 <seealso> XXX </seealso>
@@ -26,7 +27,7 @@ Copyright : 2009
 
 <vardoc>
 <name> A2Pool.A2CONC</name>
-<topic> A2CONC - DefinitionA2P3 </topic>
+<topic> XXX </topic>
 <topic> XXX </topic>
 <topic> XXX </topic>
 <seealso> XXXX </seealso>
@@ -35,7 +36,7 @@ Copyright : 2009
 
 <vardoc>
 <name> A2Pool.Block(%) </name>
-<topic> Block(%) - DefinitionA2P4 </topic>
+<topic> XX </topic>
 <topic> XX </topic>
 <topic> XXXX </topic>
 <seealso> XXX </seealso>
@@ -44,7 +45,7 @@ Copyright : 2009
 
 <vardoc>
 <name> A2Pool.CEActivity </name>
-<topic> CEActivity - DefinitionA2P5 </topic>
+<topic> XXX</topic>
 <topic> XXXX </topic>
 <topic> XXX </topic>
 <seealso> XXX </seealso>
@@ -53,7 +54,7 @@ Copyright : 2009
 
 <vardoc>
 <name> A2Pool.CEBase </name>
-<topic> CEBase - DefinitionA2P6 </topic>
+<topic> XXX </topic>
 <topic> XXX </topic>
 <topic> XXX </topic>
 <seealso> XXXX </seealso>
@@ -62,7 +63,7 @@ Copyright : 2009
 
 <vardoc>
 <name> A2Pool.EndogenousRate </name>
-<topic> EndogenousRate - DefinitionA2P7 </topic>
+<topic> XX </topic>
 <topic> XX </topic>
 <topic> XXXX </topic>
 <seealso> XXX </seealso>
@@ -71,7 +72,7 @@ Copyright : 2009
 
 <vardoc>
 <name> A2Pool.FormationRate </name>
-<topic> FormationRate - DefinitionA2P8 </topic>
+<topic> XXX</topic>
 <topic> XXXX </topic>
 <topic> XXX </topic>
 <seealso> XXX </seealso>
@@ -79,8 +80,8 @@ Copyright : 2009
 </vardoc>
 
 <vardoc>
-<name> A2Pool.Log10Conc </name>
-<topic> Log10Conc - DefinitionA2P9 </topic>
+<name> A2Pool.LOG10Conc </name>
+<topic> XXX </topic>
 <topic> XXX </topic>
 <topic> XXX </topic>
 <seealso> XXXX </seealso>
@@ -89,7 +90,7 @@ Copyright : 2009
 
 <vardoc>
 <name> A2Pool.PG_TO_PMOL </name>
-<topic> PG_TO_PMOL - DefinitionA2P10 </topic>
+<topic> XX </topic>
 <topic> XX </topic>
 <topic> XXXX </topic>
 <seealso> XXX </seealso>
@@ -97,7 +98,7 @@ Copyright : 2009
 </vardoc>
 
 <topicdoc>
-<name> Renin Angiotensin System - Overview </name>
+<name> XXX</name>
 <label> XXX</label>
 <content>
 
@@ -105,115 +106,22 @@ Copyright : 2009
 </topicdoc>
 
 <topicdoc>
-<name> A2Pool - Physical Units </name>
-<label> Physical Units </label>
+<name> XX </name>
+<label> XXX </label>
 <content>
 
 </content>
 </topicdoc>
 
 <topicdoc>
-<name> A2Pool - Concentration Units </name>
-<label> Concentration Units </label>
+<name> XXX </name>
+<label> XXX </label>
 <content>
 
 
 </content>
 </topicdoc>
 
-<topicdoc>
-<name> [A2(pG/mL)] - DefinitionA2P1 </name>
-<label> Definition </label>
-<content>
-
-</content>
-</topicdoc>
-
-<topicdoc>
-<name> [A2(pMol/L)] - DefinitionA2P2  </name>
-<label> Definition </label>
-<content>
-
-</content>
-</topicdoc>
-
-<topicdoc>
-<name> A2CONC - DefinitionA2P3  </name>
-<label> Definition </label>
-<content>
-
-
-</content>
-</topicdoc>
-
-<topicdoc>
-<name> Block(%) - DefinitionA2P4 </name>
-<label> Definition </label>
-<content>
-
-</content>
-</topicdoc>
-
-<topicdoc>
-<name> CEActivity - DefinitionA2P5 </name>
-<label> Definition </label>
-<content>
-
-</content>
-</topicdoc>
-
-<topicdoc>
-<name> CEBase - DefinitionA2P6  </name>
-<label> Definition </label>
-<content>
-
-
-</content>
-</topicdoc>
-
-<topicdoc>
-<name> EndogenousRate - DefinitionA2P7 </name>
-<label> Definition </label>
-<content>
-
-</content>
-</topicdoc>
-
-<topicdoc>
-<name> FormationRate - DefinitionA2P8  </name>
-<label> Definition </label>
-<content>
-
-</content>
-</topicdoc>
-
-<topicdoc>
-<name> Log10Conc - DefinitionA2P9  </name>
-<label> Definition </label>
-<content>
-
-Log10Conc converts [A2(pG/mL)] to a logarithmic 
-value. If [A2(pG/mL)] is less than 1.0, then Log10Conc
-has a value of zero.
-
-</content>
-</topicdoc>
-
-<topicdoc>
-<name> PG_TO_PMOL - DefinitionA2P10  </name>
-<label> Definition </label>
-<content>
-
-PG_TO_PMOL is a constant used to convert angiotensin II 
-concentrations in pG/mL to pMol/L.
-Since the Molecular Weight of Angiotensin II is 1046,
-1.046 pG/mL = 1.0 pMol/L and 
-1.0 pG/mL = 0.956 pMol/L
-
-PG_TO_PMOL = 0.956 
-
-</content>
-</topicdoc>
   
 
 End

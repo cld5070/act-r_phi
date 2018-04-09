@@ -12,6 +12,8 @@ Schema : DES V1.0
 <variables>
 
 <var><name> TotalEffect </name></var>
+<parm><name> Clamp </name><val> FALSE </val></parm>
+<parm><name> Level </name><val> 1 </val></parm>
 
 </variables>
 
@@ -30,10 +32,17 @@ Schema : DES V1.0
 
 <block><name> Calc </name>
 
+<if><test> Clamp </test>
+<true>
+<def><name> TotalEffect </name><val> Level </val></def>
+</true>
+<false>
 <def>
   <name> TotalEffect </name>
   <val> TotalEffect [ Exercise-Metabolism.TotalWatts ] </val>
 </def>
+</false>
+</if>
 
 </block>
 

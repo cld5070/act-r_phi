@@ -18,7 +18,8 @@ By : University Of Mississippi Medical Center
 <var><name> CEActivity </name></var>
 
 <parm><name> Block(%) </name><val> 0.0 </val></parm>
-<parm><name> CEBase </name><val> 30.0 </val></parm>
+<var><name> CEBase </name></var>
+<parm><name> CEBaseTarget </name><val> 30.0 </val></parm>
 
 <constant><name> A2CONC </name><val> 0.3333 </val></constant>
 <constant><name> PG_TO_PMOL </name><val> 0.956 </val></constant>
@@ -32,6 +33,7 @@ By : University Of Mississippi Medical Center
 
 <block><name> CalcConc </name>
 
+<def><name> CEBase </name><val> CEBaseTarget </val></def>
 <def>
   <name> CEActivity </name>
   <val> CEBase * ( 1.0 - ( Block(%) / 100.0 ) ) </val>
@@ -51,7 +53,7 @@ By : University Of Mississippi Medical Center
   <name> [A2(pG/mL)] </name>
   <test> Clamp </test>
   <true> Level </true>
-  <false> A2CONC * FormationRate </false>
+ <false> A2CONC * FormationRate MAX 2.5 </false>
 </conditional>
 
 <def>

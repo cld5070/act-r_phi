@@ -18,7 +18,8 @@ Schema : 2005.0
   <call> Brain-Metabolism.ScaleCals </call>
   <call> Fat-Metabolism.ScaleCals </call>
   <call> GITract-Metabolism.ScaleCals </call>
-  <call> Kidney-Metabolism.ScaleCals </call>
+  <call> LeftKidney-Metabolism.ScaleCals </call>
+  <call> RightKidney-Metabolism.ScaleCals </call>
   <call> LeftHeart-Metabolism.ScaleCals </call>
   <call> Liver-Metabolism.ScaleCals </call>
   <call> OtherTissue-Metabolism.ScaleCals </call>

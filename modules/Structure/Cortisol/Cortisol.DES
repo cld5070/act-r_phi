@@ -15,8 +15,9 @@ By : University of Mississippi Medical Center
 
 <var><name> Secretion </name></var>
 <var><name> Degradation </name></var>
+<parm><name> SecondaryInsufficiency </name><val> 1 </val></parm>
 
-<parm><name> TargetConc </name><val> 0.08 </val></parm>
+<parm><name> TargetConc </name><val> 0.2 </val></parm>
 <var><name> InitialMass </name></var>
 
 <var><name> [Conc(uG/mL)] </name></var>
@@ -33,15 +34,10 @@ By : University of Mississippi Medical Center
 <parm><name> ClampSetting </name><val> 0.0 </val></parm>
 
 <var><name> [ACTH]Effect </name></var>
-<parm><name> Secretion-Basic </name><val> 8.4 </val></parm>
+<var><name> Secretion-Basic </name></var>
+<parm><name> Secretion-Basic(/G) </name><val> 1.1556 </val></parm>
 
 <parm><name> K </name><val> 52.0 </val></parm>
-
-<var><name> Secretion-Sleep-Hom </name><val> 0 </val></var>
-<var><name> Sleep-allostatic-mag </name><val> 3.6 </val></var>
-<var><name> Sleep-allostatic-rate </name><val> 0.9 </val></var>
-<var><name> Wake-allostatic-mag </name><val> 1.6 </val></var>
-<var><name> Wake-allostatic-rate </name><val> 0.9 </val></var>
 
 </variables>
 
@@ -60,8 +56,8 @@ By : University of Mississippi Medical Center
 
 <curve><name> [ACTH]Effect </name>
 <point><x>  0 </x><y> 0 </y><slope> 0 </slope></point>
-<point><x>  5 </x><y> 1 </y><slope> 0.4 </slope></point>
-<point><x> 20 </x><y> 5 </y><slope> 0 </slope></point>
+<point><x>  5 </x><y> 1 </y><slope> 0.6 </slope></point>
+<point><x> 20 </x><y> 10 </y><slope> 0 </slope></point>
 </curve>
 
 </functions>
@@ -98,6 +94,8 @@ By : University of Mississippi Medical Center
 
 <block><name> Dervs </name>
 
+<def><name> Secretion-Basic </name><val> Secretion-Basic(/G) * AdrenalGland-Size.FasciculataMass </val></def>
+
 <conditional><name> PumpRate </name>
 <test> PumpSwitch </test>
 <true> PumpSetting </true>
@@ -109,31 +107,10 @@ By : University of Mississippi Medical Center
   <val> [ACTH]Effect [ ACTH.[Conc(nG/dL)] ] </val>
 </def>
 
-<testcase>
-
- <case>
-  <test> Status.Activity EQ 0 </test>
-  <def>
-   <name> Secretion-Sleep-Hom </name>
-   <val> Sleep-allostatic-mag * ( 1 - ( Sleep-allostatic-rate ^ ( ( System.X - Status.LastAwake ) / 60 ) ) ) </val>
-  </def>
- </case>
- 
- <case>
-  <test> Status.Activity EQ 1 </test>
-   <def>
-    <name> Secretion-Sleep-Hom  </name>
-	<val> Wake-allostatic-mag * ( 1 - ( Wake-allostatic-rate ^ ( ( System.X - Status.LastAsleep ) / 60 ) ) ) </val>
-   </def>
- </case>
- 
-</testcase>
-
 <def>
- <name> Secretion </name>
- <val> ( Secretion-Basic * [ACTH]Effect ) + Secretion-Sleep-Hom </val>
+  <name> Secretion </name>
+  <val> Secretion-Basic * [ACTH]Effect * ( ( InsulinPump.T2D * 4 ) + 1 ) * SecondaryInsufficiency </val>
 </def>
-
 
 <def><name> Degradation </name><val> K * [Conc(uG/mL)] </val></def>
 

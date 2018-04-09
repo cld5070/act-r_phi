@@ -105,7 +105,7 @@
   (chunk-type goal speaker)
   
   (goal-focus-fct (car (define-chunks (isa goal))))
-
+  
   (p ignore-self
      =goal>
        isa      goal
@@ -114,7 +114,7 @@
        location self
      ?aural>
        state    free
-   ==>
+     ==>
      =goal>
        speaker  nil
      +aural>
@@ -131,7 +131,7 @@
      - location self
      ?aural>
        state    free
-   ==>
+     ==>
      =goal>
        speaker  =who
      +aural>
@@ -147,7 +147,7 @@
        content =x
      ?vocal>
        state   free
-   ==>
+     ==>
      +vocal>
        isa     speak
        string  "Back at you"
@@ -164,7 +164,7 @@
        buffer empty
      ?vocal>
        state  free
-   ==>
+     ==>
      +goal>
        isa    goal
      +vocal>
@@ -177,7 +177,9 @@
      =aural-location>
        isa      audio-event
        location self
-   ==>
+      ?aural>
+       state    free
+     ==>
      =goal>
        speaker  nil
      +aural>
@@ -194,7 +196,7 @@
      - location self
      ?aural>
        state    free
-   ==>
+     ==>
      =goal>
        speaker  =who
      +aural>
@@ -208,7 +210,7 @@
      =aural>
        isa     sound
        content =x
-   ==>
+     ==>
      !output!  (I heard =who say =x))
 )
 
@@ -218,14 +220,16 @@
   (chunk-type goal speaker)
   
   (goal-focus-fct (car (define-chunks (isa goal))))
-
+  
   (p ignore-self
      =goal>
        isa      goal
      =aural-location>
        isa      audio-event
        location self
-   ==>
+     ?aural>
+       state    free
+     ==>
      =goal>
        speaker  nil
      +aural>
@@ -241,7 +245,7 @@
      - location self
      ?aural>
        state    free
-   ==>
+     ==>
      =goal>
        speaker  =who
      +aural>
@@ -255,6 +259,6 @@
      =aural>
        isa     sound
        content =x
-   ==>
+     ==>
      !output!  (I heard =who say =x))
 )

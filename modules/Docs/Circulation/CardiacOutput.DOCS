@@ -9,10 +9,9 @@ Copyright : 2009
 
 <vardoc>
 <name> CardiacOutput.CardiacIndex </name>
-<topic> CardiacIndex - DefinitionCO1 </topic>
 <topic> CardiacOutput - Overview </topic>
 <topic> CardiacOutput - Physical Units </topic>
-<topic> CardiacOutput - Concentration Units </topic>
+<topic> CardiacOutput - Normal Values</topic>
 <seealso> SurfaceArea.Area </seealso>
 <seealso> CardiacOutput.Flow(L/Min)</seealso>
 </vardoc>
@@ -20,43 +19,36 @@ Copyright : 2009
 <vardoc>
 <name> CardiacOutput.Flow </name>
 <topic> CardiacOutput - Overview </topic>
+<topic> CardiacOutput - Physical Units </topic>
+<topic> CardiacOutput - Normal Values </topic>
 <seealso> LeftVentricle-Pumping.BloodFlow </seealso>
 </vardoc>
 
 <vardoc>
 <name> CardiacOutput.Flow(L/Min) </name>
 <topic> CardiacOutput - Overview </topic>
+<topic> CardiacOutput - Physical Units </topic>
+<topic> CardiacOutput - Normal Values </topic>
+<seealso> CardiacOutput.Flow </seealso>
 </vardoc>
 
 <vardoc>
 <name> CardiacOutput.StrokeVolume </name>
-<topic> StrokeVolume - DefinitionCO2 </topic>
+<topic> StrokeVolume - Overview </topic>
 <topic> StrokeVolume - Normal Values </topic>
 <seealso> LeftVentricle-Pumping.StrokeVolume </seealso>
 </vardoc>
-
-<topicdoc>
-<name> CardiacIndex - DefinitionCO1 </name>
-<label> Definition </label>
-<content>
-
-Cardiac Index is cardiac output expressed as a 
-function of body surface area.
-
-Cardiac Index = Flow(L/Min)/SurfaceArea.Area
-
-</content>
-</topicdoc>
 
 <topicdoc>
 <name> CardiacOutput - Overview </name>
 <label> Overview </label>
 <content>
 
-Cardiac Output is the quantity of blood pumped into 
-the aorta each minute by the heart. 
-
-Cardiac Ouput = heart rate * stroke volume. 
+Cardiac Output is the quantity of blood pumped into the 
+aorta each minute by the heart. 
+Cardiac Ouput = heart rate*stroke volume. 
+Cardiac Index is cardiac output expressed as a 
+function of body surface area
 
 </content>
 </topicdoc>
@@ -66,15 +58,16 @@ Cardiac Ouput = heart rate * stroke volume.
 <label> Physical Units </label>
 <content>
 
-Cardiac Output: mL/Min 
-Cardiac Index: mL/min/m^2 
+Cardiac output may be expressed in mL/Min or as 
+a function of body surface area.
+Cardiac Index mL/min/m^2 
  
 </content>
 </topicdoc>
 
 <topicdoc>
-<name> CardiacOutput - Concentration Units </name>
-<label> Concentration Units  </label>
+<name> CardiacOutput - Normal Values </name>
+<label> Normal Values </label>
 <content>
 
 Resting CO: 5400mL/Min
@@ -104,8 +97,8 @@ Circulation 12:557, 1955.
 </topicdoc>
 
 <topicdoc>
-<name> StrokeVolume - DefinitionCO2 </name>
-<label> Definition </label>
+<name> StrokeVolume - Overview </name>
+<label> Overview </label>
 <content>
 
 Stroke volume(SV) is the difference between 

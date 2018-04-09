@@ -1,0 +1,43 @@
+HumMod / Sizing DES
+
+Created : 2012-03-10
+Revised : 2012-03-22
+Author : Tom Coleman
+Copyright : 2012-2012
+By : University of Mississippi Medical Center
+
+<branch>
+  <name> SIZING </name>
+  <label> Sizing </label>
+  <parent> MAINMENU </parent>
+</branch>
+
+<leaf>
+  <name> Sizing-Summary </name>
+  <label> Summary </label>
+  <parent> SIZING </parent>
+</leaf>
+
+<separatorbar>
+  <parent> SIZING </parent>
+</separatorbar>
+
+<leaf>
+  <name> Sizing-OrganMass </name>
+  <label> Organ Mass </label>
+  <parent> SIZING </parent>
+</leaf>
+
+<leaf>
+  <name> Sizing-BloodVolume </name>
+  <label> Blood Volume </label>
+  <parent> SIZING </parent>
+</leaf>
+
+<leaf>
+  <name> Sizing-ExternalH2O </name>
+  <label> External H2O </label>
+  <parent> SIZING </parent>
+</leaf>
+
+End

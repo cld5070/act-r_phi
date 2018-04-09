@@ -1,0 +1,54 @@
+HumMod / Kidney-Flow
+
+Created : 09-Apr-05
+Revised : 2012-02-19
+Author : Tom Coleman
+Copyright : 2006-2012
+By : University Of Mississippi Medical Center
+
+<structure><name> Kidney-Flow </name>
+
+<variables>
+
+<var><name> Conductance </name></var>
+<var><name> BloodFlow </name></var>
+<var><name> PlasmaFlow </name></var>
+
+</variables>
+
+<definitions>
+
+<block><name> Init </name>
+  <call> Kidney-ArcuateArtery.Init </call>
+  <call> Kidney-AfferentArtery.Init </call>
+  <call> Kidney-EfferentArtery.Init </call>
+</block>
+
+<block><name> Calc </name>
+
+<def>
+  <name> Conductance </name>
+  <val>
+    INVERT (
+      ( INVERT Kidney-ArcuateArtery.Conductance )
+    + ( INVERT Kidney-AfferentArtery.Conductance )
+    + ( INVERT Kidney-EfferentArtery.Conductance )
+    )
+  </val>
+</def>
+
+<def>
+  <name> BloodFlow </name>
+  <val> ( Kidney-Pressure.PressureGradient * Conductance ) MAX 0.0 </val>
+</def>
+
+<def>
+  <name> PlasmaFlow </name>
+  <val> BloodVol.PVCrit * BloodFlow </val>
+</def>
+
+</block>
+</definitions>
+</structure>
+
+End

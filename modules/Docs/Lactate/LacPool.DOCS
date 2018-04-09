@@ -9,16 +9,16 @@ Copyright : 2009
 
 <vardoc>
 <name> LacPool.[Lac-(mEq/L)] </name>
-<topic> [Lac-(mEq/L)] - DefinitionLP1  </topic>
-<topic> Lactate - Overview </topic>
-<topic> Lactate - Physical Units </topic>
-<seealso> Lactate - Concentration Units </seealso>
+<topic> XX </topic>
+<topic> XX </topic>
+<topic> XXXX </topic>
+<seealso> XXX </seealso>
 <seealso> XXX </seealso>
 </vardoc>
 
 <vardoc>
 <name> LacPool.[Lac-(mG/dL)] </name>
-<topic> [Lac-(mG/dL)] - DefinitionLP2 </topic>
+<topic> XXX</topic>
 <topic> XXXX </topic>
 <topic> XXX </topic>
 <seealso> XXX </seealso>
@@ -27,7 +27,7 @@ Copyright : 2009
 
 <vardoc>
 <name> LacPool.[Lac-] </name>
-<topic> [Lac-] - DefinitionLP3 </topic>
+<topic> XXX </topic>
 <topic> XXX </topic>
 <topic> XXX </topic>
 <seealso> XXXX </seealso>
@@ -36,7 +36,7 @@ Copyright : 2009
 
 <vardoc>
 <name> LacPool.Change </name>
-<topic> Change - DefinitionLP4 </topic>
+<topic> XXX </topic>
 <topic> XXX </topic>
 <topic> XXX </topic>
 <seealso> XXXX </seealso>
@@ -45,7 +45,7 @@ Copyright : 2009
 
 <vardoc>
 <name> LacPool.Mass </name>
-<topic> Mass _ DefinitionLP5 </topic>
+<topic> XX </topic>
 <topic> XX </topic>
 <topic> XXXX </topic>
 <seealso> XXX </seealso>
@@ -54,7 +54,7 @@ Copyright : 2009
 
 <vardoc>
 <name> LacPool.PumpRate </name>
-<topic> PumpRate - DefinitionLP6 </topic>
+<topic> XXX</topic>
 <topic> XXXX </topic>
 <topic> XXX </topic>
 <seealso> XXX </seealso>
@@ -63,7 +63,7 @@ Copyright : 2009
 
 <vardoc>
 <name> LacPool.PumpSetting </name>
-<topic> PumpSetting - DefinitionLP7 </topic>
+<topic> XXX </topic>
 <topic> XXX </topic>
 <topic> XXX </topic>
 <seealso> XXXX </seealso>
@@ -72,7 +72,7 @@ Copyright : 2009
 
 <vardoc>
 <name> LacPool.PumpSwitch </name>
-<topic> PumpSwitch - DefinitionLP8 </topic>
+<topic> XXX </topic>
 <topic> XXX </topic>
 <topic> XXX </topic>
 <seealso> XXXX </seealso>

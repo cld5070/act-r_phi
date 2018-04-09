@@ -1,21 +1,20 @@
 HumMod / Temperature
 
-Created : 02-Apr-09
-Last Modified : 26-Jan-10
+Created : 2014-02-25
+Revised : 2014-02-25
 Author : Tom Coleman
-Copyright : 2008-2010
-By : University of Mississippi Medical Center
-Schema : DES V1.0
+Copyright : 2014-2014
+By : Tom Coleman
 
 <showvalue>
-   <row> 10.6 </row><col> 27.0 </col>
+   <row> 7.8 </row><col> 28 </col>
    <name> HeatCore.Temp(F) </name>
    <format><decimal> 1 </decimal></format>
    <label> Temperature (F) </label>
 </showvalue>
 
 <showgraph>
-  <row> 11.6 </row><col> 27.0 </col><high> 10 </high><wide> 26 </wide>
+  <row> 8.8 </row><col> 28 </col><high> 7 </high><wide> 26 </wide>
   <leftmargin> 4 </leftmargin>
   <xaxis>
     <name> System.X </name>
@@ -33,7 +32,7 @@ Schema : DES V1.0
 </showgraph>
 
 <showvalue>
-   <row> 21.6 </row><col> 27.0 </col>
+   <row> 15.8 </row><col> 28 </col>
    <name> HeatCore.Temp(C) </name>
    <format><decimal> 1 </decimal></format>
    <label> Temperature (C) </label>

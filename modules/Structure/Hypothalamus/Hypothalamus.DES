@@ -16,6 +16,8 @@ Schema : DES V1.0
 
 <?include HypothalamusShiveringAcclimation.DES ?>
 <?include HypothalamusSweatingAcclimation.DES ?>
+<?include HypothalamusMagnocellularNeurons.DES ?>
+
 
 <structure><name> Hypothalamus </name>
 
@@ -42,6 +44,10 @@ Schema : DES V1.0
   <call> HypothalamusShiveringAcclimation.Dervs </call>
   <call> HypothalamusSweatingAcclimation.Dervs </call>
 
+</block>
+
+<block><name> Wrapup </name>
+  <call> HypothalamusMagnocellularNeurons.WrapUp </call>
 </block>
 
 </definitions>

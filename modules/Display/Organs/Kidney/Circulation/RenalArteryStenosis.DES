@@ -10,8 +10,8 @@ Schema : DES V1.0
 <groupbox>
    <row> 20.2 </row>
    <col> 32.0 </col>
-   <high> 4.4 </high>
-   <wide> 30.0 </wide>
+   <high> 7 </high>
+   <wide> 32.0 </wide>
    <title> Renal Artery Stenosis </title>
 
 <maplist>
@@ -25,16 +25,30 @@ Schema : DES V1.0
 
 <slidebar>
   <row> 1.4 </row><col> 1.0 </col>
-  <name> Kidney-ArcuateArtery.Stenosis </name>
+  <name> RightKidney-ArcuateArtery.Stenosis </name>
   <listname> Kidney-ArcuateArtery.Stenosis </listname>
-  <label> Stenosis </label>
+  <label> Right Stenosis </label>
 </slidebar>
 
 <showvalue>
   <row> 2.8 </row><col> 1.0 </col>
-  <name> Kidney-ArcuateArtery.Pressure </name>
+  <name> RightKidney-ArcuateArtery.Pressure </name>
   <format><decimal> 1 </decimal></format>
-  <label> Arcuate Artery Pressure </label>
+  <label> Right Arcuate Artery Pressure </label>
+</showvalue>
+
+<slidebar>
+  <row> 4.2 </row><col> 1.0 </col>
+  <name> LeftKidney-ArcuateArtery.Stenosis </name>
+  <listname> Kidney-ArcuateArtery.Stenosis </listname>
+  <label> Left Stenosis </label>
+</slidebar>
+
+<showvalue>
+  <row> 5.6 </row><col> 1.0 </col>
+  <name> LeftKidney-ArcuateArtery.Pressure </name>
+  <format><decimal> 1 </decimal></format>
+  <label> Left Arcuate Artery Pressure </label>
 </showvalue>
 
 </groupbox>

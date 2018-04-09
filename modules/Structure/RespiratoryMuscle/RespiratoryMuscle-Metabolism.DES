@@ -1,9 +1,9 @@
 HumMod / RespiratoryMuscle-Metabolism
 
 Created : 31-Mar-05
-Revised : 2012-07-18
+Revised : 2013-02-09
 Author : Tom Coleman
-Copyright : 2006-2012
+Copyright : 2006-2013
 By : University Of Mississippi Medical Center
 
 <structure><name> RespiratoryMuscle-Metabolism </name>
@@ -54,7 +54,7 @@ By : University Of Mississippi Medical Center
 
 <def>
   <name> ShiveringCals </name>
-  <val> 0.0 </val>
+  <val> HeatShivering.RespiratoryCals </val>
 </def>
 
 <def>

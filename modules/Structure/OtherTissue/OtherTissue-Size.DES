@@ -1,9 +1,9 @@
 HumMod / OtherTissue-Size
 
 Created : 31-Mar-05
-Revised : 2012-03-21
+Revised : 2013-03-01
 Author : Tom Coleman
-Copyright : 2006-2012
+Copyright : 2006-2013
 By : University Of Mississippi Medical Center
 
 <structure><name> OtherTissue-Size </name>
@@ -15,7 +15,6 @@ By : University Of Mississippi Medical Center
 <var><name> InitialMass </name></var>
 <var><name> Density </name></var>
 <var><name> LiquidMass </name></var>
-<constant><name> LiquidDensity </name><val> 1.00 </val></constant>
 
 <var><name> LiquidVol </name></var>
 <var><name> InitialLiquidVol </name></var>
@@ -23,7 +22,6 @@ By : University Of Mississippi Medical Center
 <var><name> SolidMass </name></var>
 <var><name> InitialSolidMass </name></var>
 
-<constant><name> SolidDensity </name><val> 1.17 </val></constant>
 <var><name> SolidVol </name></var>
 
 <var><name> FractTotal </name></var>
@@ -34,34 +32,11 @@ By : University Of Mississippi Medical Center
 <var><name> CellH2O </name></var>
 <var><name> InitialCellH2O </name></var>
 
-<constant>
-  <name> H2OFractMass </name>
-  <val> 0.67 </val>
-</constant>
-
-<var><name> SolidsFractMass </name></var>
-
 </variables>
 
 <definitions>
 
 <block><name> Init </name>
-
-<def>
-  <name> InitialLiquidVol </name>
-  <val> H2OFractMass * InitialMass / LiquidDensity </val>
-</def>
-
-<def>
-  <name> SolidsFractMass </name>
-  <val> 1.0 - H2OFractMass </val>
-</def>
-
-<def>
-  <name> InitialSolidMass </name>
-  <val> SolidsFractMass * InitialMass </val>
-</def>
-
 </block>
 
 <block><name> ScaleH2O </name>
@@ -102,7 +77,7 @@ By : University Of Mississippi Medical Center
 
 <def>
   <name> LiquidMass </name>
-  <val> LiquidVol * LiquidDensity </val>
+  <val> LiquidVol * Density.H2O </val>
 </def>
 
 <def>
@@ -112,7 +87,7 @@ By : University Of Mississippi Medical Center
 
 <def>
   <name> SolidVol </name>
-  <val> SolidMass / SolidDensity </val>
+  <val> SolidMass / Density.Tissue </val>
 </def>
 
 <def>

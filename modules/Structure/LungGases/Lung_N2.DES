@@ -29,7 +29,7 @@ By : University Of Mississippi Medical Center
   <integralname> Mass </integralname>
   <initialval> 1800 </initialval>
   <dervname> Change </dervname>
-  <errorlim> 18 </errorlim>
+  <errorlim> 54 </errorlim>
   <dxmaxname> DxMax </dxmaxname>
 </stablediffeq>
 
@@ -68,7 +68,11 @@ By : University Of Mississippi Medical Center
     <val> DiffusingCapacity * ( pN2 - BodyN2.pN2 ) </val>
   </def>
 
+  <def><name> Change </name><val> 0 </val></def>
+<!--  
+
   <def><name> Change </name><val> Gain - Loss </val></def>
+-->
 
   <def>
     <name> DxMax </name>

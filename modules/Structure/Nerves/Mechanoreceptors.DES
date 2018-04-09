@@ -40,13 +40,13 @@ By : University Of Mississippi Medical Center
 
 <curve>
   <name> RightHeartFiring </name>
-  <point><x> 10 </x><y> 20 </y><slope> 0 </slope></point>
+  <point><x> 10 </x><y> 20 </y><slope> 0 </slope></point>20
   <point><x> 20 </x><y>  1 </y><slope> 0 </slope></point>
 </curve>
 
 <curve>
   <name> LeftHeartFiring </name>
-  <point><x> 10 </x><y> 20 </y><slope> 0 </slope></point>
+  <point><x> 10 </x><y> 20 </y><slope> 0 </slope></point>20
   <point><x> 20 </x><y>  1 </y><slope> 0 </slope></point>
 </curve>
 

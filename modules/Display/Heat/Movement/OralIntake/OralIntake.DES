@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Miscellaneous\Heat\Movement\OralIntake\ ?>
+<?path Display\Heat\Movement\OralIntake\ ?>
 
 <?include Summary.DES ?>
 

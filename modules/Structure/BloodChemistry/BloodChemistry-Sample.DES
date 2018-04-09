@@ -70,7 +70,7 @@ By : University Of Mississippi Medical Center
 <def><name> [H+] </name><val> BloodPhValues.Veins[H+] </val></def>
 <def><name> [Protein] </name><val> PlasmaProtein.[Protein(G/dL)] </val></def>
 <def><name> ColloidPressure </name><val> PlasmaProtein.COP </val></def>
-<def><name> Osmolarity </name><val> OsmBody.[Osm(mOsm/L)]-CellWall </val></def>
+<def><name> Osmolarity </name><val> OsmBody.CellWall(mOsm/L) </val></def>
 <def><name> Hematocrit(%) </name><val> BloodVol.Hct(%) </val></def>
 <def><name> [Angiotensin] </name><val> A2Pool.[A2(pG/mL)] </val></def>
 <def><name> PlasmaReninActiviy </name><val> ReninPool.[PRA] </val></def>

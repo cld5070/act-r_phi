@@ -14,36 +14,85 @@ Schema : DES V1.0
    <wide> 30.0 </wide>
    <title> Segmental Conductance </title>
 
-<showvalue>
-  <row> 1.4 </row><col> 1.0 </col>
-  <name> Kidney-Flow.Conductance </name>
-  <format><decimal> 1 </decimal></format>
-  <label> Total </label>
-</showvalue>
+<showtable>
+<row> 1.4 </row><col> 1 </col>
 
-<showvalue>
-  <row> 2.4 </row><col> 1.0 </col>
-  <name> Kidney-ArcuateArtery.Conductance </name>
-  <format><decimal> 1 </decimal></format>
-  <label> Arcuate Arteries </label>
-</showvalue>
+<column>
+<indent> 0 </indent>
+<fieldwidth> 9 </fieldwidth>
+<justify> LEFT </justify>
 
-<showvalue>
-  <row> 3.4 </row><col> 1.0 </col>
-  <name> Kidney-AfferentArtery.Conductance </name>
-  <format><decimal> 1 </decimal></format>
-  <label> Afferent Arteries </label>
-</showvalue>
+<textcell> </textcell>
+<textcell> Kidney Conductance </textcell>
+<textcell> Arcuate Conductance </textcell>
+<textcell> Afferent Conductance </textcell>
+<textcell> Efferent Conductance </textcell>
 
-<showvalue>
-  <row> 4.4 </row><col> 1.0 </col>
-  <name> Kidney-EfferentArtery.Conductance </name>
-  <format><decimal> 1 </decimal></format>
-  <label> Efferent Arteries </label>
-</showvalue>
+</column>
+
+<column>
+<indent> 9.0 </indent>
+<fieldwidth> 6.0 </fieldwidth>
+<justify> RIGHT </justify>
+
+<textcell> Left </textcell>
+
+<valuecell>
+  <name> LeftKidney-Flow.Conductance </name>
+  <format><decimal> 3 </decimal></format>
+</valuecell>
+
+<valuecell>
+  <name> LeftKidney-ArcuateArtery.Conductance </name>
+  <format><decimal> 3 </decimal></format>
+</valuecell>
+
+<valuecell>
+  <name> LeftKidney-AfferentArtery.Conductance </name>
+  <format><decimal> 3 </decimal></format>
+</valuecell>
+
+<valuecell>
+  <name> LeftKidney-EfferentArtery.Conductance </name>
+  <format><decimal> 3 </decimal></format>
+</valuecell>
+
+</column>
+<column>
+<indent> 15.0 </indent>
+<fieldwidth> 6.0 </fieldwidth>
+<justify> RIGHT </justify>
+
+
+<textcell> Right </textcell>
+
+<valuecell>
+  <name> RightKidney-Flow.Conductance </name>
+  <format><decimal> 3 </decimal></format>
+</valuecell>
+
+<valuecell>
+  <name> RightKidney-ArcuateArtery.Conductance </name>
+  <format><decimal> 3 </decimal></format>
+</valuecell>
+
+<valuecell>
+  <name> RightKidney-AfferentArtery.Conductance </name>
+  <format><decimal> 3 </decimal></format>
+</valuecell>
+
+<valuecell>
+  <name> RightKidney-EfferentArtery.Conductance </name>
+  <format><decimal> 3 </decimal></format>
+</valuecell>
+
+</column>
+</showtable>
+
+
 
 <infobutton>
-  <row> 1.2 </row>
+  <row> 4.2 </row>
   <col> 26.0 </col>
 
   <line> Normal Values </line>

@@ -1,9 +1,9 @@
 HumMod / OrganMass
 
 Created : 2012-03-10
-Revised : 2012-03-10
+Revised : 2013-03-01
 Author : Tom Coleman
-Copyright : 2012-2012
+Copyright : 2012-2013
 By : University of Mississippi Medical Center
 
 <panel><name> Sizing-OrganMass </name>
@@ -51,12 +51,13 @@ By : University of Mississippi Medical Center
 <fieldwidth> 18 </fieldwidth>
 <justify> LEFT </justify>
 
-<textcell> Organs </textcell>
+<textcell> Organ </textcell>
 <textcell> -------------------------------- </textcell>
 <textcell> Bone </textcell>
 <textcell> Brain </textcell>
 <textcell> GI Tract </textcell>
-<textcell> Kidney </textcell>
+<textcell> Right Kidney </textcell>
+<textcell> Left Kidney </textcell>
 <textcell> Left Heart </textcell>
 <textcell> Liver </textcell>
 <textcell> Other Tissue </textcell>
@@ -92,7 +93,12 @@ By : University of Mississippi Medical Center
 </valuecell>
 
 <valuecell>
-  <name> Kidney_Percent </name>
+  <name> RightKidney_Percent </name>
+  <format><decimal> 1 </decimal></format>
+</valuecell>
+
+<valuecell>
+  <name> LeftKidney_Percent </name>
   <format><decimal> 1 </decimal></format>
 </valuecell>
 
@@ -159,7 +165,12 @@ By : University of Mississippi Medical Center
 </valuecell>
 
 <valuecell>
-  <name> Kidney_Mass </name>
+  <name> RightKidney_Mass </name>
+  <format><integer/></format>
+</valuecell>
+
+<valuecell>
+  <name> LeftKidney_Mass </name>
   <format><integer/></format>
 </valuecell>
 

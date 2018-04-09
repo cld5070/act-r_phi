@@ -9,126 +9,58 @@ Copyright : 2009
 
 <vardoc>
 <name> LeptinPump.Rate </name>
-<topic> LeptinPump - Overview </topic>
-<topic> Leptin - Physical Units </topic>
-<topic> Leptin - Concentration UnitsLP </topic>
+<topic> XX </topic>
+<topic> XX </topic>
+<topic> XXXX </topic>
+<seealso> XXX </seealso>
+<seealso> XXX </seealso>
 </vardoc>
 
 <vardoc>
 <name> LeptinPump.Setting </name>
-<topic> Setting - DefinitionLP1 </topic>
-<topic> Leptin - Physical Units </topic>
-<topic> Leptin - Concentration Units </topic>
+<topic> XXX</topic>
+<topic> XXXX </topic>
+<topic> XXX </topic>
+<seealso> XXX </seealso>
+<seealso> XXXX </seealso>
 </vardoc>
 
 <vardoc>
 <name> LeptinPump.Switch </name>
-<topic> Switch - DefinitionLP2 </topic>
-<topic> Leptin - Physical Units </topic>
-<topic> Leptin - Concentration Units </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<seealso> XXXX </seealso>
+<seealso> XXXX </seealso>
 </vardoc>
 
 <topicdoc>
-<name> Leptin - Physical Units</name>
-<label> Physical Units </label>
+<name> XXX</name>
+<label> XXX</label>
 <content>
-
-[Plasma]    pG/mL 
-Fluxes      uG/Min
-
-</content>
-</topicdoc>
-
-<topicdoc>
-<name> Leptin - Concentration UnitsLP  </name>
-<label> Concentration Units  </label>
-<content>
-
-Normal Leptin secretion rate is 1.2uG/Min
-
-Human Data
-Mean (+/- SD) plasma concentrations of leptin were 
-7.5 +/- 9.3 nG/mL. 
-Considine RV, Sinha MK, Heiman ML, Kriauciunas A,
-Stephens TW, Nyce MR, Ohannesian JP, Marco CC, McKee LJ,
-Bauer TL, Caro JF. Serum immunoreactive-leptin
-concentrations in normal-weight and obese humans.
-N Engl J Med 334; 292 - 295, 1996.
-
-A typical concentration is 8.0 +/- 1.2 nG/mL. 
-Stenvinkel P, Heimburger O, Lonnqvist F. Serum leptin
-concentrations correlate to plasma insulin concentrations
-independent of body fat content in chronic renal failure.
-Nephr Dial Transplant 12: 1321 - 1325, 1997.
-
-Wong SL, DePaoli AM, Lee JH, Mantzoros CS. Leptin
-hormonal kinetics in the fed state: effects of
-adipocity, age, and gender on endogenous leptin
-production and clearance.
-J Clin Endocrinol Metab 89: 2672 - 2677, 2004.
-
-Rat Data
-Cumin F, Baum H-P, Levens N. Leptin is cleared from
-the circulation primarily by the kidney. 
-Int J of Obesity 20: 1120 -1126, 1996.
-
-Zeng J, Patterson BW, Klein S, Martin DR, Dagogo-Jack S, 
-Kohrt WM, Miller SB, Landt M. Whole body leptin kinetics
-and renal metabolism in vivo. 
-Am J Physiol 273: E1102 - E1106, 1997.
 
 
 </content>
 </topicdoc>
 
 <topicdoc>
-<name> LeptinPump - Overview </name>
-<label> Overview </label>
+<name> XX </name>
+<label> XXX </label>
 <content>
 
-The LeptinPump enables the model user to change 
-plasma concentration of leptin by infusing the peptide 
-at different rates. Data is taken from a variety of human 
-and animal studies relating infusion rates to plasma 
-concentrations of leptin.
-
-Mice Data
-Halaas JL, Boozer C, Blair-West J, Fidahusein N, Denton DA, 
-Friedman JM. Physiological response to lomg-term peripheral
-and central leptin infusion in lean and obese mice.
-Proc Natl Acad Sci 94: 8878 - 8883, 1997.
-
-Rat Data
-Shek EW, Brands MW, Hall JE. Chronic leptin infusion increases 
-arterial pressure. Hypertension 31: 409 - 414, 1998.
 
 </content>
 </topicdoc>
 
 <topicdoc>
-<name> Switch - DefinitionLP2 </name>
-<label> Definition </label>
+<name> XXX </name>
+<label> XXX </label>
 <content>
 
-When the LeptinPump switch is turned on, the model 
-user can set infusion rates using the sliding bar 
-feature in the LeptinPump display box. 
 
 </content>
 </topicdoc>
 
-<topicdoc>
-<name> Setting - DefinitionLP1 </name>
-<label> Definition </label>
-<content>
-
-When the LeptinPump switch is turned on, the model 
-user can set infusion rates using the sliding bar 
-feature in the leptin Pump display box. Rates of infusion
-may be increased from 0, in increments of 0.1, up to 
-5 U/Min 
-
-</content>
-</topicdoc>
    
+
 End

@@ -10,11 +10,26 @@ By : University Of Mississippi Medical Center
 
 <variables>
 
-<var><name> Pressure </name></var>
-<parm><name> Stiffness </name><val> 0.015 </val></parm>
+<var><name> Stiffness </name></var>
+<parm><name> X </name><val> 1 </val></parm>
 <var><name> Vol </name></var>
 
 </variables>
+
+<equations>
+
+<stabledelay>
+  <name> Pressure </name>
+  <outputname> Pressure </outputname>
+  <initialval> 1.0 </initialval>
+  <inputname> Pressure-SteadyState </inputname>
+  <rateconstname> K </rateconstname>
+  <dervname> Change </dervname>
+  <errorlim> 0.01 </errorlim>
+  <dxmaxname> DxMax </dxmaxname>
+</stabledelay>
+
+</equations>
 
 <definitions>
 
@@ -27,11 +42,21 @@ By : University Of Mississippi Medical Center
 
 <call> CalcTMP </call>
 
+<def>
+  <name> K </name>
+  <val> 1.0 </val>
+</def>
+
+<def>
+  <name> DxMax </name>
+  <val> 0.1 </val>
+</def>
+
 </block>
 
 <block><name> CalcTMP </name>
 
-<conditional><name> Pressure </name>
+<conditional><name> Pressure-SteadyState </name>
 <test> Pericardium.IsOpen OR ( Vol LT Pericardium-V0.Vol ) </test>
 <true> 0.0 </true>
 <false> EXP ( Stiffness * ( Vol - Pericardium-V0.Vol ) ) - 1.0 </false>

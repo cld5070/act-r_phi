@@ -37,6 +37,8 @@ Schema : DES V1.0
   <to> Pressure </to>
 </copy>
 
+<def><name> Pressure </name><val> Pressure MIN Lung_O2.pO2 </val></def>
+
 <copy>
   <from> O2Artys.[O2] </from>
   <to> HgbConc.[O2] </to>
@@ -49,6 +51,7 @@ Schema : DES V1.0
   <to> Sat(%) </to>
 </copy>
 
+<def><name> Sat(%) </name><val> Sat(%) MIN 100 </val></def>
 </block>
 
 <block><name> ForDisplay </name>

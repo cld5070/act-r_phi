@@ -66,7 +66,7 @@ Schema : DES V1.0
 
 <slidebar>
   <row> 12.2 </row><col> 1.0 </col>
-  <name> BasicRate </name>
+  <name> BasicRateTarget </name>
   <listname> SANode-Rate.BasicRate </listname>
   <label> Basic Rate </label>
 </slidebar>

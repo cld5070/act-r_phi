@@ -62,7 +62,7 @@ By : University Of Mississippi Medical Center
 
 <showvalue>
    <row> 14.0 </row><col> 1.0 </col>
-   <name> SteadyState </name>
+   <name> TargetSynthesis  </name>
    <format><decimal> 1 </decimal></format>
    <label> SteadyState </label>
 </showvalue>

@@ -14,7 +14,7 @@ Schema : DES V1.0
    <wide> 30.0 </wide>
    <title> Balance </title>
 
-<structurename> MT_InterstitialProtein </structurename>
+<structurename> Torso_Middle_InterstitialProtein </structurename>
 
 <showvalue>
    <row> 1.4 </row><col> 1.0 </col>

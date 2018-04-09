@@ -28,6 +28,8 @@ Schema : 2005.0
 <?include Control.DES ?>
 <?include Setup.DES ?>
 
+<?include ThoraxControl.DES ?>
+<?include ThoraxSetup.DES ?>
 </panel>
 
 End

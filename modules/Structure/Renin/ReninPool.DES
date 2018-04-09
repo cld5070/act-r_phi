@@ -22,7 +22,7 @@ Schema : DES V1.0
 <var><name> Gain </name></var>
 <var><name> Loss </name></var>
 
-<var><name> Target[PRA] </name><val> 2.0 </val></var>
+<var><name> Target[PRA] </name><val> 1.0 </val></var>
 <var><name> InitialMass </name></var>
 
 </variables>
@@ -71,7 +71,7 @@ Schema : DES V1.0
 
 <def>
   <name> Gain </name>
-  <val> ReninSecretion.Rate + ReninTumor.Rate </val>
+  <val> LeftReninSecretion.Rate + RightReninSecretion.Rate + ReninTumor.Rate </val>
 </def>
 
 <def>

@@ -16,7 +16,9 @@ By : University of Mississippi Medical Center
 <parm><name> AVBlock </name><val> FALSE </val></parm>
 
 <var><name> IntrinsicRate </name></var>
-<parm><name> BasicRate </name><val> 45.0 </val></parm>
+
+<var><name> BasicRate </name></var>
+<parm><name> BasicRateTarget </name><val> 45.0 </val></parm>
 
 <var><name> Is_VentricularRhythm </name><val> FALSE </val></var>
 
@@ -26,6 +28,7 @@ By : University of Mississippi Medical Center
 
 <block><name> Calc </name>
 
+<def><name> BasicRate </name><val> BasicRateTarget </val></def>
 <def><name> IntrinsicRate </name><val> BasicRate * LeftHeart-Function.Effect </val></def>
 
 <def><name> SANode-Rate.Is_SinusRhythm </name><val> FALSE </val></def>

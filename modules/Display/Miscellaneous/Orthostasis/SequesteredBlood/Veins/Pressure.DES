@@ -1,7 +1,7 @@
 HumMod / Pressure
 
 Created : 19-Jun-05
-Revised : 2012-02-01
+Revised : 2012-03-14
 Author : Tom Coleman
 Copyright : 2006-2012
 By : University Of Mississippi Medical Center
@@ -36,7 +36,7 @@ By : University Of Mississippi Medical Center
   <xaxis>
     <name> Vol </name>
     <label> Volume </label>
-    <scale><min> 0 </min><max> 800 </max><inc> 100 </inc></scale>
+    <scale><min> 0 </min><max> 1200 </max><inc> 200 </inc></scale>
   </xaxis>
 
   <yaxis>

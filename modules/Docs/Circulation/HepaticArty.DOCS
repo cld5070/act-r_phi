@@ -9,14 +9,14 @@ Copyright : 2009
 
 <vardoc>
 <name> HepaticArty.BasicConductance </name>
-<topic> Conductance - DefinitionHA1 </topic>
+<topic> Conductance - Overview </topic>
 <topic> Conductance - Physical Units </topic>
 <topic> Conductance - Concentration Units </topic>
 </vardoc>
 
 <vardoc>
 <name> HepaticArty.Conductance </name>
-<topic> Conductance - DefinitionHA1 </topic>
+<topic> Conductance - Overview </topic>
 <topic> Conductance - Physical Units </topic>
 <topic> Conductance - Concentration Units </topic>
 
@@ -24,7 +24,7 @@ Copyright : 2009
 
 <vardoc>
 <name> HepaticArty.Flow </name>
-<topic> Flow - DefinitionHA2  </topic>
+<topic> Conductance - Overview </topic>
 <topic> Conductance - Physical Units  </topic>
 <topic> Conductance - Concentration Units </topic>
 <seealso> HepaticArty.PressureGradient </seealso>
@@ -33,7 +33,7 @@ Copyright : 2009
 
 <vardoc>
 <name> HepaticArty.PressureGradient </name>
-<topic> PressureGradient - DefinitionHA3 </topic>
+<topic> Conductance - Overview </topic>
 <topic> Conductance - Physical Units </topic>
 <topic> Conductance - Concentration Units  </topic>
 <seealso> SystemicArtys.Pressure </seealso>
@@ -41,8 +41,8 @@ Copyright : 2009
 </vardoc>
 
 <topicdoc>
-<name> Conductance - DefinitionHA1 </name>
-<label> Definition </label>
+<name> Conductance - Overview </name>
+<label> Overview </label>
 <content>
 
 Conductance is a measure of the blood flow through 
@@ -54,19 +54,6 @@ Basic Conductance is conductance when the viscosity is 1.
 
 </content>
 </topicdoc>
-
-<topicdoc>
-<name> Flow - DefinitionHA2 </name>
-<label> Definition </label>
-<content>
-
-Flow is the hepatic artery blood flow.
-
-Flow = PressureGradient * Conductance
-
-</content>
-</topicdoc>
-
 
 <topicdoc>
 <name> Conductance - Physical Units </name>
@@ -94,15 +81,5 @@ Typical conductance units for the hepatic artery are
 </content>
 </topicdoc>
 
-<topicdoc>
-<name> PressureGradient - DefinitionHA3 </name>
-<label> Definition </label>
-<content> 
-
-The pressure gradient is the difference between systemic 
-arterial pressure and splanchnic venous pressure.
-
-</content>
-</topicdoc>
    
 End

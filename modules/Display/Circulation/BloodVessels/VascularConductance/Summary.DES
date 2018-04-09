@@ -50,124 +50,109 @@ Schema : DES V1.0
 
 <showvalue>
    <row> 6.4 </row><col> 3 </col>
-   <name> Kidney-Flow.Conductance </name>
+   <name> RightKidney-Flow.Conductance </name>
    <format><decimal> 2 </decimal></format>
-   <label> Kidney </label>
+   <label> Right Kidney </label>
 </showvalue>
 
 <showvalue>
    <row> 7.4 </row><col> 3 </col>
+   <name> LeftKidney-Flow.Conductance </name>
+   <format><decimal> 2 </decimal></format>
+   <label> LeftKidney </label>
+</showvalue>
+
+<showvalue>
+   <row> 8.4 </row><col> 3 </col>
    <name> LeftHeart-Flow.Conductance </name>
    <format><decimal> 2 </decimal></format>
    <label> Left Heart </label>
 </showvalue>
 
 <showvalue>
-   <row> 8.4 </row><col> 3 </col>
+   <row> 9.4 </row><col> 3 </col>
    <name> OtherTissue-Flow.Conductance </name>
    <format><decimal> 2 </decimal></format>
    <label> Other Tissue </label>
 </showvalue>
 
 <showvalue>
-   <row> 9.4 </row><col> 3 </col>
+   <row> 10.4 </row><col> 3 </col>
    <name> RespiratoryMuscle-Flow.Conductance </name>
    <format><decimal> 2 </decimal></format>
    <label> Respiratory Muscle </label>
 </showvalue>
 
 <showvalue>
-   <row> 10.4 </row><col> 3 </col>
+   <row> 11.4 </row><col> 3 </col>
    <name> RightHeart-Flow.Conductance </name>
    <format><decimal> 2 </decimal></format>
    <label> Right Heart </label>
 </showvalue>
 
 <showvalue>
-   <row> 11.4 </row><col> 3 </col>
+   <row> 12.4 </row><col> 3 </col>
    <name> SkeletalMuscle-Flow.Conductance </name>
    <format><decimal> 2 </decimal></format>
    <label> Skeletal Muscle </label>
 </showvalue>
 
 <showvalue>
-   <row> 12.4 </row><col> 3 </col>
+   <row> 13.4 </row><col> 3 </col>
    <name> Skin-Flow.Conductance </name>
    <format><decimal> 2 </decimal></format>
    <label> Skin </label>
 </showvalue>
 
 <label>
-  <row> 13.8 </row><col> 1.0 </col>
+  <row> 14.8 </row><col> 1.0 </col>
   <text> Splanchnic </text>
   <color> DARKBLUE </color>
 </label>
 
 <showvalue>
-   <row> 14.8 </row><col> 3 </col>
+   <row> 15.8 </row><col> 3 </col>
    <name> GITract-Flow.Conductance </name>
    <format><decimal> 2 </decimal></format>
    <label> GI Tract </label>
 </showvalue>
 
 <showvalue>
-   <row> 15.8 </row><col> 3 </col>
-   <name> HepaticArtery.Conductance </name>
+   <row> 16.8 </row><col> 3 </col>
+   <name> HepaticArtery-Flow.Conductance </name>
    <format><decimal> 2 </decimal></format>
    <label> Hepatic Artery </label>
 </showvalue>
 
 <showvalue>
-   <row> 16.8 </row><col> 3 </col>
+   <row> 17.8 </row><col> 3 </col>
    <name> SplanchnicVeins.Conductance </name>
    <format><decimal> 1 </decimal></format>
    <label> Hepatic Vein </label>
 </showvalue>
 
 <label>
-  <row> 18.2 </row><col> 1.0 </col>
-  <text> Heart </text>
-  <color> DARKBLUE </color>
-</label>
-
-<!--
-<showvalue>
-   <row> 19.2 </row><col> 3 </col>
-   <name> RightAtrium.Conductance </name>
-   <format><decimal> 1 </decimal></format>
-   <label> Right Atrium </label>
-</showvalue>
-
-<showvalue>
-   <row> 20.2 </row><col> 3 </col>
-   <name> LeftAtrium.Conductance </name>
-   <format><decimal> 1 </decimal></format>
-   <label> Left Atrium </label>
-</showvalue>
--->
-
-<label>
-  <row> 21.6 </row><col> 1.0 </col>
+  <row> 20.2 </row><col> 1.0 </col>
   <text> Lungs </text>
   <color> DARKBLUE </color>
 </label>
 
 <showvalue>
-   <row> 22.6 </row><col> 3 </col>
+   <row> 21.2 </row><col> 3 </col>
    <name> PulmArty.Conductance </name>
    <format><decimal> 1 </decimal></format>
    <label> Pulmonary Artery </label>
 </showvalue>
 
 <showvalue>
-   <row> 23.6 </row><col> 3 </col>
+   <row> 22.2 </row><col> 3 </col>
    <name> PulmCapys.Conductance </name>
    <format><decimal> 1 </decimal></format>
    <label> Pulmonary Capillaries </label>
 </showvalue>
 
 <showvalue>
-   <row> 24.6 </row><col> 3 </col>
+   <row> 23.2 </row><col> 3 </col>
    <name> PulmVeins.Conductance </name>
    <format><decimal> 1 </decimal></format>
    <label> Pulmonary Veins </label>

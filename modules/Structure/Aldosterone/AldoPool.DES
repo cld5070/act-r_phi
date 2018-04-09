@@ -19,7 +19,9 @@ By : University Of Mississippi Medical Center
 <var><name> Gain </name></var>
 <var><name> Loss </name></var>
 
-<var><name> Target[Aldo] </name><val> 0.330 </val></var>
+<var><name> Target[Aldo] </name></var>
+<parm><name> Target[Aldo]Target </name><val> 0.330 </val></parm>
+
 <var><name> InitialMass </name></var>
 
 <parm><name> Clamp </name><val> FALSE </val></parm>
@@ -41,7 +43,7 @@ By : University Of Mississippi Medical Center
 <definitions>
 
 <block><name> Init </name>
-  <def><name> InitialMass </name><val> Target[Aldo] * BodyH2O.InitialVol </val></def>
+  <def><name> InitialMass </name><val> Target[Aldo]Target * BodyH2O.InitialVol </val></def>
   <def><name> Mass </name><val> InitialMass </val></def>
 </block>
 

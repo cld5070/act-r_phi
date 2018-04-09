@@ -1,9 +1,9 @@
 HumMod | CorticotropinReleasingFactor
 
 Created : 2011-07-30
-Last Modified : 2011-07-30
+Revised : 2013-03-20
 Author : Tom Coleman
-Copyright : 2011-2011
+Copyright : 2011-2013
 By : University of Mississippi Medical Center
 
 <panel><name> CorticotropinReleasingFactor </name>
@@ -30,10 +30,8 @@ By : University of Mississippi Medical Center
 
 <?path Display\Hormones\CorticotropinReleasingFactor\ ?>
 
-<?include TotalEffect.DES ?>
-
-<?include Stress.DES ?>
-<?include Cortisol.DES ?>
+<?include LeftBox.DES ?>
+<?include RightBox.DES ?>
 
 </panel>
 

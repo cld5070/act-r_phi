@@ -65,12 +65,6 @@ Schema : DES V1.0
    <label> Loss </label>
 </showvalue>
 
-<showvalue>
-   <row> 8.8 </row><col> 3 </col>
-   <name> Degradation </name>
-   <format><decimal> 4 </decimal></format>
-   <label> Degradation </label>
-</showvalue>
 
 <showvalue>
    <row> 9.8 </row><col> 3 </col>
@@ -95,7 +89,7 @@ Schema : DES V1.0
 
 <showvalue>
    <row> 12.8 </row><col> 3 </col>
-   <name> CD_Protein.Outflow </name>
+   <name> CollectingDuct_Protein.Outflow </name>
    <format><decimal> 4 </decimal></format>
    <label> Urine </label>
 </showvalue>

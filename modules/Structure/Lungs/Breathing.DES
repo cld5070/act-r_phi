@@ -16,7 +16,8 @@ We need both BTPS and STPD volumes.
 <constant><name> CPR           </name><val> 1 </val></constant>
 <constant><name> VENTILATOR    </name><val> 2 </val></constant>
 <constant><name> BREATHHOLDING </name><val> 3 </val></constant>
-<constant><name> NONE          </name><val> 4 </val></constant>
+<constant><name> CONTROLLED </name><val> 4 </val></constant>
+<constant><name> NONE          </name><val> 5 </val></constant>
 
 <var><name> Type </name><val> 0 </val></var>
 <var><name> TotalVentilation </name></var>
@@ -38,43 +39,69 @@ We need both BTPS and STPD volumes.
 <var><name> TidalVolume(STPD) </name></var>
 <var><name> DeadSpace(STPD) </name></var>
 <var><name> AlveolarVolume(STPD) </name></var>
+<var><name> Drive </name></var>
+<!-- Added by Chris Dancy -->
+<var><name> PulmStretchEffect </name><val> 1 </val></var>
+<var><name> TidalInspRatio </name></var>
 
+<parm><name> Blockage </name><val> 0 </val></parm>
 </variables>
 
 <functions>
 
-<curve>
-  <name> DriveOnTidalVolume </name>
-  <point><x>  0 </x><y>    0 </y><slope>   0 </slope></point>
-  <point><x>  1 </x><y>  550 </y><slope> 400 </slope></point>
-  <point><x> 10 </x><y> 2630 </y><slope>   0 </slope></point>
-</curve>
+<!-- Chris Dancy
+	Curve for Pulmonary Effect
+	We assume our normal effect is centered around half normal tidal volume percentage -->
+
+	<curve>
+		<name> PulmStretchEffect </name>
+		<point><x>  0 </x><y> 0 </y><slope> 0 </slope></point>
+		<point><x>  0.14 </x><y>  1 </y><slope> 3 </slope></point>
+		<point><x> 1 </x><y> 2 </y><slope>   0 </slope></point>
+	</curve>
+
+	<curve>
+		<name> DriveOnTidalVolume </name>
+		<point><x>  0 </x><y>    0 </y><slope>   0 </slope></point>
+		<point><x>  1 </x><y>  550 </y><slope> 400 </slope></point>
+		<point><x> 10 </x><y> 2630 </y><slope>   0 </slope></point>
+	</curve>
+
 
 </functions>
 
 <definitions>
 <block><name> Calc </name>
 
+<def><name> Drive </name><val>         DriveOnTidalVolume [ RespiratoryCenter-Output.MotorNerveActivity ]
+			* Thorax.LungInflation
+			* ( 1 - Blockage )
+			* RespiratoryMuscle-Function.Effect </val></def>
 <testcase>
 
 <case><test> Ventilator.Switch </test>
-  <call> Ventilator </call>
+	<call> Ventilator </call>
 </case>
 
 <case><test> CPR-Lungs.Status EQ CPR-Lungs.ACTIVE </test>
-  <call> CPR </call>
+	<call> CPR </call>
 </case>
 
 <case><test> Type EQ BREATHHOLDING </test>
-  <call> BreathHolding </call>
+	<call> BreathHolding </call>
+</case>
+
+<case>
+	<test> ControlledBreathing.ControlledBreathing </test>
+	<call> Controlled </call>
 </case>
 
 <case><test> Type EQ NONE </test>
-  <call> None </call>
+	<call> None </call>
 </case>
 
 <case><test> TRUE </test>
-  <call> Spontaneous </call>
+	<call> Spontaneous </call>
 </case>
 
 </testcase>
@@ -82,10 +109,10 @@ We need both BTPS and STPD volumes.
 <def><name> DeadSpace </name><val> DeadSpaceSlope * TidalVolume + DeadSpaceMin </val></def>
 
 <conditional>
-  <name> DeadSpaceFract </name>
-  <test> TidalVolume GT 0.0 </test>
-  <true> DeadSpace / TidalVolume </true>
-  <false> UNDEFINED </false>
+	<name> DeadSpaceFract </name>
+	<test> TidalVolume GT 0.0 </test>
+	<true> DeadSpace / TidalVolume </true>
+	<false> UNDEFINED </false>
 </conditional>
 
 <def><name> AlveolarVolume </name><val> ( TidalVolume - DeadSpace ) MAX 0 </val></def>
@@ -95,11 +122,11 @@ We need both BTPS and STPD volumes.
 <def><name> AlveolarVentilation(L) </name><val> AlveolarVentilation / 1000.0 </val></def>
 
 <copy><from> TidalVolume </from><to> BTPS_To_STPD.V1 </to></copy>
-  <call> BTPS_To_STPD.Calc </call>
+	<call> BTPS_To_STPD.Calc </call>
 <copy><from> BTPS_To_STPD.V2 </from><to> TidalVolume(STPD) </to></copy>
 
 <copy><from> DeadSpace </from><to> BTPS_To_STPD.V1 </to></copy>
-  <call> BTPS_To_STPD.Calc </call>
+	<call> BTPS_To_STPD.Calc </call>
 <copy><from> BTPS_To_STPD.V2 </from><to> DeadSpace(STPD) </to></copy>
 
 <def><name> AlveolarVolume(STPD) </name><val> TidalVolume(STPD) - DeadSpace(STPD) </val></def>
@@ -111,44 +138,55 @@ We need both BTPS and STPD volumes.
 </block>
 
 <block><name> Spontaneous </name>
-  <def><name> Type </name><val> SPONTANEOUS </val></def>
-  <def><name> RespRate </name><val> RespiratoryCenter-Output.Rate </val></def>
-  <def><name> TidalVolumeBasic </name>
-    <val>
-        DriveOnTidalVolume [ RespiratoryCenter-Output.MotorNerveActivity ]
-      * Thorax.LungInflation
-      * RespiratoryMuscle-Function.Effect
-    </val>
-  </def>
-  <def><name> TidalVolume </name><val> ( TidalVolumeBasic - ExcessLungWater.Volume ) MAX 0.0 </val></def>
+	<def><name> Type </name><val> SPONTANEOUS </val></def>
+	<def><name> RespRate </name><val> RespiratoryCenter-Output.Rate </val></def>
+	<def><name> TidalVolumeBasic </name>
+		<val>
+Drive
+		</val>
+	</def>
+	<def><name> TidalVolume </name><val> ( TidalVolumeBasic - ExcessLungWater.Volume ) MAX 0.0 </val></def>
+	<def><name> TidalInspRatio </name><val> TidalVolume / 3500 </val></def>
+	<def><name> PulmStretchEffect </name><val> PulmStretchEffect [ TidalInspRatio ] </val></def>
+</block>
+
+<!-- Chris Dancy -->
+<block><name> Controlled </name>
+	<def><name> Type </name><val> CONTROLLED </val></def>
+	<def><name> RespRate </name><val> ControlledBreathing.RespRate </val></def>
+	<def><name> TidalVolumeBasic </name><val> ControlledBreathing.TidalVolume </val></def>
+	<def><name> TidalVolume </name><val> ControlledBreathing.TidalVolume </val></def>
+	<def><name> PulmStretchEffect </name><val> ControlledBreathing.PulmStretchEffect </val></def>
 </block>
 
 <block><name> CPR </name>
-  <def><name> Type </name><val> CPR </val></def>
-  <def><name> RespRate </name><val> CPR-Lungs.Rate </val></def>
-  <def><name> TidalVolumeBasic </name><val> CPR-Lungs.Volume </val></def>
-  <def><name> TidalVolume </name><val> CPR-Lungs.Volume </val></def>
+	<def><name> Type </name><val> CPR </val></def>
+	<def><name> RespRate </name><val> CPR-Lungs.Rate </val></def>
+	<def><name> TidalVolumeBasic </name><val> CPR-Lungs.Volume </val></def>
+	<def><name> TidalVolume </name><val> CPR-Lungs.Volume </val></def>
 </block>
 
 <block><name> Ventilator </name>
-  <def><name> Type </name><val> VENTILATOR </val></def>
-  <def><name> RespRate </name><val> Ventilator.Rate </val></def>
-  <def><name> TidalVolumeBasic </name><val> Ventilator.TidalVolume </val></def>
-  <def><name> TidalVolume </name><val> Ventilator.TidalVolume </val></def>
+	<def><name> Type </name><val> VENTILATOR </val></def>
+	<def><name> RespRate </name><val> Ventilator.Rate </val></def>
+	<def><name> TidalVolumeBasic </name><val> Ventilator.TidalVolume </val></def>
+	<def><name> TidalVolume </name><val> Ventilator.TidalVolume </val></def>
+	<def><name> TidalInspRatio </name><val> TidalVolume / 3500 </val></def>
+	<def><name> PulmStretchEffect </name><val> PulmStretchEffect [ TidalInspRatio ] </val></def>
 </block>
 
 <block><name> BreathHolding </name>
-  <def><name> Type </name><val> BREATHHOLDING </val></def>
-  <def><name> RespRate </name><val> 0 </val></def>
-  <def><name> TidalVolumeBasic </name><val> 0 </val></def>
-  <def><name> TidalVolume </name><val> 0 </val></def>
+	<def><name> Type </name><val> BREATHHOLDING </val></def>
+	<def><name> RespRate </name><val> 0 </val></def>
+	<def><name> TidalVolumeBasic </name><val> 0 </val></def>
+	<def><name> TidalVolume </name><val> 0 </val></def>
 </block>
 
 <block><name> None </name>
-  <def><name> Type </name><val> NONE </val></def>
-  <def><name> RespRate </name><val> 0 </val></def>
-  <def><name> TidalVolumeBasic </name><val> 0 </val></def>
-  <def><name> TidalVolume </name><val> 0 </val></def>
+	<def><name> Type </name><val> NONE </val></def>
+	<def><name> RespRate </name><val> 0 </val></def>
+	<def><name> TidalVolumeBasic </name><val> 0 </val></def>
+	<def><name> TidalVolume </name><val> 0 </val></def>
 </block>
 
 </definitions>

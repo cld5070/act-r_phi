@@ -38,7 +38,7 @@ By : University of Mississippi Medical Center
 
 <block><name> Dervs </name>
 
-  <def><name> Change </name><val> CD_Urea.Outflow </val></def>
+  <def><name> Change </name><val> CollectingDuct_Urea.Outflow </val></def>
 
 </block>
 

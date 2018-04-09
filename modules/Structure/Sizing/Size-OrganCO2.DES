@@ -15,7 +15,8 @@ By : University Of Mississippi Medical Center
 <call> Brain-CO2.Init </call>
 <call> Fat-CO2.Init </call>
 <call> GITract-CO2.Init </call>
-<call> Kidney-CO2.Init </call>
+<call> RightKidney-CO2.Init </call>
+<call> LeftKidney-CO2.Init </call>
 <call> LeftHeart-CO2.Init </call>
 <call> Liver-CO2.Init </call>
 <call> OtherTissue-CO2.Init </call>

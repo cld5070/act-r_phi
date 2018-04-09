@@ -15,7 +15,9 @@ By : University Of Mississippi Medical Center
 <var><name> BasicConductance </name></var>
 <parm><name> Multiplier </name><val> 1.0 </val></parm>
 <var><name> NominalConductance </name></var>
-<constant><name> Conductance(/G) </name><val> 0.00497 </val></constant>
+<constant><name> Conductance(/G) </name><val> 0.00597 </val></constant>0.00497
+<parm><name> Clamp </name><val> FALSE </val></parm>
+<parm><name> Level </name><val> 0.0 </val></parm>
 
 <var><name> PO2OnTension </name></var>
 <var><name> PCO2OnTension </name></var>
@@ -36,9 +38,9 @@ By : University Of Mississippi Medical Center
 <impliciteq>
   <name> PO2 </name>
   <startname> PO2 </startname>
-  <initialval> 37.0 </initialval>
+  <initialval> 31.5 </initialval>
   <endname> PO2End </endname>
-  <errorlim> 0.37 </errorlim>
+  <errorlim> 1.37 </errorlim>
   <searchmin> 0.0 </searchmin>
   <searchmaxname> SearchMax </searchmaxname>
 </impliciteq>
@@ -49,7 +51,7 @@ By : University Of Mississippi Medical Center
 
 <curve>
   <name> PO2OnTension </name>
-  <point><x> 22 </x><y> 0.0 </y><slope> 0 </slope></point>
+  <point><x> 22</x><y> 0.0 </y><slope> 0 </slope></point>
   <point><x> 36 </x><y> 1.0 </y><slope> 0.02 </slope></point>
   <point><x> 60 </x><y> 1.2 </y><slope> 0 </slope></point>
 </curve>
@@ -125,15 +127,16 @@ By : University Of Mississippi Medical Center
   <val> TensionOnConductance [ TotalTension ] </val>
 </def>
 
-<def>
-  <name> Conductance </name>
-  <val>
+<conditional><name> Conductance </name>
+<test> Clamp </test>
+<true> Level </true>
+<false> 
       BasicConductance
     * TensionEffect
     * Viscosity.ConductanceEffect
     * Brain-Vasculature.Effect
-  </val>
-</def>
+</false>
+</conditional>
 
 <def>
   <name> BloodFlow </name>
@@ -168,6 +171,7 @@ By : University Of Mississippi Medical Center
   <from> HgbTissue.pO2 </from>
   <to> PO2End </to>
 </copy>
+
 
 </implicitmath>
 

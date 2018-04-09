@@ -17,9 +17,10 @@ Schema : 2005.0
   <call> Brain-Fuel.Dervs </call>
   <call> Fat-Fuel.Dervs </call>
   <call> GITract-Fuel.Dervs </call>
-  <call> Kidney-Fuel.Dervs </call>
+  <call> LeftKidney-Fuel.Dervs </call>
+  <call> RightKidney-Fuel.Dervs </call>
+  <call> Kidney-Fuel.Calc </call>
   <call> LeftHeart-Fuel.Dervs </call>
-
   <call> OtherTissue-Fuel.Dervs </call>
   <call> RespiratoryMuscle-Fuel.Dervs </call>
   <call> RightHeart-Fuel.Dervs </call>

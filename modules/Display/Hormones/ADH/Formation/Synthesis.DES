@@ -1,30 +1,29 @@
 HumMod / Synthesis
 
 Created : 20-Jun-06
-Last Modified : 26-Jan-10
+Revised : 2013-03-20
 Author : Tom Coleman
-Copyright : 2006-2010
+Copyright : 2006-2013
 By : University Of Mississippi Medical Center
-Schema : DES V1.0
 
 <groupbox>
    <row> 2.0 </row>
    <col> 32.0 </col>
-   <high> 12.6 </high>
+   <high> 13.6 </high>
    <wide> 30.0 </wide>
    <title> Synthesis </title>
 
 <structurename> ADHSynthesis </structurename>
 
 <showvalue>
-   <row> 1.4 </row><col> 1.0 </col>
+   <row> 1.4 </row><col> 1 </col>
    <name> Rate </name>
-   <format><decimal> 2 </decimal></format>
+   <format><decimal> 1 </decimal></format>
    <label> Rate </label>
 </showvalue>
 
 <showgraph>
-  <row> 2.4 </row><col> 1.0 </col><high> 7 </high><wide> 28 </wide>
+  <row> 2.4 </row><col> 1 </col><high> 7 </high><wide> 28 </wide>
   <leftmargin> 6 </leftmargin>
   <xaxis>
     <name> System.X </name>
@@ -42,16 +41,23 @@ Schema : DES V1.0
 </showgraph>
 
 <showvalue>
-   <row> 10.0 </row><col> 1.0 </col>
-   <name> Feedback </name>
-   <format><decimal> 2 </decimal></format>
-   <label> Feedback </label>
+   <row> 10.0 </row><col> 1 </col>
+   <name> Signal </name>
+   <format><decimal> 1 </decimal></format>
+   <label> Signal </label>
 </showvalue>
 
 <showvalue>
-   <row> 11.0 </row><col> 1.0 </col>
+   <row> 11.0 </row><col> 1 </col>
+   <name> mRNA </name>
+   <format><decimal> 1 </decimal></format>
+   <label> mRNA </label>
+</showvalue>
+
+<showvalue>
+   <row> 12.0 </row><col> 1 </col>
    <name> Base </name>
-   <format><decimal> 2 </decimal></format>
+   <format><decimal> 1 </decimal></format>
    <label> Base </label>
 </showvalue>
 

@@ -1,11 +1,10 @@
 HumMod / Goal
 
 Created : 24-Jun-06
-Last Modified : 26-Jan-10
+Revised : 2013-03-15
 Author : Tom Coleman
-Copyright : 2008-2010
+Copyright : 2008-2013
 By : University of Mississippi Medical Center
-Schema : DES V1.0
 
 <panel><name> Diet_Goal </name>
 
@@ -121,27 +120,28 @@ Schema : DES V1.0
   <repeat><reps> 10 </reps><stepsize>  1.0 </stepsize></repeat>
   <repeat><reps> 29 </reps><stepsize> 10.0 </stepsize></repeat>
   <repeat><reps>  4 </reps><stepsize> 50.0 </stepsize></repeat>
+  <repeat><reps>  4 </reps><stepsize> 250.0 </stepsize></repeat>
 </repeatlist>
 
 <slidebar>
   <row> 4.6 </row><col> 32.0 </col>
-  <name> Na+_mMol/Day </name>
+  <name> Salt_mMol/Day </name>
   <listname> Rate </listname>
-  <label> Na+ </label>
+  <label> Salt </label>
 </slidebar>
 
 <slidebar>
   <row> 6.0 </row><col> 32.0 </col>
-  <name> Cl-_mMol/Day </name>
+  <name> KCl_mMol/Day </name>
   <listname> Rate </listname>
-  <label> Cl- </label>
+  <label> KCl </label>
 </slidebar>
 
 <slidebar>
   <row> 7.4 </row><col> 32.0 </col>
-  <name> K+_mMol/Day </name>
+  <name> DietaryK+_mMol/Day </name>
   <listname> Rate </listname>
-  <label> K+ </label>
+  <label> Dietary K+ </label>
 </slidebar>
 
 <repeatlist>
@@ -170,18 +170,28 @@ Schema : DES V1.0
   <label> SO4-- </label>
 </slidebar>
 
-<infobutton>
+<showvalue>
+   <row> 13.0 </row><col> 43 </col>
+   <name> NH4+_mMol/Day </name>
+   <format><integer/></format>
+   <label> NH4+ </label>
+</showvalue> <showvalue>
+   <row> 14.4 </row><col> 43 </col>
+   <name> HCO3-_mMol/Day </name>
+   <format><integer/></format>
+   <label> HCO3- </label>
+</showvalue> <infobutton>
   <row> 2.8 </row>
   <col> 58.0 </col>
 
-  <line> Typical values for mEq/Day are </line>
+  <line> Typical values for mMol/Day are </line>
   <line> </line>
   <line> Na+ = 180 </line>
   <line> Cl- = 200 </line>
   <line> K+ = 70 </line>
   <line> Ca++ = 30 </line>
-  <line> PO4--- = 30 </line>
-  <line> SO4-- = 50 </line>
+  <line> PO4--- = 20 </line>
+  <line> SO4-- = 35 </line>
 </infobutton>
 
 </panel>

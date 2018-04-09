@@ -18,9 +18,9 @@
 
 
 (defun m ()
+  (reset)
   (let ((window (open-exp-window "window" :visible nil)))
     (install-device window)
-    (reset)
     (run 2.0)))
 
 
@@ -33,7 +33,7 @@
 
 (chunk-type do-concurrent-tasks)
 (chunk-type type)
-;(chunk-type speak)
+
 
 (add-dm
  (goal isa do-concurrent-tasks))
@@ -47,6 +47,7 @@
       isa type
    +goal>
       isa speak
+   
 )
 
 

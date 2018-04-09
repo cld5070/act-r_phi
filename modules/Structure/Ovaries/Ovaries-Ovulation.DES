@@ -30,7 +30,7 @@ Schema : DES V1.0
   <def><name> Ovaries.Phase </name><val> Ovaries.IS_LUTEAL </val></def>
   <andif>
     <test> AnnounceOvulation </test>
-    <true><page> Ovulation just now. </page></true>
+    <true><!--<page> Ovulation just now. </page>--></true>
   </andif>
 </true>
 </if>

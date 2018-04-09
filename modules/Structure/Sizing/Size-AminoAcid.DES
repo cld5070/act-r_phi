@@ -1,18 +1,17 @@
 HumMod / Size-AminoAcid DES
 
 Created : 21-Aug-09
-Last Modified : 26-Jan-10
+Revised : 2013-02-18
 Author : Tom Coleman
-Copyright : 2008-2010
+Copyright : 2008-2013
 By : University of Mississippi Medical Center
-Schema : DES V1.0
 
 <structure><name> Size-AminoAcid </name>
 
 <definitions>
 
 <block><name> Calc </name>
-  <call> AAPool.Init </call>
+  <call> AminoAcid.Init </call>
 </block>
 
 </definitions>

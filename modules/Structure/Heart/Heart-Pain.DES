@@ -51,7 +51,7 @@ By : University of Mississippi Medical Center
 <if>
 <test> NOT Brain-Function.Comatose </test>
 <true>
-  <page> I have a very BAD pain in my chest. </page>  
+<!--  <page> I have a very BAD pain in my chest. </page>  -->
 </true>
 </if>
 
@@ -62,7 +62,7 @@ By : University of Mississippi Medical Center
 <if>
 <test> NOT Brain-Function.Comatose </test>
 <true>
-  <page> My chest pain is gone. </page>  
+ <!-- <page> My chest pain is gone. </page>  -->
 </true>
 </if>
 

@@ -25,4 +25,10 @@ Schema : DES V1.0
   <parent> CirculatoryProtein </parent>
 </leaf>
 
+<leaf>
+  <name> HetaStarch </name>
+  <label> HetaStarch </label>
+  <parent> CirculatoryProtein </parent>
+</leaf>
+
 End

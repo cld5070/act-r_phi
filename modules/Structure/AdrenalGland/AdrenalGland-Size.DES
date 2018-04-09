@@ -21,13 +21,16 @@ By : University Of Mississippi Medical Center
 <parm><name> CortexMassPercent </name><val> 80 </val></parm>
 
 <var><name> MedullaMass </name></var>
-<var><name> MedullaMassPercent </name></var>
+<parm><name> MedullaMassPercent </name><val> 20 </val></parm>
 
 <var><name> GlomerulosaMass </name></var>
 <parm><name> GlomerulosaMassPercent </name><val> 15 </val></parm>
 
 <var><name> FasciculataMass </name></var>
 <var><name> FasciculataMassPercent </name></var>
+
+<var><name> FibrosisMass </name></var>
+<parm><name> FibrosisMassPercent </name><val> 0 </val></parm>
 
 <var><name> ReticularisMass </name></var>
 <parm><name> ReticularisMassPercent </name><val> 10 </val></parm>
@@ -48,18 +51,24 @@ By : University Of Mississippi Medical Center
 <block><name> Parms </name>
 
 <def>
+  <name> MedullaMass </name>
+  <val> Mass * ( MedullaMassPercent / 100 ) </val>
+</def>
+
+<def>
+  <name> CortexMassPercent </name>
+  <val> 100 - MedullaMassPercent - FibrosisMassPercent </val>
+</def>
+
+
+<def>
   <name> CortexMass </name>
   <val> Mass * ( CortexMassPercent / 100 ) </val>
 </def>
 
 <def>
-  <name> MedullaMassPercent </name>
-  <val> 100 - CortexMassPercent </val>
-</def>
-
-<def>
-  <name> MedullaMass </name>
-  <val> Mass * ( MedullaMassPercent / 100 ) </val>
+  <name> FibrosisMass </name>
+  <val> Mass * ( FibrosisMassPercent / 100 ) </val>
 </def>
 
 <def>

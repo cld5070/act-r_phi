@@ -46,21 +46,21 @@ Schema : 2005.0
 
 <showvalue>
    <row> 11.8 </row><col> 1.0 </col>
-   <name> UT_Vol </name>
+   <name> Torso_Upper_Vol </name>
    <format><decimal> 1 </decimal></format>
    <label> Upper Torso </label>
 </showvalue>
 
 <showvalue>
    <row> 12.8 </row><col> 1.0 </col>
-   <name> MT_Vol </name>
+   <name> Torso_Middle_Vol </name>
    <format><decimal> 1 </decimal></format>
    <label> Middle Torso </label>
 </showvalue>
 
 <showvalue>
    <row> 13.8 </row><col> 1.0 </col>
-   <name> LT_Vol </name>
+   <name> Torso_Lower_Vol </name>
    <format><decimal> 1 </decimal></format>
    <label> Lower Torso </label>
 </showvalue>

@@ -27,11 +27,10 @@ By : University of Mississippi Medical Center
 <timervar><name> AerobicsTimer </name></timervar>
 <timervar><name> MealsTimer </name></timervar>
 
-<var><name> MinutesIntoDay </name><val>0</val></var>
-<var><name> HoursIntoDay </name><val>0</val></var>
+<var><name> MinutesIntoDay </name></var>
+<var><name> HoursIntoDay </name></var>
 <var><name> MinutesUntilMidnight </name></var>
 <var><name> Task </name></var>
-<var><name>TestVar</name></var>
 
 <constant><name> OFF </name><val> 0 </val></constant>
 <constant><name> STARTNOW </name><val> 1 </val></constant>
@@ -97,47 +96,15 @@ By : University of Mississippi Medical Center
   </case>
 
   </testcase>
-  
-  <testcase>
-  <case>
-  <test> ( ROUND ( System.X / 1440 ) ) GT ( System.X / 1440 ) </test>
-  <def>
-   <name>TestVar</name>
-   <val> ( ( ROUND ( ( System.X / 1440.0 ) ) -  ( System.X / 1440 ) ) * 1440 )</val>
-  </def>
-  </case>
-  <case>
-  <test> ( ROUND ( System.X / 1440 ) ) LT ( System.X / 1440 ) </test>
-  <def>
-   <name>TestVar</name>
-   <val> ( ( ( System.X / 1440 ) - ROUND ( ( System.X / 1440.0 ) ) ) * 1440 )</val>
-  </def>
-  </case>
-  </testcase>
 </block>
 
 <block><name> StartWaiting </name>
- <testcase>
-  <case>
-   <test> ( ROUND ( System.X / 1440 ) ) GT ( System.X / 1440 ) </test>
-   <def>
-    <name>MinutesIntoDay</name>
-    <val> ( ( ROUND ( ( System.X / 1440.0 ) ) -  ( System.X / 1440 ) ) * 1440 )</val>
-   </def>
-  </case>
-  <case>
-   <test> ( ROUND ( System.X / 1440 ) ) LT ( System.X / 1440 ) </test>
-   <def>
-    <name>MinutesIntoDay</name>
-    <val> ( ( ( System.X / 1440 ) - ROUND ( ( System.X / 1440.0 ) ) ) * 1440 )</val>
-   </def>
-  </case>
- </testcase>
+  <def><name> MinutesIntoDay </name><val> System.X REM 1440.0 </val></def>
 
   <if>
   <test> MinutesIntoDay </test>
   <true>
-    <message> Daily planner will start at midnight. </message>
+ <!--   <message> Daily planner will start at midnight. </message>-->
     <def><name> Status </name><val> 1 </val></def>
     <timer><name> WaitingTimer </name><val> 1440.0 - MinutesIntoDay </val><state> DOWN </state></timer>
   </true>
@@ -159,7 +126,6 @@ By : University of Mississippi Medical Center
 
 <ontimedout>
   <name> HourTimer </name>
-  <call> ComputeH2D </call>
   <call> NewTask </call>
 </ontimedout>
 
@@ -181,7 +147,7 @@ By : University of Mississippi Medical Center
 </block>
 
 <block><name> Start </name>
-  <message> Daily planner is starting. </message>
+ <!-- <message> Daily planner is starting. </message>-->
   <def><name> Status </name><val> 2 </val></def>
   <call> NewTask </call>
 </block>
@@ -208,8 +174,6 @@ By : University of Mississippi Medical Center
 </block>
 
 <block><name> NewTask </name>
-  
-
   <call> GetTask </call>
 
   <testcase>
@@ -245,27 +209,9 @@ By : University of Mississippi Medical Center
 
 </block>
 
-<block><name> ComputeH2D </name>
- <testcase>
-  <case>
-   <test> ( ROUND ( System.X / 1440 ) ) GT ( System.X / 1440 ) </test>
-   <def>
-    <name> HoursIntoDay </name>
-    <val> ROUND ( ( ( ROUND ( ( System.X / 1440.0 ) ) -  ( System.X / 1440 ) ) * 1440 ) / 60.0 )</val>
-   </def>
-  </case>
-  <case>
-   <test> ( ROUND ( System.X / 1440 ) ) LT ( System.X / 1440 ) </test>
-   <def>
-    <name> HoursIntoDay </name>
-    <val> ROUND ( ( ( ( System.X / 1440 ) - ROUND ( ( System.X / 1440.0 ) ) ) * 1440 ) / 60.0 )</val>
-   </def>
-  </case>
- </testcase>
-</block>
-
 <block><name> GetTask </name>
- 
+  <def><name> HoursIntoDay </name><val> ROUND ( ( System.X REM 1440.0 ) / 60.0 ) </val></def>
+
   <testcase>
 
   <case>

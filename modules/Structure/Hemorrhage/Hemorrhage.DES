@@ -60,12 +60,12 @@ By : University of Mississippi Medical Center
   </false>
 </if>
 
-<def><name> PlasmaRate </name><val> BloodVol.PVCrit * Rate </val></def>
-<def><name> ProteinRate </name><val> PlasmaProtein.[Protein] * PlasmaRate </val></def>
-<def><name> RBCRate </name><val> BloodVol.Hct * Rate </val></def>
-<def><name> NaRate </name><val> NaPool.[Na+] * PlasmaRate </val></def>
-<def><name> KRate </name><val> KPool.[K+] * PlasmaRate </val></def>
-<def><name> ClRate </name><val> ClPool.[Cl-] * PlasmaRate </val></def>
+<def><name> PlasmaRate </name><val> BloodVol.PVCrit * Rate + ThoraxHemorrhage.PlasmaRate</val></def>
+<def><name> ProteinRate </name><val> PlasmaProtein.[Total] * PlasmaRate + ThoraxHemorrhage.ProteinRate</val></def>
+<def><name> RBCRate </name><val> BloodVol.Hct * Rate + ThoraxHemorrhage.RBCRate </val></def>
+<def><name> NaRate </name><val> NaPool.[Na+] * PlasmaRate + ThoraxHemorrhage.NaRate</val></def>
+<def><name> KRate </name><val> KPool.[K+] * PlasmaRate + ThoraxHemorrhage.KRate </val></def>
+<def><name> ClRate </name><val> ClPool.[Cl-] * PlasmaRate + ThoraxHemorrhage.ClRate </val></def>
 
 </block>
 
@@ -80,7 +80,7 @@ By : University of Mississippi Medical Center
   <test> SystemicArtys.Pressure LE 10 </test>
   <true>
     <def><name> Switch </name><val> 0 </val></def>
-    <page> Arterial collapse. Hemorrhage has stopped. </page>
+ <!--   <page> Arterial collapse. Hemorrhage has stopped. </page>-->
   </true>
 </if>
 

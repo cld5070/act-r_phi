@@ -35,7 +35,8 @@ Schema : DES V1.0
 
 <?include TissueLactate.DES ?>
 
-<?include Technical.DES ?>
+<?include LactateMade.DES ?>
+<?include LactateUsed.DES ?>
 
 </panel>
 

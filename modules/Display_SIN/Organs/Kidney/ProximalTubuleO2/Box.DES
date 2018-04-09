@@ -1,0 +1,145 @@
+HumMod / Box
+
+Created : 2012-08-06
+Revised : 2012-08-06
+Author : Tom Coleman
+Copyright : 2012-2012
+By : University of Mississippi Medical Center
+
+<structurename> Kidney-ProximalTubuleO2 </structurename>
+
+<groupbox>
+   <row> 2.0 </row>
+   <col> 1.0 </col>
+   <high> 25.8 </high>
+   <wide> 30.0 </wide>
+
+<showvalue>
+   <row> 1.4 </row><col> 1.0 </col>
+   <name> Tubule[O2] </name>
+   <format><decimal> 3 </decimal></format>
+   <label> Tubule [O2] </label>
+</showvalue>
+
+<showvalue>
+   <row> 2.4 </row><col> 1.0 </col>
+   <name> TubulePO2 </name>
+   <format><decimal> 1 </decimal></format>
+   <label> Tubule pO2 </label>
+</showvalue>
+
+<showgraph>
+  <row> 3.4 </row><col> 1.0 </col><high> 7 </high><wide> 28 </wide>
+  <leftmargin> 5 </leftmargin>
+  <xaxis>
+    <name> System.X </name>
+    <label> Time </label>
+    <scale><min> 0 </min><max> 2 </max></scale>
+  </xaxis>
+  <yaxis>
+    <yvar>
+      <name> TubulePO2 </name>
+      <label> pO2 </label>
+      <linecolor> BLUE </linecolor>
+    </yvar>
+    <scale>
+      <min> 20 </min><max> 40 </max><inc> 20 </inc>
+    </scale>
+  </yaxis>
+</showgraph>
+
+<showvalue>
+   <row> 10.8 </row><col> 1.0 </col>
+   <name> O2Artys.[O2] </name>
+   <format><decimal> 3 </decimal></format>
+   <label> Arterial [O2] </label>
+</showvalue>
+
+<showvalue>
+   <row> 11.8 </row><col> 1.0 </col>
+   <name> PO2Artys.Pressure </name>
+   <format><decimal> 1 </decimal></format>
+   <label> Arterial pO2 </label>
+</showvalue>
+
+<showvalue>
+   <row> 13.2 </row><col> 1.0 </col>
+   <name> O2Use </name>
+   <format><decimal> 1 </decimal></format>
+   <label> O2 Use </label>
+</showvalue>
+
+<showgraph>
+  <row> 14.2 </row><col> 1.0 </col><high> 7 </high><wide> 28 </wide>
+  <leftmargin> 5 </leftmargin>
+  <xaxis>
+    <name> System.X </name>
+    <label> Time </label>
+    <scale><min> 0 </min><max> 2 </max></scale>
+  </xaxis>
+  <yaxis>
+    <yvar>
+      <name> O2Use </name>
+      <label> Use </label>
+      <linecolor> BLUE </linecolor>
+    </yvar>
+    <scale>
+      <min> 0 </min><max> 20 </max><inc> 10 </inc>
+    </scale>
+  </yaxis>
+</showgraph>
+
+<showvalue>
+   <row> 21.6 </row><col> 1.0 </col>
+   <name> AerobicFraction </name>
+   <format><decimal> 1 </decimal></format>
+   <label> Aerobic Fraction </label>
+</showvalue>
+
+<showcurve>
+  <row> 22.6 </row><col> 1.0 </col><high> 7 </high><wide> 28 </wide>
+  <leftmargin> 5 </leftmargin>
+
+  <xaxis>
+    <name> TubulePO2 </name>
+    <label> Tubule pO2 </label>
+    <scale>
+      <min> 0 </min><max> 80 </max>
+    </scale>
+  </xaxis>
+
+  <yaxis>
+      <label> Fract </label>
+    <scale>
+      <min> 0 </min><max> 1 </max>
+    </scale>
+  </yaxis>
+
+  <curvename> PO2OnAerobicFraction </curvename>
+</showcurve>
+
+<showvalue>
+   <row> 29.6 </row><col> 1.0 </col>
+   <name> TubulePO2 </name>
+   <format><decimal> 1 </decimal></format>
+   <label> Tubule pO2 </label>
+</showvalue>
+
+<showvalue>
+   <row> 31.0 </row><col> 1.0 </col>
+   <name> O2Need </name>
+   <format><decimal> 1 </decimal></format>
+   <label> O2 Need </label>
+</showvalue>
+
+<infobutton>
+  <row> 1.2 </row>
+  <col> 26.0 </col>
+
+  <line>  </line>
+  <line>  </line>
+</infobutton>
+
+</groupbox>
+
+End

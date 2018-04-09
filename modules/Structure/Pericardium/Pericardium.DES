@@ -1,11 +1,10 @@
 HumMod / Pericardium
 
 Created : 16-May-05
-Last Modified : 26-Jan-10
+Revised : 2013-02-20
 Author : Tom Coleman
-Copyright : 2006-2010
+Copyright : 2006-2013
 By : University Of Mississippi Medical Center
-Schema : DES V1.0
 
 <?path Structure\Pericardium\ ?>
 
@@ -22,33 +21,52 @@ Schema : DES V1.0
   <var><name> StressedVol </name></var>
 
   <parm><name> IsOpen </name><val> FALSE </val></parm>
+
+  <var><name> InitialStiffness </name></var>
+  <var><name> InitialV0 </name></var>
 </variables>
 
 <definitions>
 
+<block><name> Init </name>
+<def>
+  <name> Pericardium-TMP.Stiffness </name>
+  <val> InitialStiffness </val>
+</def>
+
+<def>
+  <name> Pericardium-V0.Vol </name>
+  <val> InitialV0 </val>
+</def>
+
+
+</block>
+
 <block><name> Calc </name>
+
+<call> Pericardium-Cavity.Calc </call>
+
+</block>
+
+<block><name> Dervs </name>
 
 <def>
   <name> TotalVol </name>
   <val>
        RightHeart-Size.Vol
      + RightAtrium.Vol
-     + RightVentricle.Vol
+     + RightHeartPumping-Diastole.EDV
 
      + LeftHeart-Size.Vol
      + LeftAtrium.Vol
-     + LeftVentricle.Vol
+     + LeftHeartPumping-Diastole.EDV
 
      + Pericardium-Cavity.Vol
   </val>
 </def>
 
 <call> Pericardium-TMP.Calc </call>
-<call> Pericardium-Cavity.Calc </call>
-
-</block>
-
-<block><name> Dervs </name>
+<!--<call> Pericardium-Cavity.Calc </call>-->
 
 <call> Pericardium-Drain.Dervs </call>
 <call> Pericardium-Hemorrhage.Dervs </call>

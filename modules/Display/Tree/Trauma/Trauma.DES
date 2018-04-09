@@ -16,6 +16,7 @@ By : University of Mississippi Medical Center
 
 <?include Acidosis.DES ?>
 <?include A-VFistula.DES ?>
+<?include BluntInjury.DES ?>
 <?include Hemorrhage.DES ?>
 <?include MyocardialInfarction.DES ?>
 <?include Pericardium.DES ?>

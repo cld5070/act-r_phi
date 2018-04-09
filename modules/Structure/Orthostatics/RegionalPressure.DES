@@ -11,6 +11,9 @@ By : University Of Mississippi Medical Center
 <variables>
 
 <parm><name> Alpha </name><val> 0.1667 </val></parm>
+<var><name> AlphaUpper </name><val> 0.343 </val></var>
+<var><name> AlphaMiddle </name><val> 0.343 </val></var>
+<var><name> AlphaLower </name><val> 0.2 </val></var>
 
 <var><name> Brain </name></var>
 <var><name> Carotid </name></var>
@@ -112,13 +115,25 @@ By : University Of Mississippi Medical Center
     MAX 0.0
   </val>
 </def>
+<!--
+<def>
+  <name> AlphaUpper </name><val> UpperVein  / UpperArty </val>
+</def>
 
+<def>
+  <name> AlphaMiddle </name><val> MiddleVein / MiddleArty </val>
+</def>
+
+<def>
+  <name> AlphaLower </name><val> LowerVein / LowerArty </val>
+</def>
+-->
 <def>
   <name> UpperCapy </name>
   <val>
-    ( ( Alpha * UpperArty )
-    + ( ( 1.0 - Alpha ) * UpperVein )
-    )
+    ( ( AlphaUpper * UpperArty )
+    + ( UpperVein )
+    ) / ( 1 + AlphaUpper )
     MAX 0.0 
   </val>
 </def>
@@ -126,9 +141,9 @@ By : University Of Mississippi Medical Center
 <def>
   <name> MiddleCapy </name>
   <val>
-    ( ( Alpha * MiddleArty )
-    + ( ( 1.0 - Alpha ) * MiddleVein )
-    )
+    ( ( AlphaMiddle * MiddleArty )
+    + ( MiddleVein )
+    ) / ( 1 + AlphaMiddle )
     MAX 0.0 
   </val>
 </def>
@@ -136,9 +151,9 @@ By : University Of Mississippi Medical Center
 <def>
   <name> LowerCapy </name>
   <val>
-    ( ( Alpha * LowerArty )
-    + ( ( 1.0 - Alpha ) * LowerVein )
-    )
+    ( ( AlphaLower * LowerArty )
+    + (  LowerVein )
+    ) / ( 1 + AlphaLower )
     MAX 0.0 
   </val>
 </def>

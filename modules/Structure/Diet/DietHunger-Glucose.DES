@@ -33,10 +33,20 @@ By : University of Mississippi Medical Center
 
 <conditional>
   <name> Effect </name>
+  <test> InsulinPump.T2D GE 1 </test>
+  <true> 1 </true>
+  <false> Effect [ GlucosePool.[Glucose(mG/dL)] ] </false>
+</conditional>
+
+<!-- 
+
+<conditional>
+  <name> Effect </name>
   <test> Clamp </test>
   <true> Level </true>
   <false> Effect [ GlucosePool.[Glucose(mG/dL)] ] </false>
 </conditional>
+ -->
 
 </block>
 

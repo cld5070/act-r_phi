@@ -13,14 +13,14 @@ Schema : DES V1.0
    <high> 3.0 </high>
    <wide> 30.0 </wide>
    <title> Technical </title>
-
+<!--
 <showvalue>
   <row> 1.4 </row><col> 1.0 </col>
   <name> BVSeqArtys.DxMax </name>
   <format><decimal> 5 </decimal></format>
   <label> Dx Max </label>
 </showvalue>
-
+-->
 </groupbox>
 
 End

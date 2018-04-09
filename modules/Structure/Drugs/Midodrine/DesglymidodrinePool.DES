@@ -16,6 +16,10 @@ Schema : DES V1.0
 </var>
 
 <var>
+  <name> [Desglymidodrine(nMol)] </name>
+</var>
+
+<var>
   <name> Gain </name>
 </var>
 
@@ -56,6 +60,10 @@ Schema : DES V1.0
   <val> Mass / VolDist </val>
 </def>
 
+<def>
+  <name> [Desglymidodrine(nMol)] </name>
+  <val> [Desglymidodrine] / 254 </val>
+</def>
 </block>
 
 <block><name> Dervs </name>

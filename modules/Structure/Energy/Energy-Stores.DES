@@ -23,7 +23,7 @@ By : University Of Mississippi Medical Center
 
 <def>
   <name> LiverGlycogenCals </name>
-  <val> Energy-Tools.CARBO_KCAL_PER_G * LM_Glycogen.Mass </val>
+  <val> Energy-Tools.CARBO_KCAL_PER_G * LiverMetabolism_Glycogen.Mass </val>
 </def>
 
 <def>

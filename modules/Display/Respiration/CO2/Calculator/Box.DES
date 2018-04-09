@@ -81,7 +81,7 @@ By : University Of Mississippi Medical Center
 </slidebar>
 
 <maplist>
-  <name> k' </name>
+  <name> k </name>
   <map><val> 0.475 </val><img> Muscle </img></map>
   <map><val> 0.760 </val><img> Tissue </img></map>
   <map><val> 1.090 </val><img> Blood </img></map>
@@ -89,23 +89,23 @@ By : University Of Mississippi Medical Center
 
 <slidebar>
   <row> 16.6 </row><col> 1.0 </col>
-  <name> k' </name>
-  <listname> k' </listname>
-  <nolabel/>
+  <name> k </name>
+  <listname> k </listname>
+  <label> k </label>
 </slidebar>
 
 <showvalue>
    <row> 17.8 </row><col> 3.0 </col>
-   <name> k' </name>
+   <name> k </name>
    <format><decimal> 3 </decimal></format>
-   <label> k' </label>
+   <label> k </label>
 </showvalue>
 
 <infobutton>
   <row> 1.2 </row>
   <col> 26.0 </col>
 
-  <line> [HCO3] = k' * [SID] * (pCO2/(p50 + pCO2)) </line>
+  <line> [HCO3] = k * [SID] * (pCO2/(p50 + pCO2)) </line>
   <line>  </line>
   <line>  </line>
 </infobutton>

@@ -22,6 +22,7 @@ By : University of Mississippi Medical Center
 <definitions>
 
 <block><name> Parms </name>
+
   <call> Random.Parms </call>
 
   <call> Context-Gender.Parms </call>
@@ -30,6 +31,7 @@ By : University of Mississippi Medical Center
   <call> Context-Adiposity.Parms </call>
   <call> Context-Muscularity.Parms </call>
   <call> Context-OtherMass.Parms </call>
+
 </block>
 
 <block><name> Calc </name>
@@ -41,7 +43,6 @@ By : University of Mississippi Medical Center
   <call> Context-OtherMass.Calc </call>
 
   <call> Sizing.Calc </call>
-
 </block>
 
 </definitions>

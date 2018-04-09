@@ -19,7 +19,10 @@ By : University of Mississippi Medical Center
 <var><name> Change </name></var>
 
 <var><name> Target[ANP] </name><val> 20.0 </val></var>
+<parm><name> Target[ANP]Target </name><val> 20.0 </val></parm>
+
 <var><name> InitialMass </name></var>
+<var><name> sizeModification </name></var>
 
 <parm><name> Clamp </name><val> FALSE </val></parm>
 <parm><name> Level </name><val> 0.0 </val></parm>
@@ -29,7 +32,7 @@ By : University of Mississippi Medical Center
 <equations>
 
 <backwardeuler>
-  <name> Mass </name>
+  <name> Mass </name> <!-- pmol-->
   <integralname> Mass </integralname>
   <f1name> F1 </f1name>
   <f2name> F2 </f2name>
@@ -42,7 +45,7 @@ By : University of Mississippi Medical Center
 <definitions>
 
 <block><name> Init </name>
-  <def><name> InitialMass </name><val> Target[ANP] * ECFV.InitialVol(L) </val></def>
+  <def><name> InitialMass </name><val> Target[ANP]Target * ECFV.InitialVol(L) * sizeModification </val></def>
   <def><name> Mass </name><val> InitialMass </val></def>
 </block>
 

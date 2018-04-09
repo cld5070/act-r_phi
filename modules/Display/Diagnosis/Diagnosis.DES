@@ -1,14 +1,14 @@
 HumMod / Diagnosis
 
 Created : 2011-07-26
-Revised : 2012-10-31
+Revised : 2013-02-12
 Author : Tom Coleman
-Copyright : 2011-2012
+Copyright : 2011-2013
 By : University of Mississippi Medical Center
 
 <?path Display\Diagnosis\ ?>
 
-<?include Autopsy\Autopsy.DES ?>
+<?include AutopsyReport\AutopsyReport.DES ?>
 <?include BloodChemistry\BloodChemistry.DES ?>
 <?include UrineAnalysis\UrineAnalysis.DES ?>
 <?include Chart\Chart.DES ?>

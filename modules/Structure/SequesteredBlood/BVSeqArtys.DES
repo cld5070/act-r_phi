@@ -13,7 +13,7 @@ By : University Of Mississippi Medical Center
 <var><name> Pressure </name></var>
 <var><name> TMP </name></var>
 
-<parm><name> Conductance </name><val> 4.0 </val></parm>
+<parm><name> Conductance </name><val> 10.0 </val></parm>
 
 <var><name> AlphaAgonistEffect </name></var>
 
@@ -38,7 +38,7 @@ By : University Of Mississippi Medical Center
   <name> VolOnPressure </name>
   <point><x>   0 </x><y>   0 </y><slope> 0 </slope></point>
   <point><x>  50 </x><y>  97 </y><slope> 1.0 </slope></point>
-  <point><x> 200 </x><y> 150 </y><slope> 0.5 </slope></point>
+  <point><x> 200 </x><y> 300 </y><slope> 0.5 </slope></point>
 </curve>
 
 <curve>
@@ -73,14 +73,16 @@ By : University Of Mississippi Medical Center
 
 <block><name> Dervs </name>
 
-<def>
-  <name> DxMax </name>
-  <val> 0.2 </val>
-</def>
 
 <def>
   <name> Change </name>
   <val> Conductance * ( RegionalPressure.LowerArty - Pressure ) </val>
+</def>
+
+
+<def>
+  <name> DxMax </name>
+  <val> ABS ( .1 * Change / Vol ) </val>
 </def>
 
 </block>

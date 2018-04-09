@@ -12,7 +12,7 @@ Schema : 2005.0
 
 <label>
   <row> 0.3 </row><col> 1.0 </col>
-  <text> Oral H2O / Glucose Load </text>
+  <text> Oral H2O / Glucose / Salt Load </text>
 </label>
 
 <showclock>

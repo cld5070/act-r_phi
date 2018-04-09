@@ -15,7 +15,6 @@ Schema : DES V1.0
 <?include AldoSecretion.docs ?>
 <?include AldoPump.docs ?>
 <?include AldoTumor.docs ?>
-<?include AldoDisposal.docs ?>
 
 
 </docs>

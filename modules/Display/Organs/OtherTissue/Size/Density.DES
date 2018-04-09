@@ -23,14 +23,14 @@ Schema : DES V1.0
 
 <showvalue>
    <row> 2.8 </row><col> 3 </col>
-   <name> OtherTissue-Size.LiquidDensity </name>
+   <name> Density.H2O </name>
    <format><decimal> 3 </decimal></format>
    <label> Liquids </label>
 </showvalue>
 
 <showvalue>
    <row> 3.8 </row><col> 3 </col>
-   <name> OtherTissue-Size.SolidDensity</name>
+   <name> Density.Tissue </name>
    <format><decimal> 3 </decimal></format>
    <label> Solids </label>
 </showvalue>

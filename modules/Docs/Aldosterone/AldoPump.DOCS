@@ -15,7 +15,6 @@ Copyright : 2009
 
 <vardoc>
 <name> AldoPump.Setting </name>
-<topic> Setting - DefinitionAP1 </topic>
 <topic> AldoPump - Overview </topic>
 <topic> Aldo - Physical Units </topic>
 <topic> Aldo - Concentration Units </topic>
@@ -23,7 +22,6 @@ Copyright : 2009
 
 <vardoc>
 <name> AldoPump.Switch </name>
-<topic> Switch - DefinitionAP2 </topic>
 <topic> AldoPump - Overview  </topic>
 <topic> Aldo - Physical Units </topic>
 <topic> Aldo - Concentration Units </topic>
@@ -34,55 +32,23 @@ Copyright : 2009
 <label> Overview </label>
 <content>
 
-The AldoPump enables the model user to change 
-[Aldo] levels by infusing aldosterone at different 
-rates. Data is taken from a variety of human and 
-animal studies relating infusion rates to plasma 
-concentrations of Aldosterone
+The Aldo Pump enables the model user to change aldosterone
+levels by infusing aldosterone at different rates. The model 
+user first turns the switch on to activate the pump and then 
+sets the rate of infusion.
 
-When the switch is turned on, the model user sets the 
-rate by changing the setting using the slide bar.
- 
-Dog Data
-WF Ganong, PJ Mulrow. Rate of change in sodium and 
-potassium excretion after injection of aldosterone 
-into the aorta and renal artery of the dog.
+Data is taken from a variety of human and animal studies
+relating infusion rates to plasma concentrations of aldosterone.
+
+WF Ganong, PJ Mulrow. Rate of change in sodium and potassium excretion 
+after injection of aldosterone into the aorta and renal artery of the dog.
 Am J Physiol 195: 337 - 342, 1958.
 
-Pan YJ, Young DB. Experimental aldosterone hypertension 
-in the dog. Hypertension 4: 279 - 287, 1982.
+Pan YJ, Young DB. Experimental aldosterone hypertension in the dog.
+Hypertension 4: 279 - 287, 1982.
 
 </content>
 </topicdoc>
-
-<topicdoc>
-<name> Switch - DefinitionAP2 </name>
-<label> Defintion </label>
-<content>
-
-When the AldoPump switch is turned on, the model 
-user can set infusion rates using the sliding bar 
-feature in the Aldo Pump display box. 
-
-</content>
-</topicdoc>
-
-<topicdoc>
-<name> Setting - DefinitionAP1 </name>
-<label> Defintion </label>
-<content>
-
-When the AldoPump switch is turned on, the model 
-user can set infusion rates using the sliding bar 
-feature in the ADH pump display box. Rates of infusion
-may be increased from 0, in increments of 10, up to 
-4000 pMol/Min.
-
-Normal adrenal aldosterone secretion rate is 330.0 pMol/Min. 
-
-</content>
-</topicdoc>
-
 
 <topicdoc>
 <name> Aldo - Physical Units</name>

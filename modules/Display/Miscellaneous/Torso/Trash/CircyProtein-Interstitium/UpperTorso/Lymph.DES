@@ -14,7 +14,7 @@ Schema : DES V1.0
    <wide> 30.0 </wide>
    <title> Lymph </title>
 
-<structurename> UT_LymphProtein </structurename>
+<structurename> Torso_Upper_LymphProtein </structurename>
 
 <showvalue>
    <row> 1.4 </row><col> 1.0 </col>
@@ -45,14 +45,14 @@ Schema : DES V1.0
 
 <showvalue>
    <row> 11.6 </row><col> 1.0 </col>
-   <name> UT_InterstitialProtein.[Protein] </name>
+   <name> Torso_Upper_InterstitialProtein.[Protein] </name>
    <format><decimal> 4 </decimal></format>
    <label> [Protein] </label>
 </showvalue>
 
 <showvalue>
    <row> 12.6 </row><col> 1.0 </col>
-   <name> UT_LymphWater.Rate </name>
+   <name> Torso_Upper_LymphWater.Rate </name>
    <format><decimal> 3 </decimal></format>
    <label> Lymph Flow </label>
 </showvalue>

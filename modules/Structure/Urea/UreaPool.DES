@@ -1,11 +1,10 @@
 HumMod / UreaPool
 
 Created : 28-May-05
-Last Modified : 26-Jan-10
+Revised : 2013-03-05
 Author : Tom Coleman
-Copyright : 2006-2010
+Copyright : 2006-2013
 By : University Of Mississippi Medical Center
-Schema : DES V1.0
 
 <structure><name> UreaPool </name>
 
@@ -49,13 +48,13 @@ Schema : DES V1.0
 
 <definitions>
 
-<block><name> CalcOsmoles </name>
-  <def><name> Osmoles </name><val> MG_TO_MOSM * Mass </val></def>
+<block><name> Init </name>
+<!-- <def><name> InitialMass </name><val> Target[Urea] * ECFV.Vol </val></def>-->
+  <def><name> Mass </name><val> InitialMass </val></def>
 </block>
 
-<block><name> Init </name>
-  <def><name> InitialMass </name><val> Target[Urea] * ECFV.Vol </val></def>
-  <def><name> Mass </name><val> InitialMass </val></def>
+<block><name> CalcOsmoles </name>
+  <def><name> Osmoles </name><val> MG_TO_MOSM * Mass </val></def>
 </block>
 
 <block><name> CalcConc </name>
@@ -75,8 +74,8 @@ Schema : DES V1.0
 
 <def><name> FluxFromCells </name><val> -1.0 * UreaCell.Change </val></def>
 
-<def><name> Gain </name><val> LM_AminoAcids.Urea + FluxFromCells </val></def>
-<def><name> Loss </name><val> CD_Urea.Outflow </val></def>
+<def><name> Gain </name><val> LiverMetabolism_AminoAcids.Urea + FluxFromCells </val></def>
+<def><name> Loss </name><val> CollectingDuct_Urea.Outflow </val></def>
 
 <def><name> Change </name><val> Gain - Loss </val></def>
 

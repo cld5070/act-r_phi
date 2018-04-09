@@ -1,0 +1,36 @@
+HumMod / SplanchnicCirculation
+
+Created : 04-Apr-08
+Revised : 2012-02-18
+Author : Tom Coleman
+Copyright : 2008-2012
+By : University of Mississippi Medical Center
+
+<?path Structure\SplanchnicCirculation\ ?>
+
+<?include PortalVein\PortalVein.DES ?>
+<?include HepaticArtery\HepaticArtery.DES ?>
+<?include HepaticVein\HepaticVein.DES ?>
+
+<structure><name> SplanchnicCirculation </name>
+
+<definitions>
+
+<block><name> CalcFlow </name>
+
+<call> PortalVein.CalcFlow </call>
+<call> HepaticArtery.CalcFlow </call>
+<call> HepaticVein.CalcFlow </call>
+
+</block>
+
+<block><name> CalcConc </name>
+
+<call> PortalVein.CalcConc </call>
+
+</block>
+
+</definitions>
+</structure>
+
+End

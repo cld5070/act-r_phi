@@ -52,7 +52,7 @@ By : University Of Mississippi Medical Center
   <name> BloodFlow </name>
   <val>
       GITract-Flow.BloodFlow
-    + HepaticArtery.BloodFlow
+    + HepaticArtery-Flow.BloodFlow
   </val>
 </def>
 
@@ -60,7 +60,7 @@ By : University Of Mississippi Medical Center
 <test> BloodFlow GT 0 </test>
 <true>
   ( ( GITract-Flow.[O2] * GITract-Flow.BloodFlow )
-  + ( O2Artys.[O2] * HepaticArtery.BloodFlow ) )
+  + ( O2Artys.[O2] * HepaticArtery-Flow.BloodFlow ) )
   / BloodFlow
 </true>
 <false> 0 </false>

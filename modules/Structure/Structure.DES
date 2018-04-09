@@ -1,9 +1,9 @@
 HumMod / Structure.DES
 
 Created : 21-Oct-04
-Revised : 2012-11-02
+Revised : 2013-03-09
 Author : Tom Coleman
-Copyright : 2008-2012
+Copyright : 2008-2013
 By : University of Mississippi Medical Center
 
 <?path Structure\ ?>
@@ -13,11 +13,12 @@ By : University of Mississippi Medical Center
 
 <?include CO2\CO2.DES ?>
 <?include Hemoglobin\Hemoglobin.DES ?>
-
+<?include Apnea\Apnea.DES ?>
 <?include A-VFistula\A-VFistula.DES ?>
 <?include AcidBase\AcidBase.DES ?>
 <?include Acidosis\Acidosis.DES ?>
 <?include ACTH\ACTH.DES ?>
+<?include ACTH\ACTHTest.DES ?>
 <?include ADH\ADH.DES ?>
 <?include AdrenalGland\AdrenalGland.DES ?>
 <?include AirSupply\AirSupply.DES ?>
@@ -26,10 +27,11 @@ By : University of Mississippi Medical Center
 <?include AminoAcid\AminoAcid.DES ?>
 <?include Anesthesia\Anesthesia.DES ?>
 <?include ANP\ANP.DES ?>
-<?include Autopsy\Autopsy.DES ?>
+<?include AutopsyReport\AutopsyReport.DES ?>
 <?include Bladder\Bladder.DES ?>
 <?include BloodChemistry\BloodChemistry.DES ?>
 <?include BloodIons\BloodIons.DES ?>
+<?include BloodVessels\BloodVessels.DES ?>
 <?include BloodVolume\BloodVolume.DES ?>
 <?include BMI\BMI.DES ?>
 <?include BodyDensity\BodyDensity.DES ?>
@@ -49,12 +51,14 @@ By : University of Mississippi Medical Center
 <?include CircyProtein\CircyProtein.DES ?>
 <?include Cl\Cl.DES ?>
 <?include CO\CO.DES ?>
+<?include CoronarySinus\CoronarySinus.DES ?>
 <?include CorticotropinReleasingFactor\CorticotropinReleasingFactor.DES ?>
 <?include Cortisol\Cortisol.DES ?>
 <?include CPR\CPR.DES ?>
 <?include Creatine\Creatine.DES ?>
 <?include Creatinine\Creatinine.DES ?>
 <?include DailyPlanner\DailyPlanner.DES ?>
+<?include Density\Density.DES ?>
 <?include Diet\Diet.DES ?>
 <?include Drugs\Drugs.DES ?>
 <?include Energy\Energy.DES ?>
@@ -80,8 +84,12 @@ By : University of Mississippi Medical Center
 <?include Heat\Heat.DES ?>
 <?include Height\Height.DES ?>
 <?include Hemodialysis\Hemodialysis.DES ?>
+<?include Hemorrhage\ThoraxHemorrhage.DES ?>
 <?include Hemorrhage\Hemorrhage.DES ?>
+<?include Pain\Pain.DES ?>
+<?include HepaticArtery\HepaticArtery.DES ?>
 <?include HepaticFunction\HepaticFunction.DES ?>
+<?include HepaticVein\HepaticVein.DES ?>
 <?include Hypothalamus\Hypothalamus.DES ?>
 <?include Inhibin\Inhibin.DES ?>
 <?include Infusions\Infusions.DES ?>
@@ -95,6 +103,7 @@ By : University of Mississippi Medical Center
 <?include Lactate\Lactate.DES ?>
 <?include LeftHeart\LeftHeart.DES ?>
 <?include LeftHeartPumping\LeftHeartPumping.DES ?>
+<?include LeftHeartWallStress\LeftHeartWallStress.DES ?>
 <?include Leptin\Leptin.DES ?>
 <?include LH\LH.DES ?>
 <?include LipidDeposits\LipidDeposits.DES ?>
@@ -104,9 +113,11 @@ By : University of Mississippi Medical Center
 <?include LungGases\LungGases.DES ?>
 <?include Lungs\Lungs.DES ?>
 <?include Metabolism\Metabolism.DES ?>
+<?include MineralocorticoidReceptor\MineralocorticoidReceptor.DES ?>
 <?include Na\Na.DES ?>
 <?include Nephrons\Nephrons.DES ?>
 <?include Nerves\Nerves.DES ?>
+<?include OR\OR.DES ?>
 <?include O2\O2.DES ?>
 <?include OralH2OGlucoseLoad\OralH2OGlucoseLoad.DES ?>
 <?include Organs\Organs.DES ?>
@@ -119,18 +130,21 @@ By : University of Mississippi Medical Center
 <?include Peritoneum\Peritoneum.DES ?>
 <?include PituitaryGland\PituitaryGland.DES ?>
 <?include PO4\PO4.DES ?>
+<?include PortalVein\PortalVein.DES ?>
 <?include Posture\Posture.DES ?>
+<?include Pressures\Pressures.DES ?>
+<?include PressureTools\PressureTools.DES ?>
 <?include Progesterone\Progesterone.DES ?>
 <?include Renin\Renin.DES ?>
 <?include RespiratoryCenter\RespiratoryCenter.DES ?>
 <?include RespiratoryMuscle\RespiratoryMuscle.DES ?>
 <?include RightHeart\RightHeart.DES ?>
 <?include RightHeartPumping\RightHeartPumping.DES ?>
+<?include RightHeartWallStress\RightHeartWallStress.DES ?>
 <?include SequesteredBlood\SequesteredBlood.DES ?>
 <?include SkeletalMuscle\SkeletalMuscle.DES ?>
 <?include Skin\Skin.DES ?>
 <?include SO4\SO4.DES ?>
-<?include SplanchnicCirculation\SplanchnicCirculation.DES ?>
 <?include Status\Status.DES ?>
 <?include SurfaceArea\SurfaceArea.DES ?>
 <?include Sweat\Sweat.DES ?>
@@ -140,10 +154,11 @@ By : University of Mississippi Medical Center
 <?include TiltTable\TiltTable.DES ?>
 <?include TissueH2O\TissueH2O.DES ?>
 <?include Transfusion\Transfusion.DES ?>
+<?include Trauma\Trauma.DES ?>
 <?include Triglyceride\Triglyceride.DES ?>
 <?include Urea\Urea.DES ?>
 <?include UrineAnalysis\UrineAnalysis.DES ?>
-<?include VascularCompartments\VascularCompartments.DES ?>
+<?include VenaeCava\VenaeCava.DES ?>
 <?include VenousValves\VenousValves.DES ?>
 <?include VitaminD\VitaminD.DES ?>
 <?include Weight\Weight.DES ?>
@@ -181,15 +196,24 @@ By : University of Mississippi Medical Center
   <call> Ventilator.Calc </call>
 
   <call> Organs-Vasculature.Parms </call>
-  
-  <call> LacPool.Parms </call>
-  <call> PT_NH3.Parms </call>
-  <call> NephronAldo.Parms </call>
-  <call> NephronADH.Parms </call>
-  <call> NephronANP.Parms </call>
 
-  <call> MedullaNa.Parms </call>
-  <call> MedullaUrea.Parms </call>
+  <call> LacPool.Parms </call>
+  <call> RightProximalTubule_NH3.Parms </call>
+  <call> LeftProximalTubule_NH3.Parms </call>
+  <call> RightNephronAldo.Parms </call>
+  <call> LeftNephronAldo.Parms </call>
+
+  <call> RightNephronADH.Parms </call>
+  <call> LeftNephronADH.Parms </call>
+
+  <call> RightNephronANP.Parms </call>
+  <call> LeftNephronANP.Parms </call>
+
+  <call> RightMedullaNa.Parms </call>
+  <call> LeftMedullaNa.Parms </call>
+
+  <call> RightMedullaUrea.Parms </call>
+  <call> LeftMedullaUrea.Parms </call>
 
   <call> Baroreflex.Parms </call>
   <call> LowPressureReceptors.Parms </call>
@@ -216,6 +240,7 @@ By : University of Mississippi Medical Center
   <call> DailyPlannerSchedule.Parms </call>
   <call> DailyPlannerControl.Parms </call>
   <call> OralH2OGlucoseLoad.Parms </call>
+  <call> OGTT.Parms </call>
   <call> IVDrip.Parms </call>
   <call> Hemodialysis.Parms </call>
   <call> PostureControl.Parms </call>
@@ -225,7 +250,9 @@ By : University of Mississippi Medical Center
   <call> GlucosePump.Parms </call>
   <call> KAPump.Parms </call>
   <call> LiverMetabolism.Parms </call>
-  <call> Kidney-Myogenic.Parms </call>
+  <call> RightKidney-Myogenic.Parms </call>
+  <call> LeftKidney-Myogenic.Parms </call>
+
   <call> CPR.Parms </call>
   <call> SkeletalMuscle-MetabolicVasodilation.Parms </call>
   <call> Leptin.Parms </call>
@@ -244,7 +271,7 @@ By : University of Mississippi Medical Center
   <call> CushingResponse.Parms </call>
   <call> ChemoreceptorsCNS.Parms </call>
   <call> Mechanoreceptors.Parms </call>
-  <call> VascularCompartments.Parms </call>
+  <call> BloodVessels.Parms </call>
   <call> PituitaryGland.Parms </call>
   <call> CerebrospinalFluid.Parms </call>
   <call> LungGases.Parms </call>
@@ -252,10 +279,16 @@ By : University of Mississippi Medical Center
   <call> Organs-Metabolism.Parms </call>
   <call> HgbCalculator.Parms </call>
   <call> CO2Calculator.Parms </call>
+  <call> VenaeCava.Parms </call>
+  <call> GlomerulusProtein.Parms </call>
+  <call> CollectingDuct_H2O.Parms </call>
+  <call> ACTHTest.Parms </call>
+  <call> Trauma.Parms </call>
 </block>
 
 <block><name> Dervs </name>
 
+  <call> Pain.Dervs </call>
   <call> BloodVolume.CalcVol </call>
   <call> Transfusion.CalcVol </call>
   <call> TissueH2O.CalcVol </call>
@@ -271,9 +304,7 @@ By : University of Mississippi Medical Center
   <call> BVSeq.Calc </call>
   <call> SystemicVeins.CalcVol </call>
 
-  <call> OsmCell.Calc </call>
-  <call> OsmECFV.Calc </call>
-  <call> OsmBody.Calc </call>
+  <call> Osmoles.Calc </call>
 
   <call> H2O.Calc </call>
   <call> TissueH2O.Calc </call>
@@ -298,6 +329,8 @@ By : University of Mississippi Medical Center
   <call> Testosterone.Conc </call>
   <call> VitaminD.Conc </call>
 
+  <call> RightKidney-NephronCount.Calc </call>
+  <call> LeftKidney-NephronCount.Calc </call>
   <call> Kidney-NephronCount.Calc </call>
 
   <call> Heat.CalcTemp </call>
@@ -318,9 +351,9 @@ By : University of Mississippi Medical Center
   <call> Ca.Conc </call>
 
   <call> CellSID.Calc </call>
-
   <call> ACTH.Conc </call>
   <call> Aldosterone.CalcConc </call>
+  <call> MineralocorticoidReceptor.CalcBinding </call>
   <call> ADH.CalcConc </call>
   <call> Cortisol.Conc </call>
   <call> Insulin.CalcConc </call>
@@ -334,8 +367,13 @@ By : University of Mississippi Medical Center
   <call> DesglymidodrinePool.CalcConc </call>
   <call> Catechols.CalcConc </call>
 
-  <call> PlasmaProtein.CalcConc </call>
+<!--  ****************************************************************here -->
+  <call> AlbuminPool.CalcConc </call>
+  <call> IgGPool.CalcConc </call>
+  <call> AGPPool.CalcConc </call>
+  <call> HetaPool.CalcConc </call>
 
+<call> PlasmaProtein.CalcPressure </call>
   <call> LacPool.CalcConc </call>
 
   <call> KAPool.CalcConc </call>
@@ -343,7 +381,7 @@ By : University of Mississippi Medical Center
   <call> Triglyceride.Conc </call>
   <call> Triglyceride.Rate </call>
   <call> GlucosePool.CalcConc </call>
-  <call> AAPool.CalcConc </call>
+  <call> AminoAcid.Conc </call>
   <call> Urea.CalcConc </call>
   <call> Creatine.Calc </call>
   <call> Creatinine.Conc </call>
@@ -390,28 +428,31 @@ By : University of Mississippi Medical Center
   <call> Hydrostatics.Calc </call>
   <call> Pericardium.Calc </call>
 
-  <call> VascularCompartments.CalcPressure(1) </call>
+  <call> BloodVessels.CalcPressure(1) </call>
 
   <call> RegionalPressure.Calc </call>
 
   <call> CarotidSinus.Calc </call>
   <call> Baroreflex.Calc </call>
+  <call> Mechanoreflex-Renal.Calc </call>
   <call> LowPressureReceptors.Calc </call>
   <call> Mechanoreceptors.Calc </call>
   <call> ChemoreceptorsCNS.Calc </call>
   <call> CushingResponse.Calc </call>
+  <call> GlucoseReceptors.Calc </call>
+  <call> Nucleus-ADH.Calc </call>
+  <call> Nucleus-CRF.Calc </call>
 
   <call> Renin.CalcConc </call>
 
-  <call> SympsCNS.Calc </call>
-  <call> SympsKidy.Calc </call>
-  <call> GangliaGeneral.Calc </call>
-  <call> GangliaKidney.Calc </call>
+  <call> Sympathetics.Calc </call>
+  <call> Ganglia-Sympathetic.Calc </call>
   <call> VagusNerve.Calc </call>
   <call> AdrenalNerve.Calc </call>
   <call> SystemicVeins-AlphaReceptors.Calc </call>
+  <call> SplanchnicVeins-BetaReceptors.Calc </call>
 
-  <call> VascularCompartments.CalcPressure(2) </call>
+  <call> BloodVessels.CalcPressure(2) </call>
 
   <call> Peritoneum.Dervs </call>
   <call> Hemodialysis.Dervs </call>
@@ -424,7 +465,10 @@ By : University of Mississippi Medical Center
 
   <call> O2.CalcPO2 </call>
 
-  <call> CD_H2OChannels.CalcActive </call>
+  <call> LeftDistalTubule_H2OChannels.CalcActive </call>
+  <call> RightDistalTubule_H2OChannels.CalcActive </call>
+  <call> LeftCollectingDuct_H2OChannels.CalcActive </call>
+  <call> RightCollectingDuct_H2OChannels.CalcActive </call>
 
   <call> Organs-AlphaReceptors.Calc </call>
   <call> Organs-BetaReceptors.Calc </call>
@@ -456,6 +500,7 @@ By : University of Mississippi Medical Center
   <call> RespiratoryCenter.Calc </call>
   <call> Breathing.Calc </call>
   <call> LungVolumes.Calc </call>
+	<call> ControlledBreathing.Calc </call>
   <call> PulmonaryMembrane.Calc </call>
   <call> BodyN2.Calc </call>
   <call> LungGases.Calc </call>
@@ -464,38 +509,75 @@ By : University of Mississippi Medical Center
 
   <call> Organs-Pressure.Calc </call>
 
-  <call> Kidney-ArcuateArtery.Calc </call>
-  <call> Kidney-AfferentArtery.Calc </call>
-  <call> Kidney-EfferentArtery.Calc </call>
-
+  <call> LeftKidney-ArcuateArtery.Calc </call>
+  <call> LeftKidney-AfferentArtery.Calc </call>
+  <call> LeftKidney-EfferentArtery.Calc </call>
+  <call> RightKidney-ArcuateArtery.Calc </call>
+  <call> RightKidney-AfferentArtery.Calc </call>
+  <call> RightKidney-EfferentArtery.Calc </call>
+  <call> LeftKidney-Flow.Calc </call>
+  <call> RightKidney-Flow.Calc </call>
   <call> Kidney-Flow.Calc </call>
 
-  <call> Kidney-ArcuateArtery.Pressure </call>
-  <call> NephronIFP.Calc </call>
+  <call> LeftKidney-ArcuateArtery.Pressure </call>
+  <call> RightKidney-ArcuateArtery.Pressure </call>
 
-  <call> GlomerulusFiltrate.Calc </call>
-  <call> NephronANP.Calc </call>
-  <call> PT_Na.Calc </call>
-  <call> PT_H2O.Calc </call>
-  <call> PT_Na.CalcConc </call>
-  <call> PT_NH3.Calc </call>
-  <call> NephronAldo.Calc </call>
-  <call> LH_Na.Calc </call>
-  <call> LH_H2O.Calc </call>
-  <call> LH_Na.CalcConc </call>
-  <call> MD_Na.Calc </call>
-  <call> DT_Na.Calc </call>
-  <call> NephronADH.Calc </call>
-  <call> DT_H2O.Calc </call>
-  <call> DT_Na.CalcConc </call>
-  <call> DT_K.Calc </call>
+  <call> LeftNephronIFP.Calc </call>
+  <call> RightNephronIFP.Calc </call>
 
+  <call> LeftGlomerulusFiltrate.Calc </call>
+  <call> RightGlomerulusFiltrate.Calc </call>
+
+  <call> LeftNephronANP.Calc </call>
+  <call> RightNephronANP.Calc </call>
+
+  <call> LeftProximalTubule_Na.Calc </call>
+  <call> RightProximalTubule_Na.Calc </call>
+
+  <call> LeftProximalTubule_H2O.Calc </call>
+  <call> RightProximalTubule_H2O.Calc </call>
+  <call> LeftProximalTubule_Na.CalcConc </call>
+  <call> RightProximalTubule_Na.CalcConc </call>
+  <call> LeftProximalTubule_NH3.Calc </call>
+  <call> RightProximalTubule_NH3.Calc </call>
+  <call> LeftNephronAldo.Calc </call>
+  <call> RightNephronAldo.Calc </call>
+  <call> LeftLoopOfHenle_Na.Calc </call>
+  <call> RightLoopOfHenle_Na.Calc </call>
+  <call> LeftLoopOfHenle_H2O.Calc </call>
+  <call> RightLoopOfHenle_H2O.Calc </call>
+  <call> LeftLoopOfHenle_Na.CalcConc </call>
+  <call> RightLoopOfHenle_Na.CalcConc </call>
+  <call> LeftMaculaDensa_Na.Calc </call>
+  <call> RightMaculaDensa_Na.Calc </call>
+  <call> LeftDistalTubule_Na.Calc </call>
+  <call> RightDistalTubule_Na.Calc </call>
+  <call> LeftNephronADH.Calc </call>
+  <call> RightNephronADH.Calc </call>
+  <call> RightDistalTubule_K.Calc </call>
+  <call> LeftDistalTubule_K.Calc </call>
+  <call> LeftDistalTubule_H2O.Calc </call>
+  <call> RightDistalTubule_H2O.Calc </call>
+  <call> LeftDistalTubule_Na.CalcConc </call>
+  <call> RightDistalTubule_Na.CalcConc </call>
+
+  <call> LeftNephronCalciumProximal.Calc </call>
+  <call> LeftNephronCalciumDistal.Calc </call>
+  <call> RightNephronCalciumProximal.Calc </call>
+  <call> RightNephronCalciumDistal.Calc </call>
   <call> NephronCalciumProximal.Calc </call>
   <call> NephronCalciumDistal.Calc </call>
 
-  <call> MedullaNa.CalcConc </call>
-  <call> MedullaUrea.CalcConc </call>
-  <call> Medulla.CalcOsm </call>
+  <call> LeftMedullaNa.CalcConc </call>
+  <call> LeftMedullaUrea.CalcConc </call>
+  <call> LeftMedulla.CalcOsm </call>
+
+  <call> RightMedullaNa.CalcConc </call>
+  <call> RightMedullaUrea.CalcConc </call>
+  <call> RightMedulla.CalcOsm </call>
+
+  <call> GlomerulusFiltrate.Calc </call>
+  <call> ProximalTubule_NH3.Calc </call>
 
   <call> LeftHeart-Work.Calc </call>
   <call> RespiratoryMuscle-Breathing.Calc </call>
@@ -513,11 +595,17 @@ By : University of Mississippi Medical Center
   <call> SkeletalMuscle-MetabolicVasodilation.Calc </call>
 
   <call> Organs-Flow.Calc </call>
-  <call> SplanchnicCirculation.CalcFlow </call>
+  <call> HepaticArtery.CalcFlow </call>
+  <call> HepaticVein.CalcFlow </call>
+  <call> PortalVein.CalcFlow </call>
   <call> OrganFlow.Calc </call>
-  <call> VascularCompartments.Dervs </call>
+  <call> CoronarySinus.Dervs </call>
+  <call> BloodVessels.Dervs </call>
+  <call> VenaeCava.Dervs </call>
 
-  <call> Kidney-ProximalTubuleO2.Calc </call>
+  <call> RightKidney-TubuleO2.Calc </call>
+  <call> LeftKidney-TubuleO2.Calc </call>
+
   <call> Liver-O2.Calc </call>
 
   <call> Organs-Metabolism.SplitCals </call>
@@ -527,16 +615,24 @@ By : University of Mississippi Medical Center
 
   <call> Organs-Fuel.Dervs </call>
 
-  <call> NephronGlucose.CalcSpillover </call>
-  <call> NephronKetoacids.CalcExcretion </call>
-  <call> CollectingDuct.Calc </call>
 
-  <call> VasaRecta.Calc </call>
+  <call> NephronGlucose.Calc </call>
+  <call> NephronKetoacids.Calc </call>
+
+  <call> LeftCollectingDuct.Calc </call>
+  <call> RightCollectingDuct.Calc </call>
+  <call> LeftVasaRecta.Calc </call>
+  <call> RightVasaRecta.Calc </call>
+
+  <call> CollectingDuct.Integrate </call>
 
   <call> Metabolism-FuelUse.Calc </call>
 
   <call> CNSTrophicFactor.Dervs </call>
   <call> ExcessLungWater.Dervs </call>
+  <call> LeftPleuralCavity.Dervs </call>
+  <call> RightPleuralCavity.Dervs </call>
+
 
   <call> Organs-Structure.Calc </call>
   <call> Organs-Vasculature.Calc </call>
@@ -545,6 +641,7 @@ By : University of Mississippi Medical Center
   <call> CerebrospinalFluid.Calc </call>
 
   <call> IVDrip.Dervs </call>
+  <call> ThoraxHemorrhage.Dervs </call>
   <call> Hemorrhage.Dervs </call>
   <call> GILumen.Dervs </call>
   <call> Heat.Dervs </call>
@@ -565,14 +662,12 @@ By : University of Mississippi Medical Center
   <call> Insulin.Dervs </call>
   <call> Glucagon.Dervs </call>
   <call> Pancreas.Dervs </call>
-  <call> Kidney-Zones.Calc </call>
+  <call> RightKidney-Zones.Calc </call>
+  <call> LeftKidney-Zones.Calc </call>
   <call> EPO.Dervs </call>
   <call> ThyroidGland.Dervs </call>
 
-  <call> RightHeartPumping.Dervs </call>
-  <call> LeftHeartPumping.Dervs </call>
-
-  <call> SplanchnicCirculation.CalcConc </call>
+  <call> PortalVein.CalcConc </call>
   <call> Insulin.LateDervs </call>
   <call> Liver-Fuel.Dervs </call>
   <call> Metabolism-Glucose.Calc </call>
@@ -589,14 +684,21 @@ By : University of Mississippi Medical Center
   <call> Triglyceride.Dervs </call>
   <call> GlucoseDecomposition.Dervs </call>
   <call> GlucosePool.CalcDervs </call>
-  <call> AAPool.CalcDervs </call>
+  <call> AminoAcid.Dervs </call>
 
   <call> Organs-Lactate.CalcDervs </call>
   <call> LacPool.CalcDervs </call>
 
-  <call> MedullaNa.Dervs </call>
-  <call> MedullaUrea.Dervs </call>
-  <call> CD_H2OChannels.CalcDervs </call>
+  <call> RightMedullaNa.Dervs </call>
+  <call> LeftMedullaNa.Dervs </call>
+
+  <call> RightMedullaUrea.Dervs </call>
+  <call> LeftMedullaUrea.Dervs </call>
+
+  <call> RightDistalTubule_H2OChannels.CalcDervs </call>
+  <call> LeftDistalTubule_H2OChannels.CalcDervs </call>
+  <call> RightCollectingDuct_H2OChannels.CalcDervs </call>
+  <call> LeftCollectingDuct_H2OChannels.CalcDervs </call>
 
   <call> O2.Dervs </call>
 
@@ -615,25 +717,34 @@ By : University of Mississippi Medical Center
 
   <call> Drugs.Dervs </call>
 
-  <call> TGF-Vascular.Dervs </call>
-  <call> TGF-Renin.Dervs </call>
+  <call> LeftTGF-Vascular.Dervs </call>
+  <call> LeftTGF-Renin.Dervs </call>
+  <call> RightTGF-Vascular.Dervs </call>
+  <call> RightTGF-Renin.Dervs </call>
 
   <call> Renin.Dervs </call>
   <call> Catechols.Dervs </call>
   <call> Hypothalamus.Dervs </call>
 
   <call> OralH2OGlucoseLoad.Dervs </call>
+  <call> OGTT.Dervs </call>
   <call> Exercise-Treadmill.Dervs </call>
   <call> Bladder.Dervs </call>
   <call> Peritoneum.Dervs </call>
   <call> Pericardium.Dervs </call>
   <call> BloodVolume.Dervs </call>
-  <call> PlasmaProtein.CalcDervs </call>
+<!--  ************************************************************* here too -->
+  <call> AlbuminPool.CalcDervs </call>
+  <call> IgGPool.CalcDervs </call>
+  <call> AGPPool.CalcDervs </call>
+  <call> HetaPool.CalcDervs </call>
+
   <call> H2O.Dervs </call>
   <call> Creatinine.Dervs </call>
   <call> GlycerolPool.Dervs </call>
 
-  <call> Kidney-Myogenic.Dervs </call>
+  <call> LeftKidney-Myogenic.Dervs </call>
+  <call> RightKidney-Myogenic.Dervs </call>
   <call> SkeletalMuscle-MetabolicVasodilation.Dervs </call>
   <call> Leptin.Dervs </call>
 
@@ -652,15 +763,13 @@ By : University of Mississippi Medical Center
   <call> CO.Dervs </call>
 
   <call> CorticotropinReleasingFactor.Dervs </call>
+  <call> ACTHTest.Dervs </call>
   <call> ACTH.Dervs </call>
   <call> Cortisol.Dervs </call>
   <call> ParathyroidHormone.Dervs </call>
   <call> Ca.Dervs </call>
   <call> Calcitonin.Dervs </call>
   <call> VitaminD.Dervs </call>
-
-  <call> LeftHeartPumping.Dervs </call>
-  <call> RightHeartPumping.Dervs </call>
 
   <call> ChemoreceptorsCNS.Dervs </call>
   <call> Mechanoreceptors.Dervs </call>
@@ -671,6 +780,14 @@ By : University of Mississippi Medical Center
   <call> Anesthesia.Dervs </call>
   <call> GasExchangeRatio.Calc </call>
   <call> CO2.Dervs </call>
+
+  <call> RightHeartWallStress.Calc </call>
+  <call> LeftHeartWallStress.Calc </call>
+
+  <call> RightHeartPumping.Dervs </call>
+  <call> LeftHeartPumping.Dervs </call>
+  <call> OR.Dervs </call>
+  <call> Trauma.Dervs </call>
 </block>
 
 <block><name> Wrapup </name>
@@ -682,7 +799,7 @@ By : University of Mississippi Medical Center
     <true><call> Ovaries.Wrapup </call></true>
   </if>
 
-  <call> Autopsy.Calc </call>
+  <call> AutopsyReport.Calc </call>
 
   <call> Seizure.Calc </call>
   <call> Brain-Function.Page </call>
@@ -691,13 +808,14 @@ By : University of Mississippi Medical Center
 
   <call> Drugs.Wrapup </call>
   <call> Catechols.Wrapup </call>
+  <call> Hypothalamus.Wrapup </call>
 
   <call> Status.CheckConscious </call>
   <call> Exercise-Control.Wrapup </call>
   <call> DailyPlannerControl.Wrapup </call>
   <call> Status.Wrapup </call>
   <call> Hemodialysis.Wrapup </call>
-
+  <call> AirSupply-GasTanks.WrapUp </call>
   <call> Bladder.Wrapup </call>
   <call> Heart.Wrapup </call>
   <call> CPR.Wrapup </call>
@@ -705,17 +823,24 @@ By : University of Mississippi Medical Center
   <call> PeripheralResistance.Wrapup </call>
   <call> BodyH2O.Wrapup </call>
   <call> Symptoms.Calc </call>
+  <call> ThoraxHemorrhage.Wrapup </call>
   <call> Hemorrhage.Wrapup </call>
   <call> Energy.Wrapup </call>
 
-  <call> Kidney-ArcuateArtery.Wrapup </call>
-  <call> Kidney-AfferentArtery.Wrapup </call>
-  <call> Kidney-EfferentArtery.Wrapup </call>
+  <call> RightKidney-ArcuateArtery.Wrapup </call>
+  <call> LeftKidney-ArcuateArtery.Wrapup </call>
+  <call> RightKidney-AfferentArtery.Wrapup </call>
+  <call> LeftKidney-AfferentArtery.Wrapup </call>
+  <call> RightKidney-EfferentArtery.Wrapup </call>
+  <call> LeftKidney-EfferentArtery.Wrapup </call>
 
   <call> BreathHolding.Wrapup </call>
   <call> Acidosis.Wrapup </call>
   <call> SkeletalMuscle-Energy.Wrapup </call>
   <call> RespiratoryMuscle-Energy.Wrapup </call>
+  <call> Osmoles.Wrapup </call>
+  <call> Trauma.Wrapup </call>
+
 </block>
 
 </definitions>

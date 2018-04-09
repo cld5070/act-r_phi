@@ -1,9 +1,9 @@
 HumMod / BloodIons
 
 Created : 09-Apr-05
-Revised : 2012-07-10
+Revised : 2013-02-02
 Author : Tom Coleman
-Copyright : 2006-2012
+Copyright : 2006-2013
 By : University Of Mississippi Medical Center
 
 <structure><name> BloodIons </name>
@@ -40,8 +40,6 @@ By : University Of Mississippi Medical Center
       ClPool.[Cl-(mEq/L)]
     + LacPool.[Lac-(mEq/L)]
     + KAPool.[KA(mMol/L)]
-    + SO4Pool.[SO4--(mEq/L)]
-    + PO4Pool.[PO4--(mEq/L)]
   </val>
 </def>
 

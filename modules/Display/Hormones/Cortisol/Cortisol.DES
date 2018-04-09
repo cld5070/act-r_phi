@@ -32,8 +32,9 @@ By : University of Mississippi Medical Center
 
 <?include Pool.DES ?>
 
-<?include Mass.DES ?>
 <?include Pump.DES ?>
+<?include Secretion.DES ?>
+<?include Disposal.DES ?>
 
 </panel>
 

@@ -22,6 +22,7 @@ Schema : DES V1.0
 <definitions>
 
 <block><name> Parms </name>
+  <call> MidodrineSingleDose.Parms </call>
   <call> MidodrineDailyDose.Parms </call>
 </block>
 

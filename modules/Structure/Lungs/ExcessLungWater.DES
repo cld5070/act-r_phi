@@ -17,7 +17,7 @@ Schema : DES V1.0
 
 <var><name> Grad </name></var>
 <var><name> Flux </name></var>
-<var><name> Lymph </name></var>
+
 
 <var><name> Volume(L) </name></var>
 
@@ -31,6 +31,17 @@ Schema : DES V1.0
   <dervname> Change </dervname>
   <errorlim> 10.0 </errorlim>
 </diffeq>
+
+<stabledelay>
+  <name> Lymph </name>
+  <outputname> Lymph </outputname>
+  <initialval> 0 </initialval>
+  <inputname> Steady-State </inputname>
+  <rateconstname> K </rateconstname>
+  <dervname> Derv </dervname>
+  <errorlim> 0.1 </errorlim>
+ <dxmaxname> DxMax </dxmaxname>
+</stabledelay>
 
 </equations>
 
@@ -54,6 +65,10 @@ Schema : DES V1.0
 
 <block><name> Dervs </name>
 
+
+<def><name> K </name><val> 0.2 </val></def>
+<def><name> DxMax </name><val> 0.2 </val></def>
+
 <def><name> Volume(L) </name><val> Volume / 1000.0 </val></def>
 
 <if>
@@ -62,7 +77,7 @@ Schema : DES V1.0
 <false><call> NotFailed </call></false>
 </if>
 
-<def><name> Change </name><val> Flux - Lymph </val></def>
+<def><name> Change </name><val> ( Flux - Lymph ) * 0 </val></def>
 
 </block>
 
@@ -70,7 +85,7 @@ Schema : DES V1.0
 
 <def><name> Grad </name><val> PulmCapys.Pressure - PlasmaProtein.COP </val></def>
 <def><name> Flux </name><val> ( Perm * Grad ) MAX 0.0 </val></def>
-<def><name> Lymph </name><val> Lymph [ Volume ] </val></def>
+<def><name> Steady-State </name><val> Lymph [ Volume ] </val></def>lymph
 
 </block>
 

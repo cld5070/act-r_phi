@@ -1,0 +1,153 @@
+HumMod / LeftHeartPumping-Systole
+
+Created : 2010-05-25
+Revised : 2012-07-20
+Author : Tom Coleman and Radu Iliescu
+Copyright : 2010-2012
+By : University of Mississippi Medical Center
+
+<structure><name> LeftHeartPumping-Systole </name>
+
+<variables>
+
+<var><name> ESP </name></var>
+<var><name> TMP </name></var>
+
+<parm><name> K-Basic </name><val> 16.5 </val></parm>
+<var><name> K </name></var>
+
+<var><name> SBP </name></var>
+
+<var><name> TMP-Active </name></var>
+<var><name> TMP-Passive </name></var>
+
+<var><name> Del </name></var>
+
+</variables>
+
+<equations>
+
+<impliciteq>
+  <name> ESV </name>
+  <startname> ESV </startname>
+  <initialval> 50 </initialval>
+  <endname> ESV-End </endname>
+  <errorlim> 0.5 </errorlim>
+  <searchmin> 0 </searchmin>
+</impliciteq>
+
+</equations>
+
+<definitions>
+
+<block><name> Calc </name>
+
+<def><name> ESP </name><val> SBP </val></def>
+<def><name> TMP </name><val> ESP - Pericardium-Cavity.Pressure </val></def>
+
+<def>
+  <name> K </name>
+  <val> K-Basic * LeftHeartPumping-Contractility.Contractility </val>
+</def>
+
+<implicitmath><name> ESV </name>
+
+<call> TMP-Active </call>
+
+<def>
+  <name> TMP-Passive </name>
+  <val> TMP - TMP-Active </val>
+</def>
+
+<call> TMP-Passive-Inverse </call>
+
+</implicitmath>
+</block>
+
+<block><name> TMP-Passive </name>
+
+<if>
+<test> ESV GT LeftHeartPumping-Diastole.BreakVolume </test>
+<true> 
+  <def>
+    <name> Del </name>
+    <val> ESV - LeftHeartPumping-Diastole.BreakVolume </val>
+  </def>
+
+  <def>
+    <name> TMP-Passive </name>
+    <val> LeftHeartPumping-Diastole.BreakPressure + ( LeftHeartPumping-Diastole.K * Del * Del ) </val>
+  </def>
+</true>
+
+<false> 
+  <def>
+    <name> TMP-Passive </name>
+    <val> LeftHeartPumping-Diastole.Slope * ESV </val>
+  </def>
+</false>
+
+</if>
+
+</block>
+
+<block><name> TMP-Passive-Inverse </name>
+
+<if>
+<test> TMP-Passive GT LeftHeartPumping-Diastole.BreakPressure </test>
+<true> 
+  <def>
+    <name> Del </name>
+    <val> TMP-Passive - LeftHeartPumping-Diastole.BreakPressure </val>
+  </def>
+
+  <def>
+    <name> ESV-End </name>
+    <val> LeftHeartPumping-Diastole.BreakVolume + SQRT ( TMP-Passive / LeftHeartPumping-Diastole.K ) </val>
+  </def>
+</true>
+
+<false> 
+  <def>
+    <name> ESV-End </name>
+    <val> TMP-Passive / LeftHeartPumping-Diastole.Slope </val>
+  </def>
+</false>
+
+</if>
+
+</block>
+
+<block><name> TMP-Active </name>
+  <def>
+    <name> TMP-Active </name>
+    <val> K * SQRT ( ESV ) </val>
+  </def>
+</block>
+
+<block><name> TMP-Active-Inverse </name>
+  <def>
+    <name> Del </name>
+    <val> TMP-Active / K </val>
+  </def>
+
+  <def>
+    <name> ESV </name>
+    <val> Del * Del </val>
+  </def>
+</block>
+
+<block><name> TMP </name>
+  <call> TMP-Active </call>
+  <call> TMP-Passive </call>
+
+  <def>
+    <name> TMP </name>
+    <val> TMP-Active + TMP-Passive </val>
+  </def>
+</block>
+
+</definitions>
+</structure>
+
+End

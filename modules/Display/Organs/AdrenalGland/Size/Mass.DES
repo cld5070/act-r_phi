@@ -9,7 +9,7 @@ By : University Of Mississippi Medical Center
 <groupbox>
    <row> 2.0 </row>
    <col> 1.0 </col>
-   <high> 8.4 </high>
+   <high> 10.8 </high>
    <wide> 30.0 </wide>
    <title> Mass </title>
 
@@ -29,25 +29,32 @@ By : University Of Mississippi Medical Center
    <label> Cortex (G) </label>
 </showvalue>
 
-<slidebar>
-  <row> 4.2 </row><col> 3.0 </col>
-  <name> CortexMassPercent </name>
-  <listname> Common.Percent </listname>
-  <label> % </label>
-</slidebar>
-
 <showvalue>
-   <row> 5.8 </row><col> 1.0 </col>
+   <row> 4.2 </row><col> 1.0 </col>
    <name> MedullaMass </name>
    <format><decimal> 1 </decimal></format>
    <label> Medulla (G) </label>
 </showvalue>
+
+<slidebar>
+  <row> 5.8 </row><col> 3.0 </col>
+  <name> MedullaMassPercent </name>
+  <listname> Common.Percent </listname>
+  <label> % </label>
+</slidebar>
 
 <showvalue>
    <row> 6.8 </row><col> 3.0 </col>
    <name> MedullaMassPercent </name>
    <format><integer/></format>
    <label> % </label>
+</showvalue>
+
+<showvalue>
+   <row> 8.2 </row><col> 1.0 </col>
+   <name> FibrosisMass </name>
+   <format><decimal> 1 </decimal></format>
+   <label> Fibrosis (G) </label>
 </showvalue>
 
 </groupbox>

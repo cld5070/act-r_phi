@@ -1,11 +1,10 @@
 HumMod / RightHeart-Lactate
 
 Created : 31-Mar-05
-Last Modified : 26-Jan-10
+Revised : 2013-03-28
 Author : Tom Coleman
-Copyright : 2008-2010
+Copyright : 2008-2013
 By : University of Mississippi Medical Center
-Schema : DES V1.0
 
 <structure><name> RightHeart-Lactate </name>
 
@@ -19,10 +18,12 @@ Schema : DES V1.0
 <var><name> Made(mG/Min) </name></var>
 <var><name> Used </name></var>
 <var><name> Used(mG/Min) </name></var>
-<var><name> Outflux </name></var>
-<var><name> Outflux(0) </name></var>
+
+<var><name> Flow </name></var>
+<var><name> Volume </name></var>
 <var><name> K </name></var>
-<var><name> Alpha </name></var>
+<var><name> [Pool] </name></var>
+<var><name> Outflux </name></var>
 
 <constant><name> MEQ_ML_TO_MG_DL </name><val> 9008.0 </val></constant>
 <constant><name> GLUCOSE_TO_LACTATE </name><val> 0.99 </val></constant>
@@ -32,13 +33,15 @@ Schema : DES V1.0
 
 <equations>
 
-<diffeq>
+<backwardeuler>
   <name> Mass </name>
   <integralname> Mass </integralname>
   <initialval> 0.030 </initialval>
+  <f1name> F1 </f1name>
+  <f2name> F2 </f2name>
   <dervname> Change </dervname>
-  <errorlim> 0.00030 </errorlim>
-</diffeq>
+  <errorlim> 0.0003 </errorlim>
+</backwardeuler>
 
 </equations>
 
@@ -85,54 +88,38 @@ Schema : DES V1.0
 </def>
 
 <def>
+  <name> Flow </name>
+  <val> RightHeart-Flow.BloodFlow </val>
+</def>
+
+<def>
+  <name> Volume </name>
+  <val> RightHeart-Size.LiquidVol </val>
+</def>
+
+<def>
   <name> K </name>
-  <val> DC / RightHeart-Size.LiquidVol </val>
+  <val> ( Flow * DC ) / ( Flow + DC ) </val>
 </def>
 
-<testcase>
-
-<case>
-<test> System.Dx GE UNDEFINED </test>
 <def>
-  <name> Alpha </name>
-  <val> 0.0 </val>
+  <name> [Pool] </name>
+  <val> LacPool.[Lac-] </val>
 </def>
-</case>
 
-<case>
-<test> ( K * System.Dx ) GE 100.0 </test>
 <def>
-  <name> Alpha </name>
-  <val> 4E-44 </val>
+  <name> F1 </name>
+  <val> Made - Used + ( K * [Pool] ) </val>
 </def>
-</case>
-
-<case>
-<test> TRUE </test>
-<def>
-  <name> Alpha </name>
-  <val> EXP ( -  K * System.Dx ) </val>
-</def>
-</case>
-
-</testcase>
 
 <def>
-  <name> Outflux(0) </name>
-  <val> DC * ( [Lac-] - LacPool.[Lac-] ) </val>
+  <name> F2 </name>
+  <val> K / Volume </val>
 </def>
 
 <def>
   <name> Outflux </name>
-  <val>
-        ( Alpha * Outflux(0) )
-    + ( ( 1 - Alpha ) * ( Made + Used ) )
-  </val>
-</def>
-
-<def>
-  <name> Change </name>
-  <val> Made - Used - Outflux </val>
+  <val> K * ( [Lac-] - [Pool] ) </val>
 </def>
 
 </block>

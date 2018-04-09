@@ -8,17 +8,21 @@ By : University of Mississippi Medical Center
 
 <?path Structure\Nephrons\Glomerulus\ ?>
 
+<?include GlomerulusFiltrate.DES ?>
+<?include GlomerulusKetoacid.DES ?>
+<?include GlomerulusCreatinine.DES ?>
+<?include GlomerulusGlucose.DES ?>
+<?include GlomerulusProtein.DES ?>
+<!--
 <?include GlomerulusBicarbonate.DES ?>
 <?include GlomerulusCalcium.DES ?>
 <?include GlomerulusChloride.DES ?>
 <?include GlomerulusCreatinine.DES ?>
-<?include GlomerulusFiltrate.DES ?>
 <?include GlomerulusGlucose.DES ?>
-<?include GlomerulusKetoacid.DES ?>
 <?include GlomerulusPhosphate.DES ?>
-<?include GlomerulusProtein.DES ?>
+
 <?include GlomerulusSodium.DES ?>
 <?include GlomerulusSulphate.DES ?>
 <?include GlomerulusUrea.DES ?>
-
+-->
 End

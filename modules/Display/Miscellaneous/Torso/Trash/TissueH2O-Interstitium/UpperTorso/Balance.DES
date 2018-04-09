@@ -15,7 +15,7 @@ Schema : 2005.0
    <wide> 30.0 </wide>
    <title> Balance </title>
 
-<structurename> UT_InterstitialWater </structurename>
+<structurename> Torso_Upper_InterstitialWater </structurename>
 
 <showvalue>
    <row> 1.4 </row><col> 1.0 </col>

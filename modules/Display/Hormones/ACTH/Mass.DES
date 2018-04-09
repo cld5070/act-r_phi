@@ -72,9 +72,9 @@ By : University Of Mississippi Medical Center
 
 <showvalue>
    <row> 14.6 </row><col> 3.0 </col>
-   <name> CRF_Effect </name>
+   <name> [CRF]Effect </name>
    <format><decimal> 1 </decimal></format>
-   <label> CRF Effect </label>
+   <label> [CRF] Effect </label>
 </showvalue>
 
 <repeatlist>

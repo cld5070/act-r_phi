@@ -21,7 +21,7 @@ Schema : DES V1.0
 <block><name> Calc </name>
 
 <def><name> [Glucose] </name><val> GlucosePool.[Glucose] </val></def>
-<def><name> Rate </name><val> [Glucose] * GlomerulusFiltrate.GFR </val></def>
+<def><name> Rate </name><val> LeftGlomerulusGlucose.Rate + RightGlomerulusGlucose.Rate </val></def>
 
 </block>
 

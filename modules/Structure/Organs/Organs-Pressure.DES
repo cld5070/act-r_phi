@@ -18,7 +18,8 @@ Schema : 2005.0
   <call> Brain-Pressure.Calc </call>
   <call> Fat-Pressure.Calc </call>
   <call> GITract-Pressure.Calc </call>
-  <call> Kidney-Pressure.Calc </call>
+  <call> LeftKidney-Pressure.Calc </call>
+  <call> RightKidney-Pressure.Calc </call>
   <call> LeftHeart-Pressure.Calc </call>
   <call> OtherTissue-Pressure.Calc </call>
   <call> RespiratoryMuscle-Pressure.Calc </call>

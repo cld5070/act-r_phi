@@ -13,6 +13,7 @@ By : University of Mississippi Medical Center
 <var><name> Weight </name></var>
 <var><name> InitialWeight </name></var>
 <var><name> InitialWeight(kG) </name></var>
+<var><name> BSA </name></var>
 
 <var><name> Weight(kG) </name></var>
 <var><name> Weight(Lb) </name></var>
@@ -81,7 +82,8 @@ By : University of Mississippi Medical Center
       Bone-Size.InitialMass
     + Brain-Size.InitialMass
     + GITract-Size.InitialMass
-    + Kidney-Size.InitialMass
+    + RightKidney-Size.InitialMass
+    + LeftKidney-Size.InitialMass
     + LeftHeart-Size.InitialMass
     + Liver-Size.InitialMass
     + OtherTissue-Size.InitialMass
@@ -115,8 +117,9 @@ By : University of Mississippi Medical Center
   <val> InitialWeight / 1000 </val>
 </def>
 
+<def><name> BSA </name><val> ( InitialWeight(kG) ^ 0.425 ) * ( Height.Height ^ .725 ) * 0.007184 </val></def>
 </block>
-
+ 
 <block><name> Calc </name>
 
 <call> Weight-Fluids.Calc </call>

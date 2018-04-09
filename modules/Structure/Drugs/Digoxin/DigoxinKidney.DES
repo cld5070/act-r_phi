@@ -44,7 +44,7 @@ Schema : DES V1.0
   <val>
       0.001
     * DigoxinPool.[Digoxin]
-    * GlomerulusFiltrate.GFR
+    * ( RightGlomerulusFiltrate.GFR + LeftGlomerulusFiltrate.GFR )
   </val>
 </def>
 
@@ -53,8 +53,8 @@ Schema : DES V1.0
   <val>
       SecK
     * DigoxinPool.Mass
-    * Kidney-NephronCount.Filtering(xNormal)
-    * Kidney-Function.Effect
+    *  (    ( 0.5 * RightKidney-NephronCount.Filtering(xNormal) * RightKidney-Function.Effect ) 
+	+ ( 0.5 * LeftKidney-NephronCount.Filtering(xNormal) * LeftKidney-Function.Effect ) )
   </val>
 </def>
 

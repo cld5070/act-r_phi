@@ -9,91 +9,123 @@ Copyright : 2009
 
 <vardoc>
 <name> ANPPool.[ANP(pG/mL)] </name>
-<topic> ANP - Overview </topic>
-<topic> [ANP(pG/mL)] - DefinitionANPP1 </topic>
-<topic> ANP - Concentration Units </topic>
-<seealso> ANP - Physical Units </seealso>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<seealso> XXXX </seealso>
+<seealso> XXXX </seealso>
 </vardoc>
+
 
 <vardoc>
 <name> ANPPool.[ANP] </name>
-<topic> [ANP] - DefinitionANPP2 </topic>
-<seealso> ECFV.Vol(L) </seealso>
-<seealso> ANPPool.Level </seealso>
-<seealso> ANPPool.Mass </seealso>
-
+<topic> XXX </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<seealso> XXXX </seealso>
+<seealso> XXXX </seealso>
 </vardoc>
 
 <vardoc>
 <name> ANPPool.Change </name>
-<topic> Change - DefinitionANPP3 </topic>
-<seealso> ANPPool.Gain </seealso>
-<seealso> ANPPool.Loss </seealso>
-</vardoc>
-
-<vardoc>
-<name> ANPPool.Clamp </name>
-<topic> Clamp - DefinitionANPP4 </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<seealso> XXXX </seealso>
+<seealso> XXXX </seealso>
 </vardoc>
 
 <vardoc>
 <name> ANPPool.Derv </name>
-<topic> Derv - DefinitionANPP5 </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<seealso> XXXX </seealso>
+<seealso> XXXX </seealso>
 </vardoc>
 
 <vardoc>
 <name> ANPPool.F1 </name>
-<topic> F1 - DefinitionANPP6 </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<seealso> XXXX </seealso>
+<seealso> XXXX </seealso>
 </vardoc>
 
 <vardoc>
 <name> ANPPool.F2 </name>
-<topic> F2 - DefinitionANPP7 </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<seealso> XXXX </seealso>
+<seealso> XXXX </seealso>
 </vardoc>
 
 
 <vardoc>
 <name> ANPPool.Gain </name>
-<topic> Gain - DefinitionANPP8 </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<seealso> XXXX </seealso>
+<seealso> XXXX </seealso>
 </vardoc>
 
 <vardoc>
 <name> ANPPool.InitialMass </name>
-<topic> InitialMass - DefinitionANPP9  </topic>
-<seealso> Target[ANP] </seealso>
-<seealso> ECFV.InitialVol(L) </seealso>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<seealso> XXXX </seealso>
+<seealso> XXXX </seealso>
 </vardoc>
 
-<vardoc>
-<name> ANPPool.Level </name>
-<topic> Level - DefinitionANPP10 </topic>
-</vardoc>
 
 <vardoc>
 <name> ANPPool.Log10Conc </name>
-<topic> Log10Conc - DefinitionANPP11  </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<seealso> XXXX </seealso>
+<seealso> XXXX </seealso>
 </vardoc>
 
 <vardoc>
 <name> ANPPool.Loss </name>
-<topic> Loss - DefinitionANPP12 </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<seealso> XXXX </seealso>
+<seealso> XXXX </seealso>
 </vardoc>
 
 
 <vardoc>
 <name> ANPPool.Mass </name>
-<topic> Mass - DefinitionANPP13  </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<seealso> XXXX </seealso>
+<seealso> XXXX </seealso>
 </vardoc>
 
 <vardoc>
-<name> ANPPool.PMOLTOPG </name>
-<topic> PMOLTOPG - DefinitionANPP14 </topic>
+<name> ANPPool.PGMOLTOPG </name>
+<topic> XXX</topic>
+<topic> XXXX </topic>
+<topic> XXX </topic>
+<seealso> XXX </seealso>
+<seealso> XXXX </seealso>
 </vardoc>
-
 
 <vardoc>
 <name> ANPPool.Target[ANP] </name>
-<topic> Target[ANP] - DefinitionANPP15 </topic>
+<topic> XXX</topic>
+<topic> XXXX </topic>
+<topic> XXX </topic>
+<seealso> XXX </seealso>
+<seealso> XXXX </seealso>
 </vardoc>
 
 <topicdoc>
@@ -104,6 +136,10 @@ Copyright : 2009
 [Plasma]    pG/mL or pMol/L
 Fluxes      pMol/Min
 
+
+Notice that pico (10^-12)
+gram/Mol units are used.
+
 </content>
 </topicdoc>
 
@@ -112,19 +148,21 @@ Fluxes      pMol/Min
 <label> Concentration Units </label>
 <content>
 
-ANP is a 28 amino acid protein with a
-molecular weight of 3060
+ANP concentrations have been expressed in
 
-A typical concentration is 20pMol/L
-1pMol/L = 3pG/mL
+   pG/mL
+   pMol/L
 
-Normal ANP Secretion Rate is 67pMol/min.
-Clearance Rate is 67 pMol/Min 
-Right Heart Secretion Rate: 41pMol/Min and 
-Left Heart Secretion Rate: 26pMol/min 
+ANP is a 28 amino acid protein
+of molecular weight 3060.
 
-The Merck Index. 12th Edition
+   1 pMol/L = 3 pG/mL
 
+   A typical arterial blood level
+   is 20 pMol/L.
+  
+
+Normal ANP secretion rate is 67pMol/min. The right heart secretes 41pMol/Min and the left heart 26pMol/min
 </content>
 </topicdoc>
 
@@ -133,233 +171,38 @@ The Merck Index. 12th Edition
 <label> Overview </label>
 <content>
 
-Atrial natriuretic peptide (ANP) is also known as atrial 
-natriuretic factor(ANF) and atriopeptin.  ANP is a potent 
-natriuretic peptide involved in hormonal regulation of 
-extracellular fluid volume and blood pressure homeostasis. 
-It is secreted by the atrial walls of the heart 
-in response to stretch, which can occur from excess blood 
-volume. ANP acts on the kidneys to cause small increases in 
-glomerular filtration rate (GFR) and decreases in in sodium 
-reabsorption by the collecting ducts.
+ANP is a potent natriuretic peptide involved in hormonal regulation of extracellular fluid volume and blood pressure homeostasis. It is secreted by the atrial walls of the heart in response to stretch, which can occur from excess blood volume.
+ANP acts on the kidneys to cause small increases in glomerular filtration rate (GFR) and decreases in in sodium reabsorption by the collecting ducts. 
 
-Reviews
-Ruskoaho H. Atrial natriuretic peptide: synthesis, release
-and metabolism. Pharmacological Reviews 44: 479 - 602, 1992.
+ Data is from Lohmeier, but I don't
+ have the reference.
 
-de Zeeuw D, Janssen WM, de Jong PE. Atrial natriuretic 
-Factor: Its (patho)physiological significance in humans.
-Kidney International 41: 1115 - 1133, 1992.
+      RAP    [ANP]
+      mmHg   pG/mL
+      ----   -----
+        1     110
+        6     500
+       10     750
 
+The integral ANPPool.Mass jitters at Dx ~ 9. I'll try a backward
+Euler integral here.
+
+  Change = Gain - Loss
+  Loss = K * Mass
+
+With a backward Euler,
+
+  Change = F1 - F2 * Integral
+
+so
+
+  F1 = Gain
+  F2 = K
 
 </content>
 </topicdoc>
 
-<topicdoc>
-<name> [ANP(pG/mL)] - DefinitionANPP1 </name>
-<label> Definition </label>
-<content>
-
-[ANP(pG/mL)] is the plasma concentration of ANP expressed
-in pG/mL.
-
-</content>
-</topicdoc>   
+   
      
-<topicdoc>
-<name> [ANP] - DefinitionANPP2  </name>
-<label> Definition </label>
-<content>
-
-[ANP] is the plasma concentration of ANP. If the model 
-user has switched the clamp on, then [ANP] has the value set
-by the sliding bar in the ANPPool display box. Otherwise
-[ANP] = ANPPool.Mass/ECFV.Vol(L)
-
-</content>
-</topicdoc> 
-  
-<topicdoc>
-<name> Change - DefinitionANPP3  </name>
-<label> Definition </label>
-<content>
-
-Changes in the ANP pool or mass are a function of both
-gains and losses in ANP over time. Gains may occur from
-increased secretion and from infusion of ANP using the 
-ANP pump feature of the model. Loss occurs from ANP 
-clearance from the blood
-
-</content>
-</topicdoc>   
-
-<topicdoc>
-<name> Clamp - DefinitionANPP4  </name>
-<label> Definition </label>
-<content>
-
-The Clamp enables the model user to fix ANP plasma levels.
-The model user turns the clamp to "on" in the ANP Pool 
-display box. The secretion level is set by using the 
-sliding bar. Secretion rates can be set from zero pMol/L 
-up to a maximum of 100 pMol/Min in increments of 1.
-
-
-</content>
-</topicdoc>   
-     
-<topicdoc>
-<name> Derv - DefinitionANPP5  </name>
-<label> Definition </label>
-<content>
-
-Derv is the derivative of the Backward Euler for
-calculation of the mass of ANP. 
-
-</content>
-</topicdoc> 
-  
-<topicdoc>
-<name> F1 - DefinitionANPP6  </name>
-<label> Definition </label>
-<content>
-
-F1 is a mathematical variable used in the calculation of 
-the mass of ANP. F1 is the gain in ANP over time and is 
-a function of  ANP secretion rate and ANP Pump Rate.
-
-</content>
-</topicdoc>   
-
-<topicdoc>
-<name> F2 - DefinitionANPP7  </name>
-<label> Definition </label>
-<content>
-
-F2 is a mathematical variable used in the calculation of
-the mass of ANP. F2 is the loss in ANP mass over time 
-and is a function of ANP clearance rate.
-
-</content>
-</topicdoc>   
-     
-<topicdoc>
-<name> Gain - DefinitionANPP8 </name>
-<label> Definition </label>
-<content>
-
-Gain is defined as positive changes in mass of ANP
-and is a function of ANP secretion rate, and  
-ANP from infusion using the ANP pump feature.
-
-</content>
-</topicdoc> 
-  
-<topicdoc>
-<name> InitialMass - DefinitionANPP9  </name>
-<label> Definition </label>
-<content>
-
-The initial mass or pool is the Target[ANP] 
-multiplied by the initial volume of distribution, in 
-this case the ECFV.
- 
-Initial Mass = Target[ANP]*ECFV.InitialVol(L)
-
-</content>
-</topicdoc>   
-
-<topicdoc>
-<name> Level - DefinitionANPP10  </name>
-<label> Definition </label>
-<content>
-
-The model user may fix ANP plasma concentration at a 
-particular level by switching the clamp to "on" in the 
-ANP pool display box. The concentration level is then set 
-using the sliding bar. Plasma concentration can be set 
-anywhere from zero pMol/L up to a maximum of 100 pMol/L 
-in increments of 1.
-
-</content>
-</topicdoc>   
-     
-<topicdoc>
-<name> Log10Conc - DefinitionANPP11 </name>
-<label> Definition </label>
-<content>
-
-Log10Conc calculates the logarithm of the plasma 
-concentration of ANP. If [ANP] is less than 1.0, 
-then Log10Conc has a value of zero. 
-
-</content>
-</topicdoc> 
-  
-<topicdoc>
-<name> Loss - DefinitionANPP12 </name>
-<label> Definition </label>
-<content>
-
-Loss is defined as a negative change in mass of ANP
-and is a function of clearance rate. 
-
-</content>
-</topicdoc>  
-
-<topicdoc>
-<name> Mass - DefinitionANPP13 </name>
-<label> Definition </label>
-<content>
-
-Mass is the calculated amount of ANP at any 
-any given time. Change in the ANP pool or mass is a 
-function of both gains and losses in ANP over time. 
-Gains may occur from increases in ANP secretion rate,
-from infusion of ANP using the ANP pump feature of HumMod. 
-Changes in the pool are calculated in the model using two 
-mathematical variables, F1 and F2, which integrate gains and 
-losses over time. A Backward Euler integral is used in this
-calculation because it gives a more stable solution set.  
-
-</content>
-</topicdoc>   
-     
-<topicdoc>
-<name> PMOLTOPG - DefinitionANPP14 </name>
-<label> Definition </label>
-<content>
-
-PMOLTOPG is a constant used to convert pMol to pG
-PMOLTOPG = 3.060
-1pMol = 3.060pG
-
-</content>
-</topicdoc> 
-  
-<topicdoc>
-<name> Target[ANP] - DefinitionANPP15 </name>
-<label> Definition </label>
-<content>
-
-During startup, the model user defines the particular 
-traits of the HumMod patient. These are gender, body size, 
-age, muscularity and adiposity. All of these traits 
-influence body volumes, most notably the extracellular 
-fluid volume (ECFV). The assumption is made that
-while volumes may change with traits, concentrations do 
-not. At startup,initial volumes,especially ECFV and plasma 
-volume are calculated. A target concentration is specified 
-- in this case Target[ANP]. 
-
-The initial mass or circulating pool is the Target[ANP] 
-multiplied by the initial volume of distribution, in 
-this case the ECFV.
- 
-Initial Mass = Target[ANP]*ECFV.InitialVol(L)
-
-</content>
-</topicdoc>   
- 
 
 End

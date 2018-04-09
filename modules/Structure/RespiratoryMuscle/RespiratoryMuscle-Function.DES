@@ -16,6 +16,8 @@ Schema : DES V1.0
   <val> FALSE </val>
 </var>
 
+<var><name> Labored? </name><val> 0 </val></var>
+
 <var>
   <name> Effect </name>
 </var>
@@ -103,14 +105,17 @@ Schema : DES V1.0
   </val>
 </def>
 
+
 </block>
 
 <block><name> Wrapup </name>
 
+<def><name> Labored? </name><val> 1 - ROUND ( Effect MIN ( LeftHemithorax.LungInflation MIN RightHemithorax.LungInflation ) )</val></def>
+
 <testcase>
 
 <case>
-<test> NOT Failed AND ( Effect LT 0.2 ) </test>
+<test> NOT Failed AND ( Effect LT 0.4 ) </test>
 <def><name> Failed </name><val> TRUE </val></def>
 </case>
 

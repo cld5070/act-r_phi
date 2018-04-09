@@ -31,6 +31,7 @@ By : University of Mississippi Medical Center
 
 <?include Settings.DES ?>
 <?include Accumulation.DES ?>
+<?include Onc_Osm_Details.DES ?>
 
 </panel>
 

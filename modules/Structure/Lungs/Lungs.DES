@@ -17,6 +17,8 @@ By : University of Mississippi Medical Center
 <?include LeftHemithorax.DES ?>
 
 <?include ExcessLungWater.DES ?>
+<?include RightPleuralCavity.DES ?>
+<?include LeftPleuralCavity.DES ?>
 <?include LungBloodFlow.DES ?>
 
 <?include LungArtyO2.DES ?>
@@ -34,5 +36,9 @@ By : University of Mississippi Medical Center
 <?include LungVeinCO2.DES ?>
 
 <?include LungVolumes.DES ?>
+<!-- Chris Dancy
+Added to do dynamic lung volumes (based on a sin curve) to simulate some aspects of inspiration/expiration
+-->
+<?include ControlledBreathing.DES ?>
 
 End

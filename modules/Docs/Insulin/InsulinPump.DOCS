@@ -18,16 +18,18 @@ Copyright : 2009
 
 <vardoc>
 <name> InsulinPump.Setting </name>
-<topic> Setting - DefinitionIP1 </topic>
+<topic> InsulinPump - Overview </topic>
 <topic> Insulin - Physical Units </topic>
 <topic> Insulin - Concentration Units </topic>
 </vardoc>
 
 <vardoc>
 <name> InsulinPump.Switch </name>
-<topic> Switch - DefinitionIP1 </topic>
+<topic> InsulinPump - Overview </topic>
 <topic> Insulin - Physical Units </topic>
 <topic> Insulin - Concentration Units </topic>
+<seealso> XXXX </seealso>
+<seealso> XXXX </seealso>
 </vardoc>
 
 <topicdoc>
@@ -40,8 +42,8 @@ of diabetes. The first is by multiple daily injections;
 the second by continuous subcutaneous insulin infusion.
 The latter method of administration is the InsulinPump.
 
-Multiple daily injections are found under the structure
-InsulinInjection. 
+Multiple daily injections will be added to Hummod at a 
+later date under the structure name InsulinInjection. 
 
 A small programmable pump with a reservoir of 
 short-acting insulin is connected to a cannula under 
@@ -82,7 +84,7 @@ insulin. J Clin Endo Met 36: 1175 - 1179, 1973.
 Forlani G, Santacroce G, Ciaverella A, Capelli M, 
 Mattioli L, Vannini P. Effects of mixing short- and
 intermediate-acting insulins on absorption course 
-and biologic effect of short-acting preparation.
+and bilogic effect of short-acting preparation.
 Diabetes Care 9: 587 - 590, 1986. 
 
 
@@ -94,15 +96,6 @@ Diabetes Care 9: 587 - 590, 1986.
 <label> Physical Units </label>
 <content>
 
-Units for insulin pool are mU.
-Units for [plasma] are uU/mL.
-
-uU * 0.04167 = nG
-uU * 0.007241 = pMol
-
-
-An international unit (U) is 1/24 mG.  
-Molecular weight is 5754.
 
 </content>
 </topicdoc>
@@ -113,35 +106,6 @@ Molecular weight is 5754.
 <content>
 
 
-</content>
-</topicdoc>
-
-<topicdoc>
-<name> Switch - DefinitionIP1 </name>
-<label> Definition </label>
-<content>
-
-When the insulin pump switch is turned on, the model 
-user can set infusion rates using the sliding bar 
-feature in the insulin pump display box. 
-
-</content>
-</topicdoc>
-
-<topicdoc>
-<name> Setting - DefinitionIP2 </name>
-<label> Definition </label>
-<content>
-
-When the insulin pump switch is turned on, the model 
-user can set infusion rates using the sliding bar 
-feature in the insulin pump display box. Rates of infusion
-may be increased from 0 mU/Min, in increments of 1, up to 
-20 mU/Min; from 20 mU/Min, in increments of 10, up to 
-100 mU/Min; and from 100 mU/Min, in increments of 100,
-up to 1000 mU/Min.
-
-Normal insulin secretion rate is 20 mU/Min.
 </content>
 </topicdoc>
 

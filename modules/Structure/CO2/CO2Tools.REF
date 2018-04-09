@@ -81,10 +81,10 @@ Just as important as pCO2 is [SID], which modulates the pCO2 to
 The following model may be adequate.
 
   [HCO3] = K * (pCO2/(p50 + pCO2))
-  K = k' * [SID]
+  K = k * [SID]
   p50 = 32
 
-where K is a linear function of [SID]. We can now fit k' to a typical
+where K is a linear function of [SID]. We can now fit k to a typical
 data set.
 
 Normal Values ==========================================================
@@ -97,7 +97,7 @@ Normal values for venous blood.
 
 I popped these values into a spread sheet to get
 
-  k' = 1.09
+  k = 1.09
 
 Arterial Values =========================================================
 
@@ -196,19 +196,19 @@ the increase in O2 saturation.
 Inverting =============================================================
 
   [HCO3] = K * (pCO2/(p50 + pCO2))
-  K = k' * [SID]
+  K = k * [SID]
   p50 = 32
 
 Forward expression inverts to
 
   pCO2 = (p50 * [HCO3]) / (K - [HCO3])
-  K = k' * [SID]
+  K = k * [SID]
   p50 = 32
 
-Valid for [HCO3] >= 0 and [HCO3] < k' * [SID]
+Valid for [HCO3] >= 0 and [HCO3] < k * [SID]
 
 For [HCO3] < 0 use pCO2 = 0
-For [HCO3] >= k' * [SID] use pCO2 = PCO2_LARGE or 1000
+For [HCO3] >= k * [SID] use pCO2 = PCO2_LARGE or 1000
 
 Estimating Metabolic Rate =============================================
 
@@ -234,7 +234,7 @@ Tissue In General =====================================================
   pCO2 = 45 mmHg
   SID = 0.036 mEq/mL (see CellSID)
 
-  k' = 0.760
+  k = 0.760
 
   [HCO3] from Raichle. Brain Res. 166:413-417, 1979.
 
@@ -247,7 +247,7 @@ Sahlin Clin.Sci.Mol.Med. 53:459-466, 1977.
   pCO2 = 45 mmHg
   SID = 0.036mEq/mL
 
-  k' = 0.475
+  k = 0.475
 
 Papers by Thomas.
 
@@ -324,7 +324,7 @@ Specific Organs =======================================================
 
 I'll refine this table as data comes to light.
 
-ORGAN                pCO2   p50  [SID]  [HCO3]    k'
+ORGAN                pCO2   p50  [SID]  [HCO3]    k
 -------------------  ----  ----  -----  ------  -----
 Bone                  45    32   0.036   0.016  0.760
 Brain                 45    32   0.036   0.016  0.760

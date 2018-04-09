@@ -16,6 +16,8 @@ By : University Of Mississippi Medical Center
 <parm><name> Multiplier </name><val> 1.0 </val></parm>
 <var><name> NominalConductance </name></var>
 <constant><name> Conductance(/G) </name><val> 0.00029 </val></constant>
+<parm><name> Clamp </name><val> FALSE </val></parm>
+<parm><name> Level </name><val> 0.0 </val></parm>
 
 <var><name> A2Effect </name></var>
 <var><name> SympsEffect </name></var>
@@ -63,6 +65,8 @@ By : University Of Mississippi Medical Center
   <name> PO2OnConductance </name>
   <point><x> 10 </x><y> 2.0 </y><slope> 0 </slope></point>
   <point><x> 30 </x><y> 1.0 </y><slope> 0 </slope></point>
+  <point><x> 35 </x><y> 1.0 </y><slope> 0 </slope></point>
+  <point><x> 55 </x><y> 0.4 </y><slope> 0 </slope></point>
 </curve>
 
 <curve>
@@ -124,9 +128,10 @@ By : University Of Mississippi Medical Center
   <val> PO2OnConductance [ PO2 ] </val>
 </def>
 
-<def>
-  <name> Conductance </name>
-  <val>
+<conditional><name> Conductance </name>
+<test> Clamp </test>
+<true> Level </true>
+<false> 
       BasicConductance
     * A2Effect
     * SympsEffect
@@ -135,8 +140,8 @@ By : University Of Mississippi Medical Center
     * Viscosity.ConductanceEffect
     * Anesthesia.VascularConductance
     * Bone-Vasculature.Effect
-  </val>
-</def>
+</false>
+</conditional>
 
 <def>
   <name> BloodFlow </name>
@@ -170,7 +175,6 @@ By : University Of Mississippi Medical Center
   <val> PO2 </val>
 </def>
 -->
-
 </implicitmath>
 
 <def><name> PlasmaFlow </name><val> BloodFlow * BloodVol.PVCrit </val></def>

@@ -22,7 +22,6 @@ By : University Of Mississippi Medical Center
 <diffeq>
   <name> Vol </name>
   <integralname> Vol </integralname>
-  <initialval> 550.0 </initialval>
   <dervname> Change </dervname>
   <errorlim> 5.0 </errorlim>
 </diffeq>

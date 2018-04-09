@@ -1,15 +1,15 @@
 HumMod / Veins
 
 Created : 15-May-05
-Revised : 2012-07-14
+Revised : 2013-04-11
 Author : Tom Coleman
-Copyright : 2006-2012
+Copyright : 2006-2013
 By : University of Mississippi Medical Center
 
 <groupbox>
    <row> 2.0 </row>
    <col> 32.0 </col>
-   <high> 26.6 </high>
+   <high> 25.6 </high>
    <wide> 30.0 </wide>
    <title> Venous O2 </title>
 
@@ -93,13 +93,6 @@ By : University of Mississippi Medical Center
 
 <showvalue>
    <row> 24.0 </row><col> 1.0 </col>
-   <name> O2Veins.K </name>
-   <format><decimal> 2 </decimal></format>
-   <label> K </label>
-</showvalue>
-
-<showvalue>
-   <row> 25.0 </row><col> 1.0 </col>
    <name> O2Veins.DxMax </name>
    <format><decimal> 2 </decimal></format>
    <label> Dx Max </label>

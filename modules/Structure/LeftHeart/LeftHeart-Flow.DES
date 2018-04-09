@@ -15,14 +15,18 @@ By : University Of Mississippi Medical Center
 <var><name> LargeVesselConductance </name></var>
 
 <var><name> BasicLargeConductance </name></var>
-<parm><name> LargeMultiplier </name><val> 1.0 </val></parm>
+<var><name> LargeMultiplierInit </name><val> 1.0 </val></var>
+<parm><name> LargeMultiplierTarget </name><val> 1.0 </val></parm>
 <var><name> NominalLargeConductance </name></var>
-<constant><name> LargeConductance(/G) </name><val> 0.17508 </val></constant>
+<constant><name> LargeConductance(/G) </name><val> 0.177508 </val></constant>0.17508
+<parm><name> Clamp </name><val> FALSE </val></parm>
+<parm><name> Level </name><val> 0.0 </val></parm>
 
 <var><name> SmallVesselConductance </name></var>
 
 <var><name> BasicSmallConductance </name></var>
-<parm><name> SmallMultiplier </name><val> 1.0 </val></parm>
+<var><name> SmallMultiplierInit </name><val> 1.0 </val></var>
+<parm><name> SmallMultiplierTarget </name><val> 1.0 </val></parm>
 <var><name> NominalSmallConductance </name></var>
 <constant><name> SmallConductance(/G) </name><val> 0.00670 </val></constant>
 
@@ -42,6 +46,21 @@ By : University Of Mississippi Medical Center
 </variables>
 
 <equations>
+
+<diffeq>
+  <name> LargeMultiplier </name>
+  <integralname> LargeMultiplier </integralname>
+  <dervname> dLargeMultiplier   </dervname>
+  <errorlim> 0.03 </errorlim>
+</diffeq>
+
+<diffeq>
+  <name> SmallMultiplier </name>
+  <integralname> SmallMultiplier </integralname>
+  <dervname> dSmallMultiplier   </dervname>
+  <errorlim> 0.03 </errorlim>
+</diffeq>
+
 
 <impliciteq>
   <name> PO2 </name>
@@ -105,9 +124,15 @@ By : University Of Mississippi Medical Center
   <val> LargeConductance(/G) * LeftHeart-Size.InitialMass </val>
 </def>
 
+<def><name> LargeMultiplier </name><val> LargeMultiplierInit </val></def>
+<def><name> SmallMultiplier </name><val> SmallMultiplierInit </val></def>
+
 </block>
 
 <block><name> Calc </name>
+
+<def><name> dLargeMultiplier </name><val> 0.05 * ( LargeMultiplierTarget - LargeMultiplier ) </val></def>
+<def><name> dSmallMultiplier </name><val> 0.05 * ( SmallMultiplierTarget - SmallMultiplier ) </val></def>
 
 <def>
   <name> BasicLargeConductance </name>
@@ -169,13 +194,15 @@ By : University Of Mississippi Medical Center
   </val>
 </def>
 
-<def>
-  <name> Conductance </name>
-  <val>
+<conditional><name> Conductance </name>
+<test> Clamp </test>
+<true> Level </true>
+<false> 
       ( SmallVesselConductance * LargeVesselConductance )
     / ( SmallVesselConductance + LargeVesselConductance )
-  </val>
-</def>
+</false>
+</conditional>
+
 
 <def>
   <name> BloodFlow </name>

@@ -74,7 +74,7 @@ Schema : 2005.0
   <call> Reset </call>
   <def><name> Is_Flat </name><val> TRUE </val></def>
 
-  <page> The ECG is flat! </page>
+<!--  <page> The ECG is flat! </page>-->
 </case>
 
 <case>
@@ -84,7 +84,7 @@ Schema : 2005.0
   <call> Reset </call>
   <def><name> Is_VFib </name><val> TRUE </val></def>
 
-  <page> The ECG shows V-Fib! </page>
+<!--<  <page> The ECG shows V-Fib! </page>-->
 </case>
 
 <case>
@@ -94,7 +94,7 @@ Schema : 2005.0
   <call> Reset </call>
   <def><name> Is_STShift </name><val> TRUE </val></def>
 
-  <page> ECG shows S-T segment shift. </page>
+<!--  <page> ECG shows S-T segment shift. </page>-->
 </case>
 
 <case>
@@ -104,7 +104,7 @@ Schema : 2005.0
   <call> Reset </call>
   <def><name> Is_Paced </name><val> TRUE </val></def>
 
-  <page> ECG shows a pacemaker. </page>
+<!--  <page> ECG shows a pacemaker. </page>-->
 </case>
 
 <case>
@@ -114,7 +114,7 @@ Schema : 2005.0
   <call> Reset </call>
   <def><name> Is_OK </name><val> TRUE </val></def>
 
-  <page> ECG now looks OK. </page>
+<!--  <page> ECG now looks OK. </page>-->
 </case>
 
 </testcase>

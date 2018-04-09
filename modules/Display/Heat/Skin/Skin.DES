@@ -1,9 +1,9 @@
 HumMod / Skin
 
 Created : 28-Apr-05
-Last Modified : 18-Mar-10
+Revised : 2013-02-10
 Author : Tom Coleman
-Copyright : 2006-2010
+Copyright : 2006-2013
 By : University Of Mississippi Medical Center
 
 <panel><name> Heat-Skin </name>
@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Miscellaneous\Heat\Skin\ ?>
+<?path Display\Heat\Skin\ ?>
 
 <?include Storage.DES ?>
 <?include Temperature.DES ?>

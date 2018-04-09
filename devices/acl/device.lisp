@@ -133,6 +133,12 @@
 ;;; 2013.01.03 Dan
 ;;;             : * Clipped the rpm-view-line function since it isn't needed
 ;;;             :   and contains outdated code to avoid any confusion.
+;;; 2014.01.24 Dan
+;;;             : * Updated the build-vis-locs-for methods for text and button
+;;;             :   items so that they use the updated build-string-feats to
+;;;             :   deal with newlines in the text.
+;;;             : * Clipped the *simulated-key* variable definition since it's
+;;;             :   not used for anything now.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 #+:packaged-actr (in-package :act-r)
@@ -142,9 +148,6 @@
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (use-package :cg-user))
-
-(defvar *simulated-key* nil)
-
 
 (defmethod window-select ((w #-(version>= 7) cg:window #+(version>= 7) cg:basic-pane))
   (select-window w))
@@ -250,9 +253,6 @@
     c))
 
 
-
-
-
 (defmethod build-vis-locs-for ((self cg:editable-text) (vis-mod vision-module))
   (let* ((font-spec (cg:nfontmetrics (cg:window self) (cg:make-fontmetrics)))
          (ascent (cg:font-ascent font-spec))
@@ -273,19 +273,18 @@
                                                  descent (round ascent 2))
                                        :width-fct #'(lambda (str)
                                                       (string-width str self))
-                                       :height ascent :obj self)))))
+                                       :height ascent :obj self
+                                       :line-height (+ ascent descent))))))
     (dolist (x feats)
       (setf (chunk-visual-object x) self))
     feats))
     
-
-
 (defmethod build-vis-locs-for ((self cg:button) (vis-mod vision-module))
   (let* ((btn-width (width self))
          (btn-height (height self))
          (text (title self))
+         (lines (1+ (count #\newline text)))
          (feats
-    
           (cons
            (car (define-chunks-fct `((isa visual-location
                                           kind oval
@@ -299,25 +298,23 @@
              (let* ((font-spec (cg:nfontmetrics (cg:window self) (cg:make-fontmetrics)))
                     (ascent (cg:font-ascent font-spec))
                     (descent (cg:font-descent font-spec))
-                    (textlines (string-to-lines text))
                     (start-y (+ (cg:box-top (cg:box self))
-                                (round (- btn-height (* (length textlines)
+                                (round (- btn-height (* lines
                                                         (+ ascent descent))) 2)))
-                    (accum nil)
                     (width-fct #'(lambda (str) (string-width str self))))
-               (dolist (item textlines (flatten (nreverse accum)))
-                 (push
-                  (build-string-feats vis-mod :text item
-                                      :start-x 
-                                      (+ (cg:box-left (cg:box self))
-                                         (round 
-                                          (- btn-width (funcall width-fct item))
-                                          2))
-                                      :y-pos (+ start-y (round (+ ascent descent) 2))
-                                      :width-fct width-fct :height (min ascent btn-height) 
-                                      :obj self)
-                  accum)
-                 (incf start-y (+ ascent descent))))))))
+               (build-string-feats vis-mod :text text
+                                   :start-x 
+                                   (+ (cg:box-left (cg:box self))
+                                      (round btn-width 2))
+                                   :x-fct (lambda (string startx obj)
+                                            (declare (ignore obj))
+                                            (- startx
+                                               (round (funcall width-fct string) 2)))
+                                   :y-pos (+ start-y (round (+ ascent descent) 2))
+                                   :width-fct width-fct 
+                                   :height (min ascent btn-height) 
+                                   :obj self
+                                   :line-height (+ ascent descent)))))))
     
     (let ((fun (lambda (x y) (declare (ignore x)) (approach-width (car feats) y))))
       (dolist (x (cdr feats))
@@ -342,7 +339,8 @@
                                                  descent (round ascent 2))
                                        :width-fct #'(lambda (str)
                                                       (string-width str self))
-                                       :height ascent :obj self))
+                                       :height ascent :obj self
+                                       :line-height (+ ascent descent)))
             (color (system-color->symbol (aif (cg:foreground-color self)
                                               it
                                               cg:black))))

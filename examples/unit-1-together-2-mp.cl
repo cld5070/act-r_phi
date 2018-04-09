@@ -1,6 +1,7 @@
 ;;; This is all the models of unit1 defined simultaneously
-;;; but each within its own meta-process which means
-;;; a separate run call will be necessary for each.
+;;; but within two different meta-processes which means
+;;; a run call will need to be within the context of a
+;;; particular meta-process.
 ;;;
 ;;; That is:
 ;;; (with-meta-process default (run 10)) 

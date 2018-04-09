@@ -1,11 +1,10 @@
 HumMod / EPOPool
 
 Created : 07-Apr-05
-Last Modified : 26-Jan-10
+Revised : 2013-02-17
 Author : Tom Coleman
-Copyright : 2008-2010
+Copyright : 2008-2013
 By : University of Mississippi Medical Center
-Schema : DES V1.0
 
 <structure><name> EPOPool </name>
 
@@ -13,8 +12,13 @@ Schema : DES V1.0
 
 <var><name> [EPO] </name></var>
 <var><name> Log10Conc </name></var>
+<var><name> [EPO(pG/mL)] </name></var>
 
-<constant><name> VOLDIST </name><val> 0.40 </val></constant>
+<constant><name> MU_TO_PG </name><val> 7.69 </val></constant>
+<constant><name> PERCENT_TO_FRACTION </name><val> 0.01 </val></constant>
+
+<parm><name> VolDist(%ECFV) </name><val> 33 </val></parm>
+<var><name> VolDist(FractionECFV) </name></var>
 
 <var><name> VolDist </name></var>
 <var><name> InitialVolDist </name></var>
@@ -22,8 +26,11 @@ Schema : DES V1.0
 <var><name> Gain </name></var>
 <var><name> Loss </name></var>
 
-<var><name> Target[EPO] </name><val> 20.0 </val></var>
+<var><name> Target[EPO] </name><val> 18.0 </val></var>
 <var><name> InitialMass </name></var>
+
+<parm><name> Switch </name><val> FALSE </val></parm>
+<parm><name> Level </name><val> 0 </val></parm>
 
 </variables>
 
@@ -41,22 +48,48 @@ Schema : DES V1.0
 <definitions>
 
 <block><name> Init </name>
-  <def><name> InitialVolDist </name><val> VOLDIST * ECFV.InitialVol(L) </val></def>
-  <def><name> InitialMass </name><val> Target[EPO] * InitialVolDist </val></def>
+  <def>
+    <name> InitialVolDist </name>
+    <val> PERCENT_TO_FRACTION * VolDist(%ECFV) * ECFV.InitialVol(L) </val>
+  </def>
+
+  <def>
+    <name> InitialMass </name>
+    <val> Target[EPO] * InitialVolDist </val>
+  </def>
+
   <def><name> Mass </name><val> InitialMass </val></def>
+</block>
+
+<block><name> Parms </name>
+  <def>
+    <name> VolDist(FractionECFV) </name>
+    <val> PERCENT_TO_FRACTION * VolDist(%ECFV) </val>
+  </def>
 </block>
 
 <block><name> CalcConc </name>
 
 <def>
   <name> VolDist </name>
-  <val> VOLDIST * ECFV.Vol(L) </val>
+  <val> VolDist(FractionECFV) * ECFV.Vol(L) </val>
 </def>
 
-<def>
+<!-- <conditional>
   <name> [EPO] </name>
-  <val> Mass / VolDist </val>
-</def>
+  <test> Switch </test>
+  <true> Level </true>
+  <false> Mass / VolDist </false>
+</conditional>
+ -->
+
+<conditional>
+  <name> [EPO] </name>
+  <test> Switch </test>
+  <true> Level </true>
+  <false> 17 </false>
+</conditional>
+
 
 <conditional>
   <name> Log10Conc </name>
@@ -64,6 +97,11 @@ Schema : DES V1.0
   <true> LOG10 ( [EPO] ) </true>
   <false> 0.0 </false>
 </conditional>
+
+<def>
+  <name> [EPO(pG/mL)] </name>
+  <val> MU_TO_PG * [EPO] </val>
+</def>
 
 </block>
 
@@ -76,7 +114,7 @@ Schema : DES V1.0
 
 <def>
   <name> Loss </name>
-  <val> EPOClearance.Rate </val>
+  <val> EPODisposal.Rate </val>
 </def>
 
 <def>

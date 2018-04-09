@@ -1,42 +1,15 @@
 HumMod / EPO
 
-Created : 28-Apr-05
-Last Modified : 26-Jan-10
+Created : 2013-02-17
+Revised : 2013-02-17
 Author : Tom Coleman
-Copyright : 2006-2010
-By : University Of Mississippi Medical Center
-Schema : DES V1.0
+Copyright : 2013-2013
+By : Tom Coleman
 
-<panel><name> Hormones_EPO </name>
+<?path Display\Hormones\EPO\ ?> -->
 
-<showbitmap>
-  <row> 0.3 </row>
-  <col> 1.0 </col>
-  <name> Hormone </name>
-</showbitmap>
-
-<label>
-  <row> 0.3 </row>
-  <col> 4.5 </col>
-  <text> Erythropoietin </text>
-</label>
-
-<showclock>
-  <row> 0.3 </row><col> 32.0 </col>
-  <name> System.X </name>
-  <ampm/>
-  <secs/>
-  <days/>
-</showclock>
-
-<?path Display\Hormones\EPO\ ?>
-
-<?include Pool.DES ?>
-<?include Pump.DES ?>
-<?include Clearance.DES ?>
-
-<?include Secretion.DES ?>
-
-</panel>
+<?include Pool\Pool.DES ?>
+<?include Secretion\Secretion.DES ?>
+<?include Disposal\Disposal.DES ?>
 
 End

@@ -19,8 +19,22 @@ Schema : DES V1.0
 <var><name> PhEffect </name></var>
 <var><name> SympsEffect </name></var>
 <var><name> AlphaAgonism </name></var>
-
+<parm><name> ChemoConstitutive </name><val> 0.0 </val></parm>
+<parm><name> K </name><val> 0.0001 </val></parm>
+<var><name> DeltaPh </name></var>
 </variables>
+
+<equations>
+
+<diffeq>
+  <name> ssPH </name>
+  <integralname> ssPH </integralname>
+  <initialval> 7.44 </initialval>
+  <dervname> dSSPH </dervname>
+  <errorlim> 0.01 </errorlim>
+</diffeq>
+
+</equations>
 
 <functions>
 
@@ -34,9 +48,9 @@ Schema : DES V1.0
 
 <curve>
   <name> PhEffect </name>
-  <point><x> 7.10 </x><y> 2.0 </y><slope> 0 </slope></point>
-  <point><x> 7.44 </x><y> 0.4 </y><slope> -3.0 </slope></point>
-  <point><x> 7.70 </x><y> 0.0 </y><slope> 0 </slope></point>
+  <point><x> -0.34 </x><y> 2.0 </y><slope> 0 </slope></point>7.1
+  <point><x> 0 </x><y> 0.4 </y><slope> -3.0 </slope></point>7.44
+  <point><x> 0.26 </x><y> 0.0 </y><slope> 0 </slope></point>7.7
 </curve>
 
 <curve>
@@ -51,6 +65,9 @@ Schema : DES V1.0
 <definitions>
 <block><name> Calc </name>
 
+<def><name> dSSPH </name><val> K * ( BloodPhValues.ArtysPh - ssPH ) </val></def>
+<def><name> DeltaPh </name><val> BloodPhValues.ArtysPh - ssPH </val></def>
+
 <def>
   <name> PO2Effect </name>
   <val> PO2Effect [ PO2Artys.Pressure ] </val>
@@ -58,15 +75,14 @@ Schema : DES V1.0
 
 <def>
   <name> PhEffect </name>
-  <val> PhEffect [ BloodPhValues.ArtysPh ] </val>
+  <val> PhEffect [ DeltaPh ] </val>
 </def>
 
 <def>
   <name> AlphaAgonism </name>
   <val>
-      AlphaBlockade.Effect
-    * ( ( 0.5 * GangliaGeneral.NA )
-    + ( 0.5 * AlphaPool.Effect ) )
+    ( ( 0.5 * Ganglia-General.NA )
+    + ( 0.5 * Alpha1Pool.Effect ) )
   </val>
 </def>
 
@@ -77,7 +93,7 @@ Schema : DES V1.0
 
 <def>
   <name> BasicFiringRate </name>
-  <val> PO2Effect + PhEffect + SympsEffect </val>
+  <val> PO2Effect + PhEffect + SympsEffect + ChemoConstitutive </val>
 </def>
 
 <testcase>
@@ -104,7 +120,7 @@ Schema : DES V1.0
   <name> FiringRate </name>
   <val>
       BasicFiringRate
-    * ChemoreceptorAcclimation.Multiplier
+   <!-- * ChemoreceptorAcclimation.Multiplier-->
   </val>
 </def>
 </case>

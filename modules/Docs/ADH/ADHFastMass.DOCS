@@ -9,111 +9,127 @@ Copyright : 2009
 
 <vardoc>
 <name> ADHFastMass.Change </name>
-<topic> ADHFastMass - Overview </topic>
-<topic> Change - DefinitionADHFM1 </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<seealso> XXXX </seealso>
+<seealso> XXXX </seealso>
 </vardoc>
 
 <vardoc>
 <name> ADHFastMass.Flux </name>
-<topic> Flux - DefinitionADHFM2 </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<seealso> XXXX </seealso>
+<seealso> XXXX </seealso>
 </vardoc>
 
 <vardoc>
 <name> ADHFastMass.FluxK </name>
-<topic> FluxK - DefinitionADHFM3 </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<seealso> XXXX </seealso>
+<seealso> XXXX </seealso>
 </vardoc>
 
 <vardoc>
 <name> ADHFastMass.Mass </name>
-<topic> Mass - DefinitionADHFM4 </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<topic> XXX </topic>
+<seealso> XXXX </seealso>
+<seealso> XXXX </seealso>
 </vardoc>
 
 
 <topicdoc>
-<name> ADHFastMass - Overview </name>
+<name> XXX</name>
+<label> XXX</label>
+<content>
+
+[Plasma]    pG/mL
+Plasma Mass nG
+Fluxes      nG/Min
+Stored Mass uG
+
+Notice that micro (10^-6), nano (10^-9) and pico (10^-12)
+gram units are used.
+
+</content>
+</topicdoc>
+
+<topicdoc>
+<name> XX </name>
+<label> XXX </label>
+<content>
+
+XX concentrations have been expressed in
+
+   pG/mL
+   pMol/L
+   uU/mL
+
+A typical concentration is XXX pG/mL
+
+</content>
+</topicdoc>
+
+<topicdoc>
+<name> XXX </name>
 <label> Overview </label>
 <content>
 
-In HumMod, the amount of ADH stored in the posterior pituitary is 
-divided into two distict masses - the SlowMass and the FastMass. 
-This assumption comes from hemorrhage studies in dogs which show 
-that the initial secretory response is not sustained in the 
-presence of a maintained stimulus of hemorrhagic hypotension. 
-The Fast Mass is a readily releasable pool of ADH which is released 
-in response to an acute stimulus and does not result in a net 
-increase in synthesis of ADH (as indexed by total mRNA or nucleolar 
-volume in hypothalamic neurons).
-The fast mass comprises about 10 -20% of the total hormone content 
-of the gland - 3200nG. Since normal synthesis and secretion rates
-are 3.2nG/Min into and out of the FastMass pool, the fractional 
-secretion rate is 0.001/min 
-
-Sachs H, Share L, Osinchak J, Carpi A. Capacity of the neurohypophysis
-to release vasopressin. Endocrinology 81: 755 - 770, 1967. 
-   
- 
-</content>
-</topicdoc>
-
-<topicdoc>
-<name> Change - DefinitionADHFM1</name>
-<label> Definition </label>
-<content>
-
-Change in the FastMass pool can occur in three ways: 
-1. ADH secretion depletes the Fast Mass pool 
-2. Flux of ADH out of the FastMass pool into the SlowMass pool
-also depletes the FastMass pool.
-3. Flux of ADH out of SlowMass pool into the FastMass pool increases
-the FastMass pool.   
-
-Change is therefore defined as 
-ADHSlowMassFlux - ADHFastMass.Flux - ADHSecretion.Rate
 
 </content>
 </topicdoc>
 
-<topicdoc>
-<name> Flux - DefinitionADHFM2 </name>
-<label> Definition </label>
-<content>
+   Typical XX is XX pg/ml at a
+   secretion rate of XX ng/min.
 
-Flux is the rate of movement of ADH out of the FastMass and into 
-the SlowMass and vice versa. It is defined by the Flux time 
-constant: Flux K
+   Physical units.
 
-Flux = FluxK * Mass
+   [Plasma]    pG/mL
+   Plasma Mass nG
+   Fluxes      nG/Min
+   Stored Mass uG
 
-Since normal synthesis and secretion rates are 3.2 nG/Min into 
-and out of the fast pool and the fast mass is 3200ng, the 
-fractional secretion rate is 0.001 /Min. The SlowMass is
-17000nG and so fluxes between the fast and slow is 17nG/Min
-This defines the two rate constants:
-SlowToFast - 0.0010 /Min
-FastToSlow - 0.0053 /Min
+   Volume of distribution is ECFV,
+   which is 15000 mL.
 
-</content>
-</topicdoc>
+   Initial ECFV pool is 30 nG or
+   30000 pG.
 
-<topicdoc>
-<name> FluxK - DefinitionADHFM3 </name>
-<label> Definition </label>
-<content>
+   Normal synthesis and secretion
+   rates are 3.2 nG/Min into and
+   out of the fast pool.
 
-FluxK is the flux time constant for movement of ADH out of the Fast 
-Mass. it has  a value of .0043
+   The fast mass is 3200 nG, making
+   the fractional secretion rate
+   0.001 /Min.
 
-</content>
-</topicdoc>
+   The slow mass is 17000 nG.
 
-<topicdoc>
-<name> Mass - DefinitionADHFM4 </name>
-<label> Definition </label>
-<content>
+   Fluxes between the fast and slow
+   pools is 17 nG/Min, defining these
+   2 rate constants.
 
-Mass is the amount of ADH stored in the FastMass 
+      SlowToFast - 0.0010 /Min
+      FastToSlow - 0.0053 /Min
 
-</content>
-</topicdoc>
+   Thrasher. AJP 278:R469-R475, 2000.
+
+       Neural stimulation of ADH release
+       seems to come primarily from the
+       baroreflex.
+
+   I favoring the idea that there is little
+   tonic neural stimulation of AVP release.
+
+   Hemorrhage causes a big stimulus.  Brain
+   death only decreases AVP moderately.
+   Trauma to the hypophysis will decrease
+   AVP more.
 
 End

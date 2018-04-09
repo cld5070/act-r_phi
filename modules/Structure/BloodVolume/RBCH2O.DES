@@ -1,9 +1,9 @@
 HumMod / RBCH2O
 
 Created : 26-Jun-06
-Revised : 2012-03-22
+Revised : 2013-03-02
 Author : Tom Coleman
-Copyright : 2006-2012
+Copyright : 2006-2013
 By : University Of Mississippi Medical Center
 
 <structure><name> RBCH2O </name>
@@ -12,9 +12,11 @@ By : University Of Mississippi Medical Center
 
 <var><name> InitialVol </name></var>
 <var><name> Vol </name></var>
+
 <var><name> Vol(L) </name></var>
 
-<var><name> FractH2O </name></var>
+<parm><name> FractH2O </name><val> UNDEFINED </val></parm>
+<var><name> InitialFractH2O </name></var>
 
 <var><name> Gain </name></var>
 <var><name> Loss </name></var>
@@ -27,18 +29,13 @@ By : University Of Mississippi Medical Center
 <block><name> Init </name>
 
 <def>
-  <name> InitialVol </name>
-  <val> ( 1.0 - RBCSolids.FractSolids ) * RBCVol.InitialVol </val>
+  <name> FractH2O </name>
+  <val> InitialFractH2O </val>
 </def>
 
 </block>
 
 <block><name> CalcVol </name>
-
-<def>
-  <name> FractH2O </name>
-  <val> 1.0 - RBCSolids.FractSolids </val>
-</def>
 
 <def>
   <name> Vol </name>

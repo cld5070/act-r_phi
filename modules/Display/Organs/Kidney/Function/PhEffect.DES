@@ -16,9 +16,9 @@ Schema : DES V1.0
 
 <showvalue>
    <row> 1.4 </row><col> 1.0 </col>
-   <name> Kidney-Function.PhEffect </name>
+   <name> LeftKidney-Function.PhEffect </name>
    <format><decimal> 2 </decimal></format>
-   <label> Effect </label>
+   <label> Left Effect </label>
 </showvalue>
 
 <showcurve>
@@ -26,7 +26,44 @@ Schema : DES V1.0
   <leftmargin> 5 </leftmargin>
 
   <xaxis>
-    <name> Kidney-Ph.Ph </name>
+    <name> LeftKidney-Ph.Ph </name>
+    <label> Left pH </label>
+    <scale>
+      <min> 6.5 </min><max> 7.2 </max><inc> 0.1 </inc>
+    </scale>
+  </xaxis>
+
+  <yaxis>
+    <nolabel/>
+    <scale>
+      <min> 0 </min><max> 1 </max>
+    </scale>
+  </yaxis>
+
+  <curvename> LeftKidney-Function.PhOnFunction </curvename>
+</showcurve>
+
+
+<showvalue>
+   <row> 7.2 </row><col> 1.0 </col>
+   <name> LeftKidney-Ph.Ph </name>
+   <format><decimal> 2 </decimal></format>
+   <label> Left pH </label>
+</showvalue>
+
+<showvalue>
+   <row> 1.4 </row><col> 31.0 </col>
+   <name> RightKidney-Function.PhEffect </name>
+   <format><decimal> 2 </decimal></format>
+   <label> Right Effect </label>
+</showvalue>
+
+<showcurve>
+  <row> 2.6 </row><col> 31.0 </col><high> 4 </high><wide> 28 </wide>
+  <leftmargin> 5 </leftmargin>
+
+  <xaxis>
+    <name> RightKidney-Ph.Ph </name>
     <label> pH </label>
     <scale>
       <min> 6.5 </min><max> 7.2 </max><inc> 0.1 </inc>
@@ -40,16 +77,15 @@ Schema : DES V1.0
     </scale>
   </yaxis>
 
-  <curvename> Kidney-Function.PhOnFunction </curvename>
+  <curvename> RightKidney-Function.PhOnFunction </curvename>
 </showcurve>
 
 <showvalue>
-   <row> 7.2 </row><col> 1.0 </col>
-   <name> Kidney-Ph.Ph </name>
+   <row> 7.2 </row><col> 31.0 </col>
+   <name> RightKidney-Ph.Ph </name>
    <format><decimal> 2 </decimal></format>
-   <label> pH </label>
+   <label> Right pH </label>
 </showvalue>
-
 <infobutton>
   <row> 1.2 </row>
   <col> 26.0 </col>

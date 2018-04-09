@@ -23,12 +23,12 @@ By : University Of Mississippi Medical Center
 
 <def>
   <name> Inflow </name>
-  <val> GlomerulusCalcium.Rate </val>
+  <val> LeftNephronCalciumProximal.Inflow + RightNephronCalciumProximal.Inflow </val>
 </def>
 
 <def>
   <name> Reab </name>
-  <val> FractionalReab * Inflow </val>
+  <val> ( LeftNephronCalciumProximal.Inflow  * LeftNephronCalciumProximal.FractionalReab ) +  ( RightNephronCalciumProximal.Inflow  * RightNephronCalciumProximal.FractionalReab ) </val>
 </def>
 
 <def>

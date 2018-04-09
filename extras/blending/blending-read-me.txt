@@ -135,9 +135,9 @@ The blending buffer takes requests the same way the retrieval
 buffer does and it will attempt to find a chunk that matches the
 request among the chunks in the model's declarative memory.
 
-It differs in that the chunk returned will have "blended" values 
-in its slots.  How those blended values are computed is described
-below.  
+It differs in that the chunk returned may have "blended" values 
+in some of its slots.  How those blended values are computed is 
+described below.  
 
 The module can only handle one request at a time.  If a new
 request is received while the module is busy it will cancel the
@@ -148,24 +148,20 @@ There are two request parameters allowed in a request :ignore-slots
 and :do-not-generalize.
 
 If :ignore-slots is provided it must specify a list of slot names.
-Those slots will not get a value in the result chunk i.e. they
-will have a value of nil.  When using that mechanism one needs to
-be careful because there could be issues if that result chunk is
-allowed to enter declarative memory.  One issue is that since it 
-will likely become another potential target to be blended the 
-empty slots could affect the results of later blended retrievals.
-Another issue is that with lots of empty slots it may be more
-likely to be merged with other blended results.  That could lead 
-to issues with the blended results because of higher activation 
-of those merged results.
+Those slots will not receive a blended value in the result chunk.
+This parameter is primarily for efficiency purposes because 
+creating a blended value for a slot can be a costly operation. 
+Thus, if there are slots in the target chunk-type for which the 
+model will not need a value in the resulting chunk then ignoring 
+those slots may provide a noticable improvement in the time it
+takes to run the model.
 
 If :do-not-generalize is provided it must specify a list of slot names.
-Those slots in the resulting chunk will still be computed via 
-the blending mechanism, but it will not use method c if the
-values to be blended are all chunks (as described later) for 
-computing the value.  Instead it will use method d for that
-slot.  This may be necessary when one wants to use chunks for
-the slot contents and doesn't want blending to potentially consider
+Any of those slots which will receive a blended value in the 
+resulting chunk will be computed without using blending method c if 
+the values to be blended are all chunks.  Instead it will use method 
+d for those slots.  This may be necessary when one wants to use chunks
+for the slot contents and doesn't want blending to potentially consider
 all other chunks as values.
 
 ----------------------------------------------------------------
@@ -184,11 +180,13 @@ below.
 
 For each chunk i in MS its activation is computed based on the
 current settings of the declarative module (including noise), 
-which will be called A(i).  Those activations and the temperature 
-value for the blending module are used to compute the probability 
-of recall for the chunks in MS using the Boltzmann equation (shown 
-in blending.pdf).  The probability of retrieving chunk i from MS 
-will be called p(i).
+which will be called A(i).  If the :min-bl parameter is specified
+for the model then any chunks which have a base-level activation
+below that value are removed from MS.  The activations and the 
+temperature value for the blending module are then used to compute
+the probability of recall for the chunks in MS using the 
+Boltzmann equation (shown in blending.pdf).  The probability of
+retrieving chunk i from MS will be called p(i).
 
 The chunk that results from the blending request will be of the 
 chunk-type specified in the request.  The contents of the slots 
@@ -201,12 +199,17 @@ value requested with an equality test.  If a slot is requested with
 both equality and non-equal tests the explicit value from the 
 equality test will be used.
 
-If the :ignore-slots request parameter is provided all of the 
-slots in that list will have a value of nil in the resulting
-chunk.  For all other slots (including those with an explicit 
-value if the :blend-all-slots parameter is t) the following 
-process is performed to determine the value for that slot (referenced
-by the index k below) in the resulting chunk:
+If the :ignore-slots request parameter is provided any slots in
+that list which do not have an explicit value in the request will 
+receive a value of nil in the result.  A slot which is in the 
+:ignore-slots list and also has an explicit value in the request
+will have that explicit value if :blend-all-slots is nil and
+will have a result of nil if :blend-all-slots is t.
+
+For all other slots (including those with an explicit value if 
+the :blend-all-slots parameter is t) the following process is 
+performed to determine the value for that slot (referenced by 
+the index k below) in the resulting chunk:
 
 A list of potential values is created by taking the value from slot
 k for each of the chunks in MS.  Those values will be referred to 

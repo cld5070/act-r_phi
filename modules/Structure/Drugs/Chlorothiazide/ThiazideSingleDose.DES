@@ -31,6 +31,8 @@ Schema : DES V1.0
   <val> 0.0 </val>
 </var>
 
+<parm><name> Dummy </name><val> 0 </val></parm>
+
 </variables>
 
 <definitions>
@@ -57,6 +59,17 @@ Schema : DES V1.0
   <val> CumulativeDose + Dose </val>
 </def>
 
+</block>
+
+<block><name> Parms </name>
+
+<onjustchanged><name> Dummy </name>
+<def><name> ThiazideGILumen.Mass </name><val> ThiazideGILumen.Mass + (  Dose * Dummy )  </val></def>
+<def><name> TotalDoses </name><val> TotalDoses + Dummy </val></def>
+<def><name> CumulativeDose </name><val> CumulativeDose + ( Dummy * Dose ) </val></def>
+<def><name> TimeLastDose </name><val> System.X </val></def>
+<def><name> Dummy </name><val> 0 </val></def>
+</onjustchanged>
 </block>
 
 <block><name> Reset </name>

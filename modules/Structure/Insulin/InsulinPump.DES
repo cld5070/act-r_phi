@@ -25,6 +25,20 @@ Schema : DES V1.0
   <val> 0.0 </val>
 </parm>
 
+<var>
+  <name> T2D </name>
+</var>
+
+<parm>
+  <name> Switch2 </name>
+  <val> FALSE </val>
+</parm>
+
+<parm>
+  <name> Setting2 </name>
+  <val> 0.0 </val>
+</parm>
+
 </variables>
 
 <definitions>
@@ -36,6 +50,14 @@ Schema : DES V1.0
   <true> Setting </true>
   <false> 0.0 </false>
 </conditional>
+
+<conditional>
+  <name> T2D </name>
+  <test> Switch2 </test>
+  <true> Setting2 </true>
+  <false> 0.0 </false>
+</conditional>
+
 
 </block>
 </definitions>

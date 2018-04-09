@@ -10,19 +10,13 @@ Schema : DES V1.0
 <groupbox>
    <row> 2.0 </row>
    <col> 32.0 </col>
-   <high> 11.4 </high>
+   <high> 10.4 </high>
    <wide> 30.0 </wide>
    <title> Vascular Conductance </title>
 
-<showvalue>
-  <row> 1.4 </row><col> 1.0 </col>
-  <name> Kidney-Flow.Conductance </name>
-  <label> Conductance </label>
-  <format><decimal> 1 </decimal></format>
-</showvalue>
 
 <showgraph>
-  <row> 2.4 </row><col> 1.0 </col><high> 7 </high><wide> 28 </wide>
+  <row> 1.4 </row><col> 1.0 </col><high> 7 </high><wide> 28 </wide>
   <leftmargin> 4 </leftmargin>
   <xaxis>
     <name> System.X </name>
@@ -31,12 +25,16 @@ Schema : DES V1.0
   </xaxis>
   <yaxis>
     <yvar>
-      <name> Kidney-Flow.Conductance </name>
-      <nolabel/>
-      <linecolor> BLUE </linecolor>
+      <name> RightKidney-Flow.Conductance </name>
+          <label> Right </label> <linecolor> BLUE </linecolor>
+    </yvar>
+    <yvar>
+      <name> LeftKidney-Flow.Conductance </name>
+      <label> Left </label>
+      <linecolor> GREEN </linecolor>
     </yvar>
     <scale>
-      <min> 10 </min><max> 15 </max><inc> 5 </inc>
+      <min> 5 </min><max> 15 </max><inc> 5 </inc>
     </scale>
   </yaxis>
 </showgraph>

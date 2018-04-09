@@ -42,34 +42,11 @@ By : University of Mississippi Medical Center
 <var><name> CellH2O </name></var>
 <var><name> InitialCellH2O </name></var>
 
-<constant>
-  <name> H2OFractMass </name>
-  <val> 0.67 </val>
-</constant>
-
-<var><name> SolidsFractMass </name></var>
-
 </variables>
 
 <definitions>
 
 <block><name> Init </name>
-
-<def>
-  <name> InitialLiquidVol </name>
-  <val> H2OFractMass * InitialMass / LiquidDensity </val>
-</def>
-
-<def>
-  <name> SolidsFractMass </name>
-  <val> 1.0 - H2OFractMass </val>
-</def>
-
-<def>
-  <name> InitialSolidMass </name>
-  <val> SolidsFractMass * InitialMass </val>
-</def>
-
 </block>
 
 <block><name> ScaleH2O </name>

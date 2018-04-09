@@ -49,7 +49,7 @@ Schema : 2005.0
 </true>
 <false>
   <def><name> Switch </name><val> FALSE </val></def>
-  <message> Establish shunt before using dialysis machine. </message>
+<!--  <message> Establish shunt before using dialysis machine. </message>-->
 </false>
 </if>
 

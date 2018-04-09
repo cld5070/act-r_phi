@@ -1,9 +1,9 @@
 HumMod / Common
 
 Created : 05-Apr-05
-Revised : 2012-03-09
+Revised : 2013-03-16
 Author : Tom Coleman
-Copyright : 2008-2012
+Copyright : 2008-2013
 By : University of Mississippi Medical Center
 
 <maplist>
@@ -124,6 +124,21 @@ A symbol for xy plots.
 <repeatlist>
   <name> Common.Structure </name>
   <repeat><reps> 20 </reps><stepsize> 0.01 </stepsize></repeat>
+</repeatlist>
+
+<repeatlist>
+  <name> Common.FiftySteps </name>
+  <repeat><reps> 50 </reps><stepsize> 1 </stepsize></repeat>
+</repeatlist>
+
+<repeatlist>
+  <name> Common.Thousandths </name>
+  <repeat><reps> 100 </reps><stepsize> 0.001 </stepsize></repeat>
+</repeatlist>
+
+<repeatlist>
+  <name> Common.Ten-Thousandths </name>
+  <repeat><reps> 100 </reps><stepsize> 0.0001 </stepsize></repeat>
 </repeatlist>
 
 End

@@ -56,7 +56,7 @@ By : University Of Mississippi Medical Center
   <test> OrganFlow.HepaticVeinFlow GT 0.0 </test>
   <true>
     ( ( AnesthesiaIVBlood.[Blood]
-    * HepaticArtery.BloodFlow ) 
+    * HepaticArtery-Flow.BloodFlow ) 
     + ( AnesthesiaIVGITract.[Vein]
     * GITract-Flow.BloodFlow ) )
     / OrganFlow.HepaticVeinFlow

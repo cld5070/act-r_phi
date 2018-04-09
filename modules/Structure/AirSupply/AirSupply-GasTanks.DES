@@ -56,6 +56,53 @@ Schema : DES V1.0
   </val>
 </def>
 
+
+
+<onjustchanged><name>  O2Valve(%) </name>
+  <if><test> N2Valve(%) GT 0 </test>
+  <true>
+     <def><name> N2Valve(%) </name><val> N2Valve(%)  + ( 100 - SumValves ) </val></def>
+  </true>
+  </if>
+
+</onjustchanged>
+
+<onjustchanged><name>  N2Valve(%) </name>
+     <def><name> O2Valve(%) </name><val> O2Valve(%)  + ( 100 - SumValves ) </val></def>
+</onjustchanged>
+
+<onjustchanged><name>  CO2Valve(%) </name>
+     <def><name> O2Valve(%) </name><val> O2Valve(%)  + ( ( 100 - SumValves ) * O2Valve(%) / ( 100 - CO2Valve(%) ) ) </val></def>
+     <def><name> N2Valve(%) </name><val> N2Valve(%)  + ( ( 100 - SumValves ) * N2Valve(%) / ( 100 - CO2Valve(%) ) )  </val></def>
+</onjustchanged>
+
+<onjustchanged><name>  H2OValve(%) </name>
+     <def><name> O2Valve(%) </name><val> O2Valve(%)  + ( ( 100 - SumValves ) * O2Valve(%) / ( 100 - H2OValve(%) ) ) </val></def>
+     <def><name> N2Valve(%) </name><val> N2Valve(%)  + ( ( 100 - SumValves ) * N2Valve(%) / ( 100 - H2OValve(%) ) )  </val></def>
+</onjustchanged>
+
+<onjustchanged><name>  COValve(%) </name>
+     <def><name> O2Valve(%) </name><val> O2Valve(%)  + ( ( 100 - SumValves ) * O2Valve(%) / ( 100 - COValve(%) ) ) </val></def>
+     <def><name> N2Valve(%) </name><val> N2Valve(%)  + ( ( 100 - SumValves ) * N2Valve(%) / ( 100 - COValve(%) ) )  </val></def>
+</onjustchanged>
+
+<onjustchanged><name>  AnestheticValve(%) </name>
+     <def><name> O2Valve(%) </name><val> O2Valve(%)  + ( ( 100 - SumValves ) * O2Valve(%) / ( 100 - AnestheticValve(%) ) ) </val></def>
+     <def><name> N2Valve(%) </name><val> N2Valve(%)  + ( ( 100 - SumValves ) * N2Valve(%) / ( 100 - AnestheticValve(%) ) )  </val></def>
+</onjustchanged>
+
+<def>
+  <name> SumValves </name>
+  <val>
+      O2Valve(%)
+    + N2Valve(%)
+    + CO2Valve(%)
+    + H2OValve(%)
+    + COValve(%)
+    + AnestheticValve(%)
+  </val>
+</def>
+
 <def>
   <name> O2(%) </name>
   <val> ( 100.0 * O2Valve(%) ) / SumValves </val>
@@ -85,6 +132,10 @@ Schema : DES V1.0
   <name> Anesthetic(%) </name>
   <val> ( 100.0 * AnestheticValve(%) ) / SumValves </val>
 </def>
+
+</block>
+
+<block><name> WrapUp </name>
 
 </block>
 </definitions>

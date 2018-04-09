@@ -15,6 +15,9 @@ Schema : DES V1.0
 <var><name> Temp(C) </name></var>
 <var><name> Temp(K) </name></var>
 
+<var><name> IFFlux </name></var>
+<var><name> IFFrac </name></var>
+
 <var><name> Flux </name></var>
 <var><name> Gain </name></var>
 <var><name> Loss </name></var>
@@ -83,12 +86,18 @@ Schema : DES V1.0
 
 <block><name> Flux </name>
 
+<def><name> IFFrac </name><val> SkeletalMuscle-Size.Mass / Weight.Weight </val></def>
+<def><name> IFFlux </name><val> Temp(K) * IFFrac * ( Torso_Upper_LymphWater.Rate + Torso_Middle_LymphWater.Rate + Torso_Lower_LymphWater.Rate  - 
+Torso_Upper_CapillaryWater.Rate - Torso_Middle_CapillaryWater.Rate   - Torso_Lower_CapillaryWater.Rate ) / 1000 MIN 0
+</val></def>
+
 <def>
   <name> Flux </name>
   <val>
-    ( SkeletalMuscle-Flow.BloodFlow / 1000.0 )
+    ( ( SkeletalMuscle-Flow.BloodFlow / 1000.0 )
     * ( HeatSkeletalMuscle.Temp(K) - HeatCore.Temp(K) )
-    * SpecificHeat.Blood
+    * SpecificHeat.Blood )
+
   </val>
 </def>
 
@@ -103,7 +112,7 @@ Schema : DES V1.0
 
 <def>
   <name> Loss </name>
-  <val> Flux </val>
+  <val> Flux + IFFlux </val>
 </def>
 
 <def>

@@ -1,0 +1,157 @@
+HumMod / ControlledBreathing
+
+Created : 2018-01-28
+Author : Chris Dancy
+Copyright : 2018
+By : Bucknell University
+
+<!-- Chris Dancy,
+Richardson, C. A., Herbert, D. A., & Mitchell, R. A. (1984).
+Modulation of pulmonary stretch receptors and airway resistance by parasympathetic efferents.
+Journal of Applied Physiology, 57(6), 1842-1849.
+
+Provides a nice (albeit older) primer on relations between volume
+ and stretch receptor activity
+-->
+
+<structure><name> ControlledBreathing </name>
+
+<variables>
+
+<parm><name> TotalCapacity </name><val> 5800 </val></parm>
+<parm><name> ExpiratoryReserve(%) </name><val> 19 </val></parm>
+<parm><name> ResidualVol(%) </name><val> 20.6 </val></parm>
+
+<!-- Used to determine what "normal" tidal volume is to determine
+     pulmonary stretech receptor effects -->
+<parm><name> InspirCapacityNormal(%) </name><val> 60.3 </val></parm>
+<parm><name> TidalVolNormal(%) </name><val> 8.6 </val></parm>
+
+
+<!-- We use this to determine what our max Tidal volume should be
+ (i.e., the amplitude of our Tidal Volume Sin Curve)
+ We use Inspiratory capacity for this
+ (should be no more than InspirCapacityNormal(%) * TotalCapacity)
+-->
+<parm><name> TidalVolumeMax </name><val> 3500 </val></parm>
+
+<!-- Parameter to set respiration rate (breaths/min) -->
+<parm><name> RespRate </name><val> 12 </val></parm>
+
+<!-- On-off Switch for this version of Respiratory Rate & TidalVolume -->
+<parm><name> ControlledBreathing </name><val> FALSE </val></parm>
+
+<var><name> RightCapacity </name><val> 2900 </val></var>
+<var><name> LeftCapacity </name><val> 2900 </val></var>
+<var><name> InspiratoryReserve </name></var>
+<var><name> ExpiratoryReserve </name></var>
+<var><name> ResidualVolume </name></var>
+
+<var><name> InspiratoryCapacity </name></var>
+<var><name> VitalCapacity </name></var>
+<var><name> FunctionalResidualCapacity </name></var>
+
+<var><name> Correction </name></var>
+<var><name> Scale </name></var>
+
+<var><name> TidalVolume </name><val> 0 </val></var>
+<var><name> TidalInspRatio </name></var>
+<var><name> PulmStretchEffect </name><val> 1 </val></var>
+
+</variables>
+
+<!-- Curve for Pulmonary Effect
+ We assume our normal effect is centered around half normal tidal volume percentage-->
+<functions>
+	<curve>
+		<name> PulmStretchEffect </name>
+		<point><x>  0 </x><y> 0 </y><slope> 0 </slope></point>
+		<point><x>  0.1 </x><y> 1 </y><slope> 2 </slope></point>
+		<point><x> 1 </x><y> 1.5 </y><slope>   0 </slope></point>
+	</curve>
+</functions>
+
+<definitions>
+<block><name> Calc </name>
+
+<!-- Chris Dancy
+Full EQN:
+TidalVolume = TidalVolumeMax * (0.5 + ((Sin((PI * 2 * RespRate * Time) + (PI/2))) / 2)))
+Dividing by 2 and adding by 0.5 will make values 0 to 1 instead of -1 to 1
+& Adding by Pi/2 shifts the phase so that we start at TidalMax
+-->
+<def>
+	<name> TidalVolume </name>
+	<val> TidalVolumeMax * ( 0.5 + ( SIN ( ( 3.1415926535897932384626433832795 * 2 * RespRate * System.X ) + ( 3.1415926535897932384626433832795 / 2 ) ) / 2 ) ) </val>
+</def>
+
+<def>
+	<name> TidalInspRatio </name>
+	<val> ( 100 * ( TidalVolume / TotalCapacity ) ) / InspirCapacityNormal(%) </val>
+</def>
+
+<def>
+	<name> PulmStretchEffect </name>
+	<val> PulmStretchEffect [ TidalInspRatio ] </val>
+</def>
+
+<!--
+<def>
+	<name> TidalVolume(%) </name>
+	<val> 100 * ( TidalVolume / TotalCapacity ) </val>
+</def>
+
+<def>
+	<name> Correction </name>
+	<val>
+	(   InspiratoryReserve(%)
+		+ TidalVolume(%)
+		+ ExpiratoryReserve(%)
+		+ ResidualVolume(%)
+	) / 100
+	</val>
+</def>
+
+<def>
+	<name> Scale </name>
+	<val> 0.01 * Correction * TotalCapacity </val>
+</def>
+
+<def>
+	<name> InspiratoryReserve </name>
+	<val> Scale * InspiratoryReserve(%) </val>
+</def>
+
+<def>
+	<name> ExpiratoryReserve </name>
+	<val> Scale * ExpiratoryReserve(%) </val>
+</def>
+
+<def>
+	<name> ResidualVolume </name>
+	<val> Scale * ResidualVolume(%) </val>
+</def>
+
+<def>
+	<name> InspiratoryCapacity </name>
+	<val> InspiratoryReserve + Breathing.TidalVolume </val>
+</def>
+
+<def>
+	<name> VitalCapacity </name>
+	<val> InspiratoryCapacity + ExpiratoryReserve </val>
+</def>
+
+<def>
+	<name> FunctionalResidualCapacity </name>
+	<val> ExpiratoryReserve + ResidualVolume </val>
+</def>
+
+<def><name> RightCapacity </name><val> TotalCapacity / 2 </val></def>
+<def><name> LeftCapacity </name><val> TotalCapacity / 2 </val></def>
+-->
+</block>
+</definitions>
+</structure>
+
+End

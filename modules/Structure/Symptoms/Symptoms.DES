@@ -12,12 +12,25 @@ Schema : DES V1.0
 <variables>
 
 <var><name> Number </name></var>
-
+<var><name> ExhaustedQ </name><val> FALSE </val></var>
+<var><name> TestElement </name></var>
 </variables>
 
 <definitions>
 
 <block><name> Calc </name>
+
+ <def>
+   <name> ExhaustedQ </name>
+   <val> ( SkeletalMuscle-Ph.Ph GT Exercise-Motivation.Motivation ) 
+             AND ( 1 -  SkeletalMuscle-Function.Failed ) 
+             AND ( 1 - Brain-Function.Comatose ) 
+             AND ( 1 - Brain-Function.Impaired )
+             AND ( 1 - RespiratoryMuscle-Function.Failed )
+  </val>
+ </def>
+
+<def><name> TestElement </name><val> SkeletalMuscle-Ph.Ph GT Exercise-Motivation.Motivation </val></def>
 
 <testcase>
 
@@ -105,10 +118,67 @@ Schema : DES V1.0
     <def><name> Number </name><val> 14 </val></def>
   </case>
 
+  <!-- On Treadmill -->
+  <case>
+  <test> 1 - ExhaustedQ </test>
+    <def><name> Number </name><val> 15 </val></def>
+  </case>
+
   <!-- OK -->
   <case>
   <test> TRUE </test>
     <def><name> Number </name><val> 0 </val></def>
+  </case>
+
+<!-- Heart-Asystole -->
+ <case>
+  <test> Heart-Asystole.Is_Asystole </test>
+    <def><name> Number </name><val> 16 </val></def>
+  </case>
+
+  <case>
+  <test> Heart-VFib.Is_Fibrillating </test>
+   <def><name> Number </name><val> 17 </val></def>
+  </case>
+
+  <case>
+  <test> Heart-ECG.Is_Flat </test>
+    <def><name> Number </name><val> 18 </val></def>
+  </case>
+
+  <case>
+  <test> Brain.Seizure </test>
+    <def><name> Number </name><val> 19 </val></def>
+  </case>
+
+  <case>
+  <test> BreathHolding.Restarting </test>
+    <def><name> Number </name><val> 20 </val></def>
+  </case>
+
+  <case>
+  <test> DigoxinPool.Nauseated </test>
+    <def><name> Number </name><val> 21 </val></def>
+  </case>
+
+  <case>
+  <test> Heart-Defribrillator.NewHeartbeat </test>
+    <def><name> Number </name><val> 22 </val></def>
+  </case>
+
+  <case>
+  <test> Heart-Defribrillator.NoHeartbeat </test>
+    <def><name> Number </name><val> 23 </val></def>
+  </case>
+
+  <case>
+  <test> Ovaries-Ovulation.AnnounceOvulation </test>
+    <def><name> Number </name><val> 24 </val></def>
+  </case>
+
+  <case>
+  <test> NOT BladderVolume.CanVoid </test>
+    <def><name> Number </name><val> 24 </val></def>
   </case>
 
 </testcase>

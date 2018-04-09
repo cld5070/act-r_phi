@@ -37,12 +37,20 @@ Schema : 2005.0
   <blockname> ResetElapsedTime </blockname>
   <label> Reset Elapsed Time </label>
 </actionbutton>
-
+<!--
 <actionbutton>
   <row> 5.8 </row><col> 1.0 </col>
   <blockname> RequestStart </blockname>
   <label> Fibrillate Now </label>
 </actionbutton>
+-->
+
+<radiobuttons>
+  <row> 5.8 </row><col> 1.0 </col>
+  <name> VFib </name>
+  <listname> Common.Switch </listname>
+  <label> Start VFib </label>
+</radiobuttons>
 
 <infobutton>
   <row> 1.2 </row><col> 26.0 </col>

@@ -17,8 +17,7 @@ By : University of Mississippi Medical Center
 <var><name> Protein </name></var>
 <var><name> Digoxin </name></var>
 <var><name> Anesthetic </name></var>
-
-<parm><name> Basic </name><val> 1 </val></parm>
+<parm><name> BasicTarget </name><val> 1 </val></parm>
 
 <parm><name> ClampSwitch </name><val> FALSE </val></parm>
 <parm><name> ClampSetting </name><val> 0 </val></parm>
@@ -30,11 +29,23 @@ By : University of Mississippi Medical Center
 
 </variables>
 
+<equations>
+
+<diffeq>
+  <name> Basic </name>
+  <integralname> Basic </integralname>
+  <initialval> 1.0 </initialval>
+  <dervname> dBasic   </dervname>
+  <errorlim> 0.03 </errorlim>
+</diffeq>
+
+</equations>
+
 <functions>
 
 <curve><name> PhEffect </name>
-<point><x> 6.75 </x><y> 0 </y><slope> 0 </slope></point>
-<point><x> 6.90 </x><y> 1 </y><slope> 0 </slope></point>
+<point><x> 6.6 </x><y> 0 </y><slope> 0 </slope></point>
+<point><x> 6.75 </x><y> 1 </y><slope> 0 </slope></point>
 </curve>
 
 <curve><name> DigoxinEffect </name>
@@ -58,9 +69,11 @@ By : University of Mississippi Medical Center
 
 <block><name> Calc </name>
 
+<def><name> dBasic </name><val> 0.05 * ( BasicTarget - Basic ) </val></def>
+
 <def>
   <name> BetaSymps </name>
-  <val> LeftHeart-BetaReceptors.Activity </val>
+  <val> ( 2.5 * ( LeftHeart-BetaReceptors.Activity - 1 ) ) + 1 </val>
 </def>
 
 <def>
@@ -72,7 +85,7 @@ By : University of Mississippi Medical Center
   <name> Protein </name>
   <val>
        LeftHeartPumping-ContractileProtein.Functional
-     / LeftHeartPumping-ContractileProtein.InitialMass
+     / LeftHeartPumping-ContractileProtein.Protein-Base
   </val>
 </def>
 

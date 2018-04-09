@@ -8,27 +8,19 @@ By : University of Mississippi Medical Center
 Solver : DES 2005
 Schema : 2005.0
 
-<?path Structure\Nephrons\ ?>
 
-<?include FractReab.DES ?>
+<?path Structure ?>
+<?include LeftNephrons\LeftNephrons.DES ?>
+<?include RightNephrons\RightNephrons.DES ?>
+<?include Nephrons\CollectingDuct\CollectingDuct.DES ?>
+<?include Nephrons\Glomerulus\Glomerulus.DES ?>
+<?include Nephrons\NephronGlucose.DES ?>
+<?include Nephrons\NephronKetoacids.DES ?>
+<?include Nephrons\ProximalTubule\ProximalTubule_NH3.DES ?>
+<?include Nephrons\ProximalTubule\ProximalTubule_Na.DES ?>
+<?include Nephrons\LoopOfHenle\LoopOfHenle_Na.DES ?>
+<?include Nephrons\DistalTubule\DistalTubule_Na.DES ?>
 
-<?include CollectingDuct\CollectingDuct.DES ?>
-<?include DistalTubule\DistalTubule.DES ?>
-<?include Glomerulus\Glomerulus.DES ?>
-<?include LoopOfHenle\LoopOfHenle.DES ?>
-<?include Medulla\Medulla.DES ?>
-<?include MaculaDensa\MaculaDensa.DES ?>
-<?include ProximalTubule\ProximalTubule.DES ?>
-
-<?include NephronIFP.DES ?>
-<?include NephronAldo.DES ?>
-<?include NephronADH.DES ?>
-<?include VasaRecta.DES ?>
-<?include NephronGlucose.DES ?>
-<?include NephronKetoacids.DES ?>
-<?include NephronANP.DES ?>
-
-<?include NephronCalciumProximal.DES ?>
-<?include NephronCalciumDistal.DES ?>
-
+<?include Nephrons\NephronCalciumProximal.DES ?>
+<?include Nephrons\NephronCalciumDistal.DES ?>
 End

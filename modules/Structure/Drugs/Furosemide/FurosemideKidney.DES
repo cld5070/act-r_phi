@@ -31,8 +31,8 @@ Schema : DES V1.0
   <val>
       K
     * FurosemidePool.Mass
-    * Kidney-NephronCount.Filtering(xNormal)
-    * Kidney-Function.Effect
+    *  (    ( 0.5 * RightKidney-NephronCount.Filtering(xNormal) * RightKidney-Function.Effect ) 
+	+ ( 0.5 * LeftKidney-NephronCount.Filtering(xNormal) * LeftKidney-Function.Effect ) )
   </val>
 </def>
 

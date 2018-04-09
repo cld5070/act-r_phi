@@ -285,8 +285,8 @@ InitialVolDist = VOLDIST * ECFV.InitialVol(L).
 <label> Definition </label>
 <content>
 
-Log10Conc converts [EPO] to a logarithmic value. If [EPO] is
-less than 1, then Log10Conc has a value of zero.
+Log10Conc is a conditional element to ensure that
+[EPO]can never be less than zero.
 
 </content>
 </topicdoc>

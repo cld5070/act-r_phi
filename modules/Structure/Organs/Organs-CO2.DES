@@ -17,7 +17,8 @@ Schema : 2005.0
   <call> Brain-CO2.CalcConc </call>
   <call> Fat-CO2.CalcConc </call>
   <call> GITract-CO2.CalcConc </call>
-  <call> Kidney-CO2.CalcConc </call>
+  <call> LeftKidney-CO2.CalcConc </call>
+  <call> RightKidney-CO2.CalcConc </call>
   <call> LeftHeart-CO2.CalcConc </call>
   <call> Liver-CO2.CalcConc </call>
   <call> OtherTissue-CO2.CalcConc </call>
@@ -32,7 +33,8 @@ Schema : 2005.0
   <call> Brain-CO2.CalcDervs </call>
   <call> Fat-CO2.CalcDervs </call>
   <call> GITract-CO2.CalcDervs </call>
-  <call> Kidney-CO2.CalcDervs </call>
+  <call> LeftKidney-CO2.CalcDervs </call>
+  <call> RightKidney-CO2.CalcDervs </call>
   <call> LeftHeart-CO2.CalcDervs </call>
   <call> Liver-CO2.CalcDervs </call>
   <call> OtherTissue-CO2.CalcDervs </call>
