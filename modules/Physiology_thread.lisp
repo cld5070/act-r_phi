@@ -682,13 +682,7 @@ t)
 		(list (list "Sympathetics-General.EssentialEffect" 1.1)
 			(list "CorticotropinReleasingFactor.Stress" 4)
 			(list "Sympathetics-Adrenal.ClampLevel" 2)
-			(list "Sympathetics-Adrenal.ClampSwitch" 1)))
-	(schedule-event-relative 0.022 'set-phys-vals :module 'physio
-		:params (list (list (list "Sympathetics-General.EssentialEffect" 1.1)
-							(list "CorticotropinReleasingFactor.Stress" 4)
-							(list "Sympathetics-Adrenal.ClampLevel" 2)
-							(list "Sympathetics-Adrenal.ClampSwitch" 1)))
-		:priority :max :details "Stress Model out!"))
+			(list "Sympathetics-Adrenal.ClampSwitch" 1))))
 
 (defun create-graded-symp-stress (&optional (length 20) (perc-inc 100) (num-steps 10))
 	"Function to allowed a graded increase in sympathetic activity
