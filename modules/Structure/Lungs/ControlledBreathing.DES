@@ -34,6 +34,7 @@ Provides a nice (albeit older) primer on relations between volume
  (should be no more than InspirCapacityNormal(%) * TotalCapacity)
 -->
 <parm><name> TidalVolumeMax </name><val> 3500 </val></parm>
+<parm><name> TidalVolumeMin </name><val> 0 </val></parm>
 
 <!-- Parameter to set respiration rate (breaths/min) -->
 <parm><name> RespRate </name><val> 12 </val></parm>
@@ -55,6 +56,7 @@ Provides a nice (albeit older) primer on relations between volume
 <var><name> Scale </name></var>
 
 <var><name> TidalVolume </name><val> 0 </val></var>
+<var><name> TidalVolumeRatio </name><val> 1 </val></var>
 <var><name> TidalInspRatio </name></var>
 <var><name> PulmStretchEffect </name><val> 1 </val></var>
 
@@ -74,15 +76,21 @@ Provides a nice (albeit older) primer on relations between volume
 <definitions>
 <block><name> Calc </name>
 
+<!-- Used to determine the amplitude of the Tidal volume sin wave -->
+<def>
+	<name> TidalVolumeRatio </name>
+	<val> ( TidalVolumeMax / ( ( TidalVolumeMax - TidalVolumeMin ) MAX 1 ) ) </val>
+</def>
+
 <!-- Chris Dancy
 Full EQN:
-TidalVolume = TidalVolumeMax * (0.5 + ((Sin((PI * 2 * RespRate * Time) + (PI/2))) / 2)))
+TidalVolume = ( TidalVolumeMin / 2) + (TidalVolumeMax * ((0.5 + (((Sin((PI * 2 * RespRate * Time) + (PI/2))) / 2) / TidalVolumeRatio))))
 Dividing by 2 and adding by 0.5 will make values 0 to 1 instead of -1 to 1
 & Adding by Pi/2 shifts the phase so that we start at TidalMax
 -->
 <def>
 	<name> TidalVolume </name>
-	<val> TidalVolumeMax * ( 0.5 + ( SIN ( ( 3.1415926535897932384626433832795 * 2 * RespRate * System.X ) + ( 3.1415926535897932384626433832795 / 2 ) ) / 2 ) ) </val>
+	<val> ( TidalVolumeMin / 2 ) + ( TidalVolumeMax * ( 0.5 + ( ( SIN ( ( 3.1415926535897932384626433832795 * 2 * RespRate * System.X ) + ( 3.1415926535897932384626433832795 / 2 ) ) / 2 ) / TidalVolumeRatio ) ) ) </val>
 </def>
 
 <def>

@@ -61,11 +61,23 @@ By : Bucknell University
 		<repeat><reps> 35 </reps><stepsize> 100 </stepsize></repeat>
 	</repeatlist>
 
+	<repeatlist>
+		<name> TidalVolumeMin </name>
+		<repeat><reps> 35 </reps><stepsize> 100 </stepsize></repeat>
+	</repeatlist>
+
 	<slidebar>
 		<row> 10 </row><col> 4.0 </col>
 		<name> TidalVolumeMax </name>
 		<listname> TidalVolumeMax </listname>
 		<label> Tidal Volume Maximum </label>
+	</slidebar>
+
+	<slidebar>
+		<row> 12 </row><col> 4.0 </col>
+		<name> TidalVolumeMin </name>
+		<listname> TidalVolumeMin </listname>
+		<label> Tidal Volume Minimum </label>
 	</slidebar>
 
 	<showgraph>
