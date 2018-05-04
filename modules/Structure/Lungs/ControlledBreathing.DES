@@ -35,6 +35,7 @@ Provides a nice (albeit older) primer on relations between volume
 -->
 <parm><name> TidalVolumeMax </name><val> 3500 </val></parm>
 <parm><name> TidalVolumeMin </name><val> 0 </val></parm>
+<parm><name> TidalPhaseShift </name><val> 1.5707963267948966192313216916398 </val></parm>
 
 <!-- Parameter to set respiration rate (breaths/min) -->
 <parm><name> RespRate </name><val> 12 </val></parm>
@@ -84,13 +85,13 @@ Provides a nice (albeit older) primer on relations between volume
 
 <!-- Chris Dancy
 Full EQN:
-TidalVolume = ( TidalVolumeMin / 2) + (TidalVolumeMax * ((0.5 + (((Sin((PI * 2 * RespRate * Time) + (PI/2))) / 2) / TidalVolumeRatio))))
+TidalVolume = ( TidalVolumeMin / 2) + (TidalVolumeMax * ((0.5 + (((Sin((PI * 2 * RespRate * Time) + TidalPhaseShift)) / 2) / TidalVolumeRatio))))
 Dividing by 2 and adding by 0.5 will make values 0 to 1 instead of -1 to 1
-& Adding by Pi/2 shifts the phase so that we start at TidalMax
+& Adding by TidalPhaseShift (Pi/2 by default) shifts the phase so that we start at TidalMax (by default)
 -->
 <def>
 	<name> TidalVolume </name>
-	<val> ( TidalVolumeMin / 2 ) + ( TidalVolumeMax * ( 0.5 + ( ( SIN ( ( 3.1415926535897932384626433832795 * 2 * RespRate * System.X ) + ( 3.1415926535897932384626433832795 / 2 ) ) / 2 ) / TidalVolumeRatio ) ) ) </val>
+	<val> ( TidalVolumeMin / 2 ) + ( TidalVolumeMax * ( 0.5 + ( ( SIN ( ( 3.1415926535897932384626433832795 * 2 * RespRate * System.X ) + TidalPhaseShift ) / 2 ) / TidalVolumeRatio ) ) ) </val>
 </def>
 
 <def>

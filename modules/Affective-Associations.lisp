@@ -207,7 +207,7 @@
 		for reference in references
 		for arousal in arousals
 				do (progn
-					(let ((arous-mid (/ (AA-max-arousal (get-module Affective-Associations)) 2)))
+					(let ((arous-mid (/ (AA-max-arous (get-module Affective-Associations)) 2)))
 					(incf value
 						(expt-coerced (max .05 (ms->seconds (- (mp-time-ms) reference)))
 							(* minus-decay (- 1 (/ arousal arous-mid)))))
@@ -899,7 +899,7 @@
 	(nom-util-noise 0.01)
 
 	;Max utility noise a model can have
-	(max-util-noise 1)
+	(max-util-noise 0.4)
 
 	(util-noise-scalar 1)
 
@@ -1059,12 +1059,14 @@
 	(setf (AA-nom-dm-noise AA) (cdr param)))
 	 (:AA-dm-noise-switch
 	(setf (AA-dm-noise-switch AA) (cdr param)))
-	 (:AA-util-noise-switch
+	(:AA-util-noise-switch
 		(setf (AA-util-noise-switch AA) (cdr param)))
-	 (:AA-util-thresh-scalar
+	(:AA-util-thresh-scalar
 		(setf (AA-util-thresh-scalar AA) (cdr param)))
-	 (:AA-util-noise-scalar
+	(:AA-util-noise-scalar
 		(setf (AA-util-noise-scalar AA) (cdr param)))
+	(:AA-max-arous
+		(setf (AA-max-arous AA) (cdr param)))
 	 (:AA-enabled
 		(setf (AA-enabled AA) (cdr param))))
 	(case param
@@ -1096,6 +1098,8 @@
 	(AA-util-thresh-scalar AA))
 	 (:AA-util-noise-scalar
 	(AA-util-thresh-scalar AA))
+			(:AA-max-arous
+				(AA-max-arous AA))
 	 (:AA-enabled
 	(AA-enabled AA)))))
 
@@ -1157,6 +1161,10 @@
 		(define-parameter
 		 :AA-util-noise-scalar
 		 :default-value 1
+		 :valid-test (lambda (x) (numberp x)))
+		(define-parameter
+		 :AA-max-arous
+		 :default-value 2
 		 :valid-test (lambda (x) (numberp x))))
 	:version "0.1"
 	:documentation "Affective Associations Module"

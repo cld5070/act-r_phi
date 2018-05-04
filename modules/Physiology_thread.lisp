@@ -62,11 +62,11 @@
 ;;;clear out any unwanted files
 (defun clear-phys-files ()
 	(sleep 0.005)
-	(dolist (fileName (directory (concatenate 'string *HumModDir* "SolverOut*")))
+	(dolist (fileName (directory (concatenate 'string *HumModDir* "SolverOut" (phys-module-pipeID (get-module physio)))))
 		(handler-case (delete-file fileName) (error () nil)))
-	(dolist (fileName (directory (concatenate 'string *HumModDir* "SolverIn*")))
+	(dolist (fileName (directory (concatenate 'string *HumModDir* "SolverIn" (phys-module-pipeID (get-module physio)))))
 		(handler-case (delete-file fileName) (error () nil)))
-	(dolist (fileName (directory (concatenate 'string *HumModDir* "*.tem")))
+	(dolist (fileName (directory (concatenate 'string *HumModDir* (phys-module-pipeID (get-module physio)) ".tem")))
 		(handler-case (delete-file fileName) (error () nil))))
 
 ;;;Initialize Variable and Variable Order Hash-Table for physiological variable order
@@ -88,19 +88,27 @@ t)
 	"Advance the modelsolver forward in time
 		timeSlice - The time in minutes"
 	(let*	((advanceMessage
-					(concatenate 'string
+				 (concatenate 'string
 						"\"<solverin><gofor><solutionint>"
 						(format nil "~10,$" timeSlice)
 						"</solutionint><displayint>"
 						(format nil "~10,$" timeSlice)
 						"</displayint></gofor></solverin>\""))
-				(phys (get-module physio))
-				(solverInputFile
+				 (phys (get-module physio))
+				 (solverInputFile
 					(concatenate 'string
 						*HumModDir* "SolverIn" (phys-module-pipeID phys)))
-				(solverOutputFile
+				 (solverOutputFile
 					(concatenate 'string
-						*HumModDir* "SolverOut" (phys-module-pipeID phys))))
+						*HumModDir* "SolverOut" (phys-module-pipeID phys)))
+				 (max-wait
+					(cond
+						((<= timeSlice 2) 1)
+						((< timeSlice 10) 6)
+						((< timeSlice 60) 12)
+						((< timeSlice 600) 24)
+						((< timeSlice 3600) 48)
+						(t 480))))
 		(clear-phys-files) ;;Make sure we don't have any files left over for some reason
 
 	(tagbody resetAdvance
@@ -121,7 +129,7 @@ t)
 		;;Wait for ModelSolver to advance and output data from advancing specified time
 		(let ((currTime (get-universal-time)))
 			(handler-case
-				(while (and (not (probe-file solverOutputFile)) (< (- (get-universal-time) currTime) 480)))
+				(while (and (not (probe-file solverOutputFile)) (< (- (get-universal-time) currTime) max-wait)))
 				(error (e) (print (concatenate 'string "124 phys" (write-to-string e))))))
 		;;If we didn't get the output file, go back and do this all over again
 		(when (not (probe-file solverOutputFile)) (go resetAdvance)))
@@ -162,7 +170,7 @@ t)
 	(tagbody resetSetVal
 		(clear-phys-files)
 		(model-output "Changing the following physiology: ~a~&" varValList)
-		(format t "Changing the following physiology: ~a~&" varValList)
+		;(format t "Changing the following physiology: ~a~&" varValList)
 		(let ((phys (get-module physio))
 					(setPhysMessage "\"<solverin>")
 					(timeOut 6))
@@ -177,7 +185,7 @@ t)
 							(concatenate 'string
 								setPhysMessage
 								"<setvalue><var>" k "</var><val>"
-								(write-to-string (cadr v)) "</val></setvalue>")))))
+								(format nil "~10,$" (cadr v)) "</val></setvalue>")))))
 		(setf setPhysMessage (concatenate 'string setPhysMessage "</solverin>\""))
 		(let ((solverOutputFile (concatenate 'string *HumModDir* "SolverOut" (phys-module-pipeID phys)))
 					(solverInputFile (concatenate 'string *HumModDir* "SolverIn" (phys-module-pipeID phys))))
@@ -335,25 +343,26 @@ t)
 			(setf (phys-module-init phys) t)
 			;;Set Physiology Substrate periodic communication time (HumMod)
 			(let*	((pipeID (phys-module-pipeID phys))
-						;;Set the name of the files used to input to model solver stream and to which solver outputs results
-						(solverInputFile (concatenate 'string *HumModDir* "SolverIn" pipeID))
-						(solverOutputFile (concatenate 'string *HumModDir* "SolverOut" pipeID))
+						 ;;Set the name of the files used to input to model solver stream and to which solver outputs results
+						 (solverInputFile (concatenate 'string *HumModDir* "SolverIn" pipeID))
+						 (solverOutputFile (concatenate 'string *HumModDir* "SolverOut" pipeID))
+						 (initial-advance-time (format nil "~10,$" (phys-module-initial-advance phys)))
 
-						;Reset/Restart Utility Message (needed to start getting values from HumMod model solver)
-						(resetMessage "\"<solverin><restart/></solverin>\"")
+						 ;Reset/Restart Utility Message (needed to start getting values from HumMod model solver)
+						 (resetMessage "\"<solverin><restart/></solverin>\"")
 
-						;Get Variables Message
-						(getVarsMessage "\"<solverin><requestvarroster/></solverin>\"")
+						 ;Get Variables Message
+						 (getVarsMessage "\"<solverin><requestvarroster/></solverin>\"")
 
-						;We have the simulation go for X mins to stabilize some
-						; -variables in HumMod (e.g. osmoreceptors), this also returns values
-						(getValsMessage
+						 ;We have the simulation go for X mins to stabilize some
+						 ; -variables in HumMod (e.g. osmoreceptors), this also returns values
+						 (getValsMessage
 							(concatenate 'string
-								"\"<solverin><gofor><solutionint>" (write-to-string (phys-module-initial-advance phys))
-								"</solutionint><displayint>" (write-to-string (phys-module-initial-advance phys))
+								"\"<solverin><gofor><solutionint>" initial-advance-time
+								"</solutionint><displayint>" initial-advance-time
 								"</displayint></gofor></solverin>\""))
-						(physVarList nil)
-						(physValueList nil))
+						 (physVarList nil)
+						 (physValueList nil))
 				;;Send reset & restart message to solver
 				;; *This is needed for solver to correctly process messages sent*
 				(handler-case
@@ -431,7 +440,7 @@ t)
 						(error () nil))
 
 				;;Advance Simulator X mins (done to get level osmo-receptor values at a steady state)
-				(let ((timeOut 10))
+				(let ((timeOut 120))
 					(tagbody startGetVals
 						(handler-case
 							(delete-file solverOutputFile)
@@ -637,8 +646,7 @@ t)
 	(incf (phys-module-timeSliceCount phys)))
 	;;Record update-phys to internal event trace
 	(push (list #'update-phys-vars '()) (phys-module-solverActionTrace phys))
-	))
-)
+	)))
 
 ;;;Generate chunks from list of physiological variables
 ;;; and corresponding values
@@ -650,8 +658,7 @@ t)
 		(setf newList (append newList (list (read-from-string
 				(string-upcase (remove #\space (car currSlot))))))))
 	;make a chunk from our list
-	(define-chunks-fct (list newList)))
-)
+	(define-chunks-fct (list newList))))
 
 (defun schedule-phys-events ()
 	(let ((phys (get-module physio)))
@@ -675,14 +682,23 @@ t)
 
 (defvar *stress-on* nil)
 
-(defun create-stress ()
-	"Simulate the physiology side of stress"
+(defun create-high-stress ()
+	"Simulate the physiology side of (high) stress"
 	(setf *stress-on* t)
 	(set-phys-vals
 		(list (list "Sympathetics-General.EssentialEffect" 1.1)
 			(list "CorticotropinReleasingFactor.Stress" 4)
 			(list "Sympathetics-Adrenal.ClampLevel" 2)
 			(list "Sympathetics-Adrenal.ClampSwitch" 1))))
+
+(defun create-mid-stress ()
+	"Simulate the physiology side of (medium) stress"
+	(setf *stress-on* t)
+	(set-phys-vals
+		(list (list "Sympathetics-General.EssentialEffect" 0.5)
+			(list "CorticotropinReleasingFactor.Stress" 3)
+			(list "Sympathetics-Adrenal.ClampSwitch" 1)
+			(list "Sympathetics-Adrenal.ClampLevel" 1.5))))
 
 (defun create-graded-symp-stress (&optional (length 20) (perc-inc 100) (num-steps 10))
 	"Function to allowed a graded increase in sympathetic activity
@@ -716,10 +732,11 @@ t)
 	(set-phys-vals
 		(list (list " ControlledBreathing.RespRate" 6)
 			(list "ControlledBreathing.TidalVolumeMax" 3000)
+			(list "ControlledBreathing.TidalVolumeMin" 1200)
 			(list "ControlledBreathing.ControlledBreathing" 1)))
 		(de-stress))
 
-(defun stop-slow-breathing ()
+(defun stop-controlled-breathing ()
 	"Move to spontaneous breath"
 	(set-phys-vals (list (list "ControlledBreathing.ControlledBreathing" 0))))
 
@@ -817,8 +834,9 @@ t)
 
 ;;Compute cortisol factor
 (defun compute-cort (&optional test)
-	"cort(t_n)/cort(t_0)
-	cort(t_n) == cort.gain(t_n)/cort.loss(t_n)"
+	"cort(t_n)/cort(t_0) + cortisol[uG/dL](t_n)/cortisol[uG/dL](t_0)
+	cort(t_n) == (cort.gain(t_n)/cort.loss(t_n)
+	That is, the average of the Cortisol circulating and the more rapid change in cortisol"
 	(let* ((cort (read-from-string (cadar (car (get-phys-vals nil (list '("Cortisol.[Conc(uG/dL)]")))))))
 				 (cort-base (read-from-string (cadar (car (get-phys-vals t (list '("Cortisol.[Conc(uG/dL)]")))))))
 				 (cort-gain (read-from-string (cadar (car (get-phys-vals nil (list '("Cortisol.Gain")))))))
@@ -828,8 +846,8 @@ t)
 				 (cort-ratio (if (and cort-gain cort-loss) (/ cort-gain cort-loss) nil))
 				 (cort-ratio-base (if (and cort-gain-base cort-loss-base) (/ cort-gain-base cort-loss-base) nil)))
 		(setf cort-norm
-			(if (and cort-ratio cort-ratio-base)
-				(/ cort-ratio cort-ratio-base) 0))
+			(if (and cort-ratio cort-ratio-base cort cort-base)
+				(/ (+ (/ cort-ratio cort-ratio-base) (/ cort cort-base)) 2) 0))
 		;Write to output file if we are testing things
 		(if test
 			(with-open-file
@@ -1024,8 +1042,8 @@ t)
 	 (progn
 		;;Schedule periodic updating of ans parameter (eventually I need to make this only happen if call to phys-substrate buffer is made)
 		(if (phys-module-epi-ans phys)
-		(schedule-periodic-event (phys-module-delay phys) 'do-epi-ans2
-		:priority :max :initial-delay 1 :module :none :output nil :maintenance t))
+			(schedule-periodic-event (phys-module-delay phys) 'do-epi-ans2
+			:priority :max :initial-delay 1 :module :none :output nil :maintenance t))
 
 		;;Make it so cognition controlls eating (as opposed to HumMod)
 		(set-food-intake 0)))
@@ -1052,7 +1070,7 @@ t)
 
 
 (define-module-fct 'physio
-					 '(phys-substrate efferent output)
+	'(phys-substrate efferent output)
 	(list
 		(define-parameter
 			:phys-delay
