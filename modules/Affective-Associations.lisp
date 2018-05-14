@@ -118,7 +118,7 @@
 	#|(with-open-file
 		(messageStream  "arousalLevels.txt" :direction :output :if-exists :append :if-does-not-exist :create)
 		(format messageStream "~a~&" arous-util-noise))|#
-	 (when (<= arous-util-noise 0) (setf arous-util-noise 0.000001))
+	(when (<= arous-util-noise 0) (setf arous-util-noise 0.000001))
 		(if (<= arous-util-noise arous-mid)
 			(sgp-fct (list :ut (* (AA-util-thresh-scalar aa) (- (AA-max-util-thresh aa) arous-util-noise));(- (AA-max-util-thresh aa) (* (- 1 (/ arous-util-noise 0.5)) (AA-max-util-thresh aa) ))))
 				:egs (* (AA-util-noise-scalar aa) (/ (+ (* arous-util-noise (AA-nom-util-noise aa)) (* (- arous-mid arous-util-noise) (AA-max-util-noise aa))) arous-mid))))
@@ -282,23 +282,28 @@
 		;; on how long it has been since the model has slept. By default, the function assumes
 		;; an arbitrary max amount of days awake of 4 before hitting a minimal value (0.0001)
 		;; The value output is in the range from 0.0001 to 1
-(defun compute-homeostatic-arousal-factor ()
+(defun compute-homeostatic-arousal-factor (&optional test)
 	(let* ((LA (if (cadar  (car (get-phys-vals nil (list '("Status.LastAsleep")))))
 				(cadar  (car (get-phys-vals nil (list '("Status.LastAsleep")))))
 				"0"))
 		(currT (if (cadar  (car (get-phys-vals nil (list '("System.X")))))
 				(cadar  (car (get-phys-vals nil (list '("System.X")))))
 					"0"))
-		(minArousal 0.0001)
+		(ret-arousal 0.0001) ;Arousal variable/value to be returned
 		(maxDays 4)
 		(timeSinceAsleep (- (read-from-string currT) (read-from-string LA))))
 		(if (and LA currT (> timeSinceAsleep 0))
-		 (let ((homArousal (/ (- (expt (* maxDays 1440) 2) (expt timeSinceAsleep 2)) (expt (* maxDays 1440) 2))))
-			(if (> homArousal 0)
-				homArousal
-				minArousal))
-		 1)
-	))
+			(let ((homArousal (/ (- (expt (* maxDays 1440) 2) (expt timeSinceAsleep 2)) (expt (* maxDays 1440) 2))))
+				(if (> homArousal 0)
+					(progn
+						(setf ret-arousal homArousal))))
+			(setf ret-arousal 1))
+		(if test
+			(with-open-file
+				(msgStream (concatenate 'string "Homeostatic-Arousal" *START-TIME* ".txt")
+					:direction :output :if-exists :append :if-does-not-exist :create)
+				(format msgStream "~5$~&" ret-arousal)))
+		ret-arousal))
 
 
 ;;We update the pred-error-factor (for LC-based arousal) to an average between the new value (due to a reward) and the old value

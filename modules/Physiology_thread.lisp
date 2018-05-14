@@ -334,6 +334,49 @@ t)
 		(while (and (probe-file solverOutputFile) (not (handler-case (delete-file solverOutputFile)
 			(error () nil))))))))
 
+(defun load-HumMod-ICs (init-filename)
+	"Used to load initial conditions based on ICS file saved from HumMod
+		Inputs:
+			filename - Name of file to be read in and parsed"
+
+	(cwd "../")
+	(let* ((phys (get-module physio))
+				(solverInputFile (concatenate 'string *HumModDir* "SolverIn" (phys-module-pipeID phys)))
+				(solverOutputFile (concatenate 'string *HumModDir* "SolverOut" (phys-module-pipeID phys)))
+				 (init-vals-msg "\"<solverin>")
+				 ics-val-list)
+		(setf ics-val-list (s-xml:parse-xml-file init-filename))
+		(setf init-vals-msg (format nil "~a~&<sending_current_values>" init-vals-msg))
+
+		;Go through list returned by parsing and pull vals out
+		; and put into msg (assuming 1st 2 elements are ICS & time)
+		(dolist (var-val (cddr ics-val-list))
+			(dolist (v (cdr var-val))
+				(when (equal (car v) ':|val|)
+					(format t "~a~&" v)
+					(setf init-vals-msg
+						(format nil "~a~&<val>~a</val>" init-vals-msg (cadr v))))))
+			;Add closing tag
+			(setf init-vals-msg (format nil "~a~&</sending_current_values>~&</solverin>\"" init-vals-msg))
+
+		;;Send new values to model solver
+		(handler-case
+			(with-open-file
+				(messageStream	solverInputFile
+				:direction :output :if-exists :overwrite :if-does-not-exist :create)
+				(format messageStream init-vals-msg))
+			((or
+				#+:ccl ccl::simple-file-error
+				#+:sbcl sb-impl::simple-file-error
+				simple-error) () (format t "Error loading ICS file!~&")))
+		;;Clean up resulting output
+		(while (probe-file solverInputFile)) ;Wait for Model Solver to finish computation & output file
+		(let ((currTime (get-universal-time)))
+			(while (and (not (probe-file solverOutputFile))
+			(< (- (get-universal-time) currTime) 55))))
+		(while (and (probe-file solverOutputFile) (not (handler-case (delete-file solverOutputFile)
+			(error () nil)))))) (sleep 10))
+
 ;;Generate hash-table of physiological variables & Hash-Table of the order of the variables
 ;; and default values
 (defun create-phys-vars ()
@@ -348,14 +391,12 @@ t)
 						 (solverOutputFile (concatenate 'string *HumModDir* "SolverOut" pipeID))
 						 (initial-advance-time (format nil "~10,$" (phys-module-initial-advance phys)))
 
-						 ;Reset/Restart Utility Message (needed to start getting values from HumMod model solver)
+						 ;Restart Utility Message (needed to start getting values from HumMod model solver)
 						 (resetMessage "\"<solverin><restart/></solverin>\"")
 
 						 ;Get Variables Message
 						 (getVarsMessage "\"<solverin><requestvarroster/></solverin>\"")
 
-						 ;We have the simulation go for X mins to stabilize some
-						 ; -variables in HumMod (e.g. osmoreceptors), this also returns values
 						 (getValsMessage
 							(concatenate 'string
 								"\"<solverin><gofor><solutionint>" initial-advance-time
@@ -363,7 +404,7 @@ t)
 								"</displayint></gofor></solverin>\""))
 						 (physVarList nil)
 						 (physValueList nil))
-				;;Send reset & restart message to solver
+				;;Send restart message to solver
 				;; *This is needed for solver to correctly process messages sent*
 				(handler-case
 					(with-open-file
@@ -387,6 +428,11 @@ t)
 				;Delete the output file after restart
 				(while (and (probe-file solverOutputFile) (not (handler-case (delete-file solverOutputFile)
 					(error () nil)))))
+
+				;; Initialize with stable values (obtained from running sim 1 week)
+				(load-HumMod-ICs (phys-module-ics-file phys))
+
+
 				;Create input file for hummod to give us a list of variables and digest the output file created by HumMod (w/ the variables). Loop back around if there is an error
 				(tagbody getVars
 					(handler-case
@@ -433,7 +479,6 @@ t)
 							(when (not (init-var-list-to-hash physVarList)) (print "problem with init")
 								(go getVars))
 							(when (not physVarList) (go parseVarList))))))
-
 
 				;Delete output file when finished with it
 				(handler-case (delete-file solverOutputFile)
@@ -685,8 +730,9 @@ t)
 (defun create-high-stress ()
 	"Simulate the physiology side of (high) stress"
 	(setf *stress-on* t)
+	(cleanup-de-stress)
 	(set-phys-vals
-		(list (list "Sympathetics-General.EssentialEffect" 1.1)
+		(list (list "Sympathetics-General.EssentialEffect" 1)
 			(list "CorticotropinReleasingFactor.Stress" 4)
 			(list "Sympathetics-Adrenal.ClampLevel" 2)
 			(list "Sympathetics-Adrenal.ClampSwitch" 1))))
@@ -694,6 +740,7 @@ t)
 (defun create-mid-stress ()
 	"Simulate the physiology side of (medium) stress"
 	(setf *stress-on* t)
+	(cleanup-de-stress)
 	(set-phys-vals
 		(list (list "Sympathetics-General.EssentialEffect" 0.5)
 			(list "CorticotropinReleasingFactor.Stress" 3)
@@ -726,6 +773,70 @@ t)
 		(list (list "Sympathetics-General.EssentialEffect" 0)
 			(list "CorticotropinReleasingFactor.Stress" 2)
 			(list "Sympathetics-Adrenal.ClampSwitch" 0))))
+
+(defun de-stress-graded (&optional (ds-steps 5) (ds-len 60))
+	"Turn stress back to normal in a graded manner
+		Inputs:
+			ds-steps - de-stress steps, provides number of steps to be used for grading de-stress [OPTIONAL]
+			ds-len - de-stress length, provides length (seconds) of graded de-stress [OPTIONAL]
+			*note* the above are only used if module ds-state is inactive (i.e., ==nil)"
+	(setf *stress-on* nil)
+	;ds-state will hold all of the state information we need
+	(let* ((phys (get-module physio))
+				 (ds-state (phys-module-de-stress phys))
+				 (ds-steps (if ds-state (elt ds-state 0) ds-steps))
+				 (ds-len (if ds-state (elt ds-state 1) ds-len))
+				 (perc-per (/ 1 ds-steps))
+				 (END-SYMP-ACT 1))
+		;;If we haven't turned off the ClampSwitch, do so now
+		(when (or (not ds-state) (not (= (elt ds-state 3) 0)))
+			(schedule-event-relative 0.020 'set-phys-vals :module 'physio
+				:params (list (list (list "Sympathetics-Adrenal.ClampSwitch" 0)))
+				:priority :max :details "Graded stress reduction Adrenal")
+			(if ds-state
+				(setf (elt ds-state 3) 0)
+				(setf ds-state (list ds-steps ds-len (mp-time) 0 nil nil))))
+			;If we've already done as much graded de-stress as needed, reset state variable, else continue
+			(if (> (- (mp-time) (elt ds-state 2)) ds-len)
+				(setf (phys-module-de-stress phys) nil)
+				(let* ((step (floor (* (/ (- (mp-time) (elt ds-state 2)) ds-len) ds-steps)))
+							 (symp-act (- END-SYMP-ACT (* perc-per step END-SYMP-ACT))))
+					(setf (elt ds-state 4) symp-act) ;Update our saved sympathetic activity state
+					;General sympathetic arousal
+					(schedule-event-relative 0.021 'set-phys-vals :module 'physio
+						:params (list (list (list "Sympathetics-General.EssentialEffect"  symp-act)))
+						:priority :max :details "Graded stress reduction Symp Essential")
+					;Reduce CRH-based stress
+					(if (and (= (elt ds-state 5) 3) (> (- (mp-time) (elt ds-state 2)) (* ds-len 0.75)))
+						(progn
+							(setf (elt ds-state 5) 2)
+							(schedule-event-relative 0.022 'set-phys-vals :module 'physio
+								:params (list (list (list "CorticotropinReleasingFactor.Stress" 2)))
+								:priority :max :details "Graded stress reduction CRF/CRH")
+							(setf (phys-module-de-stress-evt phys)
+								(schedule-event-relative (* (/ ds-steps ds-len) ds-len) 'de-stress-graded :module 'physio
+									:priority :max :details "Global graded stress reduction")))
+						(when (and (= (elt ds-state 5) 4) (> (- (mp-time) (elt ds-state 2)) (* ds-len 0.375)))
+							(setf (elt ds-state 5) 3)
+							(schedule-event-relative 0.022 'set-phys-vals :module 'physio
+							 :params (list (list (list "CorticotropinReleasingFactor.Stress" 3)))
+							 :priority :max :details "Graded stress reduction")
+							(setf (phys-module-de-stress-evt phys)
+								(schedule-event-relative (* (/ ds-steps ds-len) ds-len) 'de-stress-graded :module 'physio
+									:priority :max :details "Global graded stress reduction"))))
+					;If our sympathetic actitity is 0, then we no longer need to de-stress
+					; cleanup any vars
+					(when (= symp-act 0)
+						(cleanup-de-stress))))))
+
+(defun cleanup-de-stress ()
+	"Used to cleanup any on-going (i.e., graded) de-stress process
+	Also may be used to stop de-stress process when a new stressfule event occurs"
+	(let ((phys (get-module physio)))
+		(setf (phys-module-de-stress phys) nil)
+		(when (phys-module-de-stress-evt phys)
+			(delete-event (phys-module-de-stress-evt phys))
+			(setf (phys-module-de-stress-evt phys) nil))))
 
 (defun start-slow-breathing ()
 	"Start deep slow breaths"
@@ -767,7 +878,7 @@ t)
 			(with-open-file
 				(msgStream (concatenate 'string "CRH-Raw" *START-TIME* ".txt")
 					:direction :output :if-exists :append :if-does-not-exist :create)
-				(format msgStream "~S~10$~T~10$~&" crh-stress crh crh-base)))
+				(format msgStream "~S~T~10$~T~10$~&" crh-stress crh crh-base)))
 		;Return the CRH factor or 0 if less than 0
 		(if (< crh-factor 0) 0 crh-factor)))
 
@@ -834,7 +945,7 @@ t)
 
 ;;Compute cortisol factor
 (defun compute-cort (&optional test)
-	"cort(t_n)/cort(t_0) + cortisol[uG/dL](t_n)/cortisol[uG/dL](t_0)
+	"(cort(t_n)/cort(t_0) + cortisol[uG/dL](t_n)/cortisol[uG/dL](t_0))/2
 	cort(t_n) == (cort.gain(t_n)/cort.loss(t_n)
 	That is, the average of the Cortisol circulating and the more rapid change in cortisol"
 	(let* ((cort (read-from-string (cadar (car (get-phys-vals nil (list '("Cortisol.[Conc(uG/dL)]")))))))
@@ -896,7 +1007,11 @@ t)
 	(set-drink-event)
 
 	;;Initial time to advance model
-	(initial-advance 2880)
+	(initial-advance 1)
+
+	;File to be used for initial conditions
+	ics-file
+
 	esc
 	busy
 
@@ -972,6 +1087,17 @@ t)
 	;;A trace of all previous functions called w/ their parameters
 	;; (used if we get an error that forces us to restart)
 	(solverActionTrace '())
+
+	;[NOT IMPLEMENTED YET] Use this to save what physiological events we have in queue
+	; an attempt to stop wierd overriding behavior by deleting events before
+	(phys-sched '())
+
+	;Used to save current state of de-stress
+	; If active then == `(steps len[secs] last-time[secs] symp-adrenal symp-act crh)
+	; else (inactive) then == nil
+	(de-stress nil)
+	;Hold the next de-stress event (if there is one in the mp queue)
+	(de-stress-evt nil)
 )
 
 ;Create module everytime new model is defined
@@ -995,27 +1121,31 @@ t)
 	(if (consp param)
 	 (case (car param)
 		(:phys-delay
-		 (setf (phys-module-delay phys) (cdr param) ))
+			(setf (phys-module-delay phys) (cdr param) ))
 		(:epi-ans
-		 (setf (phys-module-epi-ans phys) (cdr param) ))
+			(setf (phys-module-epi-ans phys) (cdr param) ))
 		(:phys-enabled
-		 (setf (phys-module-enabled phys) (cdr param) ))
+			(setf (phys-module-enabled phys) (cdr param) ))
 		(:esc
-		 (setf (phys-module-esc phys) (cdr param) ))
+			(setf (phys-module-esc phys) (cdr param) ))
 		(:recorded-phys
-		 (setf (phys-module-recordedPhys phys) (cdr param))))
+			(setf (phys-module-recordedPhys phys) (cdr param)))
+		(:phys-ics-file
+			(setf (phys-module-ics-file phys) (cdr param))))
 
 	 (case param
 		(:phys-delay
-		(phys-module-delay phys))
+			(phys-module-delay phys))
 		(:epi-ans
-		 (phys-module-epi-ans phys))
+			(phys-module-epi-ans phys))
 		(:phys-enabled
-		 (phys-module-enabled phys))
+			(phys-module-enabled phys))
 		(:esc
-		 (phys-module-esc phys))
+			(phys-module-esc phys))
 		(:recorded-phys
-		 (phys-module-recordedPhys phys)))))
+			(phys-module-recordedPhys phys))
+		(:phys-ics-file
+			(phys-module-ics-file phys)))))
 
 ;Define query function for module (b = buffer)
 (defun phys-module-query (phys b slot value)
@@ -1101,6 +1231,13 @@ t)
 		:documentation "Switch variable for physiology to continue to run w/ model"
 		:default-value nil
 		:valid-test (lambda (x) (or (typep x 't) (typep x 'nil)))
+		:owner t)
+
+		(define-parameter
+		:phys-ics-file
+		:documentation "File used to load initial conditions"
+		:default-value "ICS/1wkNormal.ICS"
+		:valid-test (lambda (x) (typep x 'string))
 		:owner t)
 	)
 	:version "1.0"
