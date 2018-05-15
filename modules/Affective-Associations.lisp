@@ -917,7 +917,7 @@
 	(max-dm-noise 0.4)
 
 	;Maximum arousal value possible/expected
-	(max-arous 2)
+	(max-arous 3.5)
 
 	(dm-noise-switch nil)
 

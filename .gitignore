@@ -9,3 +9,10 @@ modules/Structure_Stochastic_asdsdsds/
 *.wx32fsl
 *.wx64fsl
 phys-test-models/Test_Data
+HumModExtras
+modules/SolverIn*
+CogSci18
+CECArous*
+CORT-Raw*
+EPI-Raw
+CRH-Raw
