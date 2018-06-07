@@ -344,7 +344,16 @@ t)
 				 (solverOutputFile (concatenate 'string *HumModDir* "SolverOut" (phys-module-pipeID phys)))
 				 (init-vals-msg "\"<solverin>")
 				 ordered-val-list
+				 old-dir
 				 ics-val-list)
+		(setf old-dir
+			#+:ccl	(ccl::current-directory-name)
+			#+:sbcl	(sb-posix:getcwd)
+			)
+		#+:ccl	(ccl::cwd *HumModDir*)
+		#+:ccl	(ccl::cwd "../")
+		#+:sbcl	(sb-posix:chdir *HumModDir*)
+		#+:sbcl	(sb-posix:chdir "../")
 		(setf ics-val-list (s-xml:parse-xml-file init-filename))
 		(setf init-vals-msg (concatenate 'string init-vals-msg (list #\newline) "<sending_current_values>" (list #\newline)))
 
@@ -390,7 +399,9 @@ t)
 			(while (and (not (probe-file solverOutputFile))
 			(< (- (get-universal-time) currTime) 55))))
 		(while (and (probe-file solverOutputFile) (not (handler-case (delete-file solverOutputFile)
-			(error () nil)))))|#))
+			(error () nil)))))|#
+			#+:ccl	(ccl::cwd old-dir)
+			#+:sbcl	(sb-posix:chdir old-dir)))
 
 ;;Generate hash-table of physiological variables & Hash-Table of the order of the variables
 ;; and default values
