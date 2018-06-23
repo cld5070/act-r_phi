@@ -945,7 +945,7 @@
  (setf (AA-dm-SEEKING-hash AA) (make-hash-table))
  (setf (AA-vis-SEEKING-hash AA) (make-hash-table))
  (setf (AA-aur-SEEKING-hash AA) (make-hash-table))
- (schedule-event 0.001 'schedule-AA-events :params (list AA) :priority :max :module 'Affective-Associations :maintenance t)
+ (schedule-event 0.001 'schedule-AA-events :params (list AA) :priority :max :module 'Affective-Associations :maintenance t :output nil)
  nil)
 
 (defun AA-module-query (AA buff slot val)

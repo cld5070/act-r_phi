@@ -432,6 +432,7 @@ t)
 						 (physValueList nil))
 				;;Send restart message to solver
 				;; *This is needed for solver to correctly process messages sent*
+				(clear-phys-files)
 				(handler-case
 					(with-open-file
 						(messageStream	solverInputFile
@@ -442,20 +443,24 @@ t)
 							#+:sbcl sb-impl::simple-file-error
 							simple-error) () (go resetCreate)))
 				(while (probe-file solverInputFile))
+
 				(let ((currTime (get-universal-time)))
-					(while (and (not (probe-file solverOutputFile)) (< (- (get-universal-time) currTime) 20))))
+					(while (and (not (probe-file solverOutputFile)) (< (- (get-universal-time) currTime) 5))))
 				(when (not (probe-file solverOutputFile))(go resetCreate))
 				;Should output two files on the reset
 				(while (and (probe-file solverOutputFile) (not (handler-case (delete-file solverOutputFile)
 					(error () nil)))))
 
-				(let ((currTime (get-universal-time)))
-					(while (and (not (probe-file solverOutputFile)) (< (- (get-universal-time) currTime) 20))))
-				;Delete the output file after restart
-				(while (and (probe-file solverOutputFile) (not (handler-case (delete-file solverOutputFile)
-					(error () nil)))))
+				;We should only need this on the 1st run (helps us avoid having to waste time)
+				(if (phys-module-first-run phys)
+					(let ((currTime (get-universal-time)))
+						(while (and (not (probe-file solverOutputFile)) (< (- (get-universal-time) currTime) 5))))
+					;Delete the output file after restart
+					(while (and (probe-file solverOutputFile) (not (handler-case (delete-file solverOutputFile)
+						(error () nil))))))
 				;; Initialize with stable values (obtained from running sim 1 week)
 				(load-HumMod-ICs (phys-module-ics-file phys))
+
 (sleep 0.05)
 				;Create input file for hummod to give us a list of variables and digest the output file created by HumMod (w/ the variables). Loop back around if there is an error
 				(tagbody getVars
@@ -481,6 +486,7 @@ t)
 							(delete-file solverOutputFile)
 							(error () nil))
 						(go getVars))
+
 					;;Parse the list of variables output by the ModelSolver
 					(let ((parseStart (get-universal-time)))
 						(tagbody parseVarList
@@ -731,7 +737,10 @@ t)
 			(progn
 				(if (not (phys-module-HProc phys))
 					;;Start HumMod
-					(start-HumMod phys))
+					(progn
+						(start-HumMod phys)
+						(setf (phys-module-first-run phys) t))
+					(setf (phys-module-first-run phys) nil))
 				;;All chunk-types used in the efferent buffer should be a subtype of phys-var
 				(chunk-type phys-var)
 				(setf (phys-module-physValList phys) nil)
@@ -1135,6 +1144,8 @@ t)
 	(de-stress nil)
 	;Hold the next de-stress event (if there is one in the mp queue)
 	(de-stress-evt nil)
+	;Tells us whether this is the 1st run of the module (i.e., it was reset once)
+	(first-run nil)
 )
 
 ;Create module everytime new model is defined
