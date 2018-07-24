@@ -801,15 +801,15 @@ t)
 (defun de-stress ()
 	"Turn stress-based params back to normal"
 	(setf *stress-on* nil)
-	(schedule-event-relative 0.020 'set-phys-vals :module 'physio
+	(schedule-event-relative 0.001 'set-phys-vals :module 'physio
 		:params
 			(list (list	(list "Sympathetics-Adrenal.ClampSwitch" 0)))
 		:priority :max :details "Turn stress off")
-	(schedule-event-relative 0.021 'set-phys-vals :module 'physio
+	(schedule-event-relative 0.002 'set-phys-vals :module 'physio
 		:params
 			(list (list (list "Sympathetics-General.EssentialEffect" 0)))
 		:priority :max :details "Turn stress off")
-	(schedule-event-relative 0.022 'set-phys-vals :module 'physio
+	(schedule-event-relative 0.003 'set-phys-vals :module 'physio
 		:params
 			(list (list (list "CorticotropinReleasingFactor.Stress" 2)))
 		:priority :max :details "Turn stress off"))

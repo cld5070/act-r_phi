@@ -284,8 +284,8 @@
 		;; The value output is in the range from 0.0001 to 1
 (defun compute-homeostatic-arousal-factor (&optional test)
 	(let* ((LA (if (cadar  (car (get-phys-vals nil (list '("Status.LastAsleep")))))
-				(cadar  (car (get-phys-vals nil (list '("Status.LastAsleep")))))
-				"0"))
+	      			(cadar  (car (get-phys-vals nil (list '("Status.LastAsleep")))))
+	      			"0"))
 		(currT (if (cadar  (car (get-phys-vals nil (list '("System.X")))))
 				(cadar  (car (get-phys-vals nil (list '("System.X")))))
 					"0"))
