@@ -75,21 +75,21 @@
 			(eq checkOsmoVal-base nil) (eq (cadar checkOsmoVal-base) nil)) 0
 			(read-from-string (cadar checkOsmoVal-base))))
 		(tVal nil)
-		(subjMult (SEEKING-subj-thirst SEEKING))
-			(tMult (if (SEEKING-thirst-multiplier SEEKING) (SEEKING-thirst-multiplier SEEKING) 1))
-		(max-reward (if (SEEKING-max-seeking-val SEEKING) (SEEKING-max-seeking-val SEEKING) 1))
-		(noise-val (if (SEEKING-hom-noise SEEKING) (act-r-noise (* (SEEKING-hom-noise SEEKING) max-reward)) 0)))
+		(subjMult (SEEKING-subj-thirst S))
+			(tMult (if (SEEKING-thirst-multiplier S) (SEEKING-thirst-multiplier S) 1))
+		(max-reward (if (SEEKING-max-seeking-val S) (SEEKING-max-seeking-val S) 1))
+		(noise-val (if (SEEKING-hom-noise S) (act-r-noise (* (SEEKING-hom-noise S) max-reward)) 0)))
 
 		(declare (ignore tMult))
 		(declare (ignore subjMult))
 		;(print checkOsmoVal)
-		(if (> osmoVal (SEEKING-thirst-max SEEKING))
+		(if (> osmoVal (SEEKING-thirst-max S))
 			(setf tVal 1)
-			(if (< osmoVal (SEEKING-thirst-min SEEKING))
+			(if (< osmoVal (SEEKING-thirst-min S))
 				(setf tVal -1)
 				(if (<= osmoVal base-osmoVal)
-					(setf tVal (/ (- osmoVal base-osmoVal) (- base-osmoVal (SEEKING-thirst-min SEEKING))))
-					(setf tVal (/ (- osmoVal base-osmoVal) (- (SEEKING-thirst-max SEEKING) base-osmoVal))))))
+					(setf tVal (/ (- osmoVal base-osmoVal) (- base-osmoVal (SEEKING-thirst-min S))))
+					(setf tVal (/ (- osmoVal base-osmoVal) (- (SEEKING-thirst-max S) base-osmoVal))))))
 		;(print (list base-osmoVal osmoVal (* subjMult tVal)))
 
 		;;Could use log-type curve to convert tVal to thirst, however I will just make a linear conversion w/ added noise for now
@@ -104,9 +104,9 @@
 		(setf tVal (exp (* (- tval 1) max-reward)))
 
 		(when (> tVal max-reward) (setf tVal max-reward))
-		(when (< tVal (SEEKING-max-neg-incentive SEEKING)) (setf tVal (SEEKING-max-neg-incentive SEEKING)))
+		(when (< tVal (SEEKING-max-neg-incentive S)) (setf tVal (SEEKING-max-neg-incentive S)))
 
-		(setf (gethash 'thirstVal (SEEKING-S-vals SEEKING)) tVal)
+		(setf (gethash 'thirstVal (SEEKING-S-vals S)) tVal)
 		tVal
 	 )))
 
@@ -411,4 +411,3 @@
 	:request 'SEEKING-requests
 	:params 'SEEKING-params
 	:query 'SEEKING-query)
-

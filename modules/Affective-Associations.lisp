@@ -30,7 +30,7 @@
 
 (defvar *START-TIME* (write-to-string (get-internal-real-time)))
 
-(defun add-aa-to-chunks ()
+;(defun add-aa-to-chunks ()
 	(suppress-extension-warnings)
 		(extend-chunks fValue :default-value 0 :merge-function merge-chunks-fValue)
 		(extend-chunks fFunction :default-value nil :merge-function merge-chunks-fFunction)
@@ -41,9 +41,9 @@
 		(extend-productions sValue :default-value 0)
 		(extend-productions fFunction :default-value nil)
 		(extend-productions fValue :default-value 0)
-	(unsuppress-extension-warnings))
+	(unsuppress-extension-warnings)
 
-(add-aa-to-chunks)
+;(add-aa-to-chunks)
 ;;Set of functions used when chunks are merged that make sure the correct
 (defun merge-chunks-fValue (c1 c2)
  (/ (+ (chunk-fValue c1) (chunk-fValue c2)) 2))
@@ -284,8 +284,8 @@
 		;; The value output is in the range from 0.0001 to 1
 (defun compute-homeostatic-arousal-factor (&optional test)
 	(let* ((LA (if (cadar  (car (get-phys-vals nil (list '("Status.LastAsleep")))))
-				(cadar  (car (get-phys-vals nil (list '("Status.LastAsleep")))))
-				"0"))
+	      			(cadar  (car (get-phys-vals nil (list '("Status.LastAsleep")))))
+	      			"0"))
 		(currT (if (cadar  (car (get-phys-vals nil (list '("System.X")))))
 				(cadar  (car (get-phys-vals nil (list '("System.X")))))
 					"0"))
@@ -945,7 +945,8 @@
  (setf (AA-dm-SEEKING-hash AA) (make-hash-table))
  (setf (AA-vis-SEEKING-hash AA) (make-hash-table))
  (setf (AA-aur-SEEKING-hash AA) (make-hash-table))
- (schedule-event 0.001 'schedule-AA-events :params (list AA) :priority :max :module 'Affective-Associations :maintenance t))
+ (schedule-event 0.001 'schedule-AA-events :params (list AA) :priority :max :module 'Affective-Associations :maintenance t :output nil)
+ nil)
 
 (defun AA-module-query (AA buff slot val)
  (case slot
