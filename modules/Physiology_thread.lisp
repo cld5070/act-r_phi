@@ -264,11 +264,17 @@ t)
 				(get-module-physio)
 				(progName
 					#+:windows	"ModelSolver.exe"
-					#+:darwin		"./ModelSolverAppMac"
+					#+:darwin		"./ModelSolverMac"
 					#+:linux		"./ModelSolverLinux"
 					)
 				(pipeID (phys-module-pipeID phys))
-				(solverOutputFile (concatenate 'string *HumModDir* "SolverOut" pipeID)))
+				(solverOutputFile (concatenate 'string *HumModDir* "SolverOut" pipeID))
+				(model (concatenate 'string
+				  "\"<root><model>" *HumModDir* "HumMod.DES</model><pipeid>"
+				  pipeID "</pipeid></root>\""))
+				(hide-gui "\"False\"")
+				(non-gui-version "\"False\"")
+				(activity-timeout "60"))
 
 		(setf old-dir
 			#+:ccl	(ccl::current-directory-name)
@@ -278,9 +284,7 @@ t)
 		#+:sbcl	(sb-posix:chdir *HumModDir*)
 		(setf (phys-module-HProc phys)
 			(run-program progName
-				(list (concatenate 'string
-								"\"<root><model>" *HumModDir* "HumMod.DES</model><pipeid>"
-								(phys-module-pipeid phys) "</pipeid></root>\" \"False\" \"False\" 60"))
+				(list (concatenate 'string model hide-gui non-gui-version activity-timeout))
 								:wait nil :output *HumModOutStream*))
 		;;This gives the modelsolver time to process the initial HumMod model
 		#+:ccl	(ccl::cwd old-dir)
@@ -400,6 +404,10 @@ t)
 			(< (- (get-universal-time) currTime) 55))))
 		(while (and (probe-file solverOutputFile) (not (handler-case (delete-file solverOutputFile)
 			(error () nil)))))|#
+			;Wait for solverInput file to be digested (and get of Output files if there are any holdin up the ModelSolver digesting the input files
+			(while (probe-file solverInputFile)
+				(handler-case (delete-file solverOutputFile)
+					(error () nil)))
 			#+:ccl	(ccl::cwd old-dir)
 			#+:sbcl	(sb-posix:chdir old-dir)))
 
@@ -442,7 +450,12 @@ t)
 							#+:ccl ccl::simple-file-error
 							#+:sbcl sb-impl::simple-file-error
 							simple-error) () (go resetCreate)))
-				(while (probe-file solverInputFile))
+				(handler-case (delete-file solverOutputFile)
+					(error () nil))
+				;Wait for solverInput file to be digested (and get of Output files if there are any holdin up the ModelSolver digesting the input files
+				(while (probe-file solverInputFile)
+					(handler-case (delete-file solverOutputFile)
+						(error () nil)))
 
 				(let ((currTime (get-universal-time)))
 					(while (and (not (probe-file solverOutputFile)) (< (- (get-universal-time) currTime) 5))))
