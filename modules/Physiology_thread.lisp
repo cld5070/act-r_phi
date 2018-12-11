@@ -31,19 +31,25 @@
 
 ;;;Function to test for non ACT-R/Phi based events in queue (modified run function in scheduling.lisp to use)
 (defun non-phi-events ()
- (or
-	(mp-modules-events 'procedural)
-	(mp-modules-events 'declarative)
-	(mp-modules-events :fatigue)
-	(mp-modules-events 'vision)
-	(mp-modules-events 'audio)
-	(mp-modules-events 'blending)
-	(mp-modules-events 'temporal)
-	(mp-modules-events 'goal)
-	(mp-modules-events 'imaginal)
-	(mp-modules-events 'motor)
-	(mp-modules-events 'speech))
+	(or
+		(mp-modules-events 'procedural)
+		(mp-modules-events 'declarative)
+		(mp-modules-events :fatigue)
+		(mp-modules-events 'vision)
+		(mp-modules-events 'audio)
+		(mp-modules-events 'blending)
+		(mp-modules-events 'temporal)
+		(mp-modules-events 'goal)
+		(mp-modules-events 'imaginal)
+		(mp-modules-events 'motor)
+		(mp-modules-events 'speech))
 )
+
+(defun wait-delete-output (out-file)
+	(while (not (probe-file out-file)))
+	(handler-case
+		(delete-file out-file)
+		(error () nil)))
 
 (defvar *HumModOutStream* (make-string-output-stream))
 
@@ -130,9 +136,9 @@ t)
 		(let ((currTime (get-universal-time)))
 			(handler-case
 				(while (and (not (probe-file solverOutputFile)) (< (- (get-universal-time) currTime) max-wait)))
-				(error (e) (print (concatenate 'string "124 phys" (write-to-string e))))))
+				(error (e) (print (concatenate 'string "124 phys" (write-to-string e)))))
 		;;If we didn't get the output file, go back and do this all over again
-		(when (not (probe-file solverOutputFile)) (go resetAdvance)))
+		(when (not (probe-file solverOutputFile)) (print "Issue @ 141 - PT") (print (- (get-universal-time) currTime)) (go resetAdvance))))
 
 	;;Translate those output data (which are in an xml file) into a list
 	(tagbody parseValList
@@ -172,8 +178,9 @@ t)
 		(model-output "Changing the following physiology: ~a~&" varValList)
 		;(format t "Changing the following physiology: ~a~&" varValList)
 		(let ((phys (get-module physio))
-					(setPhysMessage "\"<solverin>")
-					(timeOut 6))
+					(setPhysMessage "<solverin>")
+					(timeOut 6)
+					(num-param-changes 0))
 		;;Construct message to be sent to new HumMod Solver Process
 		;; -We must find the chunk in the hash-table because the request to HumMod is case sensitive
 		(dolist (v varValList)
@@ -185,8 +192,9 @@ t)
 							(concatenate 'string
 								setPhysMessage
 								"<setvalue><var>" k "</var><val>"
-								(format nil "~10,$" (cadr v)) "</val></setvalue>")))))
-		(setf setPhysMessage (concatenate 'string setPhysMessage "</solverin>\""))
+								(format nil "~10,$" (cadr v)) "</val></setvalue>"))
+						(incf num-param-changes))))
+		(setf setPhysMessage (concatenate 'string setPhysMessage "</solverin>"))
 		(let ((solverOutputFile (concatenate 'string *HumModDir* "SolverOut" (phys-module-pipeID phys)))
 					(solverInputFile (concatenate 'string *HumModDir* "SolverIn" (phys-module-pipeID phys))))
 			(tagbody startGetVals
@@ -222,6 +230,15 @@ t)
 								(and (not (probe-file solverOutputFile))
 									(< (- (get-universal-time) currTime) timeOut)))
 							(error (e) (format t "Error 214 Phys - ~a~%" (write-to-string e)))))
+					;;How many output files we should expect depends upon the number of param changes
+					(while (> num-param-changes 0)
+						(wait-delete-output solverOutputFile)
+						(print "236 PT")
+						(wait-delete-output solverOutputFile)
+						(decf num-param-changes)
+						(print "239 PT"))
+					;;;NEED TO CHANGE THIS. I need to wait for vals & parseout output file for *Each* parameter change
+					(format t "241 - PT~&")
 					#|(sleep 0.4)
 						(handler-case (delete-file solverOutputFile)
 							(error (e) (print (concatenate 'string "Error 217 Phys" (write-to-string e)))))
@@ -290,7 +307,7 @@ t)
 		#+:ccl	(ccl::cwd old-dir)
 		#+:sbcl	(sb-posix:chdir old-dir)
 		;;Wait for the output file from starting HumMod, then delete it
-		;(while (not(probe-file solverOutputFile)))
+		(while (not(probe-file solverOutputFile)))
 
 		(handler-case (delete-file solverOutputFile)	(error () nil))))
 
@@ -346,7 +363,7 @@ t)
 	(let* ((phys (get-module physio))
 				 (solverInputFile (concatenate 'string *HumModDir* "SolverIn" (phys-module-pipeID phys)))
 				 (solverOutputFile (concatenate 'string *HumModDir* "SolverOut" (phys-module-pipeID phys)))
-				 (init-vals-msg "\"<solverin>")
+				 (init-vals-msg "<solverin>")
 				 ordered-val-list
 				 old-dir
 				 ics-val-list)
@@ -363,7 +380,7 @@ t)
 
 		;Go through list returned by parsing and pull vals out
 		; and put into msg (assuming 1st 2 elements are ICS & time)
-		(print (length (cdr ics-val-list)))
+		;(print (length (cdr ics-val-list)))
 
 		;;[NO LONGER USED] Get correct order for variables (our ICS order may be incorrect)
 		#|(setf ordered-val-list (make-list (length (cdr ics-val-list))))
@@ -385,7 +402,7 @@ t)
 					(concatenate 'string init-vals-msg "<val>" (remove #\Space (cadr (caddr var-val))) "</val>" (list #\newline) )))
 					;(format nil "~a~%<val>~a</val>" init-vals-msg (cadr (caddr var-val)))))
 			;Add closing tag
-			(setf init-vals-msg (concatenate 'string init-vals-msg "</sending_current_values></solverin>\""))
+			(setf init-vals-msg (concatenate 'string init-vals-msg "</sending_current_values></solverin>~&"))
 
 		;;Send new values to model solver
 		(handler-case
@@ -426,16 +443,16 @@ t)
 						 (initial-advance-time (format nil "~10,$" (phys-module-initial-advance phys)))
 
 						 ;Restart Utility Message (needed to start getting values from HumMod model solver)
-						 (resetMessage "\"<solverin><restart/></solverin>\"")
+						 (resetMessage "<solverin><restart/></solverin>~&")
 
 						 ;Get Variables Message
-						 (getVarsMessage "\"<solverin><requestvarroster/></solverin>\"")
+						 (getVarsMessage "<solverin><requestvarroster/></solverin>~&")
 
 						 (getValsMessage
 							(concatenate 'string
-								"\"<solverin><gofor><solutionint>" initial-advance-time
+								"<solverin><gofor><solutionint>" initial-advance-time
 								"</solutionint><displayint>" initial-advance-time
-								"</displayint></gofor></solverin>\""))
+								"</displayint></gofor></solverin>~&"))
 						 (physVarList nil)
 						 (physValueList nil))
 				;;Send restart message to solver
