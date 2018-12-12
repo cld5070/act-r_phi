@@ -1,6 +1,7 @@
 *.dx64fsl
 *.dx32fsl
 *.ds_store
+*.DS_Store
 modules/Display_Scholar_sdsd/
 modules/SolverOut1032531681
 modules/Structure_Stochastic_asdsdsds/
