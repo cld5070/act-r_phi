@@ -21,7 +21,7 @@
 
 ;;; Tested w/ CCL
 ;;; Should theoretically work with sbcl
-;;;	(*features* should be tested for all implementation specific functions)
+;;;	(*features* stil need to be tested for all implementation specific functions)
 
 
 ;;Thread library
@@ -130,7 +130,7 @@ t)
 		(let ((currTime (get-universal-time)))
 			(handler-case
 				(while (and (not (probe-file solverOutputFile)) (< (- (get-universal-time) currTime) max-wait)))
-				(error (e) (print (concatenate 'string "124 phys" (write-to-string e))))))
+				(error (e) (print (concatenate 'string "Error on line 133 in Phys Module - " (write-to-string e))))))
 		;;If we didn't get the output file, go back and do this all over again
 		(when (not (probe-file solverOutputFile)) (go resetAdvance)))
 
@@ -147,7 +147,6 @@ t)
 			(while (not (handler-case (delete-file solverOutputFile)
 				(error () nil))))
 			(go parseValList)))
-
 	;;Delete the output file after we've harvested those data
 	(while (probe-file solverOutputFile)
 		(handler-case
@@ -286,7 +285,7 @@ t)
 		#+:ccl	(ccl::cwd old-dir)
 		#+:sbcl	(sb-posix:chdir old-dir)
 		;;Wait for the output file from starting HumMod, then delete it
-		;(while (not(probe-file solverOutputFile)))
+		(while (not(probe-file solverOutputFile)))
 
 		(handler-case (delete-file solverOutputFile)	(error () nil))))
 
@@ -392,7 +391,7 @@ t)
 			((or
 				#+:ccl ccl::simple-file-error
 				#+:sbcl sb-impl::simple-file-error
-				simple-error) () (format t "Error loading ICS file!~&")))
+				simple-error) (e) (format t "Error loading ICS file!~&" e)))
 		;;[NOT USED (Doesn't seem to be needed)] Clean up resulting output
 		#|(while (probe-file solverInputFile)) ;Wait for Model Solver to finish computation & output file
 		(let ((currTime (get-universal-time)))
