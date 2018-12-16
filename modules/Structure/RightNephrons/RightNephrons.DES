@@ -8,17 +8,17 @@ By : University of Mississippi Medical Center
 Solver : DES 2005
 Schema : 2005.0
 
-<?path Structure\RightNephrons\ ?>
+<?path Structure/RightNephrons/ ?>
 
 <?include RightFractReab.DES ?>
 
-<?include RightCollectingDuct\RightCollectingDuct.DES ?>
-<?include RightDistalTubule\RightDistalTubule.DES ?>
-<?include RightGlomerulus\RightGlomerulus.DES ?>
-<?include RightLoopOfHenle\RightLoopOfHenle.DES ?>
-<?include RightMedulla\RightMedulla.DES ?>
-<?include RightMaculaDensa\RightMaculaDensa.DES ?>
-<?include RightProximalTubule\RightProximalTubule.DES ?>
+<?include RightCollectingDuct/RightCollectingDuct.DES ?>
+<?include RightDistalTubule/RightDistalTubule.DES ?>
+<?include RightGlomerulus/RightGlomerulus.DES ?>
+<?include RightLoopOfHenle/RightLoopOfHenle.DES ?>
+<?include RightMedulla/RightMedulla.DES ?>
+<?include RightMaculaDensa/RightMaculaDensa.DES ?>
+<?include RightProximalTubule/RightProximalTubule.DES ?>
 
 <?include RightNephronIFP.DES ?>
 <?include RightNephronAldo.DES ?>

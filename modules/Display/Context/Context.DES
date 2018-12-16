@@ -6,14 +6,14 @@ Author : Tom Coleman
 Copyright : 2012-2012
 By : University of Mississippi Medical Center
 
-<?path Display\Context\ ?>
+<?path Display/Context/ ?>
 
-<?include Adiposity\Adiposity.DES ?>
-<?include Age\Age.DES ?>
-<?include Gender\Gender.DES ?>
-<?include Height\Height.DES ?>
-<?include Muscularity\Muscularity.DES ?>
-<?include OtherMass\OtherMass.DES ?>
-<?include Summary\Summary.DES ?>
+<?include Adiposity/Adiposity.DES ?>
+<?include Age/Age.DES ?>
+<?include Gender/Gender.DES ?>
+<?include Height/Height.DES ?>
+<?include Muscularity/Muscularity.DES ?>
+<?include OtherMass/OtherMass.DES ?>
+<?include Summary/Summary.DES ?>
 
 End

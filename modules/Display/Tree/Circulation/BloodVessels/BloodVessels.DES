@@ -12,11 +12,11 @@ By : Tom Coleman
   <parent> CIRCULATION </parent>
 </branch>
 
-<?path Display\Tree\Circulation\BloodVessels\ ?>
+<?path Display/Tree/Circulation/BloodVessels/ ?>
 
-<?include Arteries\Arteries.DES ?>
-<?include Veins\Veins.DES ?>
-<?include Lungs\Lungs.DES ?>
+<?include Arteries/Arteries.DES ?>
+<?include Veins/Veins.DES ?>
+<?include Lungs/Lungs.DES ?>
 
 <separatorbar>
   <parent> BloodVessels </parent>

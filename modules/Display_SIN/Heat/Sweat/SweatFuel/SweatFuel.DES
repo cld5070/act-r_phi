@@ -28,7 +28,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Heat\Sweat\SweatFuel\ ?>
+<?path Display/Heat/Sweat/SweatFuel/ ?>
 
 <?include Summary.DES ?>
 

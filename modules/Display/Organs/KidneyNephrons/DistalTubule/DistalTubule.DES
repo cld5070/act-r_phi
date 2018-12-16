@@ -6,9 +6,9 @@ Author : Tom Coleman
 Copyright : 2005-2013
 By : University of Mississippi Medical Center
 
-<?path Display\Organs\KidneyNephrons\DistalTubule\ ?>
+<?path Display/Organs/KidneyNephrons/DistalTubule/ ?>
 
-<?include Potassium\Potassium.DES ?>
-<?include Sodium\Sodium.DES ?>
+<?include Potassium/Potassium.DES ?>
+<?include Sodium/Sodium.DES ?>
 
 End

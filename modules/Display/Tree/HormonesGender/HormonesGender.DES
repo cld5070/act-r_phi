@@ -22,7 +22,7 @@ By : Tom Coleman
   <parent> HORMONESGENDER </parent>
 </separatorbar>
 
-<?path Display\Tree\HormonesGender\ ?>
+<?path Display/Tree/HormonesGender/ ?>
 
 <?include Estradiol.DES ?>
 <?include FSH.DES ?>

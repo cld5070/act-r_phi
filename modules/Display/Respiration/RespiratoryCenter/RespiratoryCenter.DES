@@ -7,11 +7,11 @@ Copyright : 2006-2010
 By : University Of Mississippi Medical Center
 Schema : DES V1.0
 
-<?path Display\Respiration\RespiratoryCenter\ ?>
+<?path Display/Respiration/RespiratoryCenter/ ?>
 
-<?include ChemicalDrive\ChemicalDrive.DES ?>
-<?include ExerciseDrive\ExerciseDrive.DES ?>
-<?include Integration\Integration.DES ?>
-<?include Output\Output.DES ?>
+<?include ChemicalDrive/ChemicalDrive.DES ?>
+<?include ExerciseDrive/ExerciseDrive.DES ?>
+<?include Integration/Integration.DES ?>
+<?include Output/Output.DES ?>
 
 End

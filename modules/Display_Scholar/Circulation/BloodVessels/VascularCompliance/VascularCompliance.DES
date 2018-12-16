@@ -27,7 +27,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Circulation\BloodVessels\VascularCompliance\ ?>
+<?path Display/Circulation/BloodVessels/VascularCompliance/ ?>
 
 <?include Summary.DES ?>
 

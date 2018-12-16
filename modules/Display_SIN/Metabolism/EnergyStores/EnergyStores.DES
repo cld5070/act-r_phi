@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Metabolism\EnergyStores\ ?>
+<?path Display/Metabolism/EnergyStores/ ?>
 
 <?include Total.DES ?>
 <?include LiverGlycogen.DES ?>

@@ -26,7 +26,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Respiration\CO2\Calculator\ ?>
+<?path Display/Respiration/CO2/Calculator/ ?>
 
 <?include Box.DES ?>
 

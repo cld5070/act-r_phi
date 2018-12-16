@@ -8,7 +8,7 @@ By : University of Mississippi Medical Center
 Solver : DES 2005
 Schema : 2005.0
 
-<?path Structure\TissueH2O\CapillaryWater\ ?>
+<?path Structure/TissueH2O/CapillaryWater/ ?>
 
 <?include UT_CapillaryWater.DES ?>
 <?include MT_CapillaryWater.DES ?>

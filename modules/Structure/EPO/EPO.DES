@@ -7,7 +7,7 @@
    By : Tom Coleman
 */
 
-<?path Structure\EPO\ ?>
+<?path Structure/EPO/ ?>
 
 <?include EPOPool.DES ?>
 <?include EPOPump.DES ?>

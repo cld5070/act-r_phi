@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Metabolism\Summary\ ?>
+<?path Display/Metabolism/Summary/ ?>
 
 <?include MetabolicRate.DES ?>
 <?include BMR.DES ?>

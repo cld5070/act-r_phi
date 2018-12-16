@@ -28,7 +28,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Organs\LiverMetabolism\PortalVein\ ?>
+<?path Display/Organs/LiverMetabolism/PortalVein/ ?>
 
 <?include Insulin.DES ?>
 <?include Glucose.DES ?>

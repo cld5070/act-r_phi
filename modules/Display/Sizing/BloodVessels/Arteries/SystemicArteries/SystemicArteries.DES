@@ -28,7 +28,7 @@ By : Tom Coleman
   <days/>
 </showclock>
 
-<?path Display\Sizing\BloodVessels\Arteries\SystemicArteries ?>
+<?path Display/Sizing/BloodVessels/Arteries/SystemicArteries ?>
 
 <?include Box.DES ?>
 

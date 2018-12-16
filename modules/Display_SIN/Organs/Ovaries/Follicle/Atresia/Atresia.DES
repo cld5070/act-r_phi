@@ -29,7 +29,7 @@ Schema : DES V1.0
   <days/>
 </showclock>
 
-<?path Display\Organs\Ovaries\Follicle\Atresia\ ?>
+<?path Display/Organs/Ovaries/Follicle/Atresia/ ?>
 
 <?include Summary.DES ?>
 

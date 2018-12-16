@@ -30,7 +30,7 @@ Schema : 2005.0
   <days/>
 </showclock>
 
-<?path Display\Organs\SkeletalMuscle\Insulin\ ?>
+<?path Display/Organs/SkeletalMuscle/Insulin/ ?>
 
 <?include Summary.DES ?>
 

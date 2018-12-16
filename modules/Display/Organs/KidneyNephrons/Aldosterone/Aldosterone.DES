@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Organs\KidneyNephrons\Aldosterone\ ?>
+<?path Display/Organs/KidneyNephrons/Aldosterone/ ?>
 
 <?include MineralocorticoidReceptor.DES ?>
 <?include [Aldo-Nucleus].DES ?>

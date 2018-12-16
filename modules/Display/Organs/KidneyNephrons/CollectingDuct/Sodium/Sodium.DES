@@ -28,7 +28,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Organs\KidneyNephrons\CollectingDuct\Sodium\ ?>
+<?path Display/Organs/KidneyNephrons/CollectingDuct/Sodium/ ?>
 
 <?include SodiumMovement.DES ?>
 <?include Na+FractionalReabsorption.DES ?>

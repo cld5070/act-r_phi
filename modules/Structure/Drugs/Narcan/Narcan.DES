@@ -6,7 +6,7 @@ Author : W Pruett
 Copyright : 2015-2015
 By : University Of Mississippi Medical Center
 
-<?path Structure\Drugs\Narcan\ ?>
+<?path Structure/Drugs/Narcan/ ?>
 
 <?include NarcanPool.DES ?>
 <?include NarcanLiver.DES ?>

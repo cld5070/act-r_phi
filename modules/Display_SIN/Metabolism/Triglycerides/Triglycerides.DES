@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Metabolism\Triglycerides\ ?>
+<?path Display/Metabolism/Triglycerides/ ?>
 
 <?include Concentration.DES ?>
 <?include Hydrolysis.DES ?>

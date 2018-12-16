@@ -21,7 +21,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Respiration\CO2\Arteries\ ?>
+<?path Display/Respiration/CO2/Arteries/ ?>
 
 <?include LeftBox.DES ?>
 <?include Technical.DES ?>

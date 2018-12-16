@@ -28,7 +28,7 @@ By : Tom Coleman
   <days/>
 </showclock>
 
-<?path Display\Sizing\BloodVessels\Lungs\PulmonaryCapillaries\ ?>
+<?path Display/Sizing/BloodVessels/Lungs/PulmonaryCapillaries/ ?>
 
 <?include Box.DES ?>
 

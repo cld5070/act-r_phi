@@ -28,7 +28,7 @@ By : Tom Coleman
   <days/>
 </showclock>
 
-<?path Display\Sizing\BloodVessels\Veins\RightAtrium\ ?>
+<?path Display/Sizing/BloodVessels/Veins/RightAtrium/ ?>
 
 <?include Box.DES ?>
 

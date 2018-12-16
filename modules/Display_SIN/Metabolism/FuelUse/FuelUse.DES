@@ -30,7 +30,7 @@ Schema : 2005.0
   <days/>
 </showclock>
 
-<?path Display\Metabolism\FuelUse\ ?>
+<?path Display/Metabolism/FuelUse/ ?>
 
 <?include Glucose.DES ?>
 <?include Ketoacids.DES ?>

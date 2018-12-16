@@ -30,7 +30,7 @@ Schema : 2005.0
   <days/>
 </showclock>
 
-<?path Display\Miscellaneous\CellProtein\ ?>
+<?path Display/Miscellaneous/CellProtein/ ?>
 
 <?include Concentration.DES ?>
 <?include Inflow.DES ?>

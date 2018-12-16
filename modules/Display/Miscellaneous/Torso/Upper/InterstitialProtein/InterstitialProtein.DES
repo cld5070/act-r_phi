@@ -27,7 +27,7 @@ Schema : DES V1.0
   <days/>
 </showclock>
 
-<?path Display\Miscellaneous\Torso\Upper\InterstitialProtein\ ?>
+<?path Display/Miscellaneous/Torso/Upper/InterstitialProtein/ ?>
 
 <?include Balance.DES ?>
 <?include CapillaryLeak.DES ?>

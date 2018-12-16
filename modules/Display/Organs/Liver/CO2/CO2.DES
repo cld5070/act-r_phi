@@ -30,7 +30,7 @@ By : University Of Mississippi Medical Center
 
 <structurename> Liver-CO2 </structurename>
 
-<?path Display\Organs\Liver\CO2\ ?>
+<?path Display/Organs/Liver/CO2/ ?>
 
 <?include LeftBox.DES ?>
 <?include Technical.DES ?>

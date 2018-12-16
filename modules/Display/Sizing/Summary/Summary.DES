@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Sizing\Summary\ ?>
+<?path Display/Sizing/Summary/ ?>
 
 <?include Installed.DES ?>
 

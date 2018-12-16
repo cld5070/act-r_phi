@@ -28,7 +28,7 @@ Schema : 2005.0
   <days/>
 </showclock>
 
-<?path Display\BodyFluids\H2O\Movement\IVDrip\ ?>
+<?path Display/BodyFluids/H2O/Movement/IVDrip/ ?>
 
 <?include Summary.DES ?>
 

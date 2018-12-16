@@ -28,7 +28,7 @@ By : Tom Coleman
   <days/>
 </showclock>
 
-<?path Display\NervousSystem\AutonomicNerves\Efferents\Ganglia-Mesenteric\ ?>
+<?path Display/NervousSystem/AutonomicNerves/Efferents/Ganglia-Mesenteric/ ?>
 
 <?include Box.DES ?>
 

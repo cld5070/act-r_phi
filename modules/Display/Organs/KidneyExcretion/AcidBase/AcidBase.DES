@@ -28,7 +28,7 @@ By : Tom Coleman
   <days/>
 </showclock>
 
-<?path Display\Organs\KidneyExcretion\AcidBase\ ?>
+<?path Display/Organs/KidneyExcretion/AcidBase/ ?>
 
 <?include Excretion.DES ?>
 <?include Urine.DES ?>

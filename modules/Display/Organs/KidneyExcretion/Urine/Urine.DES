@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Organs\KidneyExcretion\Urine\ ?>
+<?path Display/Organs/KidneyExcretion/Urine/ ?>
 
 <?include ExcretionRate.DES ?>
 <?include Composition.DES ?>

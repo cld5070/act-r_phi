@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Organs\OtherTissue\Structure\Summary\ ?>
+<?path Display/Organs/OtherTissue/Structure/Summary/ ?>
 
 <?include Box.DES ?>
 

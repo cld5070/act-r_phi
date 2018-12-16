@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Hormones\Insulin\Receptors\Liver\ ?>
+<?path Display/Hormones/Insulin/Receptors/Liver/ ?>
 
 <?include Box.DES ?>
 <?include HepaticInsulin.DES ?>

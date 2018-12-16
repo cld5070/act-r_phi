@@ -29,7 +29,7 @@ Schema : DES V1.0
   <days/>
 </showclock>
 
-<?path Display\Organs\Ovaries\Estradiol\ ?>
+<?path Display/Organs/Ovaries/Estradiol/ ?>
 
 <?include Secretion.DES ?>
 <?include Follicle.DES ?>

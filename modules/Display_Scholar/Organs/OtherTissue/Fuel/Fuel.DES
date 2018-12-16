@@ -30,7 +30,7 @@ By : University of Mississippi Medical Center
 
 <structurename> OtherTissue-Fuel </structurename>
 
-<?path Display\Organs\OtherTissue\Fuel\ ?>
+<?path Display/Organs/OtherTissue/Fuel/ ?>
 
 <?include Delivery.DES ?>
 <?include Use.DES ?>

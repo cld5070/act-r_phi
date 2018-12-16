@@ -30,7 +30,7 @@ By : University of Mississippi Medical Center
 
 <structurename> Liver-Fuel </structurename>
 
-<?path Display\Organs\Liver\Fuel\ ?>
+<?path Display/Organs/Liver/Fuel/ ?>
 
 <?include Delivery.DES ?>
 <?include Use.DES ?>

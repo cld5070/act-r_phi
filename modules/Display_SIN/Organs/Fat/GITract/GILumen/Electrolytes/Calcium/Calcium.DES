@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Organs\GITract\GILumen\Electrolytes\Calcium\ ?>
+<?path Display/Organs/GITract/GILumen/Electrolytes/Calcium/ ?>
 
 <?include LeftColumn.DES ?>
 <?include RightColumn.DES ?>

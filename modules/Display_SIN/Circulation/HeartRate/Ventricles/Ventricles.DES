@@ -28,7 +28,7 @@ Schema : 2005.0
   <days/>
 </showclock>
 
-<?path Display\Circulation\HeartRate\Ventricles\ ?>
+<?path Display/Circulation/HeartRate/Ventricles/ ?>
 
 <?include Contraction.DES ?>
 <?include AVBlock.DES ?>

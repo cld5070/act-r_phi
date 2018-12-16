@@ -6,7 +6,7 @@ Author : Tom Coleman
 Copyright : 2005-2013
 By : University of Mississippi Medical Center
 
-<?path Structure\Nephrons\CollectingDuct\ ?>
+<?path Structure/Nephrons/CollectingDuct/ ?>
 
 <?include CollectingDuct_H2O.DES ?>
 <?include CollectingDuct_Glucose.DES ?>

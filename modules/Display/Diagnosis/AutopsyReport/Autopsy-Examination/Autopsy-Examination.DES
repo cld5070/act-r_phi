@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Diagnosis\AutopsyReport\Autopsy-Examination\ ?>
+<?path Display/Diagnosis/AutopsyReport/Autopsy-Examination/ ?>
 
 <?include Box.DES ?>
 

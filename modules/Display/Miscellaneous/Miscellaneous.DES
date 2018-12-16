@@ -6,11 +6,11 @@ Author : Tom Coleman
 Copyright : 2011-2013
 By : University of Mississippi Medical Center
 
-<?path Display\Miscellaneous\ ?>
+<?path Display/Miscellaneous/ ?>
 
-<?include CarbonMonoxide\CarbonMonoxide.DES ?>
-<?include CellProtein\CellProtein.DES ?>
-<?include Orthostasis\Orthostasis.DES ?>
-<?include Torso\Torso.DES ?>
+<?include CarbonMonoxide/CarbonMonoxide.DES ?>
+<?include CellProtein/CellProtein.DES ?>
+<?include Orthostasis/Orthostasis.DES ?>
+<?include Torso/Torso.DES ?>
 
 End

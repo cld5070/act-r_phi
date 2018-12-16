@@ -6,11 +6,11 @@ Author : Tom Coleman
 Copyright : 2008-2012
 By : University of Mississippi Medical Center
 
-<?path Display\Lifestyle\Diet\ ?>
+<?path Display/Lifestyle/Diet/ ?>
 
-<?include Goal\Goal.DES ?>
-<?include Hunger-Thirst\Hunger-Thirst.DES ?>
-<?include Control\Control.DES ?>
-<?include Intake\Intake.DES ?>
+<?include Goal/Goal.DES ?>
+<?include Hunger-Thirst/Hunger-Thirst.DES ?>
+<?include Control/Control.DES ?>
+<?include Intake/Intake.DES ?>
 
 End

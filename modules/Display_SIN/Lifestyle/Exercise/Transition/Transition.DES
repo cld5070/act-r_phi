@@ -30,7 +30,7 @@ By : University of Mississippi Medical Center
 
 <structurename> Exercise-Metabolism </structurename>
 
-<?path Display\Lifestyle\Exercise\Transition\ ?>
+<?path Display/Lifestyle/Exercise/Transition/ ?>
 
 <?include Energy.DES ?>
 <?include Contractions.DES ?>

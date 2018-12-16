@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Lifestyle\BreathHolding\ ?>
+<?path Display/Lifestyle/BreathHolding/ ?>
 
 <?include Box.DES ?>
 <?include LungGas.DES ?>

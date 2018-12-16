@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Organs\KidneyExcretion\Calcium\ ?>
+<?path Display/Organs/KidneyExcretion/Calcium/ ?>
 
 <?include LeftColumn.DES ?>
 <?include RightColumn.DES ?>

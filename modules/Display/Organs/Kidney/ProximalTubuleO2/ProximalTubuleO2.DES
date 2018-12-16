@@ -28,7 +28,7 @@ HumMod / ProximalTubuleO2
   <days/>
 </showclock>
 
-<?path Display\Organs\Kidney\ProximalTubuleO2\ ?>
+<?path Display/Organs/Kidney/ProximalTubuleO2/ ?>
 
 <?include Box.DES ?>
 

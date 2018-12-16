@@ -112,7 +112,7 @@ By : University Of Mississippi Medical Center
   <parent> Kidney </parent>
 </leaf>
 
-<?path Display\Tree\Organs\ ?>
+<?path Display/Tree/Organs/ ?>
 <?include Nephrons.DES ?>
 
 End

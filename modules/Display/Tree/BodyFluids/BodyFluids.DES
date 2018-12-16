@@ -12,7 +12,7 @@ By : University of Mississippi Medical Center
   <parent> MAINMENU </parent>
 </branch>
 
-<?path Display\Tree\BodyFluids\ ?>
+<?path Display/Tree/BodyFluids/ ?>
 
 <?include H2O.DES ?>
 <?include Blood.DES ?>

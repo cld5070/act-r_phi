@@ -30,7 +30,7 @@ Schema : 2005.0
   <days/>
 </showclock>
 
-<?path Display\Metabolism\Creatine\ ?>
+<?path Display/Metabolism/Creatine/ ?>
 
 <?include Summary.DES ?>
 <?include SkeletalMuscle.DES ?>

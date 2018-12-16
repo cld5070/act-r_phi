@@ -29,7 +29,7 @@ Schema : DES V1.0
   <days/>
 </showclock>
 
-<?path Display\Organs\SkeletalMuscle\Vasculature\ ?>
+<?path Display/Organs/SkeletalMuscle/Vasculature/ ?>
 
 <?include Summary.DES ?>
 

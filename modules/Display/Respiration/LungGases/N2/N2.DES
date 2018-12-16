@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Respiration\LungGases\N2\ ?>
+<?path Display/Respiration/LungGases/N2/ ?>
 
 <?include Box.DES ?>
 <?include Technical.DES ?>

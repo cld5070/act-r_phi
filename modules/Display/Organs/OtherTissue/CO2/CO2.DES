@@ -31,7 +31,7 @@ Schema : DES V1.0
 
 <structurename> OtherTissue-CO2 </structurename>
 
-<?path Display\Organs\OtherTissue\CO2\ ?>
+<?path Display/Organs/OtherTissue/CO2/ ?>
 
 <?include LeftBox.DES ?>
 <?include Technical.DES ?>

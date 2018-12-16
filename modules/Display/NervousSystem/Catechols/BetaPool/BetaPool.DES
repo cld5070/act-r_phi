@@ -21,7 +21,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\NervousSystem\Catechols\BetaPool\ ?>
+<?path Display/NervousSystem/Catechols/BetaPool/ ?>
 
 <?include Box.DES ?>
 

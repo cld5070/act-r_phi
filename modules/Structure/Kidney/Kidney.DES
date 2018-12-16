@@ -8,12 +8,12 @@ By : University of Mississippi Medical Center
 
 
 <?path Structure ?>
-<?include RightKidney\RightKidney.DES ?>
-<?include LeftKidney\LeftKidney.DES ?>
-<?include Kidney\Kidney-NephronCount.DES ?>
-<?include Kidney\Kidney-Size.DES ?>
-<?include Kidney\Kidney-Flow.DES ?>
-<?include Kidney\Kidney-Metabolism.DES ?>
-<?include Kidney\Kidney-Pressure.DES ?>
+<?include RightKidney/RightKidney.DES ?>
+<?include LeftKidney/LeftKidney.DES ?>
+<?include Kidney/Kidney-NephronCount.DES ?>
+<?include Kidney/Kidney-Size.DES ?>
+<?include Kidney/Kidney-Flow.DES ?>
+<?include Kidney/Kidney-Metabolism.DES ?>
+<?include Kidney/Kidney-Pressure.DES ?>
 
-<?include Kidney\Kidney-Fuel.DES ?>
+<?include Kidney/Kidney-Fuel.DES ?>

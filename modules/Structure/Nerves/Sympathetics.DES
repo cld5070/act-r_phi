@@ -6,7 +6,7 @@ Author : Tom Coleman
 Copyright : 2013-2013
 By : Tom Coleman
 
-<?path Structure\Nerves\ ?>
+<?path Structure/Nerves/ ?>
 
 <?include Sympathetics-General.DES ?>
 <?include Sympathetics-Adrenal.DES ?>

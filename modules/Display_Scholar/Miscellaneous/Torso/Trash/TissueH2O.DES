@@ -8,9 +8,9 @@ By : University of Mississippi Medical Center
 Solver : DES 2005
 Schema : 2005.0
 
-<?path Display\Miscellaneous\TissueH2O\ ?>
+<?path Display/Miscellaneous/TissueH2O/ ?>
 
-<?include Interstitium\Interstitium.DES ?>
-<?include Cells\Cells.DES ?>
+<?include Interstitium/Interstitium.DES ?>
+<?include Cells/Cells.DES ?>
 
 End

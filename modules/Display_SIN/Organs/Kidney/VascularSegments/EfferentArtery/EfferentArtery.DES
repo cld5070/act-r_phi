@@ -28,7 +28,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Organs\Kidney\VascularSegments\EfferentArtery ?>
+<?path Display/Organs/Kidney/VascularSegments/EfferentArtery ?>
 
 <?include Conductance.DES ?>
 <?include Flow.DES ?>

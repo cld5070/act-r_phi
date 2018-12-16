@@ -30,7 +30,7 @@ Schema : 2005.0
   <days/>
 </showclock>
 
-<?path Display\Organs\Kidney\Nephrons\MaculaDensa\Summary\ ?>
+<?path Display/Organs/Kidney/Nephrons/MaculaDensa/Summary/ ?>
 
 <?include LumenSodium.DES ?>
 <?include TGF.DES ?>

@@ -26,7 +26,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Organs\Bladder\ ?>
+<?path Display/Organs/Bladder/ ?>
 
 <?include Voiding.DES ?>
 <?include Proteinuria.DES ?>

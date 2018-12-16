@@ -7,7 +7,7 @@ Copyright : 2008-2010
 By : University of Mississippi Medical Center
 Schema : DES V1.0
 
-<?path Structure\Leptin\ ?>
+<?path Structure/Leptin/ ?>
 
 <?include LeptinPool.DES ?>
 <?include LeptinClearance.DES ?>

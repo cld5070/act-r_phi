@@ -28,7 +28,7 @@ By : Tom Coleman
   <days/>
 </showclock>
 
-<?path Display\NervousSystem\AutonomicNerves\Efferents\Ganglia-Renal\ ?>
+<?path Display/NervousSystem/AutonomicNerves/Efferents/Ganglia-Renal/ ?>
 
 <?include Box.DES ?>
 

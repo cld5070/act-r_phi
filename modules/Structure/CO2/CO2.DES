@@ -6,7 +6,7 @@ Author : Tom Coleman
 Copyright : 2006-2012
 By : University of Mississippi Medical Center
 
-<?path Structure\CO2\ ?>
+<?path Structure/CO2/ ?>
 
 <?include CO2Tools.DES ?>
 

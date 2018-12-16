@@ -28,7 +28,7 @@ Schema : 2005.0
   <days/>
 </showclock>
 
-<?path Display\Circulation\Pericardium\ ?>
+<?path Display/Circulation/Pericardium/ ?>
 
 <?include Pressure.DES ?>
 <?include UnstressedVolume.DES ?>

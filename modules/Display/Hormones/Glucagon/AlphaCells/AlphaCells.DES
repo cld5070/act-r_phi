@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Hormones\Glucagon\AlphaCells\ ?>
+<?path Display/Hormones/Glucagon/AlphaCells/ ?>
 
 <?include Secretion.DES ?>
 <?include [Glucagon].DES ?>

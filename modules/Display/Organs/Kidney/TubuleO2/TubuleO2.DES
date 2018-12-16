@@ -29,7 +29,7 @@
   <days/>
 </showclock>
 
-<?path Display\Organs\Kidney\TubuleO2\ ?>
+<?path Display/Organs/Kidney/TubuleO2/ ?>
 
 <?include Tubules.DES ?>
 

@@ -7,7 +7,7 @@ Copyright : 2008-2012
 By : University of Mississippi Medical Center
 Schema : DES V1.0
 
-<?path Structure\LipidDeposits\ ?>
+<?path Structure/LipidDeposits/ ?>
 
 <?include LipidDeposits-Uptake.DES ?>
 <?include LipidDeposits-Release.DES ?>

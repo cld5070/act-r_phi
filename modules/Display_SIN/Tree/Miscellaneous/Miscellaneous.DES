@@ -12,7 +12,7 @@ By : University of Mississippi Medical Center
   <parent> MAINMENU </parent>
 </branch>
 
-<?path Display\Tree\Miscellaneous\ ?>
+<?path Display/Tree/Miscellaneous/ ?>
 
 <?include CarbonMonoxide.DES ?>
 <?include CellProtein.DES ?>

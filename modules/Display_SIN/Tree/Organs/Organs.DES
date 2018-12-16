@@ -12,7 +12,7 @@ By : University of Mississippi Medical Center
   <parent> MAINMENU </parent>
 </branch>
 
-<?path Display\Tree\Organs\ ?>
+<?path Display/Tree/Organs/ ?>
 
 <?include AdiposeTissue.DES ?>
 <?include AdrenalGland.DES ?>

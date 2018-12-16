@@ -29,7 +29,7 @@ Schema : DES V1.0
   <days/>
 </showclock>
 
-<?path Display\Lifestyle\Posture\ ?>
+<?path Display/Lifestyle/Posture/ ?>
 
 <?include Control.DES ?>
 <?include Gravity.DES ?>

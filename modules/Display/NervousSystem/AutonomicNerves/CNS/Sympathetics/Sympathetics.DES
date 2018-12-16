@@ -28,7 +28,7 @@ By : Tom Coleman
   <days/>
 </showclock>
 
-<?path Display\NervousSystem\AutonomicNerves\CNS\Sympathetics\ ?>
+<?path Display/NervousSystem/AutonomicNerves/CNS/Sympathetics/ ?>
 
 <?include NerveActivity.DES ?>
 

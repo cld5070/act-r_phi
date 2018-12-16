@@ -28,7 +28,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Respiration\RespiratoryCenter\ChemicalDrive\ ?>
+<?path Display/Respiration/RespiratoryCenter/ChemicalDrive/ ?>
 
 <?include Summary.DES ?>
 <?include CentralDrive.DES ?>

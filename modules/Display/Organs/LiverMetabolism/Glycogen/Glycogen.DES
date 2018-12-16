@@ -28,7 +28,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Organs\LiverMetabolism\Glycogen\ ?>
+<?path Display/Organs/LiverMetabolism/Glycogen/ ?>
 
 <?include Balance.DES ?>
 <?include Glycogenesis.DES ?>

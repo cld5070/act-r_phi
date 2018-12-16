@@ -28,7 +28,7 @@ Schema : DES V1.0
   <days/>
 </showclock>
 
-<?path Display\Circulation\BloodPressure\ ?>
+<?path Display/Circulation/BloodPressure/ ?>
 
 <?include Summary.DES ?>
 

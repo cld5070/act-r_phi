@@ -1,6 +1,6 @@
 Trauma.DES
 
-<?path Structure\Trauma\ ?>
+<?path Structure/Trauma/ ?>
 <?include BluntInjury.DES ?>
 <structure><name> Trauma </name>
 

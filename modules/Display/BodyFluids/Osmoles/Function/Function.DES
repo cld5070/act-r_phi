@@ -28,7 +28,7 @@ By : Tom Coleman
   <days/>
 </showclock>
 
-<?path Display\BodyFluids\Osmoles\Function\ ?>
+<?path Display/BodyFluids/Osmoles/Function/ ?>
 
 <?include CellWall.DES ?>
 <?include Osmoreceptors.DES ?>

@@ -6,11 +6,11 @@ Author : Tom Coleman
 Copyright : 2006-2013
 By : University Of Mississippi Medical Center
 
-<?path Display\Intervention\Analgesia\ ?>
+<?path Display/Intervention/Analgesia/ ?>
 
 
-<?include Morphine\Morphine.DES ?>
-<?include Narcan\Narcan.DES ?>
-<?include OpioidReceptor\OpioidReceptor.DES ?>
+<?include Morphine/Morphine.DES ?>
+<?include Narcan/Narcan.DES ?>
+<?include OpioidReceptor/OpioidReceptor.DES ?>
 
 End

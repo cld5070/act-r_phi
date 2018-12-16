@@ -30,7 +30,7 @@ Schema : 2005.0
   <days/>
 </showclock>
 
-<?path Display\Organs\Kidney\Nephrons\More\Ketoacids\ ?>
+<?path Display/Organs/Kidney/Nephrons/More/Ketoacids/ ?>
 
 <?include Excretion.DES ?>
 

@@ -28,7 +28,7 @@ By : Tom Coleman
   <days/>
 </showclock>
 
-<?path Display\Organs\KidneyNephrons\DistalTubule\Sodium\Summary\ ?>
+<?path Display/Organs/KidneyNephrons/DistalTubule/Sodium/Summary/ ?>
 
 <?include SodiumMovement.DES ?>
 <?include Na+FractionalReabsorption.DES ?>

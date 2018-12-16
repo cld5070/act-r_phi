@@ -30,7 +30,7 @@ Schema : 2005.0
   <days/>
 </showclock>
 
-<?path Display\Organs\Kidney\Nephrons\Glomerulus\Urea\ ?>
+<?path Display/Organs/Kidney/Nephrons/Glomerulus/Urea/ ?>
 
 <?include Summary.DES ?>
 

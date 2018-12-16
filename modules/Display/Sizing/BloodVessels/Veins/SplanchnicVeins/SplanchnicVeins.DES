@@ -28,7 +28,7 @@ By : Tom Coleman
   <days/>
 </showclock>
 
-<?path Display\Sizing\BloodVessels\Veins\SplanchnicVeins\ ?>
+<?path Display/Sizing/BloodVessels/Veins/SplanchnicVeins/ ?>
 
 <?include Box.DES ?>
 

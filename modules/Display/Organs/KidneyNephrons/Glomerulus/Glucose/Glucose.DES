@@ -29,7 +29,7 @@ Schema : DES V1.0
   <days/>
 </showclock>
 
-<?path Display\Organs\KidneyNephrons\Glomerulus\Glucose\ ?>
+<?path Display/Organs/KidneyNephrons/Glomerulus/Glucose/ ?>
 
 <?include Summary.DES ?>
 

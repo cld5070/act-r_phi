@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Electrolytes\Lactate\Blood\ ?>
+<?path Display/Electrolytes/Lactate/Blood/ ?>
 
 <?include Summary.DES ?>
 <?include Pump.DES ?>

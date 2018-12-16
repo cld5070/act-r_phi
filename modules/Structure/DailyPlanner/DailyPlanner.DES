@@ -7,7 +7,7 @@ Copyright : 2008-2010
 By : University of Mississippi Medical Center
 Schema : DES V1.0
 
-<?path Structure\DailyPlanner\ ?>
+<?path Structure/DailyPlanner/ ?>
 
 <?include DailyPlannerControl.DES ?>
 <?include DailyPlannerSchedule.DES ?>

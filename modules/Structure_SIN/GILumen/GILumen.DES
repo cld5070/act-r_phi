@@ -6,14 +6,14 @@ Author : Tom Coleman
 Copyright : 2004-2012
 By : University of Mississippi Medical Center
 
-<?path Structure\GILumen\ ?>
+<?path Structure/GILumen/ ?>
 
-<?include GILumenElectrolytes\GILumenElectrolytes.DES ?>
-<?include GILumenFood\GILumenFood.DES ?>
-<?include GILumenHeat\GILumenHeat.DES ?>
-<?include GILumenH2O\GILumenH2O.DES ?>
-<?include GILumenOther\GILumenOther.DES ?>
-<?include GILumenVolume\GILumenVolume.DES ?>
+<?include GILumenElectrolytes/GILumenElectrolytes.DES ?>
+<?include GILumenFood/GILumenFood.DES ?>
+<?include GILumenHeat/GILumenHeat.DES ?>
+<?include GILumenH2O/GILumenH2O.DES ?>
+<?include GILumenOther/GILumenOther.DES ?>
+<?include GILumenVolume/GILumenVolume.DES ?>
 
 <structure><name> GILumen </name>
 

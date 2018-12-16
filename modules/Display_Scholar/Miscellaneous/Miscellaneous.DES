@@ -6,14 +6,14 @@ Author : Tom Coleman
 Copyright : 2011-2011
 By : University of Mississippi Medical Center
 
-<?path Display\Miscellaneous\ ?>
+<?path Display/Miscellaneous/ ?>
 
-<?include AcidBase\AcidBase.DES ?>
-<?include CarbonMonoxide\CarbonMonoxide.DES ?>
-<?include CellProtein\CellProtein.DES ?>
-<?include Heat\Heat.DES ?>
-<?include Orthostasis\Orthostasis.DES ?>
-<?include PKs\PKs.DES ?>
-<?include Torso\Torso.DES ?>
+<?include AcidBase/AcidBase.DES ?>
+<?include CarbonMonoxide/CarbonMonoxide.DES ?>
+<?include CellProtein/CellProtein.DES ?>
+<?include Heat/Heat.DES ?>
+<?include Orthostasis/Orthostasis.DES ?>
+<?include PKs/PKs.DES ?>
+<?include Torso/Torso.DES ?>
 
 End

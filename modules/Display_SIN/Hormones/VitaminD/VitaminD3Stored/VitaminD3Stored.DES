@@ -28,7 +28,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Hormones\VitaminD\VitaminD3Stored\ ?>
+<?path Display/Hormones/VitaminD/VitaminD3Stored/ ?>
 
 <?include Mass.DES ?>
 

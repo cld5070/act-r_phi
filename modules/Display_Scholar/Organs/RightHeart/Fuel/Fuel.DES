@@ -30,7 +30,7 @@ By : University of Mississippi Medical Center
 
 <structurename> RightHeart-Fuel </structurename>
 
-<?path Display\Organs\RightHeart\Fuel\ ?>
+<?path Display/Organs/RightHeart/Fuel/ ?>
 
 <?include Delivery.DES ?>
 <?include Use.DES ?>

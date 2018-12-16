@@ -27,7 +27,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Intervention\InfusionPumps\Ketoacid\ ?>
+<?path Display/Intervention/InfusionPumps/Ketoacid/ ?>
 
 <?include Pump.DES ?>
 

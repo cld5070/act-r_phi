@@ -6,9 +6,9 @@ Author : Tom Coleman
 Copyright : 2013-2013
 By : Tom Coleman
 
-<?path Display\Organs\KidneyNephrons\DistalTubule\Potassium\ ?>
+<?path Display/Organs/KidneyNephrons/DistalTubule/Potassium/ ?>
 
-<?include Summary\Summary.DES ?>
-<?include Details\Details.DES ?>
+<?include Summary/Summary.DES ?>
+<?include Details/Details.DES ?>
 
 End

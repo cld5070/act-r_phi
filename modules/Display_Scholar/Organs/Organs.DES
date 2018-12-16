@@ -6,21 +6,21 @@ Author : Tom Coleman
 Copyright : 2011-2011
 By : University of Mississippi Medical Center
 
-<?path Display\Organs\ ?>
+<?path Display/Organs/ ?>
 
-<?include Bone\Bone.DES ?>
-<?include Brain\Brain.DES ?>
-<?include Fat\Fat.DES ?>
-<?include GITract\GITract.DES ?>
-<?include Kidney\Kidney.DES ?>
-<?include LeftHeart\LeftHeart.DES ?>
-<?include Liver\Liver.DES ?>
-<?include OtherTissue\OtherTissue.DES ?>
-<?include RespiratoryMuscle\RespiratoryMuscle.DES ?>
-<?include RightHeart\RightHeart.DES ?>
-<?include SkeletalMuscle\SkeletalMuscle.DES ?>
-<?include Skin\Skin.DES ?>
+<?include Bone/Bone.DES ?>
+<?include Brain/Brain.DES ?>
+<?include Fat/Fat.DES ?>
+<?include GITract/GITract.DES ?>
+<?include Kidney/Kidney.DES ?>
+<?include LeftHeart/LeftHeart.DES ?>
+<?include Liver/Liver.DES ?>
+<?include OtherTissue/OtherTissue.DES ?>
+<?include RespiratoryMuscle/RespiratoryMuscle.DES ?>
+<?include RightHeart/RightHeart.DES ?>
+<?include SkeletalMuscle/SkeletalMuscle.DES ?>
+<?include Skin/Skin.DES ?>
 
-<?include More\More.DES ?>
+<?include More/More.DES ?>
 
 End

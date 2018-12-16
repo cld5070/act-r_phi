@@ -27,7 +27,7 @@ Schema : DES V1.0
   <days/>
 </showclock>
 
-<?path Display\Miscellaneous\CircyProtein\Interstitium\MiddleTorso\ ?>
+<?path Display/Miscellaneous/CircyProtein/Interstitium/MiddleTorso/ ?>
 
 <?include Balance.DES ?>
 <?include Capillaries.DES ?>

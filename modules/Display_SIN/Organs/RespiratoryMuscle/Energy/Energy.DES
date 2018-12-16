@@ -28,7 +28,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Organs\RespiratoryMuscle\Energy\ ?>
+<?path Display/Organs/RespiratoryMuscle/Energy/ ?>
 
 <?include Box.DES ?>
 

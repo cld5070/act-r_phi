@@ -8,7 +8,7 @@ By : University of Mississippi Medical Center
 Solver : DES 2005
 Schema : 2005.0
 
-<?path Structure\LiverMetabolism\ ?>
+<?path Structure/LiverMetabolism/ ?>
 
 <?include LM_Glycogenesis.DES ?>
 <?include LM_Glycogenolysis.DES ?>

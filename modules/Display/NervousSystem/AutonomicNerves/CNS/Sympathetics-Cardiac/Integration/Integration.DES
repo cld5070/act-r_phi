@@ -28,7 +28,7 @@ By : Tom Coleman
   <days/>
 </showclock>
 
-<?path Display\NervousSystem\AutonomicNerves\CNS\Sympathetics-Cardiac\Integration\ ?>
+<?path Display/NervousSystem/AutonomicNerves/CNS/Sympathetics-Cardiac/Integration/ ?>
 
 <?include Box.DES ?>
 

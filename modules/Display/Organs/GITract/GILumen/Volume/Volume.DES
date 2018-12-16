@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Organs\GITract\GILumen\Volume\ ?>
+<?path Display/Organs/GITract/GILumen/Volume/ ?>
 
 <?include Summary.DES ?>
 

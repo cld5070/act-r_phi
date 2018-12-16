@@ -6,7 +6,7 @@ Author : Tom Coleman
 Copyright : 2004-2012
 By : University of Mississippi Medical Center
 
-<?path Structure\Kidney\ ?>
+<?path Structure/Kidney/ ?>
 
 <?include Kidney-EfferentArtery.DES ?>
 <?include Kidney-AfferentArtery.DES ?>
@@ -31,6 +31,6 @@ By : University of Mississippi Medical Center
 <?include Kidney-ProximalTubuleO2.DES ?>
 
 <?include Kidney-Myogenic.DES ?>
-<?include Kidney-Zones\Kidney-Zones.DES ?>
+<?include Kidney-Zones/Kidney-Zones.DES ?>
 
 End

@@ -28,7 +28,7 @@ Schema : 2005.0
   <days/>
 </showclock>
 
-<?path Display\Circulation\HeartRate\Atria\ ?>
+<?path Display/Circulation/HeartRate/Atria/ ?>
 
 <?include Rate.DES ?>
 <?include BetaReceptors.DES ?>

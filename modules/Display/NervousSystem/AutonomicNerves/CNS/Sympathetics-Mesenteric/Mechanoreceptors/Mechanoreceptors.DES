@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\NervousSystem\AutonomicNerves\CNS\Sympathetics-Mesenteric\Mechanoreceptors\ ?>
+<?path Display/NervousSystem/AutonomicNerves/CNS/Sympathetics-Mesenteric/Mechanoreceptors/ ?>
 
 <?include Summary.DES ?>
 

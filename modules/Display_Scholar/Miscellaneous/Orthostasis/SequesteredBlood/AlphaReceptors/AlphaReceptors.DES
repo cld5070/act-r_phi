@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Miscellaneous\Orthostasis\SequesteredBlood\AlphaReceptors\ ?>
+<?path Display/Miscellaneous/Orthostasis/SequesteredBlood/AlphaReceptors/ ?>
 
 <?include Summary.DES ?>
 

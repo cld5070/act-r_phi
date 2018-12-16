@@ -6,10 +6,10 @@ Author : Tom Coleman
 Copyright : 2005-2010
 By : University of Mississippi Medical Center
 
-<?path Display\BodyFluids\H2O\ ?>
+<?path Display/BodyFluids/H2O/ ?>
 
-<?include Distribution\Distribution.DES ?>
-<?include Storage\Storage.DES ?>
-<?include Movement\Movement.DES ?>
+<?include Distribution/Distribution.DES ?>
+<?include Storage/Storage.DES ?>
+<?include Movement/Movement.DES ?>
 
 End

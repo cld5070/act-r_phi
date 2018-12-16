@@ -7,7 +7,7 @@ Copyright : 2006-2010
 By : University Of Mississippi Medical Center
 Schema : DES V1.0
 
-<?path Structure\Nephrons\MaculaDensa\ ?>
+<?path Structure/Nephrons/MaculaDensa/ ?>
 
 <?include MD_Na.DES ?>
 <?include TGF-Vascular.DES ?>

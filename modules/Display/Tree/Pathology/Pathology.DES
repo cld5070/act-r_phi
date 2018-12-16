@@ -8,7 +8,7 @@ HumMod / Pathology.DES
   <parent> MAINMENU </parent>
 </branch>
 
-<?path Display\Tree\Pathology\ ?>
+<?path Display/Tree/Pathology/ ?>
 
 <?include Diabetes.DES ?>
 <?include AdrenalInsufficiency.DES ?>

@@ -28,7 +28,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Metabolism\LipidDeposits\Balance\ ?>
+<?path Display/Metabolism/LipidDeposits/Balance/ ?>
 
 <?include Summary.DES ?>
 

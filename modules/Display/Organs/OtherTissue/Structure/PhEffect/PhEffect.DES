@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Organs\OtherTissue\Structure\PhEffect\ ?>
+<?path Display/Organs/OtherTissue/Structure/PhEffect/ ?>
 
 <?include Box.DES ?>
 

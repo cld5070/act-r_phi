@@ -28,7 +28,7 @@ Schema : 2005.0
   <days/>
 </showclock>
 
-<?path Display\Circulation\LeftHeartPumping\Output\ ?>
+<?path Display/Circulation/LeftHeartPumping/Output/ ?>
 
 <?include Summary.DES ?>
 <?include StenosisAndRegurgitation.DES ?>

@@ -26,7 +26,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Circulation\RightHeartPumping\Cardiopathy\ ?>
+<?path Display/Circulation/RightHeartPumping/Cardiopathy/ ?>
 
 <?include Infarction.DES ?>
 <?include Pain.DES ?>

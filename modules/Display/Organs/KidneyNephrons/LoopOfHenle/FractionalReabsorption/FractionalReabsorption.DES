@@ -28,7 +28,7 @@ By : Tom Coleman
   <days/>
 </showclock>
 
-<?path Display\Organs\KidneyNephrons\LoopOfHenle\FractionalReabsorption\ ?>
+<?path Display/Organs/KidneyNephrons/LoopOfHenle/FractionalReabsorption/ ?>
 
 <?include Box.DES ?>
 

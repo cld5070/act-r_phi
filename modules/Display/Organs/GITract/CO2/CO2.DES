@@ -30,7 +30,7 @@ By : University Of Mississippi Medical Center
 
 <structurename> GITract-CO2 </structurename>
 
-<?path Display\Organs\GITract\CO2\ ?>
+<?path Display/Organs/GITract/CO2/ ?>
 
 <?include LeftBox.DES ?>
 <?include Technical.DES ?>

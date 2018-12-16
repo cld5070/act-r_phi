@@ -29,7 +29,7 @@ Schema : DES V1.0
   <days/>
 </showclock>
 
-<?path Display\Organs\Bone\Size\ ?>
+<?path Display/Organs/Bone/Size/ ?>
 
 <?include Volume.DES ?>
 <?include Compartments.DES ?>

@@ -28,7 +28,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Organs\Kidney\Zones\Anatomy\ ?>
+<?path Display/Organs/Kidney/Zones/Anatomy/ ?>
 
 <?include Mass.DES ?>
 

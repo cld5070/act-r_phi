@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Organs\OtherTissue\Structure\FuelEffect\ ?>
+<?path Display/Organs/OtherTissue/Structure/FuelEffect/ ?>
 
 <?include Box.DES ?>
 

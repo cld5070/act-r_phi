@@ -22,7 +22,7 @@ HumMod / Testosterone
   <days/>
 </showclock>
 
-<?path Display\Hormones\Gender\Testosterone\ ?>
+<?path Display/Hormones/Gender/Testosterone/ ?>
 
 <?include Pool.DES ?>
 <?include Degradation.DES ?>

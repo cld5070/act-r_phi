@@ -30,7 +30,7 @@ By : University of Mississippi Medical Center
 
 <structurename> SkeletalMuscle-Fuel </structurename>
 
-<?path Display\Organs\SkeletalMuscle\Fuel\ ?>
+<?path Display/Organs/SkeletalMuscle/Fuel/ ?>
 
 <?include Delivery.DES ?>
 <?include Use.DES ?>

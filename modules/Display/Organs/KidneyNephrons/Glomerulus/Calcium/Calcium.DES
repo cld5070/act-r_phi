@@ -28,7 +28,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Organs\KidneyNephrons\Glomerulus\Calcium\ ?>
+<?path Display/Organs/KidneyNephrons/Glomerulus/Calcium/ ?>
 <?include Summary.DES ?>
 
 

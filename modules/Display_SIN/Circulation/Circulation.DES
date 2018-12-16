@@ -6,16 +6,16 @@ Author : Tom Coleman
 Copyright : 2011-2012
 By : University of Mississippi Medical Center
 
-<?path Display\Circulation\ ?>
+<?path Display/Circulation/ ?>
 
-<?include BloodFlow\BloodFlow.DES ?>
-<?include BloodPressure\BloodPressure.DES ?>
-<?include CirculatoryProtein\CirculatoryProtein.DES ?>
-<?include HeartRate\HeartRate.DES ?>
-<?include HeartValves\HeartValves.DES ?>
-<?include LeftHeartPumping\LeftHeartPumping.DES ?>
-<?include Pericardium\Pericardium.DES ?>
-<?include RightHeartPumping\RightHeartPumping.DES ?>
-<?include BloodVessels\BloodVessels.DES ?>
+<?include BloodFlow/BloodFlow.DES ?>
+<?include BloodPressure/BloodPressure.DES ?>
+<?include CirculatoryProtein/CirculatoryProtein.DES ?>
+<?include HeartRate/HeartRate.DES ?>
+<?include HeartValves/HeartValves.DES ?>
+<?include LeftHeartPumping/LeftHeartPumping.DES ?>
+<?include Pericardium/Pericardium.DES ?>
+<?include RightHeartPumping/RightHeartPumping.DES ?>
+<?include BloodVessels/BloodVessels.DES ?>
 
 End

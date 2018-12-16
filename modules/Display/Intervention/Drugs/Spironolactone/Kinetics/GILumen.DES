@@ -18,7 +18,8 @@ By : Tom Coleman
 <showvalue>
    <row> 1.4 </row><col> 1.0 </col>
    <name> [Spironolactone(uG/mL)] </name>
-   <format><integer/></format>   <label> [Spiro (uG/mL)] </label>
+   <format><integer/></format>
+   <label> [Spiro (uG/mL)] </label>
 </showvalue>
 
 <showgraph>
@@ -49,28 +50,53 @@ By : Tom Coleman
 <showvalue>
    <row> 11.2 </row><col> 1.0 </col>
    <name> Mass(uG) </name>
-   <format><integer/></format>   <label> Mass (uG) </label>
+   <format><integer/></format>
+   <label> Mass (uG) </label>
 </showvalue>
 
 <showvalue>
    <row> 12.2 </row><col> 3 </col>
    <name> Change </name>
-   <format><integer/></format>   <label> Change </label>
+   <format><integer/></format>
+   <label> Change </label>
 </showvalue>
 
 <showvalue>
    <row> 13.6 </row><col> 1 </col>
    <name> Uptake </name>
-   <format><integer/></format>   <label> Uptake </label>
+   <format><integer/></format>
+   <label> Uptake </label>
 </showvalue>
 
-<slidebar>  <row> 15.0 </row><col> 3 </col>  <name> Permeability </name>  <listname> Common.Ten-Thousandths </listname>  <label> Perm </label></slidebar><showvalue>
+<slidebar>
+  <row> 15.0 </row><col> 3 </col>
+  <name> Permeability </name>
+  <listname> Common.Ten-Thousandths </listname>
+  <label> Perm </label>
+</slidebar>
+
+<showvalue>
    <row> 16.4 </row><col> 1 </col>
    <name> Excretion </name>
-   <format><integer/></format>   <label> Excretion </label>
+   <format><integer/></format>
+   <label> Excretion </label>
 </showvalue>
 
-<slidebar>  <row> 17.8 </row><col> 3 </col>  <name> Disposal </name>  <listname> Common.Thousandths </listname>  <label> Disp </label></slidebar><slidebar>  <row> 19.4 </row><col> 1 </col>  <name> Bioavailability(%) </name>  <listname> Common.Percent </listname>  <label> Available (%) </label></slidebar><infobutton>
+<slidebar>
+  <row> 17.8 </row><col> 3 </col>
+  <name> Disposal </name>
+  <listname> Common.Thousandths </listname>
+  <label> Disp </label>
+</slidebar>
+
+<slidebar>
+  <row> 19.4 </row><col> 1 </col>
+  <name> Bioavailability(%) </name>
+  <listname> Common.Percent </listname>
+  <label> Available (%) </label>
+</slidebar>
+
+<infobutton>
   <row> 1.2 </row>
   <col> 26.0 </col>
 

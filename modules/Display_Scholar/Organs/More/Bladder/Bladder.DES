@@ -27,7 +27,7 @@ Schema : DES V1.0
   <days/>
 </showclock>
 
-<?path Display\Organs\More\Bladder\ ?>
+<?path Display/Organs/More/Bladder/ ?>
 
 <?include Voiding.DES ?>
 <?include Composition.DES ?>

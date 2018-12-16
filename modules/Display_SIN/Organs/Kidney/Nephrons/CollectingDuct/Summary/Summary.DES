@@ -29,7 +29,7 @@ Schema : DES V1.0
   <days/>
 </showclock>
 
-<?path Display\Organs\Kidney\Nephrons\CollectingDuct\Summary\ ?>
+<?path Display/Organs/Kidney/Nephrons/CollectingDuct/Summary/ ?>
 
 <?include Composition.DES ?>
 <?include Osmolarity.DES ?>

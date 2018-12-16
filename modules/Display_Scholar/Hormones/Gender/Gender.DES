@@ -6,19 +6,19 @@ Author : Tom Coleman
 Copyright : 2011-2012
 By : University of Mississippi Medical Center
 
-<?path Display\Hormones\Gender\ ?>
+<?path Display/Hormones/Gender/ ?>
 
-<?include Summary\Summary.DES ?>
+<?include Summary/Summary.DES ?>
 
 <!-- Separator Bar -->
 
-<?include Estradiol\Estradiol.DES ?>
-<?include FSH\FSH.DES ?>
-<?include GnRH\GnRH.DES ?>
-<?include hCG\hCG.DES ?>
-<?include Inhibin\Inhibin.DES ?>
-<?include LH\LH.DES ?>
-<?include Progesterone\Progesterone.DES ?>
-<?include Testosterone\Testosterone.DES ?>
+<?include Estradiol/Estradiol.DES ?>
+<?include FSH/FSH.DES ?>
+<?include GnRH/GnRH.DES ?>
+<?include hCG/hCG.DES ?>
+<?include Inhibin/Inhibin.DES ?>
+<?include LH/LH.DES ?>
+<?include Progesterone/Progesterone.DES ?>
+<?include Testosterone/Testosterone.DES ?>
 
 End

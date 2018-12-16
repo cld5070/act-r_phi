@@ -29,7 +29,7 @@ Schema : DES V1.0
   <days/>
 </showclock>
 
-<?path Display\Miscellaneous\Heat\Movement\Conduction\ ?>
+<?path Display/Miscellaneous/Heat/Movement/Conduction/ ?>
 
 <?include Summary.DES ?>
 

@@ -28,7 +28,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Organs\LiverMetabolism\FattyAcids\GlucoseToFA\ ?>
+<?path Display/Organs/LiverMetabolism/FattyAcids/GlucoseToFA/ ?>
 
 <!--
 <?include Summary.DES ?>

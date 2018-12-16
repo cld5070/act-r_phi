@@ -28,7 +28,7 @@ By : University of Mississippi Medical Center
   <parent> HORMONES </parent>
 </separatorbar>
 
-<?path Display\Tree\Hormones\ ?>
+<?path Display/Tree/Hormones/ ?>
 
 <?include ACTH.DES ?>
 <?include ADH.DES ?>

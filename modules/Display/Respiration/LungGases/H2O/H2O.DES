@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Respiration\LungGases\H2O\ ?>
+<?path Display/Respiration/LungGases/H2O/ ?>
 
 <?include Box.DES ?>
 <?include Technical.DES ?>

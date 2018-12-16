@@ -6,11 +6,11 @@ Author : Tom Coleman
 Copyright : 2005-2012
 By : University of Mississippi Medical Center
 
-<?path Display\Organs\Kidney\VascularSegments\ ?>
+<?path Display/Organs/Kidney/VascularSegments/ ?>
 
-<?include ArcuateArtery\ArcuateArtery.DES ?>
-<?include AfferentArtery\AfferentArtery.DES ?>
-<?include MyogenicResponse\MyogenicResponse.DES ?>
-<?include EfferentArtery\EfferentArtery.DES ?>
+<?include ArcuateArtery/ArcuateArtery.DES ?>
+<?include AfferentArtery/AfferentArtery.DES ?>
+<?include MyogenicResponse/MyogenicResponse.DES ?>
+<?include EfferentArtery/EfferentArtery.DES ?>
 
 End

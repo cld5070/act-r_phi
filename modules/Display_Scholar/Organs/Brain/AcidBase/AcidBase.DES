@@ -31,7 +31,7 @@ Schema : DES V1.0
 
 <structurename> Brain-Ph </structurename>
 
-<?path Display\Organs\Brain\AcidBase\ ?>
+<?path Display/Organs/Brain/AcidBase/ ?>
 
 <?include Ph.DES ?>
 

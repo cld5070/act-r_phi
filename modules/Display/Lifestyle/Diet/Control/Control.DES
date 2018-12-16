@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Lifestyle\Diet\Control\ ?>
+<?path Display/Lifestyle/Diet/Control/ ?>
 
 <?include Nutrition.DES ?>
 <?include H2O.DES ?>

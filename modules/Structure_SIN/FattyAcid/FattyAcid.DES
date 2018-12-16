@@ -7,7 +7,7 @@ Copyright : 2006-2010
 By : University Of Mississippi Medical Center
 Schema : DES V1.0
 
-<?path Structure\FattyAcid\ ?>
+<?path Structure/FattyAcid/ ?>
 
 <?include FAPool.DES ?>
 <?include FADecomposition.DES ?>

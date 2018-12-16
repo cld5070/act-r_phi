@@ -7,10 +7,10 @@ Copyright : 2008-2010
 By : University of Mississippi Medical Center
 Schema : DES V1.0
 
-<?path Display\Circulation\CirculatoryProtein\ ?>
+<?path Display/Circulation/CirculatoryProtein/ ?>
 
-<?include Plasma\Plasma.DES ?>
-<?include Interstitium\Interstitium.DES ?>
-<?include HetaStarch\HetaStarch.DES ?>
+<?include Plasma/Plasma.DES ?>
+<?include Interstitium/Interstitium.DES ?>
+<?include HetaStarch/HetaStarch.DES ?>
 
 End

@@ -28,7 +28,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Organs\Kidney\VascularSegments\ArcuateArtery\ ?>
+<?path Display/Organs/Kidney/VascularSegments/ArcuateArtery/ ?>
 
 <?include Flow.DES ?>
 <?include Conductance.DES ?>

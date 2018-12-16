@@ -26,7 +26,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Circulation\RightHeartPumping\Systole\ ?>
+<?path Display/Circulation/RightHeartPumping/Systole/ ?>
 
 <?include Pressure-Volume.DES ?>
 <?include TechnicalActive.DES ?>

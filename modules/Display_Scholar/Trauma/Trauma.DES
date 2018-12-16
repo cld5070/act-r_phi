@@ -6,13 +6,13 @@ Author : Tom Coleman
 Copyright : 2011-2011
 By : University of Mississippi Medical Center
 
-<?path Display\Trauma\ ?>
+<?path Display/Trauma/ ?>
 
-<?include A-VFistula\A-VFistula.DES ?>
-<?include Hemorrhage\Hemorrhage.DES ?>
-<?include MyocardialInfarction\MyocardialInfarction.DES ?>
-<?include Pericardium\Pericardium.DES ?>
-<?include Pneumothorax\Pneumothorax.DES ?>
-<?include VentricularFibrillation\VentricularFibrillation.DES ?>
+<?include A-VFistula/A-VFistula.DES ?>
+<?include Hemorrhage/Hemorrhage.DES ?>
+<?include MyocardialInfarction/MyocardialInfarction.DES ?>
+<?include Pericardium/Pericardium.DES ?>
+<?include Pneumothorax/Pneumothorax.DES ?>
+<?include VentricularFibrillation/VentricularFibrillation.DES ?>
 
 End

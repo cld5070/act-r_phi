@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Electrolytes\Lactate\Tissue\ ?>
+<?path Display/Electrolytes/Lactate/Tissue/ ?>
 
 <?include Concentration.DES ?>
 <?include Outflux.DES ?>

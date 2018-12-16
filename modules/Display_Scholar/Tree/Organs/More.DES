@@ -12,7 +12,7 @@ By : University of Mississippi Medical Center
   <parent> ORGANS </parent>
 </branch>
 
-<?path Display\Tree\Organs\More\ ?>
+<?path Display/Tree/Organs/More/ ?>
 
 <!--
 <?include AdiposeTissue.DES ?>

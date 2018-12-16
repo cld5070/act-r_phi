@@ -27,7 +27,7 @@ Schema : DES V1.0
   <ampm/><secs/><days/>
 </showclock>
 
-<?path Display\Diagnosis\Evaluation\ ?>
+<?path Display/Diagnosis/Evaluation/ ?>
 
 <?include CurrentState.DES ?>
 <?include NeurologicalSigns.DES ?>

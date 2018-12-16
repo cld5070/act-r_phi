@@ -21,7 +21,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Respiration\CO2\Veins\ ?>
+<?path Display/Respiration/CO2/Veins/ ?>
 
 <?include LeftBox.DES ?>
 <?include Technical.DES ?>

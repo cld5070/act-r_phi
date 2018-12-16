@@ -28,7 +28,7 @@ By : Tom Coleman
   <days/>
 </showclock>
 
-<?path Display\Organs\KidneyMetabolism\Ketoacid\ ?>
+<?path Display/Organs/KidneyMetabolism/Ketoacid/ ?>
 
 <?include Summary.DES ?>
 

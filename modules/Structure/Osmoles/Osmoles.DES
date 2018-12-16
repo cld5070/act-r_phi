@@ -6,7 +6,7 @@ Author : Tom Coleman
 Copyright : 2006-2013
 By : University Of Mississippi Medical Center
 
-<?path Structure\Osmoles\ ?>
+<?path Structure/Osmoles/ ?>
 
 <?include OsmBody.DES ?>
 <?include OsmCell.DES ?>

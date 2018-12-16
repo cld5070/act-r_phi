@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Organs\More\Sweat\SweatGland\ ?>
+<?path Display/Organs/More/Sweat/SweatGland/ ?>
 
 <?include PrecursorSecretion.DES ?>
 

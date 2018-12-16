@@ -26,7 +26,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Circulation\HeartValves\Mitral\ ?>
+<?path Display/Circulation/HeartValves/Mitral/ ?>
 
 <?include Stenosis.DES ?>
 <?include Regurgitation.DES ?>

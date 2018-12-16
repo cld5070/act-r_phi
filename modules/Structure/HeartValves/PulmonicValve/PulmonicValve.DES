@@ -7,7 +7,7 @@ Copyright : 2008-2010
 By : University of Mississippi Medical Center
 Schema : DES V1.0
 
-<?path Structure\HeartValves\PulmonicValve\ ?>
+<?path Structure/HeartValves/PulmonicValve/ ?>
 
 <?include PulmonicValve-Stenosis.DES ?>
 <?include PulmonicValve-Regurgitation.DES ?>

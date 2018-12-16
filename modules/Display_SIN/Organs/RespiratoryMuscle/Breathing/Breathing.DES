@@ -30,7 +30,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Organs\RespiratoryMuscle\Breathing\ ?>
+<?path Display/Organs/RespiratoryMuscle/Breathing/ ?>
 
 <?include Cals.DES ?>
 <?include MotionCals.DES ?>

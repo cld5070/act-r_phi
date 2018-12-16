@@ -30,7 +30,7 @@ Schema : 2005.0
   <days/>
 </showclock>
 
-<?path Display\Metabolism\LiverMetabolism\Glucose\ ?>
+<?path Display/Metabolism/LiverMetabolism/Glucose/ ?>
 
 <?include Summary.DES ?>
 

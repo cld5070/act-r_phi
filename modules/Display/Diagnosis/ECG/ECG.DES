@@ -28,7 +28,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Diagnosis\ECG\ ?>
+<?path Display/Diagnosis/ECG/ ?>
 
 <?include Box.DES ?>
 

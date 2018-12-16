@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Miscellaneous\Torso\Summary\ ?>
+<?path Display/Miscellaneous/Torso/Summary/ ?>
 
 <?include UpperTorso.DES ?>
 <?include MiddleTorso.DES ?>

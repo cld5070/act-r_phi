@@ -31,7 +31,7 @@ Schema : DES V1.0
 
 <structurename> GITract-Lactate </structurename>
 
-<?path Display\Organs\GITract\Lactate\ ?>
+<?path Display/Organs/GITract/Lactate/ ?>
 
 <?include TissueLactate.DES ?>
 

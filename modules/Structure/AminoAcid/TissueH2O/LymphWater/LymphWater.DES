@@ -8,7 +8,7 @@ By : University of Mississippi Medical Center
 Solver : DES 2005
 Schema : 2005.0
 
-<?path Structure\TissueH2O\LymphWater\ ?>
+<?path Structure/TissueH2O/LymphWater/ ?>
 
 <?include Torso_Upper_LymphWater.DES ?>
 <?include Torso_Middle_LymphWater.DES ?>

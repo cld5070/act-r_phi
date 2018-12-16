@@ -12,7 +12,7 @@ By : University of Mississippi Medical Center
   <parent> MAINMENU </parent>
 </branch>
 
-<?path Display\Tree\Trauma\ ?>
+<?path Display/Tree/Trauma/ ?>
 
 <?include A-VFistula.DES ?>
 <?include Hemorrhage.DES ?>

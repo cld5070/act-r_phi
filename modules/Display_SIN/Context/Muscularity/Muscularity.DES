@@ -34,7 +34,7 @@ By : University of Mississippi Medical Center
    <high> 15.4 </high>
    <wide> 35.0 </wide>
 
-<?path Display\Context\Muscularity\ ?>
+<?path Display/Context/Muscularity/ ?>
 
 <structurename> Context-Muscularity </structurename>
 

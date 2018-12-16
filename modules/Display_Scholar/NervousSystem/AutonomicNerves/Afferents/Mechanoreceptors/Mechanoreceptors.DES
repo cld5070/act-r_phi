@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\NervousSystem\AutonomicNerves\Afferents\Mechanoreceptors\ ?>
+<?path Display/NervousSystem/AutonomicNerves/Afferents/Mechanoreceptors/ ?>
 
 <?include FiringRate.DES ?>
 

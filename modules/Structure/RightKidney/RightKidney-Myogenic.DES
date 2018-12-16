@@ -9,7 +9,7 @@ Solver : DES 2005
 Schema : 2005.0
 
 
-<?path Structure\RightKidney\ ?>
+<?path Structure/RightKidney/ ?>
 
 <?include RightKidney-MyogenicDelay.DES ?>
 

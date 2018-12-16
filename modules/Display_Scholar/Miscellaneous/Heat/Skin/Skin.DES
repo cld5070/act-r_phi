@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Miscellaneous\Heat\Skin\ ?>
+<?path Display/Miscellaneous/Heat/Skin/ ?>
 
 <?include Storage.DES ?>
 <?include Temperature.DES ?>

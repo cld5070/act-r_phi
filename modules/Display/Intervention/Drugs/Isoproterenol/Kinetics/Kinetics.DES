@@ -28,7 +28,7 @@ By : Tom Coleman
   <days/>
 </showclock>
 
-<?path Display\Intervention\Drugs\Isoproterenol\Kinetics\ ?>
+<?path Display/Intervention/Drugs/Isoproterenol/Kinetics/ ?>
 
 <?include Pool.DES ?>
 

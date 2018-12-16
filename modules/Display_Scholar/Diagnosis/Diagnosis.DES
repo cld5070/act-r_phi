@@ -6,13 +6,13 @@ Author : Tom Coleman
 Copyright : 2011-2012
 By : University of Mississippi Medical Center
 
-<?path Display\Diagnosis\ ?>
+<?path Display/Diagnosis/ ?>
 
-<?include Autopsy\Autopsy.DES ?>
-<?include BloodChemistry\BloodChemistry.DES ?>
-<?include Chart\Chart.DES ?>
-<?include ECG\ECG.DES ?>
-<?include Evaluation\Evaluation.DES ?>
-<?include Size\Size.DES ?>
+<?include Autopsy/Autopsy.DES ?>
+<?include BloodChemistry/BloodChemistry.DES ?>
+<?include Chart/Chart.DES ?>
+<?include ECG/ECG.DES ?>
+<?include Evaluation/Evaluation.DES ?>
+<?include Size/Size.DES ?>
 
 End

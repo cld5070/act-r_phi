@@ -30,7 +30,7 @@ Schema : 2005.0
   <days/>
 </showclock>
 
-<?path Display\Organs\Kidney\VascularSegments\AfferentArtery\ ?>
+<?path Display/Organs/Kidney/VascularSegments/AfferentArtery/ ?>
 
 <?include Conductance.DES ?>
 <?include Flow.DES ?>

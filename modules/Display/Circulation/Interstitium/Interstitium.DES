@@ -6,12 +6,12 @@ Author : Tom Coleman
 Copyright : 2013-2013
 By : Tom Coleman
 
-<?path Display\Circulation\Interstitium\ ?>
+<?path Display/Circulation/Interstitium/ ?>
 
-<?include Summary\Summary.DES ?>
+<?include Summary/Summary.DES ?>
 
-<?include Lower\Lower.DES ?>
-<?include Middle\Middle.DES ?>
-<?include Upper\Upper.DES ?>
+<?include Lower/Lower.DES ?>
+<?include Middle/Middle.DES ?>
+<?include Upper/Upper.DES ?>
 
 End

@@ -21,7 +21,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Respiration\CO2\Balance\ ?>
+<?path Display/Respiration/CO2/Balance/ ?>
 
 <?include Change.DES ?>
 <?include Generated.DES ?>

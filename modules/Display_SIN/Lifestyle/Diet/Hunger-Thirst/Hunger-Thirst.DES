@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Lifestyle\Diet\Hunger-Thirst\ ?>
+<?path Display/Lifestyle/Diet/Hunger-Thirst/ ?>
 
 <?include Hunger.DES ?>
 <?include Glucose.DES ?>

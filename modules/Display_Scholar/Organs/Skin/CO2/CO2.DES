@@ -31,7 +31,7 @@ Schema : DES V1.0
 
 <structurename> Skin-CO2 </structurename>
 
-<?path Display\Organs\Skin\CO2\ ?>
+<?path Display/Organs/Skin/CO2/ ?>
 
 <?include HCO3.DES ?>
 <?include Technical.DES ?>

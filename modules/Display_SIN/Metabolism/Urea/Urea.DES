@@ -8,9 +8,9 @@ By : University of Mississippi Medical Center
 Solver : DES 2005
 Schema : 2005.0
 
-<?path Display\Metabolism\Urea\ ?>
+<?path Display/Metabolism/Urea/ ?>
 
-<?include Cell\Cell.DES ?>
-<?include Pool\Pool.DES ?>
+<?include Cell/Cell.DES ?>
+<?include Pool/Pool.DES ?>
 
 End

@@ -7,7 +7,7 @@ Copyright : 2006-2010
 By : University Of Mississippi Medical Center
 Schema : DES V1.0
 
-<?path Structure\Ketoacid\ ?>
+<?path Structure/Ketoacid/ ?>
 
 <?include KAPool.DES ?>
 <?include KAPump.DES ?>

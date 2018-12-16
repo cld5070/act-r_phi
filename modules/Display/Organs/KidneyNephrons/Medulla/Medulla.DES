@@ -30,7 +30,7 @@ Schema : 2005.0
   <days/>
 </showclock>
 
-<?path Display\Organs\KidneyNephrons\Medulla\ ?>
+<?path Display/Organs/KidneyNephrons/Medulla/ ?>
 
 <?include Osmolarity.DES ?>
 <?include Salt.DES ?>

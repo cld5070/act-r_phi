@@ -30,7 +30,7 @@ By : University of Mississippi Medical Center
 
 <structurename> Kidney-Fuel </structurename>
 
-<?path Display\Organs\Kidney\Fuel\ ?>
+<?path Display/Organs/Kidney/Fuel/ ?>
 
 <?include Delivery.DES ?>
 <?include Use.DES ?>

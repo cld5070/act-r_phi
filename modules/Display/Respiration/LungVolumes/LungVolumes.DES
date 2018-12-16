@@ -28,7 +28,7 @@ By : University of Mississippi Medical Center
 	<days/>
 </showclock>
 
-<?path Display\Respiration\LungVolumes\ ?>
+<?path Display/Respiration/LungVolumes/ ?>
 
 <?include Box.DES ?>
 

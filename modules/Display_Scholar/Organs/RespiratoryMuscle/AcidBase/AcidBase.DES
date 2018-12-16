@@ -33,7 +33,7 @@ Schema : DES V1.0
 
 <structurename> RespiratoryMuscle-Ph </structurename>
 
-<?path Display\Organs\RespiratoryMuscle\AcidBase\ ?>
+<?path Display/Organs/RespiratoryMuscle/AcidBase/ ?>
 
 <?include Ph.DES ?>
 <?include SID.DES ?>

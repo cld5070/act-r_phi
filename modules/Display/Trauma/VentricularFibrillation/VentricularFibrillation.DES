@@ -23,7 +23,7 @@ Schema : 2005.0
   <days/>
 </showclock>
 
-<?path Display\Trauma\VentricularFibrillation\ ?>
+<?path Display/Trauma/VentricularFibrillation/ ?>
 
 <?include Control.DES ?>
 

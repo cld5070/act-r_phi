@@ -28,7 +28,7 @@ By : Tom Coleman
   <days/>
 </showclock>
 
-<?path Display\Circulation\Interstitium\Upper\BloodPressure\ ?>
+<?path Display/Circulation/Interstitium/Upper/BloodPressure/ ?>
 
 <?include Arteries.DES ?>
 <?include Capillaries.DES ?>

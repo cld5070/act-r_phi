@@ -28,7 +28,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Hormones\Calcitonin\ ?>
+<?path Display/Hormones/Calcitonin/ ?>
 
 <?include Pool.DES ?>
 

@@ -6,7 +6,7 @@ Author : Tom Coleman
 Copyright : 2006-2012
 By : University of Mississippi Medical Center
 
-<?path Structure\Bladder\ ?>
+<?path Structure/Bladder/ ?>
 
 <?include BladderVolume.DES ?>
 <?include BladderSodium.DES ?>

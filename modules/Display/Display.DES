@@ -7,7 +7,7 @@ Copyright : 2008-2012
 By : University of Mississippi Medical Center
 
 
-<?path Display\ ?>
+<?path Display/ ?>
 
 <display>
 
@@ -15,31 +15,31 @@ By : University of Mississippi Medical Center
 
 <addarrowsnewline/>
 
-<?include Tree\Tree.DES ?>
+<?include Tree/Tree.DES ?>
 <?include Common.DES ?>
 
 </common>
 
-<?include AcidBase\AcidBase.DES ?>
-<?include BodyFluids\BodyFluids.DES ?>
-<?include Circulation\Circulation.DES ?>
-<?include Diagnosis\Diagnosis.DES ?>
+<?include AcidBase/AcidBase.DES ?>
+<?include BodyFluids/BodyFluids.DES ?>
+<?include Circulation/Circulation.DES ?>
+<?include Diagnosis/Diagnosis.DES ?>
 
-<?include Electrolytes\Electrolytes.DES ?>
-<?include Heat\Heat.DES ?>
-<?include Hormones\Hormones.DES ?>
-<?include Intervention\Intervention.DES ?>
-<?include Lifestyle\Lifestyle.DES ?>
-<?include Metabolism\Metabolism.DES ?>
-<?include Miscellaneous\Miscellaneous.DES ?>
-<?include NervousSystem\NervousSystem.DES ?>
-<?include Organs\Organs.DES ?>
-<?include Respiration\Respiration.DES ?>
-<?include Trauma\Trauma.DES ?>
-<?include Pathology\Pathology.DES ?>
+<?include Electrolytes/Electrolytes.DES ?>
+<?include Heat/Heat.DES ?>
+<?include Hormones/Hormones.DES ?>
+<?include Intervention/Intervention.DES ?>
+<?include Lifestyle/Lifestyle.DES ?>
+<?include Metabolism/Metabolism.DES ?>
+<?include Miscellaneous/Miscellaneous.DES ?>
+<?include NervousSystem/NervousSystem.DES ?>
+<?include Organs/Organs.DES ?>
+<?include Respiration/Respiration.DES ?>
+<?include Trauma/Trauma.DES ?>
+<?include Pathology/Pathology.DES ?>
 
-<?include Context\Context.DES ?>
-<?include Sizing\Sizing.DES ?>
+<?include Context/Context.DES ?>
+<?include Sizing/Sizing.DES ?>
 
 <common>
   <displayfirst> Chart </displayfirst>

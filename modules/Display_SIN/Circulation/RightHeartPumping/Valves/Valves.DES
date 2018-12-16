@@ -6,9 +6,9 @@ Author : Tom Coleman
 Copyright : 2010-2010
 By : University of Mississippi Medical Center
 
-<?path Display\Circulation\RightHeartPumping\Valves\ ?>
+<?path Display/Circulation/RightHeartPumping/Valves/ ?>
 
-<?include Pulmonic\Pulmonic.DES ?>
-<?include Tricuspid\Tricuspid.DES ?>
+<?include Pulmonic/Pulmonic.DES ?>
+<?include Tricuspid/Tricuspid.DES ?>
 
 End

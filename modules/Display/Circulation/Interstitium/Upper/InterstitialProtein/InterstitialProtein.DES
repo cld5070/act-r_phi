@@ -26,7 +26,7 @@ By : Tom Coleman
   <days/>
 </showclock>
 
-<?path Display\Circulation\Interstitium\Upper\InterstitialProtein\ ?>
+<?path Display/Circulation/Interstitium/Upper/InterstitialProtein/ ?>
 
 <?include Balance.DES ?>
 <?include CapillaryLeak.DES ?>

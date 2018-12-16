@@ -28,7 +28,7 @@ By : Tom Coleman
   <days/>
 </showclock>
 
-<?path Display\BodyFluids\Osmoles\ECFV\ ?>
+<?path Display/BodyFluids/Osmoles/ECFV/ ?>
 
 <?include [Osm].DES ?>
 <?include Osmoles.DES ?>

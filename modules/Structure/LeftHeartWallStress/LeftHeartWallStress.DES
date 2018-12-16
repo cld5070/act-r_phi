@@ -6,7 +6,7 @@ Author : Tom Coleman
 Copyright : 2013-2013
 By : Tom Coleman
 
-<?path Structure\LeftHeartWallStress\ ?>
+<?path Structure/LeftHeartWallStress/ ?>
 
 <?include LeftHeartWallStress-Mass.DES ?>
 <?include LeftHeartWallStress-Diastole.DES ?>

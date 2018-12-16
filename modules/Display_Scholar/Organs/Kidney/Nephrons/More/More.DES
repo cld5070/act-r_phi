@@ -6,17 +6,17 @@ Author : Tom Coleman
 Copyright : 2011-2011
 By : University Of Mississippi Medical Center
 
-<?path Display\Organs\Kidney\Nephrons\More\ ?>
+<?path Display/Organs/Kidney/Nephrons/More/ ?>
 
-<?include ADH\ADH.DES ?>
-<?include Aldosterone\Aldosterone.DES ?>
-<?include Ammonia\Ammonia.DES ?>
-<?include ANP\ANP.DES ?>
-<?include Bicarbonate\Bicarbonate.DES ?>
-<?include Calcium\Calcium.DES ?>
-<?include Chloride\Chloride.DES ?>
-<?include Creatinine\Creatinine.DES ?>
-<?include Glucose\Glucose.DES ?>
-<?include Ketoacids\Ketoacids.DES ?>
+<?include ADH/ADH.DES ?>
+<?include Aldosterone/Aldosterone.DES ?>
+<?include Ammonia/Ammonia.DES ?>
+<?include ANP/ANP.DES ?>
+<?include Bicarbonate/Bicarbonate.DES ?>
+<?include Calcium/Calcium.DES ?>
+<?include Chloride/Chloride.DES ?>
+<?include Creatinine/Creatinine.DES ?>
+<?include Glucose/Glucose.DES ?>
+<?include Ketoacids/Ketoacids.DES ?>
 
 End

@@ -29,7 +29,7 @@ Schema : DES V1.0
   <days/>
 </showclock>
 
-<?path Display\Hormones\Glucagon\Circulating\ ?>
+<?path Display/Hormones/Glucagon/Circulating/ ?>
 
 <?include Pool.DES ?>
 <?include Clearance.DES ?>

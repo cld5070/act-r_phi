@@ -6,11 +6,11 @@ Author : Tom Coleman
 Copyright : 2008-2012
 By : University of Mississippi Medical Center
 
-<?path Structure\SplanchnicCirculation\ ?>
+<?path Structure/SplanchnicCirculation/ ?>
 
-<?include PortalVein\PortalVein.DES ?>
-<?include HepaticArtery\HepaticArtery.DES ?>
-<?include HepaticVein\HepaticVein.DES ?>
+<?include PortalVein/PortalVein.DES ?>
+<?include HepaticArtery/HepaticArtery.DES ?>
+<?include HepaticVein/HepaticVein.DES ?>
 
 <structure><name> SplanchnicCirculation </name>
 

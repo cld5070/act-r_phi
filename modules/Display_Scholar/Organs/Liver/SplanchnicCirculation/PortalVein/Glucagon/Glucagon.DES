@@ -31,7 +31,7 @@ Schema : DES V1.0
 
 <structurename> PortalVein-Glucagon </structurename>
 
-<?path Display\Organs\Liver\SplanchnicCirculation\PortalVein\Glucagon\ ?>
+<?path Display/Organs/Liver/SplanchnicCirculation/PortalVein/Glucagon/ ?>
 
 <?include Summary.DES ?>
 

@@ -30,7 +30,7 @@ By : University Of Mississippi Medical Center
 
 <structurename> PortalVein-FattyAcid </structurename>
 
-<?path Display\Organs\PortalVein\FattyAcid\ ?>
+<?path Display/Organs/PortalVein/FattyAcid/ ?>
 
 <?include Summary.DES ?>
 

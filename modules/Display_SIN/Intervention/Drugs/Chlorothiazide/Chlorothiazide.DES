@@ -29,7 +29,7 @@ Schema : DES V1.0
   <days/>
 </showclock>
 
-<?path Display\Intervention\Drugs\Chlorothiazide\ ?>
+<?path Display/Intervention/Drugs/Chlorothiazide/ ?>
 
 <?include SingleDoseOral.DES ?>
 <?include DailyDoseOral.DES ?>

@@ -31,7 +31,7 @@ Schema : DES V1.0
 
 <structurename> Liver-Ph </structurename>
 
-<?path Display\Organs\Liver\AcidBase\ ?>
+<?path Display/Organs/Liver/AcidBase/ ?>
 
 <?include Ph.DES ?>
 <?include SID.DES ?>

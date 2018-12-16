@@ -28,7 +28,7 @@ By : Tom Coleman
   <days/>
 </showclock>
 
-<?path Display\NervousSystem\AutonomicNerves\Efferents\Ganglia-Adrenal\ ?>
+<?path Display/NervousSystem/AutonomicNerves/Efferents/Ganglia-Adrenal/ ?>
 
 <?include Box.DES ?>
 

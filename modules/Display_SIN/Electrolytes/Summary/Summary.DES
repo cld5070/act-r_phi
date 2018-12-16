@@ -28,7 +28,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Electrolytes\Summary\ ?>
+<?path Display/Electrolytes/Summary/ ?>
 
 <?include Conc.DES ?>
 

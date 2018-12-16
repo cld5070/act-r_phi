@@ -28,7 +28,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Organs\KidneyExcretion\Ammonia ?>
+<?path Display/Organs/KidneyExcretion/Ammonia ?>
 
 <?include ProximalTubuleNH3.DES ?>
 <?include ChronicPhEffect.DES ?>

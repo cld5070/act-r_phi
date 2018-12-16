@@ -28,7 +28,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Organs\KidneyExcretion\Ketoacids\ ?>
+<?path Display/Organs/KidneyExcretion/Ketoacids/ ?>
 
 <?include Box.DES ?>
 

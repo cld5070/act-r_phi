@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Organs\More\Sweat\SweatDuct\ ?>
+<?path Display/Organs/More/Sweat/SweatDuct/ ?>
 
 <?include Reabsorption.DES ?>
 <?include Balance.DES ?>

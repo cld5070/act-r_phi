@@ -28,7 +28,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Organs\KidneyNephrons\ANP\ ?>
+<?path Display/Organs/KidneyNephrons/ANP/ ?>
 
 <?include RenalTubule.DES ?>
 

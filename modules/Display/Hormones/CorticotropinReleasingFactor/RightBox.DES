@@ -116,7 +116,8 @@ By : Tom Coleman
 <showvalue>
    <row> 29.2 </row><col> 1.0 </col>
    <name> Cortisol.[Conc(uG/dL)] </name>
-   <format><integer/></format>   <label> [Cortisol (uG/dL)] </label>
+   <format><integer/></format>
+   <label> [Cortisol (uG/dL)] </label>
 </showvalue>
 
 <infobutton>

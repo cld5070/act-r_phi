@@ -27,7 +27,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Circulation\BloodVessels\VascularConductance\ ?>
+<?path Display/Circulation/BloodVessels/VascularConductance/ ?>
 
 <?include Summary.DES ?>
 <?include PeripheralResistance.DES ?>

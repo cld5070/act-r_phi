@@ -30,7 +30,7 @@ Schema : 2005.0
   <days/>
 </showclock>
 
-<?path Display\Metabolism\LiverMetabolism\Glycogen\ ?>
+<?path Display/Metabolism/LiverMetabolism/Glycogen/ ?>
 
 <?include Balance.DES ?>
 <?include Glycogenesis.DES ?>

@@ -28,7 +28,7 @@ By : Tom Coleman
   <days/>
 </showclock>
 
-<?path Display\Sizing\BloodVessels\Lungs\Total ?>
+<?path Display/Sizing/BloodVessels/Lungs/Total ?>
 
 <?include Box.DES ?>
 

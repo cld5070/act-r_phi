@@ -6,7 +6,7 @@ Author : Tom Coleman
 Copyright : 2008-2012
 By : University of Mississippi Medical Center
 
-<?path Structure\SkeletalMuscle\ ?>
+<?path Structure/SkeletalMuscle/ ?>
 
 <?include SkeletalMuscle-Flow.DES ?>
 <?include SkeletalMuscle-MetabolicVasodilation.DES ?>
@@ -31,7 +31,7 @@ By : University of Mississippi Medical Center
 <?include SkeletalMuscle-MusclePumping.DES ?>
 <?include SkeletalMuscle-Metaboreflex.DES ?>
 
-<?include SkeletalMuscle-Glycogen\SkeletalMuscle-Glycogen.DES ?>
+<?include SkeletalMuscle-Glycogen/SkeletalMuscle-Glycogen.DES ?>
 
 <?include SkeletalMuscle-Energy.DES ?>
 

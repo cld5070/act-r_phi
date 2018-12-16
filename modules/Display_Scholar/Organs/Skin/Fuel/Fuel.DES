@@ -30,7 +30,7 @@ By : University of Mississippi Medical Center
 
 <structurename> Skin-Fuel </structurename>
 
-<?path Display\Organs\Skin\Fuel\ ?>
+<?path Display/Organs/Skin/Fuel/ ?>
 
 <?include Delivery.DES ?>
 <?include Use.DES ?>

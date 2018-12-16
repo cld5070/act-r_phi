@@ -28,7 +28,7 @@ Schema : 2005.0
   <days/>
 </showclock>
 
-<?path Display\Miscellaneous\TissueH2O\Interstitium\UpperTorso\ ?>
+<?path Display/Miscellaneous/TissueH2O/Interstitium/UpperTorso/ ?>
 
 <?include Balance.DES ?>
 <?include Capillaries.DES ?>

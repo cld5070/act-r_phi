@@ -6,10 +6,10 @@ Author : Tom Coleman
 Copyright : 2006-2011
 By : University Of Mississippi Medical Center
 
-<?path Display\Hormones\Insulin\ ?>
+<?path Display/Hormones/Insulin/ ?>
 
-<?include Circulating\Circulating.DES ?>
-<?include BetaCells\BetaCells.DES ?>
-<?include Injected\Injected.DES ?>
+<?include Circulating/Circulating.DES ?>
+<?include BetaCells/BetaCells.DES ?>
+<?include Injected/Injected.DES ?>
 
 End

@@ -7,7 +7,7 @@ Copyright : 2006-2010
 By : University Of Mississippi Medical Center
 Schema : DES V1.0
 
-<?path Structure\Urea\ ?>
+<?path Structure/Urea/ ?>
 
 <?include UreaPool.DES ?>
 <?include UreaCell.DES ?>

@@ -28,7 +28,7 @@ By : Tom Coleman
   <days/>
 </showclock>
 
-<?path Display\NervousSystem\AutonomicNerves\CNS\Sympathetics-Mesenteric\Integration\ ?>
+<?path Display/NervousSystem/AutonomicNerves/CNS/Sympathetics-Mesenteric/Integration/ ?>
 
 <?include Box.DES ?>
 

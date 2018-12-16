@@ -17,7 +17,8 @@ By : Tom Coleman
 <showvalue>
   <row> 1.4 </row><col> 1 </col>
   <name> [CRF(pG/mL)] </name>
-  <format><integer/></format>  <label> [CRF (pG/mL)] </label>
+  <format><integer/></format>
+  <label> [CRF (pG/mL)] </label>
 </showvalue>
 
 <showgraph>

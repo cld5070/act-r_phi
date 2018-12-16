@@ -26,7 +26,7 @@ By : University Of Mississippi Medical Center
   <ampm/><secs/><days/>
 </showclock>
 
-<?path Display\Circulation\BloodVessels\Lungs\PulmonaryCapillaries\ ?>
+<?path Display/Circulation/BloodVessels/Lungs/PulmonaryCapillaries/ ?>
 
 <?include Volume.DES ?>
 <?include Pressure.DES ?>

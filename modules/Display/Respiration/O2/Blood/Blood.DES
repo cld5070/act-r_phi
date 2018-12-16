@@ -22,7 +22,7 @@ Schema : DES V1.0
   <days/>
 </showclock>
 
-<?path Display\Respiration\O2\Blood\ ?>
+<?path Display/Respiration/O2/Blood/ ?>
 
 <?include Artys.DES ?>
 <?include Veins.DES ?>

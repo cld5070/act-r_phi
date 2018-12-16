@@ -26,7 +26,7 @@ By : University Of Mississippi Medical Center
   <ampm/><secs/><days/>
 </showclock>
 
-<?path Display\Circulation\BloodVessels\Lungs\LeftVentricle\ ?>
+<?path Display/Circulation/BloodVessels/Lungs/LeftVentricle/ ?>
 
 <?include BloodVolume.DES ?>
 <?include BloodFlow.DES ?>

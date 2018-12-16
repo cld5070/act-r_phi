@@ -29,7 +29,7 @@ Schema : DES V1.0
   <days/>
 </showclock>
 
-<?path Display\NervousSystem\AutonomicNerves\Afferents\Metaboreflex\ ?>
+<?path Display/NervousSystem/AutonomicNerves/Afferents/Metaboreflex/ ?>
 
 <?include Summary.DES ?>
 <?include Radiation.DES ?>

@@ -26,7 +26,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Circulation\BloodVessels\GreatVeins\CoronarySinus\ ?>
+<?path Display/Circulation/BloodVessels/GreatVeins/CoronarySinus/ ?>
 
 
 <?include BloodFlow.DES ?>

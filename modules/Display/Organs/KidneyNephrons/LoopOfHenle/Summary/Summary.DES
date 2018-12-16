@@ -44,7 +44,7 @@ By : Tom Coleman
 </showvalue>
 
 
-<?path Display\Organs\KidneyNephrons\LoopOfHenle\Summary\ ?>
+<?path Display/Organs/KidneyNephrons/LoopOfHenle/Summary/ ?>
 
 <?include SodiumMovement.DES ?>
 <?include Na+FractionalReabsorption.DES ?>

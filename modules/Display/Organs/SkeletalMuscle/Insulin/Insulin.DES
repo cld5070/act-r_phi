@@ -28,7 +28,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Organs\SkeletalMuscle\Insulin\ ?>
+<?path Display/Organs/SkeletalMuscle/Insulin/ ?>
 
 <?include InsulinReceptor.DES ?>
 

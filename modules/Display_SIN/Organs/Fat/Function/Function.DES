@@ -29,7 +29,7 @@ Schema : DES V1.0
   <days/>
 </showclock>
 
-<?path Display\Organs\Fat\Function\ ?>
+<?path Display/Organs/Fat/Function/ ?>
 
 <?include Summary.DES ?>
 

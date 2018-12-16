@@ -30,7 +30,7 @@ Schema : DES V1.0
 </showclock>
 
 
-<?path Display\Organs\SkeletalMuscle\ContractileProtein\ ?>
+<?path Display/Organs/SkeletalMuscle/ContractileProtein/ ?>
 
 <?include Mass.DES ?>
 

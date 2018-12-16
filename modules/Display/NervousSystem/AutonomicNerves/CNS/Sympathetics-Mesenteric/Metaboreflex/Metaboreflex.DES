@@ -28,7 +28,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\NervousSystem\AutonomicNerves\CNS\Sympathetics-Mesenteric\Metaboreflex\ ?>
+<?path Display/NervousSystem/AutonomicNerves/CNS/Sympathetics-Mesenteric/Metaboreflex/ ?>
 
 <?include SympatheticOutflow.DES ?>
 

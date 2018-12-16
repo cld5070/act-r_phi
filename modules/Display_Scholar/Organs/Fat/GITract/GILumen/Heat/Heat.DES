@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Organs\GITract\GILumen\Heat\ ?>
+<?path Display/Organs/GITract/GILumen/Heat/ ?>
 
 <?include Summary.DES ?>
 

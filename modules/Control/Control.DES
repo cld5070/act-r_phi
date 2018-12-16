@@ -8,10 +8,10 @@ By : University of Mississippi Medical Center
 
 <control>
 
-<?include Control\GoFor.DES ?>
-<?include Control\GoTo.DES ?>
-<?include Control\SettlingTime.DES ?>
-<?include Control\Scramble.DES ?>
+<?include Control/GoFor.DES ?>
+<?include Control/GoTo.DES ?>
+<?include Control/SettlingTime.DES ?>
+<?include Control/Scramble.DES ?>
 
 </control>
 

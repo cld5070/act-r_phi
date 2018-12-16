@@ -28,7 +28,7 @@ By : Tom Coleman
   <days/>
 </showclock>
 
-<?path Display\NervousSystem\AutonomicNerves\Afferents\GlucoseReceptors\ ?>
+<?path Display/NervousSystem/AutonomicNerves/Afferents/GlucoseReceptors/ ?>
 
 <?include Box.DES ?>
 

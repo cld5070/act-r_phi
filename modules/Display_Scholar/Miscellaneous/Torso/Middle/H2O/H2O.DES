@@ -28,7 +28,7 @@ Schema : 2005.0
   <days/>
 </showclock>
 
-<?path Display\Miscellaneous\Torso\Middle\H2O\ ?>
+<?path Display/Miscellaneous/Torso/Middle/H2O/ ?>
 
 <?include Balance.DES ?>
 <?include InterstitialPressure.DES ?>

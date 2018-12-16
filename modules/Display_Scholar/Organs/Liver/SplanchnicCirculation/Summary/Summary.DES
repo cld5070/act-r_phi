@@ -28,7 +28,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Organs\Liver\SplanchnicCirculation\Summary\ ?>
+<?path Display/Organs/Liver/SplanchnicCirculation/Summary/ ?>
 
 <?include Flow.DES ?>
 

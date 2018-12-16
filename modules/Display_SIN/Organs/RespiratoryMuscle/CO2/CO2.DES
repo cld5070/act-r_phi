@@ -30,7 +30,7 @@ By : University Of Mississippi Medical Center
 
 <structurename> RespiratoryMuscle-CO2 </structurename>
 
-<?path Display\Organs\RespiratoryMuscle\CO2\ ?>
+<?path Display/Organs/RespiratoryMuscle/CO2/ ?>
 
 <?include LeftBox.DES ?>
 <?include Technical.DES ?>

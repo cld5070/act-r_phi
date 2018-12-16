@@ -28,7 +28,7 @@ By : Tom Coleman
   <days/>
 </showclock>
 
-<?path Display\Hormones\EPO\Disposal\ ?>
+<?path Display/Hormones/EPO/Disposal/ ?>
 
 <?include Box.DES ?>
 

@@ -6,9 +6,9 @@ Author : Tom Coleman
 Copyright : 2008-2011
 By : University of Mississippi Medical Center
 
-<?path Display\Metabolism\LiverMetabolism\Gluconeogenesis\ ?>
+<?path Display/Metabolism/LiverMetabolism/Gluconeogenesis/ ?>
 
-<?include Summary\Summary.DES ?>
-<?include Stimuli\Stimuli.DES ?>
+<?include Summary/Summary.DES ?>
+<?include Stimuli/Stimuli.DES ?>
 
 End

@@ -28,7 +28,7 @@ By : Tom Coleman
   <days/>
 </showclock>
 
-<?path Display\Hormones\ANP\Pool\ ?>
+<?path Display/Hormones/ANP/Pool/ ?>
 
 <?include Box.DES ?>
 

@@ -6,12 +6,12 @@ Author : Tom Coleman
 Copyright : 2008-2010
 By : University of Mississippi Medical Center
 
-<?path Display\Miscellaneous\Torso\ ?>
+<?path Display/Miscellaneous/Torso/ ?>
 
-<?include Summary\Summary.DES ?>
+<?include Summary/Summary.DES ?>
 
-<?include Lower\Lower.DES ?>
-<?include Middle\Middle.DES ?>
-<?include Upper\Upper.DES ?>
+<?include Lower/Lower.DES ?>
+<?include Middle/Middle.DES ?>
+<?include Upper/Upper.DES ?>
 
 End

@@ -6,9 +6,9 @@ Author : Tom Coleman
 Copyright : 2006-2012
 By : University Of Mississippi Medical Center
 
-<?path Display\Electrolytes\Lactate\ ?>
+<?path Display/Electrolytes/Lactate/ ?>
 
-<?include Blood\Blood.DES ?>
-<?include Tissue\Tissue.DES ?>
+<?include Blood/Blood.DES ?>
+<?include Tissue/Tissue.DES ?>
 
 End

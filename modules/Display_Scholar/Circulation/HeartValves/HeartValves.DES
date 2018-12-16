@@ -6,11 +6,11 @@ Author : Tom Coleman
 Copyright : 2006-2010
 By : University Of Mississippi Medical Center
 
-<?path Display\Circulation\HeartValves\ ?>
+<?path Display/Circulation/HeartValves/ ?>
 
-<?include Aortic\Aortic.DES ?>
-<?include Mitral\Mitral.DES ?>
-<?include Pulmonic\Pulmonic.DES ?>
-<?include Tricuspid\Tricuspid.DES ?>
+<?include Aortic/Aortic.DES ?>
+<?include Mitral/Mitral.DES ?>
+<?include Pulmonic/Pulmonic.DES ?>
+<?include Tricuspid/Tricuspid.DES ?>
 
 End

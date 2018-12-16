@@ -29,7 +29,7 @@ Schema : DES V1.0
   <days/>
 </showclock>
 
-<?path Display\Organs\Testes\ ?>
+<?path Display/Organs/Testes/ ?>
 
 <?include Gender.DES ?>
 <?include Testosterone.DES ?>

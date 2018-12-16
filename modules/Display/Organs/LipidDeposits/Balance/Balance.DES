@@ -28,7 +28,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Organs\LipidDeposits\Balance\ ?>
+<?path Display/Organs/LipidDeposits/Balance/ ?>
 
 <?include Summary.DES ?>
 

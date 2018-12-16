@@ -6,10 +6,10 @@ Author : Tom Coleman
 Copyright : 2005-2013
 By : University of Mississippi Medical Center
 
-<?path Display\BodyFluids\Osmoles\ ?>
+<?path Display/BodyFluids/Osmoles/ ?>
 
-<?include Function\Function.DES ?>
-<?include ECFV\ECFV.DES ?>
-<?include ICFV\ICFV.DES ?>
+<?include Function/Function.DES ?>
+<?include ECFV/ECFV.DES ?>
+<?include ICFV/ICFV.DES ?>
 
 End

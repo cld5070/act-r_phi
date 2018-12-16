@@ -30,7 +30,7 @@ Schema : 2005.0
   <days/>
 </showclock>
 
-<?path Display\Metabolism\Creatinine\ ?>
+<?path Display/Metabolism/Creatinine/ ?>
 
 <?include Concentration.DES ?>
 <?include Balance.DES ?>

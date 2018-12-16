@@ -28,7 +28,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Lifestyle\Exercise\Bike\ ?>
+<?path Display/Lifestyle/Exercise/Bike/ ?>
 
 <?include Summary.DES ?>
 

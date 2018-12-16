@@ -21,7 +21,25 @@ By : Tom Coleman
   <label> Receptor Activity </label>
 </showvalue>
 
-<showgraph>  <row> 2.4 </row><col> 1 </col><high> 7 </high><wide> 28 </wide>  <leftmargin> 5 </leftmargin>  <xaxis>    <name> System.X </name>    <label> Time </label>    <scale><min> 0 </min><max> 2 </max></scale>  </xaxis>  <yaxis>    <yvar>      <name> NA </name>      <label> NA </label>      <linecolor> BLUE </linecolor>    </yvar>    <scale><min> 0 </min><max> 2 </max><inc> 1 </inc></scale>  </yaxis></showgraph><radiobuttons>
+<showgraph>
+  <row> 2.4 </row><col> 1 </col><high> 7 </high><wide> 28 </wide>
+  <leftmargin> 5 </leftmargin>
+  <xaxis>
+    <name> System.X </name>
+    <label> Time </label>
+    <scale><min> 0 </min><max> 2 </max></scale>
+  </xaxis>
+  <yaxis>
+    <yvar>
+      <name> NA </name>
+      <label> NA </label>
+      <linecolor> BLUE </linecolor>
+    </yvar>
+    <scale><min> 0 </min><max> 2 </max><inc> 1 </inc></scale>
+  </yaxis>
+</showgraph>
+
+<radiobuttons>
   <row> 9.8 </row><col> 1 </col>
   <name> Clamp </name>
   <listname> Common.Switch </listname>

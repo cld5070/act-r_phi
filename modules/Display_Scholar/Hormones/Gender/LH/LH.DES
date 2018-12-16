@@ -7,9 +7,9 @@ Copyright : 2008-2010
 By : University of Mississippi Medical Center
 Schema : DES V1.0
 
-<?path Display\Hormones\Gender\LH\ ?>
+<?path Display/Hormones/Gender/LH/ ?>
 
-<?include Circulating\Circulating.DES ?>
-<?include AnteriorPituitary\AnteriorPituitary.DES ?>
+<?include Circulating/Circulating.DES ?>
+<?include AnteriorPituitary/AnteriorPituitary.DES ?>
 
 End

@@ -28,7 +28,7 @@ By : Tom Coleman
   <days/>
 </showclock>
 
-<?path Display\Intervention\Analgesia\Narcan\Kinetics\ ?>
+<?path Display/Intervention/Analgesia/Narcan/Kinetics/ ?>
 
 <?include Pool.DES ?>
 

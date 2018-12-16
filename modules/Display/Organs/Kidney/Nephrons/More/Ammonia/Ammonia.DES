@@ -30,7 +30,7 @@ Schema : 2005.0
   <days/>
 </showclock>
 
-<?path Display\Organs\Kidney\Nephrons\More\Ammonia ?>
+<?path Display/Organs/Kidney/Nephrons/More/Ammonia ?>
 
 <?include ProximalTubuleNH3.DES ?>
 <?include ChronicPhEffect.DES ?>

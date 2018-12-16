@@ -28,7 +28,7 @@ By : Tom Coleman
   <days/>
 </showclock>
 
-<?path Display\Sizing\HeartPumping\ ?>
+<?path Display/Sizing/HeartPumping/ ?>
 
 <?include RightHeart.DES ?>
 <?include LeftHeart.DES ?>

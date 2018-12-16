@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Hormones\Insulin\Receptors\General\ ?>
+<?path Display/Hormones/Insulin/Receptors/General/ ?>
 
 <?include Box.DES ?>
 

@@ -30,7 +30,7 @@ By : University Of Mississippi Medical Center
 
 <structurename> Fat-CO2 </structurename>
 
-<?path Display\Organs\Fat\CO2\ ?>
+<?path Display/Organs/Fat/CO2/ ?>
 
 <?include LeftBox.DES ?>
 <?include Technical.DES ?>

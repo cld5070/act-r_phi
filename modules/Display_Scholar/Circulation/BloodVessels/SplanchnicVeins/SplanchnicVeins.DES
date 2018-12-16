@@ -27,7 +27,7 @@ Schema : DES V1.0
   <ampm/><secs/><days/>
 </showclock>
 
-<?path Display\Circulation\BloodVessels\SplanchnicVeins\ ?>
+<?path Display/Circulation/BloodVessels/SplanchnicVeins/ ?>
 
 <?include Volume.DES ?>
 <?include Technical.DES ?>

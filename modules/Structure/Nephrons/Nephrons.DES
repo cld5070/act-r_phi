@@ -10,17 +10,17 @@ Schema : 2005.0
 
 
 <?path Structure ?>
-<?include LeftNephrons\LeftNephrons.DES ?>
-<?include RightNephrons\RightNephrons.DES ?>
-<?include Nephrons\CollectingDuct\CollectingDuct.DES ?>
-<?include Nephrons\Glomerulus\Glomerulus.DES ?>
-<?include Nephrons\NephronGlucose.DES ?>
-<?include Nephrons\NephronKetoacids.DES ?>
-<?include Nephrons\ProximalTubule\ProximalTubule_NH3.DES ?>
-<?include Nephrons\ProximalTubule\ProximalTubule_Na.DES ?>
-<?include Nephrons\LoopOfHenle\LoopOfHenle_Na.DES ?>
-<?include Nephrons\DistalTubule\DistalTubule_Na.DES ?>
+<?include LeftNephrons/LeftNephrons.DES ?>
+<?include RightNephrons/RightNephrons.DES ?>
+<?include Nephrons/CollectingDuct/CollectingDuct.DES ?>
+<?include Nephrons/Glomerulus/Glomerulus.DES ?>
+<?include Nephrons/NephronGlucose.DES ?>
+<?include Nephrons/NephronKetoacids.DES ?>
+<?include Nephrons/ProximalTubule/ProximalTubule_NH3.DES ?>
+<?include Nephrons/ProximalTubule/ProximalTubule_Na.DES ?>
+<?include Nephrons/LoopOfHenle/LoopOfHenle_Na.DES ?>
+<?include Nephrons/DistalTubule/DistalTubule_Na.DES ?>
 
-<?include Nephrons\NephronCalciumProximal.DES ?>
-<?include Nephrons\NephronCalciumDistal.DES ?>
+<?include Nephrons/NephronCalciumProximal.DES ?>
+<?include Nephrons/NephronCalciumDistal.DES ?>
 End

@@ -30,7 +30,7 @@ By : University Of Mississippi Medical Center
 
 <structurename> Skin-CO2 </structurename>
 
-<?path Display\Organs\Skin\CO2\ ?>
+<?path Display/Organs/Skin/CO2/ ?>
 
 <?include LeftBox.DES ?>
 <?include Technical.DES ?>

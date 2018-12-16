@@ -28,7 +28,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\NervousSystem\AutonomicNerves\CNS\Sympathetics-Renal\Metaboreflex\ ?>
+<?path Display/NervousSystem/AutonomicNerves/CNS/Sympathetics-Renal/Metaboreflex/ ?>
 
 <?include SympatheticOutflow.DES ?>
 

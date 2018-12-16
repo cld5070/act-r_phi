@@ -6,10 +6,10 @@ Author : Tom Coleman
 Copyright : 2011-2011
 By : University Of Mississippi Medical Center
 
-<?path Display\Organs\Bone\Mineral\ ?>
+<?path Display/Organs/Bone/Mineral/ ?>
 
-<?include Composition\Composition.DES ?>
-<?include ExchangeableCalcium\ExchangeableCalcium.DES ?>
-<?include FixedCalcium\FixedCalcium.DES ?>
+<?include Composition/Composition.DES ?>
+<?include ExchangeableCalcium/ExchangeableCalcium.DES ?>
+<?include FixedCalcium/FixedCalcium.DES ?>
 
 End

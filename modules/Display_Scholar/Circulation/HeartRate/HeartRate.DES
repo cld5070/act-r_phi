@@ -7,11 +7,11 @@ Copyright : 2008-2011
 By : University of Mississippi Medical Center
 Schema : DES V1.0
 
-<?path Display\Circulation\HeartRate\ ?>
+<?path Display/Circulation/HeartRate/ ?>
 
-<?include Atria\Atria.DES ?>
-<?include Ventricles\Ventricles.DES ?>
-<?include Intervals\Intervals.DES ?>
-<?include Tachyarrhythmia\Tachyarrhythmia.DES ?>
+<?include Atria/Atria.DES ?>
+<?include Ventricles/Ventricles.DES ?>
+<?include Intervals/Intervals.DES ?>
+<?include Tachyarrhythmia/Tachyarrhythmia.DES ?>
 
 End

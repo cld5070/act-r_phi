@@ -6,9 +6,9 @@ Author : Tom Coleman
 Copyright : 2011-2011
 By : University of Mississippi Medical Center
 
-<?path Display\NervousSystem\ ?>
+<?path Display/NervousSystem/ ?>
 
-<?include AutonomicNerves\AutonomicNerves.DES ?>
-<?include Catechols\Catechols.DES ?>
+<?include AutonomicNerves/AutonomicNerves.DES ?>
+<?include Catechols/Catechols.DES ?>
 
 End

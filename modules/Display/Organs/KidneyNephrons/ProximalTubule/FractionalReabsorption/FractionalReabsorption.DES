@@ -28,7 +28,7 @@ By : Tom Coleman
   <days/>
 </showclock>
 
-<?path Display\Organs\KidneyNephrons\ProximalTubule\FractionalReabsorption\ ?>
+<?path Display/Organs/KidneyNephrons/ProximalTubule/FractionalReabsorption/ ?>
 
 <?include Box.DES ?>
 

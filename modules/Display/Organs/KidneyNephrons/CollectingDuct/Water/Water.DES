@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Organs\KidneyNephrons\CollectingDuct\Water\ ?>
+<?path Display/Organs/KidneyNephrons/CollectingDuct/Water/ ?>
 
 <?include WaterMovement.DES ?>
 <?include Permeability.DES ?>

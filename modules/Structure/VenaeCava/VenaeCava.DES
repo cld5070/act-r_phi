@@ -6,7 +6,7 @@ Author : Tom Coleman
 Copyright : 2012-2013
 By : University Of Mississippi Medical Center
 
-<?path Structure\VenaeCava\ ?>
+<?path Structure/VenaeCava/ ?>
 
 <?include InferiorVenaCava.DES ?>
 <?include SuperiorVenaCava.DES ?>

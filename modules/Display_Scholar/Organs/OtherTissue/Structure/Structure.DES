@@ -6,12 +6,12 @@ Author : Tom Coleman
 Copyright : 2010-2010
 By : University Of Mississippi Medical Center
 
-<?path Display\Organs\OtherTissue\Structure\ ?>
+<?path Display/Organs/OtherTissue/Structure/ ?>
 
-<?include Summary\Summary.DES ?>
+<?include Summary/Summary.DES ?>
 
-<?include PhEffect\PhEffect.DES ?>
-<?include FuelEffect\FuelEffect.DES ?>
-<?include TemperatureEffect\TemperatureEffect.DES ?>
+<?include PhEffect/PhEffect.DES ?>
+<?include FuelEffect/FuelEffect.DES ?>
+<?include TemperatureEffect/TemperatureEffect.DES ?>
 
 End

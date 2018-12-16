@@ -7,9 +7,9 @@ Copyright : 2006-2010
 By : University Of Mississippi Medical Center
 Schema : DES V1.0
 
-<?path Display\Hormones\ThyroidGland\ ?>
+<?path Display/Hormones/ThyroidGland/ ?>
 
-<?include T4-T3\T4-T3.DES ?>
-<?include TSH\TSH.DES ?>
+<?include T4-T3/T4-T3.DES ?>
+<?include TSH/TSH.DES ?>
 
 End

@@ -8,9 +8,9 @@ By : University of Mississippi Medical Center
 Solver : DES 2005
 Schema : 2005.0
 
-<?path Display\BodyFluids\Blood\Hemoglobin\ ?>
+<?path Display/BodyFluids/Blood/Hemoglobin/ ?>
 
-<?include Properties\Properties.DES ?>
-<?include Loading\Loading.DES ?>
+<?include Properties/Properties.DES ?>
+<?include Loading/Loading.DES ?>
 
 End

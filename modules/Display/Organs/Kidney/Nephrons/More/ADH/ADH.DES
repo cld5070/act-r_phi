@@ -30,7 +30,7 @@ Schema : 2005.0
   <days/>
 </showclock>
 
-<?path Display\Organs\Kidney\Nephrons\More\ADH\ ?>
+<?path Display/Organs/Kidney/Nephrons/More/ADH/ ?>
 
 <?include RenalTubule.DES ?>
 

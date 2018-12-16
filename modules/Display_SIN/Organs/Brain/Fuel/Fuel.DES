@@ -30,7 +30,7 @@ By : University of Mississippi Medical Center
 
 <structurename> Brain-Fuel </structurename>
 
-<?path Display\Organs\Brain\Fuel\ ?>
+<?path Display/Organs/Brain/Fuel/ ?>
 
 <?include Delivery.DES ?>
 <?include Use.DES ?>

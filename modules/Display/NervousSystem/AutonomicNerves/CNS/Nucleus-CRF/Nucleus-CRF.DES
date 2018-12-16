@@ -28,7 +28,7 @@ By : Tom Coleman
   <days/>
 </showclock>
 
-<?path Display\NervousSystem\AutonomicNerves\CNS\Nucleus-CRF\ ?>
+<?path Display/NervousSystem/AutonomicNerves/CNS/Nucleus-CRF/ ?>
 
 <?include Box.DES ?>
 

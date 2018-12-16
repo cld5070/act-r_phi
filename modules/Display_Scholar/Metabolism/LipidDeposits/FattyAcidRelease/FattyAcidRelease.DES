@@ -28,7 +28,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Metabolism\LipidDeposits\FattyAcidRelease\ ?>
+<?path Display/Metabolism/LipidDeposits/FattyAcidRelease/ ?>
 
 <?include Rate.DES ?>
 <?include InsulinEffect.DES ?>

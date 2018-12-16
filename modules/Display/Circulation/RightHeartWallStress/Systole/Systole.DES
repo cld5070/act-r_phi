@@ -26,7 +26,7 @@ By : Tom Coleman
   <days/>
 </showclock>
 
-<?path Display\Circulation\RightHeartWallStress\Systole\ ?>
+<?path Display/Circulation/RightHeartWallStress/Systole/ ?>
 
 <?include Box.DES ?>
 

@@ -30,7 +30,7 @@ By : University of Mississippi Medical Center
 
 <structurename> RespiratoryMuscle-Fuel </structurename>
 
-<?path Display\Organs\RespiratoryMuscle\Fuel\ ?>
+<?path Display/Organs/RespiratoryMuscle/Fuel/ ?>
 
 <?include Delivery.DES ?>
 <?include Use.DES ?>

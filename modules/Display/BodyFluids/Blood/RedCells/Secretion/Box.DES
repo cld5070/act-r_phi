@@ -67,8 +67,19 @@ By : University Of Mississippi Medical Center
    <label> [EPO] Effect </label>
 </showvalue>
 
-<repeatlist>  <name> Base </name>  <repeat><reps> 100 </reps><stepsize> 0.001 </stepsize></repeat></repeatlist>
-<slidebar>  <row> 14.0 </row><col> 1.0 </col>  <name> Base </name>  <listname> Base </listname>  <label> Base </label></slidebar><infobutton>
+<repeatlist>
+  <name> Base </name>
+  <repeat><reps> 100 </reps><stepsize> 0.001 </stepsize></repeat>
+</repeatlist>
+
+<slidebar>
+  <row> 14.0 </row><col> 1.0 </col>
+  <name> Base </name>
+  <listname> Base </listname>
+  <label> Base </label>
+</slidebar>
+
+<infobutton>
   <row> 1.2 </row>
   <col> 26.0 </col>
   <line> A typical red cell secretion rate </line>

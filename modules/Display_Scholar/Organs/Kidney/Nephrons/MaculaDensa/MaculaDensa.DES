@@ -8,11 +8,11 @@ By : University of Mississippi Medical Center
 Solver : DES 2005
 Schema : 2005.0
 
-<?path Display\Organs\Kidney\Nephrons\MaculaDensa\ ?>
+<?path Display/Organs/Kidney/Nephrons/MaculaDensa/ ?>
 
-<?include Summary\Summary.DES ?>
-<?include TGF-Vascular\TGF-Vascular.DES ?>
-<?include TGF-Renin\TGF-Renin.DES ?>
+<?include Summary/Summary.DES ?>
+<?include TGF-Vascular/TGF-Vascular.DES ?>
+<?include TGF-Renin/TGF-Renin.DES ?>
 
 
 End

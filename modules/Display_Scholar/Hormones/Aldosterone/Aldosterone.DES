@@ -29,7 +29,7 @@ Schema : DES V1.0
   <days/>
 </showclock>
 
-<?path Display\Hormones\Aldosterone\ ?>
+<?path Display/Hormones/Aldosterone/ ?>
 
 <?include Pool.DES ?>
 <?include Pump.DES ?>

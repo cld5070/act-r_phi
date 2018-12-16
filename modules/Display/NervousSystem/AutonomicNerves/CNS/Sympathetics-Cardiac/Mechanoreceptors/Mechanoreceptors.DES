@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\NervousSystem\AutonomicNerves\CNS\Sympathetics-Cardiac\Mechanoreceptors\ ?>
+<?path Display/NervousSystem/AutonomicNerves/CNS/Sympathetics-Cardiac/Mechanoreceptors/ ?>
 
 <?include Summary.DES ?>
 

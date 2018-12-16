@@ -31,7 +31,7 @@ Schema : DES V1.0
 
 <structurename> GITract-Ph </structurename>
 
-<?path Display\Organs\GITract\AcidBase\ ?>
+<?path Display/Organs/GITract/AcidBase/ ?>
 
 <?include Ph.DES ?>
 

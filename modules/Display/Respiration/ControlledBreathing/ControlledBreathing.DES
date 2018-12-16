@@ -28,7 +28,7 @@ By : Bucknell University
 	<days/>
 </showclock>
 
-<?path Display\Respiration\ControlledBreathing\ ?>
+<?path Display/Respiration/ControlledBreathing/ ?>
 
 	<structurename> ControlledBreathing </structurename>
 	<showvalue>

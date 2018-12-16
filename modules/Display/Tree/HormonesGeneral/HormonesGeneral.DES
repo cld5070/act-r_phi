@@ -22,7 +22,7 @@ By : Tom Coleman
   <parent> HORMONESGENERAL </parent>
 </separatorbar>
 
-<?path Display\Tree\HormonesGeneral\ ?>
+<?path Display/Tree/HormonesGeneral/ ?>
 
 <?include ACTH.DES ?>
 <?include ADH.DES ?>

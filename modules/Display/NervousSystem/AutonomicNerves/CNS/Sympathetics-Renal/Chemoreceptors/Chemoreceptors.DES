@@ -28,7 +28,7 @@ By : Tom Coleman
   <days/>
 </showclock>
 
-<?path Display\NervousSystem\AutonomicNerves\CNS\Sympathetics-Renal\Chemoreceptors\ ?>
+<?path Display/NervousSystem/AutonomicNerves/CNS/Sympathetics-Renal/Chemoreceptors/ ?>
 
 <?include Summary.DES ?>
 

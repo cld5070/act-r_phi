@@ -30,7 +30,7 @@ Schema : 2005.0
   <days/>
 </showclock>
 
-<?path Display\Organs\RespiratoryMuscle\Glycogen\ ?>
+<?path Display/Organs/RespiratoryMuscle/Glycogen/ ?>
 
 <?include Summary.DES ?>
 <?include Synthesis.DES ?>

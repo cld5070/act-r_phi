@@ -28,7 +28,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Metabolism\LiverMetabolism\Insulin\ ?>
+<?path Display/Metabolism/LiverMetabolism/Insulin/ ?>
 
 <?include InsulinReceptor.DES ?>
 

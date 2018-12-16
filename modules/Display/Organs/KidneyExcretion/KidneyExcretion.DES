@@ -6,16 +6,16 @@ Author : Tom Coleman
 Copyright : 2013-2013
 By : Tom Coleman
 
-<?path Display\Organs\KidneyExcretion\ ?>
+<?path Display/Organs/KidneyExcretion/ ?>
 
-<?include AcidBase\AcidBase.DES ?>
-<?include Ammonia\Ammonia.DES ?>
-<?include Bicarbonate\Bicarbonate.DES ?>
-<?include Calcium\Calcium.DES ?>
-<?include Chloride\Chloride.DES ?>
-<?include Creatinine\Creatinine.DES ?>
-<?include Glucose\Glucose.DES ?>
-<?include Ketoacids\Ketoacids.DES ?>
-<?include Urine\Urine.DES ?>
+<?include AcidBase/AcidBase.DES ?>
+<?include Ammonia/Ammonia.DES ?>
+<?include Bicarbonate/Bicarbonate.DES ?>
+<?include Calcium/Calcium.DES ?>
+<?include Chloride/Chloride.DES ?>
+<?include Creatinine/Creatinine.DES ?>
+<?include Glucose/Glucose.DES ?>
+<?include Ketoacids/Ketoacids.DES ?>
+<?include Urine/Urine.DES ?>
 
 End

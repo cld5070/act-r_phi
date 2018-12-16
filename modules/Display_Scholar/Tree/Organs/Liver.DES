@@ -12,7 +12,7 @@ By : University Of Mississippi Medical Center
   <parent> ORGANS </parent>
 </branch>
 
-<?path Display\Tree\Organs\ ?>
+<?path Display/Tree/Organs/ ?>
 <?include SplanchnicCirculation.DES ?>
 
 <leaf>

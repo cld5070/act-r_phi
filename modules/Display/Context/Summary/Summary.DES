@@ -28,7 +28,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Context\Summary\ ?>
+<?path Display/Context/Summary/ ?>
 
 <?include Traits.DES ?>
 <?include Randomness.DES ?>

@@ -29,7 +29,7 @@ Schema : DES V1.0
   <days/>
 </showclock>
 
-<?path Display\Metabolism\RespiratoryQuotient\ ?>
+<?path Display/Metabolism/RespiratoryQuotient/ ?>
 
 <?include RQ.DES ?>
 

@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Miscellaneous\CarbonMonoxide\Distribution\ ?>
+<?path Display/Miscellaneous/CarbonMonoxide/Distribution/ ?>
 
 <?include Balance.DES ?>
 <?include Spaces.DES ?>

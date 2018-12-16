@@ -28,7 +28,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Organs\LiverMetabolism\AminoAcids\ ?>
+<?path Display/Organs/LiverMetabolism/AminoAcids/ ?>
 
 <?include Uptake.DES ?>
 </panel>

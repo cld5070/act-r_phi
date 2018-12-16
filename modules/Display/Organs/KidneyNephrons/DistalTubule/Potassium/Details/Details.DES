@@ -28,7 +28,7 @@ By : Tom Coleman
   <days/>
 </showclock>
 
-<?path Display\Organs\KidneyNephrons\DistalTubule\Potassium\Details\ ?>
+<?path Display/Organs/KidneyNephrons/DistalTubule/Potassium/Details/ ?>
 
 <?include Box.DES ?>
 

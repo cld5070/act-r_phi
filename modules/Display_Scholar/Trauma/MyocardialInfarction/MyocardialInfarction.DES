@@ -28,7 +28,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Trauma\MyocardialInfarction\ ?>
+<?path Display/Trauma/MyocardialInfarction/ ?>
 
 <?include RightHeart.DES ?>
 <?include LeftHeart.DES ?>

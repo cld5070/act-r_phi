@@ -30,7 +30,7 @@ By : University Of Mississippi Medical Center
 
 <structurename> RightHeart-CO2 </structurename>
 
-<?path Display\Organs\RightHeart\CO2\ ?>
+<?path Display/Organs/RightHeart/CO2/ ?>
 
 <?include LeftBox.DES ?>
 <?include Technical.DES ?>

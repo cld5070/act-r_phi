@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Organs\PortalVein\BloodFlow\ ?>
+<?path Display/Organs/PortalVein/BloodFlow/ ?>
 
 <?include Box.DES ?>
 

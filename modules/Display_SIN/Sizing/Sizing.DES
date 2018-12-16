@@ -6,14 +6,14 @@ Author : Tom Coleman
 Copyright : 2012-2012
 By : University of Mississippi Medical Center
 
-<?path Display\Sizing\ ?>
+<?path Display/Sizing/ ?>
 
-<?include Summary\Summary.DES ?>
+<?include Summary/Summary.DES ?>
 
 <!-- =============================== -->
 
-<?include OrganMass\OrganMass.DES ?>
-<?include BloodVolume\BloodVolume.DES ?>
-<?include ExternalH2O\ExternalH2O.DES ?>
+<?include OrganMass/OrganMass.DES ?>
+<?include BloodVolume/BloodVolume.DES ?>
+<?include ExternalH2O/ExternalH2O.DES ?>
 
 End

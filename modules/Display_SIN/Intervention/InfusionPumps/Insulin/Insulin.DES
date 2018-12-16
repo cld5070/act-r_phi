@@ -27,7 +27,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Intervention\InfusionPumps\Insulin\ ?>
+<?path Display/Intervention/InfusionPumps/Insulin/ ?>
 
 <?include Pump.DES ?>
 

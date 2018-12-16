@@ -29,7 +29,7 @@ Schema : DES V1.0
   <days/>
 </showclock>
 
-<?path Display\Organs\Kidney\Structure\ ?>
+<?path Display/Organs/Kidney/Structure/ ?>
 
 <?include Summary.DES ?>
 

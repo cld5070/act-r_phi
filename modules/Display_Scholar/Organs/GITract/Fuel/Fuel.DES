@@ -30,7 +30,7 @@ By : University of Mississippi Medical Center
 
 <structurename> GITract-Fuel </structurename>
 
-<?path Display\Organs\GITract\Fuel\ ?>
+<?path Display/Organs/GITract/Fuel/ ?>
 
 <?include Delivery.DES ?>
 <?include Use.DES ?>

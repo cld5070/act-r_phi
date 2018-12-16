@@ -31,7 +31,7 @@ Schema : DES V1.0
 
 <structurename> LeftHeart-Lactate </structurename>
 
-<?path Display\Organs\LeftHeart\Lactate\ ?>
+<?path Display/Organs/LeftHeart/Lactate/ ?>
 
 <?include TissueLactate.DES ?>
 

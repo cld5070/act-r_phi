@@ -31,7 +31,7 @@ Schema : DES V1.0
   <days/>
 </showclock>
 
-<?path Display\Organs\LeftHeart\Circulation\ ?>
+<?path Display/Organs/LeftHeart/Circulation/ ?>
 
 <?include BloodFlow.DES ?>
 <?include Pump.DES ?>

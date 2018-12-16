@@ -31,7 +31,7 @@ Schema : DES V1.0
 
 <structurename> Brain-Lactate </structurename>
 
-<?path Display\Organs\Brain\Lactate\ ?>
+<?path Display/Organs/Brain/Lactate/ ?>
 
 <?include TissueLactate.DES ?>
 

@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Organs\SkeletalMuscle\Glycogen\Synthesis\ ?>
+<?path Display/Organs/SkeletalMuscle/Glycogen/Synthesis/ ?>
 
 <?include Box.DES ?>
 <?include InsulinEffect.DES ?>

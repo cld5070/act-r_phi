@@ -31,7 +31,7 @@ Schema : DES V1.0
 
 <structurename> PortalVein-Insulin </structurename>
 
-<?path Display\Organs\Liver\SplanchnicCirculation\PortalVein\Insulin\ ?>
+<?path Display/Organs/Liver/SplanchnicCirculation/PortalVein/Insulin/ ?>
 
 <?include Summary.DES ?>
 

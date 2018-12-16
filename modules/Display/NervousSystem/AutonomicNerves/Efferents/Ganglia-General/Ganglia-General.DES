@@ -28,7 +28,7 @@ By : Tom Coleman
   <days/>
 </showclock>
 
-<?path Display\NervousSystem\AutonomicNerves\Efferents\Ganglia-General\ ?>
+<?path Display/NervousSystem/AutonomicNerves/Efferents/Ganglia-General/ ?>
 
 <?include Box.DES ?>
 

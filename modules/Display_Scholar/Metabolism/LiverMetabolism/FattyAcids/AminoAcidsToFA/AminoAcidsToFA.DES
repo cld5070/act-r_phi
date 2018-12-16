@@ -28,7 +28,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Metabolism\LiverMetabolism\FattyAcids\AminoAcidsToFA\ ?>
+<?path Display/Metabolism/LiverMetabolism/FattyAcids/AminoAcidsToFA/ ?>
 
 <!--
 <?include Summary.DES ?>

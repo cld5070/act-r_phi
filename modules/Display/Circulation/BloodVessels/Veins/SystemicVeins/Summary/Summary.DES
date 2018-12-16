@@ -27,7 +27,7 @@ Schema : DES V1.0
   <ampm/><secs/><days/>
 </showclock>
 
-<?path Display\Circulation\BloodVessels\Veins\SystemicVeins\Summary\ ?>
+<?path Display/Circulation/BloodVessels/Veins/SystemicVeins/Summary/ ?>
 
 <?include Volume.DES ?>
 <?include UnstressedVolume.DES ?>

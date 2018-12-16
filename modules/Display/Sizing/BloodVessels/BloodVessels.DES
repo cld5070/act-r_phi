@@ -6,11 +6,11 @@ Author : Tom Coleman
 Copyright : 2013-2013
 By : Tom Coleman
 
-<?path Display\Sizing\BloodVessels\ ?>
+<?path Display/Sizing/BloodVessels/ ?>
 
-<?include Total\Total.DES ?>
-<?include Arteries\Arteries.DES ?>
-<?include Veins\Veins.DES ?>
-<?include Lungs\Lungs.DES ?>
+<?include Total/Total.DES ?>
+<?include Arteries/Arteries.DES ?>
+<?include Veins/Veins.DES ?>
+<?include Lungs/Lungs.DES ?>
 
 End

@@ -7,10 +7,10 @@ Copyright : 2006-2010
 By : University Of Mississippi Medical Center
 Schema : DES V1.0
 
-<?path Structure\ ?>
+<?path Structure/ ?>
 
-<?include AnesthesiaGas\AnesthesiaGas.DES ?>
-<?include AnesthesiaIV\AnesthesiaIV.DES ?>
+<?include AnesthesiaGas/AnesthesiaGas.DES ?>
+<?include AnesthesiaIV/AnesthesiaIV.DES ?>
 
 <structure><name> Anesthesia </name>
 

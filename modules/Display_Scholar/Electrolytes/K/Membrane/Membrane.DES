@@ -26,7 +26,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Electrolytes\K\Membrane ?>
+<?path Display/Electrolytes/K/Membrane ?>
 
 <?include FluxToCell.DES ?>
 <?include AldoEffect.DES ?>

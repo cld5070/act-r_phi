@@ -6,7 +6,7 @@ Author : W Pruett
 Copyright : 2015-2015
 By : University Of Mississippi Medical Center
 
-<?path Structure\Drugs\Morphine\ ?>
+<?path Structure/Drugs/Morphine/ ?>
 
 <?include MorphinePool.DES ?>
 <?include MorphineLiver.DES ?>

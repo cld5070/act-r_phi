@@ -26,7 +26,7 @@ By : University Of Mississippi Medical Center
   <ampm/><secs/><days/>
 </showclock>
 
-<?path Display\Circulation\BloodVessels\Arteries\SystemicArteries\ ?>
+<?path Display/Circulation/BloodVessels/Arteries/SystemicArteries/ ?>
 
 <?include Volume.DES ?>
 <?include Technical.DES ?>

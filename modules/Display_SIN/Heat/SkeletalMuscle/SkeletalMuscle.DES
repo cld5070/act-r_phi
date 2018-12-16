@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Miscellaneous\Heat\SkeletalMuscle\ ?>
+<?path Display/Miscellaneous/Heat/SkeletalMuscle/ ?>
 
 <?include Storage.DES ?>
 <?include Temperature.DES ?>

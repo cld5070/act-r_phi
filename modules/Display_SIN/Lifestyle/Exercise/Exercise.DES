@@ -6,11 +6,11 @@ Author : Tom Coleman
 Copyright : 2008-2011
 By : University of Mississippi Medical Center
 
-<?path Display\Lifestyle\Exercise\ ?>
+<?path Display/Lifestyle/Exercise/ ?>
 
-<?include Control\Control.DES ?>
-<?include Bike\Bike.DES ?>
-<?include Treadmill\Treadmill.DES ?>
-<?include Transition\Transition.DES ?>
+<?include Control/Control.DES ?>
+<?include Bike/Bike.DES ?>
+<?include Treadmill/Treadmill.DES ?>
+<?include Transition/Transition.DES ?>
 
 End

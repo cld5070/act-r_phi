@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\NervousSystem\AutonomicNerves\CNS\Sympathetics-Renal\Mechanoreceptors\ ?>
+<?path Display/NervousSystem/AutonomicNerves/CNS/Sympathetics-Renal/Mechanoreceptors/ ?>
 
 <?include Summary.DES ?>
 

@@ -6,10 +6,10 @@ Author : Tom Coleman
 Copyright : 2006-2012
 By : University Of Mississippi Medical Center
 
-<?path Display\Miscellaneous\Orthostasis\SequesteredBlood\ ?>
+<?path Display/Miscellaneous/Orthostasis/SequesteredBlood/ ?>
 
-<?include Arteries\Arteries.DES ?>
-<?include Veins\Veins.DES ?>
-<?include AlphaReceptors\AlphaReceptors.DES ?>
+<?include Arteries/Arteries.DES ?>
+<?include Veins/Veins.DES ?>
+<?include AlphaReceptors/AlphaReceptors.DES ?>
 
 End

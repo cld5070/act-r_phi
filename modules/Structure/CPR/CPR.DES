@@ -8,7 +8,7 @@ By : University of Mississippi Medical Center
 Solver : DES 2005
 Schema : 2005.0
 
-<?path Structure\CPR\ ?>
+<?path Structure/CPR/ ?>
 
 <?include CPR-Heart.DES ?>
 <?include CPR-Lungs.DES ?>

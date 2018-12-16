@@ -29,7 +29,7 @@ Schema : DES V1.0
   <days/>
 </showclock>
 
-<?path Display\Organs\SkeletalMuscle\Conductance\ ?>
+<?path Display/Organs/SkeletalMuscle/Conductance/ ?>
 
 <?include MetabolicVasodilation.DES ?>
 <?include O2Vasodilation.DES ?>

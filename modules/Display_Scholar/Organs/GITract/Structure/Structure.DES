@@ -29,7 +29,7 @@ Schema : DES V1.0
   <days/>
 </showclock>
 
-<?path Display\Organs\GITract\Structure\ ?>
+<?path Display/Organs/GITract/Structure/ ?>
 
 <?include Summary.DES ?>
 

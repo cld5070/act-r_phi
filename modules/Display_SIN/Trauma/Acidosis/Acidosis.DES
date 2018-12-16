@@ -26,7 +26,7 @@ By : University of Mississippi Medical Center
   <ampm/><secs/><days/>
 </showclock>
 
-<?path Display\Trauma\Acidosis\ ?>
+<?path Display/Trauma/Acidosis/ ?>
 
 <?include CardiacArrest.DES ?>
 

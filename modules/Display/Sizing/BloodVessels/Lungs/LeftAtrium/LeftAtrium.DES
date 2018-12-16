@@ -28,7 +28,7 @@ By : Tom Coleman
   <days/>
 </showclock>
 
-<?path Display\Sizing\BloodVessels\Lungs\LeftAtrium\ ?>
+<?path Display/Sizing/BloodVessels/Lungs/LeftAtrium/ ?>
 
 <?include Box.DES ?>
 

@@ -6,7 +6,7 @@ Author : Tom Coleman
 Copyright : 2006-2012
 By : University Of Mississippi Medical Center
 
-<?path Structure\RespiratoryMuscle\ ?>
+<?path Structure/RespiratoryMuscle/ ?>
 
 <?include RespiratoryMuscle-Breathing.DES ?>
 
@@ -27,7 +27,7 @@ By : University Of Mississippi Medical Center
 <?include RespiratoryMuscle-Vasculature.DES ?>
 
 <?include RespiratoryMuscle-Work.DES ?>
-<?include RespiratoryMuscle-Glycogen\RespiratoryMuscle-Glycogen.DES ?>
+<?include RespiratoryMuscle-Glycogen/RespiratoryMuscle-Glycogen.DES ?>
 
 <?include RespiratoryMuscle-Energy.DES ?>
 

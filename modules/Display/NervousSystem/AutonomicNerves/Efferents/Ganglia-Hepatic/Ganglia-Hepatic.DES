@@ -28,7 +28,7 @@ By : Tom Coleman
   <days/>
 </showclock>
 
-<?path Display\NervousSystem\AutonomicNerves\Efferents\Ganglia-Hepatic\ ?>
+<?path Display/NervousSystem/AutonomicNerves/Efferents/Ganglia-Hepatic/ ?>
 
 <?include Box.DES ?>
 

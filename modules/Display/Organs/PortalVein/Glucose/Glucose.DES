@@ -30,7 +30,7 @@ By : University Of Mississippi Medical Center
 
 <structurename> PortalVein-Glucose </structurename>
 
-<?path Display\Organs\PortalVein\Glucose\ ?>
+<?path Display/Organs/PortalVein/Glucose/ ?>
 
 <?include Summary.DES ?>
 

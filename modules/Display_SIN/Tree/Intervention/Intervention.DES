@@ -12,7 +12,7 @@ By : University of Mississippi Medical Center
   <parent> MAINMENU </parent>
 </branch>
 
-<?path Display\Tree\Intervention\ ?>
+<?path Display/Tree/Intervention/ ?>
 
 <?include Anesthesia.DES ?>
 <?include Blockers.DES ?>

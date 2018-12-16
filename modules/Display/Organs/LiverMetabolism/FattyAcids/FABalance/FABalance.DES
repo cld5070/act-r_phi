@@ -28,7 +28,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Organs\LiverMetabolism\FattyAcids\FABalance\ ?>
+<?path Display/Organs/LiverMetabolism/FattyAcids/FABalance/ ?>
 
 <?include Summary.DES ?>
 

@@ -26,7 +26,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\BodyFluids\H2O\Movement\OralIntake\ ?>
+<?path Display/BodyFluids/H2O/Movement/OralIntake/ ?>
 
 <?include Summary.DES ?>
 

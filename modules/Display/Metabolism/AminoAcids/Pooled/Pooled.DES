@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Metabolism\AminoAcids\Pooled\ ?>
+<?path Display/Metabolism/AminoAcids/Pooled/ ?>
 
 <?include Concentration.DES ?>
 <?include Balance.DES ?>

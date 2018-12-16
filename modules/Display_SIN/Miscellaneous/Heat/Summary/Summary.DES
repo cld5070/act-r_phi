@@ -28,7 +28,7 @@ Schema : DES V1.0
   <days/>
 </showclock>
 
-<?path Display\Miscellaneous\Heat\Summary\ ?>
+<?path Display/Miscellaneous/Heat/Summary/ ?>
 
 <?include Storage.DES ?>
 <?include Temperatures.DES ?>

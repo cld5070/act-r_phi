@@ -12,9 +12,9 @@ By : University of Mississippi Medical Center
   <parent> MAINMENU </parent>
 </branch>
 
-<?path Display\Tree\Circulation\ ?>
+<?path Display/Tree/Circulation/ ?>
 
-<?include BloodVessels\BloodVessels.DES ?>
+<?include BloodVessels/BloodVessels.DES ?>
 
 <separatorbar>
   <parent> CIRCULATION </parent>

@@ -29,7 +29,7 @@ Schema : DES V1.0
   <days/>
 </showclock>
 
-<?path Display\Organs\Ovaries\Follicle\Growth\ ?>
+<?path Display/Organs/Ovaries/Follicle/Growth/ ?>
 
 <?include Summary.DES ?>
 <?include Stimuli.DES ?>

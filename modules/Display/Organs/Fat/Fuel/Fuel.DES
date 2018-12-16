@@ -30,7 +30,7 @@ By : University of Mississippi Medical Center
 
 <structurename> Fat-Fuel </structurename>
 
-<?path Display\Organs\Fat\Fuel\ ?>
+<?path Display/Organs/Fat/Fuel/ ?>
 
 <?include Delivery.DES ?>
 <?include Use.DES ?>

@@ -27,9 +27,9 @@ By : University of Mississippi Medical Center
 </math>
 
 <?include Control/Control.DES ?>
-<?include Display\Display.DES ?>
+<?include Display/Display.DES ?>
 
-<?attach Docs\Docs.DOCS ?>
+<?attach Docs/Docs.DOCS ?>
 
 </model>
 

@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\NervousSystem\AutonomicNerves\CNS\Sympathetics-Mesenteric\Exercise\ ?>
+<?path Display/NervousSystem/AutonomicNerves/CNS/Sympathetics-Mesenteric/Exercise/ ?>
 
 <?include ExerciseSymps.DES ?>
 <?include MotorRadiation.DES ?>

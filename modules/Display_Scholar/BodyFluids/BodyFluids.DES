@@ -6,10 +6,10 @@ Author : Tom Coleman
 Copyright : 2011-2011
 By : University of Mississippi Medical Center
 
-<?path Display\BodyFluids\ ?>
+<?path Display/BodyFluids/ ?>
 
-<?include Blood\Blood.DES ?>
-<?include H2O\H2O.DES ?>
-<?include Osmoles\Osmoles.DES ?>
+<?include Blood/Blood.DES ?>
+<?include H2O/H2O.DES ?>
+<?include Osmoles/Osmoles.DES ?>
 
 End

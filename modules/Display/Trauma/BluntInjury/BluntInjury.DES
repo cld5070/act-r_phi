@@ -23,7 +23,7 @@ Schema : 2005.0
   <days/>
 </showclock>
 
-<?path Display\Trauma\BluntInjury\ ?>
+<?path Display/Trauma/BluntInjury/ ?>
 
 
 <?include SkeletalMuscle.DES ?>

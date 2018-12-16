@@ -6,10 +6,10 @@ Author : Tom Coleman
 Copyright : 2008-2010
 By : University of Mississippi Medical Center
 
-<?path Display\Metabolism\LipidDeposits\ ?>
+<?path Display/Metabolism/LipidDeposits/ ?>
 
-<?include Balance\Balance.DES ?>
-<?include FattyAcidUptake\FattyAcidUptake.DES ?>
-<?include FattyAcidRelease\FattyAcidRelease.DES ?>
+<?include Balance/Balance.DES ?>
+<?include FattyAcidUptake/FattyAcidUptake.DES ?>
+<?include FattyAcidRelease/FattyAcidRelease.DES ?>
 
 End

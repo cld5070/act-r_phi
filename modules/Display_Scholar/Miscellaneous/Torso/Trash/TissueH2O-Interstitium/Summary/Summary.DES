@@ -28,7 +28,7 @@ Schema : 2005.0
   <days/>
 </showclock>
 
-<?path Display\Miscellaneous\TissueH2O\Interstitium\Summary\ ?>
+<?path Display/Miscellaneous/TissueH2O/Interstitium/Summary/ ?>
 
 <?include Volume.DES ?>
 <?include Regions.DES ?>

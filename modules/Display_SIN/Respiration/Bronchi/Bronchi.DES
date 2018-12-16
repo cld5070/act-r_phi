@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Respiration\Bronchi\ ?>
+<?path Display/Respiration/Bronchi/ ?>
 
 <?include InspiredAir.DES ?>
 <?include BronchialAir.DES ?>

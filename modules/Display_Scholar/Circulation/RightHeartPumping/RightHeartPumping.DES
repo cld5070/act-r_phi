@@ -6,16 +6,16 @@ Author : Tom Coleman
 Copyright : 2005-2012
 By : University of Mississippi Medical Center
 
-<?path Display\Circulation\RightHeartPumping\ ?>
+<?path Display/Circulation/RightHeartPumping/ ?>
 
-<?include Cardiopathy\Cardiopathy.DES ?>
-<?include ContractileProtein\ContractileProtein.DES ?>
-<?include Diastole\Diastole.DES ?>
-<?include HeartStrength\HeartStrength.DES ?>
-<?include Output\Output.DES ?>
-<?include Systole\Systole.DES ?>
-<?include Work\Work.DES ?>
+<?include Cardiopathy/Cardiopathy.DES ?>
+<?include ContractileProtein/ContractileProtein.DES ?>
+<?include Diastole/Diastole.DES ?>
+<?include HeartStrength/HeartStrength.DES ?>
+<?include Output/Output.DES ?>
+<?include Systole/Systole.DES ?>
+<?include Work/Work.DES ?>
 
-<!-- <?include Valves\Valves.DES ?> -->
+<!-- <?include Valves/Valves.DES ?> -->
 
 End

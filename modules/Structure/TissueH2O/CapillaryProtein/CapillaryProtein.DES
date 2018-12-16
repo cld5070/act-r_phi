@@ -8,7 +8,7 @@ By : University of Mississippi Medical Center
 Solver : DES 2005
 Schema : 2005.0
 
-<?path Structure\TissueH2O\CapillaryProtein\ ?>
+<?path Structure/TissueH2O/CapillaryProtein/ ?>
 
 <?include Torso_Upper_CapillaryProtein.DES ?>
 <?include Torso_Middle_CapillaryProtein.DES ?>

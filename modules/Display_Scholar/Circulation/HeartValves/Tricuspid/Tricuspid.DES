@@ -26,7 +26,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Circulation\HeartValves\Tricuspid\ ?>
+<?path Display/Circulation/HeartValves/Tricuspid/ ?>
 
 <?include Stenosis.DES ?>
 <?include Regurgitation.DES ?>

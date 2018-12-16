@@ -28,7 +28,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Metabolism\LiverMetabolism\Ketoacids\ ?>
+<?path Display/Metabolism/LiverMetabolism/Ketoacids/ ?>
 
 <?include Synthesis.DES ?>
 <?include GlucagonEffect.DES ?>

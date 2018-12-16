@@ -27,7 +27,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Heat\Summary\ ?>
+<?path Display/Heat/Summary/ ?>
 
 <?include Storage.DES ?>
 <?include Temperatures.DES ?>

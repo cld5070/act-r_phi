@@ -28,7 +28,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Hormones\VitaminD\VitaminD(1,25-Dihydroxy)\ ?>
+<?path Display/Hormones/VitaminD/VitaminD(1,25-Dihydroxy)/ ?>
 
 <?include Pool.DES ?>
 

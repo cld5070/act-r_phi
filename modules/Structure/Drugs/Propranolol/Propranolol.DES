@@ -6,7 +6,7 @@ Author : W Pruett
 Copyright : 2013-2013
 By : University Of Mississippi Medical Center
 
-<?path Structure\Drugs\Propranolol\ ?>
+<?path Structure/Drugs/Propranolol/ ?>
 
 <?include PropranololPool.DES ?>
 <?include PropranololLiver.DES ?>

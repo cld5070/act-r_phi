@@ -7,7 +7,7 @@ Copyright : 2005-2010
 By : University of Mississippi Medical Center
 Schema : DES V1.0
 
-<?path Structure\Nephrons\CollectingDuct\ ?>
+<?path Structure/Nephrons/CollectingDuct/ ?>
 
 <?include CD_H2O.DES ?>
 <?include CD_Glucose.DES ?>

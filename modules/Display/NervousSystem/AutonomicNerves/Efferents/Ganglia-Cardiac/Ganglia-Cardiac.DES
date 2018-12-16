@@ -28,7 +28,7 @@ By : Tom Coleman
   <days/>
 </showclock>
 
-<?path Display\NervousSystem\AutonomicNerves\Efferents\Ganglia-Cardiac\ ?>
+<?path Display/NervousSystem/AutonomicNerves/Efferents/Ganglia-Cardiac/ ?>
 
 <?include Box.DES ?>
 

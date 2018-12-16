@@ -22,7 +22,7 @@ Schema : DES V1.0
   <days/>
 </showclock>
 
-<?path Display\Respiration\O2\Tissues\ ?>
+<?path Display/Respiration/O2/Tissues/ ?>
 
 <?include TissueUse.DES ?>
 

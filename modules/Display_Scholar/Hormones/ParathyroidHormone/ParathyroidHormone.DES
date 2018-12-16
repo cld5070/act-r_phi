@@ -28,7 +28,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Hormones\ParathyroidHormone\ ?>
+<?path Display/Hormones/ParathyroidHormone/ ?>
 
 <?include Pool.DES ?>
 

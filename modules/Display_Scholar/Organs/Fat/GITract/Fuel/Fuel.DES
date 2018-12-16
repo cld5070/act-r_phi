@@ -7,11 +7,11 @@ Copyright : 2008-2010
 By : University of Mississippi Medical Center
 Schema : DES V1.0
 
-<?path Display\Organs\GITract\Fuel\ ?>
+<?path Display/Organs/GITract/Fuel/ ?>
 
-<?include Selection\Selection.DES ?>
-<?include AerobicUse\AerobicUse.DES ?>
-<?include AnaerobicUse\AnaerobicUse.DES ?>
-<?include Adequacy\Adequacy.DES ?>
+<?include Selection/Selection.DES ?>
+<?include AerobicUse/AerobicUse.DES ?>
+<?include AnaerobicUse/AnaerobicUse.DES ?>
+<?include Adequacy/Adequacy.DES ?>
 
 End

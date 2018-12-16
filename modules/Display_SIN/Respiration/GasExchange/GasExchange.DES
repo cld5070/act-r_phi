@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Respiration\GasExchange\ ?>
+<?path Display/Respiration/GasExchange/ ?>
 
 <?include O2Uptake.DES ?>
 <?include LungPO2.DES ?>

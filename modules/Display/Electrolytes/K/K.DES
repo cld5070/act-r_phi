@@ -6,10 +6,10 @@ Author : Tom Coleman
 Copyright : 2006-2012
 By : University Of Mississippi Medical Center
 
-<?path Display\Electrolytes\K\ ?>
+<?path Display/Electrolytes/K/ ?>
 
-<?include Cell\Cell.DES ?>
-<?include ECFV\ECFV.DES ?>
-<?include Membrane\Membrane.DES ?>
+<?include Cell/Cell.DES ?>
+<?include ECFV/ECFV.DES ?>
+<?include Membrane/Membrane.DES ?>
 
 End

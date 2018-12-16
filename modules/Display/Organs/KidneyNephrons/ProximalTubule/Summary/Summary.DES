@@ -28,7 +28,7 @@ By : Tom Coleman
   <days/>
 </showclock>
 
-<?path Display\Organs\KidneyNephrons\ProximalTubule\Summary\ ?>
+<?path Display/Organs/KidneyNephrons/ProximalTubule/Summary/ ?>
 
 <?include SodiumMovement.DES ?>
 <?include Na+FractionalReabsorption.DES ?>

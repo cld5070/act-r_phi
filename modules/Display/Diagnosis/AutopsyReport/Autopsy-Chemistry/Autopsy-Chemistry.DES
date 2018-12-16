@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Diagnosis\AutopsyReport\Autopsy-Chemistry ?>
+<?path Display/Diagnosis/AutopsyReport/Autopsy-Chemistry ?>
 
 <?include LeftBox.DES ?>
 <?include RightBox.DES ?>

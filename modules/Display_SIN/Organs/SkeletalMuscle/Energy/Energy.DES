@@ -28,7 +28,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Organs\SkeletalMuscle\Energy\ ?>
+<?path Display/Organs/SkeletalMuscle/Energy/ ?>
 
 <?include Box.DES ?>
 

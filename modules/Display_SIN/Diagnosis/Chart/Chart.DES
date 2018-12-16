@@ -21,7 +21,7 @@ Schema : DES V1.0
   <text> Chart </text>
 </label>
 
-<?path Display\Diagnosis\Chart\ ?>
+<?path Display/Diagnosis/Chart/ ?>
 
 <?include Morphology.DES ?>
 <?include Symptoms.DES ?>

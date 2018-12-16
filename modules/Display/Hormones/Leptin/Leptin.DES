@@ -29,7 +29,7 @@ Schema : DES V1.0
   <days/>
 </showclock>
 
-<?path Display\Hormones\Leptin\ ?>
+<?path Display/Hormones/Leptin/ ?>
 
 <?include Pool.DES ?>
 <?include Pump.DES ?>

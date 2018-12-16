@@ -6,17 +6,17 @@ Author : Tom Coleman
 Copyright : 2006-2012
 By : University Of Mississippi Medical Center
 
-<?path Display\NervousSystem\AutonomicNerves\CNS\ ?>
+<?path Display/NervousSystem/AutonomicNerves/CNS/ ?>
 
-<?include Baroreflex\Baroreflex.DES ?>
-<?include Chemoreceptors\Chemoreceptors.DES ?>
-<?include Cushing\Cushing.DES ?>
-<?include Exercise\Exercise.DES ?>
-<?include Integration\Integration.DES ?>
-<?include LowPressureReceptors\LowPressureReceptors.DES ?>
-<?include Mechanoreceptors\Mechanoreceptors.DES ?>
-<?include Metaboreflex\Metaboreflex.DES ?>
-<?include PituitaryNerve\PituitaryNerve.DES ?>
-<?include TrophicFactor\TrophicFactor.DES ?>
+<?include Baroreflex/Baroreflex.DES ?>
+<?include Chemoreceptors/Chemoreceptors.DES ?>
+<?include Cushing/Cushing.DES ?>
+<?include Exercise/Exercise.DES ?>
+<?include Integration/Integration.DES ?>
+<?include LowPressureReceptors/LowPressureReceptors.DES ?>
+<?include Mechanoreceptors/Mechanoreceptors.DES ?>
+<?include Metaboreflex/Metaboreflex.DES ?>
+<?include PituitaryNerve/PituitaryNerve.DES ?>
+<?include TrophicFactor/TrophicFactor.DES ?>
 
 End

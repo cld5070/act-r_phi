@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Organs\RespiratoryMuscle\Glycogen\Summary\ ?>
+<?path Display/Organs/RespiratoryMuscle/Glycogen/Summary/ ?>
 
 <?include Box.DES ?>
 

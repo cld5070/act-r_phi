@@ -28,7 +28,7 @@ By : Tom Coleman
   <days/>
 </showclock>
 
-<?path Display\Intervention\Drugs\Phenylephrine\Dosing\ ?>
+<?path Display/Intervention/Drugs/Phenylephrine/Dosing/ ?>
 
 <!--<?include IV.DES ?>-->
 <?include DailyDoseOral.DES ?>

@@ -8,9 +8,9 @@ By : University of Mississippi Medical Center
 Solver : DES 2005
 Schema : 2005.0
 
-<?path Display\BodyFluids\Osmoles\ ?>
+<?path Display/BodyFluids/Osmoles/ ?>
 
-<?include WholeBody\WholeBody.DES ?>
-<?include Compartments\Compartments.DES ?>
+<?include WholeBody/WholeBody.DES ?>
+<?include Compartments/Compartments.DES ?>
 
 End

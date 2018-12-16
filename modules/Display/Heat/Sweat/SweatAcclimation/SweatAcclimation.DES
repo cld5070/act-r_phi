@@ -28,7 +28,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Heat\Sweat\SweatAcclimation\ ?>
+<?path Display/Heat/Sweat/SweatAcclimation/ ?>
 
 <?include Summary.DES ?>
 

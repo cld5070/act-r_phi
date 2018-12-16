@@ -6,13 +6,13 @@ Author : Tom Coleman
 Copyright : 2011-2011
 By : University of Mississippi Medical Center
 
-<?path Display\Lifestyle\ ?>
+<?path Display/Lifestyle/ ?>
 
-<?include AirSupply\AirSupply.DES ?>
-<?include DailyPlanner\DailyPlanner.DES ?>
-<?include Diet\Diet.DES ?>
-<?include Environment\Environment.DES ?>
-<?include Exercise\Exercise.DES ?>
-<?include Posture\Posture.DES ?>
+<?include AirSupply/AirSupply.DES ?>
+<?include DailyPlanner/DailyPlanner.DES ?>
+<?include Diet/Diet.DES ?>
+<?include Environment/Environment.DES ?>
+<?include Exercise/Exercise.DES ?>
+<?include Posture/Posture.DES ?>
 
 End

@@ -7,7 +7,7 @@ Copyright : 2006-2010
 By : University Of Mississippi Medical Center
 Schema : DES V1.0
 
-<?path Structure\RightNephrons\RightProximalTubule\ ?>
+<?path Structure/RightNephrons/RightProximalTubule/ ?>
 
 <?include RightProximalTubule_Na.DES ?>
 <?include RightProximalTubule_H2O.DES ?>

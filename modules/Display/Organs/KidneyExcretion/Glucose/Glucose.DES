@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Organs\KidneyExcretion\Glucose\ ?>
+<?path Display/Organs/KidneyExcretion/Glucose/ ?>
 
 <?include Box.DES ?>
 <?include Fractions.DES ?>

@@ -29,7 +29,7 @@ Schema : DES V1.0
   <days/>
 </showclock>
 
-<?path Display\Lifestyle\Diet\Intake\ ?>
+<?path Display/Lifestyle/Diet/Intake/ ?>
 
 <?include Status.DES ?>
 <?include Nutrition.DES ?>

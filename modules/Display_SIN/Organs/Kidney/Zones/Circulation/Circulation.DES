@@ -28,7 +28,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Organs\Kidney\Zones\Circulation\ ?>
+<?path Display/Organs/Kidney/Zones/Circulation/ ?>
 
 <?include BloodFlow.DES ?>
 

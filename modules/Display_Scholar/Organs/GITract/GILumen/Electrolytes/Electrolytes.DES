@@ -6,11 +6,11 @@ Author : Tom Coleman
 Copyright : 2011-2011
 By : University Of Mississippi Medical Center
 
-<?path Display\Organs\GITract\GILumen\Electrolytes\ ?>
+<?path Display/Organs/GITract/GILumen/Electrolytes/ ?>
 
-<?include Sodium\Sodium.DES ?>
-<?include Chloride\Chloride.DES ?>
-<?include Potassium\Potassium.DES ?>
-<?include Calcium\Calcium.DES ?>
+<?include Sodium/Sodium.DES ?>
+<?include Chloride/Chloride.DES ?>
+<?include Potassium/Potassium.DES ?>
+<?include Calcium/Calcium.DES ?>
 
 End

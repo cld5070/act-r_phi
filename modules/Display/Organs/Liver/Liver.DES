@@ -6,18 +6,18 @@ Author : Tom Coleman
 Copyright : 2006-2012
 By : University Of Mississippi Medical Center
 
-<?path Display\Organs\Liver\ ?>
+<?path Display/Organs/Liver/ ?>
 
-<?include Fuel\Fuel.DES ?>
-<?include Function\Function.DES ?>
-<?include Metabolism\Metabolism.DES ?>
-<?include Size\Size.DES ?>
-<?include Structure\Structure.DES ?>
+<?include Fuel/Fuel.DES ?>
+<?include Function/Function.DES ?>
+<?include Metabolism/Metabolism.DES ?>
+<?include Size/Size.DES ?>
+<?include Structure/Structure.DES ?>
 
-<?include AcidBase\AcidBase.DES ?>
-<?include CO2\CO2.DES ?>
-<?include Lactate\Lactate.DES ?>
+<?include AcidBase/AcidBase.DES ?>
+<?include CO2/CO2.DES ?>
+<?include Lactate/Lactate.DES ?>
 
-<?include Nerves\Nerves.DES ?>
+<?include Nerves/Nerves.DES ?>
 
 End

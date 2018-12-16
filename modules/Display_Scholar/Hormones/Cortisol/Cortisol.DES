@@ -28,7 +28,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Hormones\Cortisol\ ?>
+<?path Display/Hormones/Cortisol/ ?>
 
 <?include Pool.DES ?>
 

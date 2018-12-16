@@ -23,7 +23,7 @@ Schema : 2005.0
   <days/>
 </showclock>
 
-<?path Display\Trauma\Hemorrhage\ ?>
+<?path Display/Trauma/Hemorrhage/ ?>
 
 <?include Control.DES ?>
 <?include Setup.DES ?>

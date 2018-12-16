@@ -28,7 +28,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Metabolism\LipidDeposits\FattyAcidUptake\ ?>
+<?path Display/Metabolism/LipidDeposits/FattyAcidUptake/ ?>
 
 <?include Rate.DES ?>
 <?include InsulinEffect.DES ?>

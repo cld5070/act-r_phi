@@ -26,7 +26,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Diagnosis\BloodChemistry\Sample\ ?>
+<?path Display/Diagnosis/BloodChemistry/Sample/ ?>
 
 <?include GetSample.DES ?>
 

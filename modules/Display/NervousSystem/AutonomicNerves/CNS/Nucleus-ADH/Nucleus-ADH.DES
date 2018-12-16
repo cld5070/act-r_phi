@@ -28,7 +28,7 @@ By : Tom Coleman
   <days/>
 </showclock>
 
-<?path Display\NervousSystem\AutonomicNerves\CNS\Nucleus-ADH\ ?>
+<?path Display/NervousSystem/AutonomicNerves/CNS/Nucleus-ADH/ ?>
 
 <?include Box.DES ?>
 

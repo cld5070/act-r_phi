@@ -6,22 +6,22 @@ Author : Tom Coleman
 Copyright : 2008-2012
 By : University of Mississippi Medical Center
 
-<?path Structure\TissueH2O\ ?>
+<?path Structure/TissueH2O/ ?>
 
 <?include UT_H2O.DES ?>
 <?include MT_H2O.DES ?>
 <?include LT_H2O.DES ?>
 
-<?include CapillaryWater\CapillaryWater.DES ?>
-<?include CapillaryProtein\CapillaryProtein.DES ?>
+<?include CapillaryWater/CapillaryWater.DES ?>
+<?include CapillaryProtein/CapillaryProtein.DES ?>
 
-<?include InterstitialWater\InterstitialWater.DES ?>
-<?include InterstitialProtein\InterstitialProtein.DES ?>
+<?include InterstitialWater/InterstitialWater.DES ?>
+<?include InterstitialProtein/InterstitialProtein.DES ?>
 
-<?include LymphWater\LymphWater.DES ?>
-<?include LymphProtein\LymphProtein.DES ?>
+<?include LymphWater/LymphWater.DES ?>
+<?include LymphProtein/LymphProtein.DES ?>
 
-<?include CellH2O\CellH2O.DES ?>
+<?include CellH2O/CellH2O.DES ?>
 
 <structure><name> TissueH2O </name>
 

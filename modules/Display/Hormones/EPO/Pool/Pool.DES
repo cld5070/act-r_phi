@@ -28,7 +28,7 @@ By : Tom Coleman
   <days/>
 </showclock>
 
-<?path Display\Hormones\EPO\Pool\ ?>
+<?path Display/Hormones/EPO/Pool/ ?>
 
 <?include Box.DES ?>
 <?include VolumeDistribution.DES ?>

@@ -28,7 +28,7 @@ By : Tom Coleman
   <days/>
 </showclock>
 
-<?path Display\Sizing\BloodVessels\Lungs\PulmonaryArtery\ ?>
+<?path Display/Sizing/BloodVessels/Lungs/PulmonaryArtery/ ?>
 
 <?include Box.DES ?>
 

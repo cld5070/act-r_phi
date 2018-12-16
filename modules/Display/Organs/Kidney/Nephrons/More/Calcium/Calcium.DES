@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Organs\Kidney\Nephrons\More\Calcium\ ?>
+<?path Display/Organs/Kidney/Nephrons/More/Calcium/ ?>
 
 <?include LeftColumn.DES ?>
 <?include RightColumn.DES ?>

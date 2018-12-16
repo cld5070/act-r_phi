@@ -28,7 +28,7 @@ Schema : 2005.0
   <days/>
 </showclock>
 
-<?path Display\Miscellaneous\Torso\Upper\Capillaries-Lymph\ ?>
+<?path Display/Miscellaneous/Torso/Upper/Capillaries-Lymph/ ?>
 
 <?include CapillaryLeak.DES ?>
 <?include LymphFlow.DES ?>

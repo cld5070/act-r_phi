@@ -28,7 +28,7 @@ By : Tom Coleman
   <days/>
 </showclock>
 
-<?path Display\Organs\KidneyNephrons\DistalTubule\Sodium\FractionalReabsorption\ ?>
+<?path Display/Organs/KidneyNephrons/DistalTubule/Sodium/FractionalReabsorption/ ?>
 
 <?include Box.DES ?>
 

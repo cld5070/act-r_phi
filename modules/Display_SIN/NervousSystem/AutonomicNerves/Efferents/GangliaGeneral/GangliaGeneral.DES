@@ -29,7 +29,7 @@ Schema : DES V1.0
   <days/>
 </showclock>
 
-<?path Display\NervousSystem\AutonomicNerves\Efferents\GangliaGeneral\ ?>
+<?path Display/NervousSystem/AutonomicNerves/Efferents/GangliaGeneral/ ?>
 
 <?include Summary.DES ?>
 

@@ -12,7 +12,7 @@ By : University of Mississippi Medical Center
   <parent> MAINMENU </parent>
 </branch>
 
-<?path Display\Tree\Respiration\ ?>
+<?path Display/Tree/Respiration/ ?>
 
 <?include O2.DES ?>
 <?include CO2.DES ?>

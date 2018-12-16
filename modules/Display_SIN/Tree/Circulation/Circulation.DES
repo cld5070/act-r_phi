@@ -12,7 +12,7 @@ By : University of Mississippi Medical Center
   <parent> MAINMENU </parent>
 </branch>
 
-<?path Display\Tree\Circulation\ ?>
+<?path Display/Tree/Circulation/ ?>
 
 <?include BloodVessels.DES ?>
 

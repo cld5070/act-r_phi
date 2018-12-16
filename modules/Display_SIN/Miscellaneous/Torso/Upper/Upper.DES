@@ -6,11 +6,11 @@ Author : Tom Coleman
 Copyright : 2008-2010
 By : University of Mississippi Medical Center
 
-<?path Display\Miscellaneous\Torso\Upper\ ?>
+<?path Display/Miscellaneous/Torso/Upper/ ?>
 
-<?include BloodPressure\BloodPressure.DES ?>
-<?include H2O\H2O.DES ?>
-<?include Capillaries-Lymph\Capillaries-Lymph.DES ?>
-<?include InterstitialProtein\InterstitialProtein.DES ?>
+<?include BloodPressure/BloodPressure.DES ?>
+<?include H2O/H2O.DES ?>
+<?include Capillaries-Lymph/Capillaries-Lymph.DES ?>
+<?include InterstitialProtein/InterstitialProtein.DES ?>
 
 End

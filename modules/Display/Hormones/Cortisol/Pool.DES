@@ -64,7 +64,8 @@ By : University Of Mississippi Medical Center
 <showvalue>
    <row> 12.8 </row><col> 1.0 </col>
    <name> [Conc(nMol/L)] </name>
-   <format><integer/></format>   <label> [Conc (nMol/L)] </label>
+   <format><integer/></format>
+   <label> [Conc (nMol/L)] </label>
 </showvalue>
 
 <showvalue>

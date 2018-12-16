@@ -28,7 +28,7 @@ By : University Of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Miscellaneous\CarbonMonoxide\Uptake\ ?>
+<?path Display/Miscellaneous/CarbonMonoxide/Uptake/ ?>
 
 <?include GasExchange.DES ?>
 <?include Hemoglobin.DES ?>

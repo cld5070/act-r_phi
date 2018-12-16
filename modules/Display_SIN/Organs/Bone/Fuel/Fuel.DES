@@ -30,7 +30,7 @@ By : University of Mississippi Medical Center
 
 <structurename> Bone-Fuel </structurename>
 
-<?path Display\Organs\Bone\Fuel\ ?>
+<?path Display/Organs/Bone/Fuel/ ?>
 
 <?include Delivery.DES ?>
 <?include Use.DES ?>

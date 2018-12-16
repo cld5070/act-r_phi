@@ -31,7 +31,7 @@ Schema : DES V1.0
 
 <structurename> OtherTissue-Ph </structurename>
 
-<?path Display\Organs\OtherTissue\AcidBase\ ?>
+<?path Display/Organs/OtherTissue/AcidBase/ ?>
 
 <?include Ph.DES ?>
 <?include SID.DES ?>

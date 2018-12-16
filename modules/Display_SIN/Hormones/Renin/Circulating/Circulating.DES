@@ -29,7 +29,7 @@ Schema : DES V1.0
   <days/>
 </showclock>
 
-<?path Display\Hormones\Renin\Circulating\ ?>
+<?path Display/Hormones/Renin/Circulating/ ?>
 
 <?include Pool.DES ?>
 <?include Clearance.DES ?>

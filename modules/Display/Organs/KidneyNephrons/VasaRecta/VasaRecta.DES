@@ -30,7 +30,7 @@ Schema : 2005.0
   <days/>
 </showclock>
 
-<?path Display\Organs\KidneyNephrons\VasaRecta\ ?>
+<?path Display/Organs/KidneyNephrons/VasaRecta/ ?>
 
 <?include BloodFlow.DES ?>
 <?include BloodVessels.DES ?>

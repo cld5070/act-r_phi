@@ -31,7 +31,7 @@ Schema : DES V1.0
 
 <structurename> RespiratoryCenter-Output </structurename>
 
-<?path Display\Respiration\RespiratoryCenter\Output\ ?>
+<?path Display/Respiration/RespiratoryCenter/Output/ ?>
 
 <?include RespirationRate.DES ?>
 <?include MotorNerveActivity.DES ?>

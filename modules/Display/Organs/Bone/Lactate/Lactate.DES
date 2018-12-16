@@ -1,7 +1,8 @@
 HumMod / Lactate
 
 Created : 12-Dec-05
-Revised : 2013-03-28Author : Tom Coleman
+Revised : 2013-03-28
+Author : Tom Coleman
 Copyright : 2006-2013
 By : University Of Mississippi Medical Center
 
@@ -29,7 +30,7 @@ By : University Of Mississippi Medical Center
 
 <structurename> Bone-Lactate </structurename>
 
-<?path Display\Organs\Bone\Lactate\ ?>
+<?path Display/Organs/Bone/Lactate/ ?>
 
 <?include TissueLactate.DES ?>
 

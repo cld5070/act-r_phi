@@ -28,7 +28,7 @@ By : Tom Coleman
   <days/>
 </showclock>
 
-<?path Display\Sizing\BloodVessels\Veins\PeripheralVeins\ ?>
+<?path Display/Sizing/BloodVessels/Veins/PeripheralVeins/ ?>
 
 <?include Box.DES ?>
 

@@ -6,10 +6,10 @@ Author : Tom Coleman
 Copyright : 2005-2012
 By : University of Mississippi Medical Center
 
-<?path Display\Circulation\BloodVessels\GreatVeins\ ?>
+<?path Display/Circulation/BloodVessels/GreatVeins/ ?>
 
-<?include SuperiorVenaCava\SuperiorVenaCava.DES ?>
-<?include CoronarySinus\CoronarySinus.DES ?>
-<?include InferiorVenaCava\InferiorVenaCava.DES ?>
+<?include SuperiorVenaCava/SuperiorVenaCava.DES ?>
+<?include CoronarySinus/CoronarySinus.DES ?>
+<?include InferiorVenaCava/InferiorVenaCava.DES ?>
 
 End

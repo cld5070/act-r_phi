@@ -30,7 +30,7 @@ Schema : 2005.0
   <days/>
 </showclock>
 
-<?path Display\Metabolism\Urea\Cell\ ?>
+<?path Display/Metabolism/Urea/Cell/ ?>
 
 <?include Concentration.DES ?>
 <?include Balance.DES ?>

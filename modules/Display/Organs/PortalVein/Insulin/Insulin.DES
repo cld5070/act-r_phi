@@ -30,7 +30,7 @@ By : University Of Mississippi Medical Center
 
 <structurename> PortalVein-Insulin </structurename>
 
-<?path Display\Organs\PortalVein\Insulin\ ?>
+<?path Display/Organs/PortalVein/Insulin/ ?>
 
 <?include Box.DES ?>
 

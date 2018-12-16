@@ -28,7 +28,7 @@ By : University of Mississippi Medical Center
   <days/>
 </showclock>
 
-<?path Display\Respiration\RespiratoryCenter\ExerciseDrive\ ?>
+<?path Display/Respiration/RespiratoryCenter/ExerciseDrive/ ?>
 
 <?include Summary.DES ?>
 
