@@ -45,18 +45,23 @@
 		(mp-modules-events 'speech))
 )
 
-(defun wait-delete-output (out-file)
-	(while (not (probe-file out-file)))
-	(handler-case
-		(delete-file out-file)
-		(error () nil)))
+(defun wait-delete-output (out-file &optional (time-out 500))
+	(let ((timed-out nil)
+		    (end-time (+ (get-universal-time) time-out)))
+		(while (and (not (probe-file out-file)) (< (get-universal-time) end-time)))
+		(when (not (probe-file out-file)) (setf timed-out t))
+		(handler-case
+			(delete-file out-file)
+			(error () nil))
+		timed-out))
 
 (defvar *HumModOutStream* (make-string-output-stream))
 
 (defvar *HumModInStream* nil)
 ;;;Custom Physiology Function Section
 ;;HumMod Directory variable
-(defvar *HumModDir* (subseq (namestring *LOAD-TRUENAME*) 0 (search (file-namestring *LOAD-TRUENAME*) (namestring *LOAD-TRUENAME*))))
+#+:windows	(defvar *HumModDir* (subseq (namestring *LOAD-TRUENAME*) 0 (search (file-namestring *LOAD-TRUENAME*) (namestring *LOAD-TRUENAME*))))
+#-:windows	(defvar *HumModDir* (substitute #\\ #\/ (subseq (namestring *LOAD-TRUENAME*) 0 (search (file-namestring *LOAD-TRUENAME*) (namestring *LOAD-TRUENAME*)))) :from-end t :count 1)
 
 ;;We use this so we have a reference to the next update-event that is scheduled to be run
 (defvar *nextUpdateEvent* nil)
@@ -136,10 +141,10 @@ t)
 		(let ((currTime (get-universal-time)))
 			(handler-case
 				(while (and (not (probe-file solverOutputFile)) (< (- (get-universal-time) currTime) max-wait)))
-				(error (e) (print (concatenate 'string "Error near line 139 in Phys Module - " (write-to-string e))))))
+				(error (e) (print (concatenate 'string "Error near line 139 in Phys Module - " (write-to-string e)))))
 
 		;;If we didn't get the output file, go back and do this all over again
-		(when (not (probe-file solverOutputFile)) (print "Issue @ 141 - PT") (print (- (get-universal-time) currTime)) (go resetAdvance)))
+		(when (not (probe-file solverOutputFile)) (print "Issue @ 141 - PT") (print (- (get-universal-time) currTime)) (go resetAdvance))))
 
 	;;Translate those output data (which are in an xml file) into a list
 	(tagbody parseValList
@@ -230,13 +235,15 @@ t)
 								(and (not (probe-file solverOutputFile))
 									(< (- (get-universal-time) currTime) timeOut)))
 							(error (e) (format t "Error 214 Phys - ~a~%" (write-to-string e)))))
+					;;The multiple output files don't occur for the prebuilt (Windows) Model Solver
+					(wait-delete-output solverOutputFile)
 					;;How many output files we should expect depends upon the number of param changes
-					(while (> num-param-changes 0)
+					#|(while (> num-param-changes 0)
 						(wait-delete-output solverOutputFile)
 						(print "236 PT")
 						(wait-delete-output solverOutputFile)
 						(decf num-param-changes)
-						(print "239 PT"))
+						(print "239 PT"))|#
 					;;;NEED TO CHANGE THIS. I need to wait for vals & parseout output file for *Each* parameter change
 					(format t "241 - PT~&")
 					#|(sleep 0.4)
@@ -431,8 +438,10 @@ t)
 ;;Generate hash-table of physiological variables & Hash-Table of the order of the variables
 ;; and default values
 (defun create-phys-vars ()
+	(format t "PT - 437~&")
 	(let ((phys (get-module physio)))
 		(tagbody resetCreate
+			(format t "PT - 440~&")
 			(clear-phys-files)
 			(setf (phys-module-init phys) t)
 			;;Set Physiology Substrate periodic communication time (HumMod)
@@ -467,29 +476,31 @@ t)
 							#+:ccl ccl::simple-file-error
 							#+:sbcl sb-impl::simple-file-error
 							simple-error) () (go resetCreate)))
-				(handler-case (delete-file solverOutputFile)
-					(error () nil))
+				;(handler-case (delete-file solverOutputFile)
+				;	(error () nil))
 				;Wait for solverInput file to be digested (and get of Output files if there are any holdin up the ModelSolver digesting the input files
-				(while (probe-file solverInputFile)
-					(handler-case (delete-file solverOutputFile)
-						(error () nil)))
+				(while (probe-file solverInputFile))
 
-				(let ((currTime (get-universal-time)))
+				#|(let ((currTime (get-universal-time)))
 					(while (and (not (probe-file solverOutputFile)) (< (- (get-universal-time) currTime) 5))))
 				(when (not (probe-file solverOutputFile))(go resetCreate))
 				;Should output two files on the reset
 				(while (and (probe-file solverOutputFile) (not (handler-case (delete-file solverOutputFile)
-					(error () nil)))))
+					(error () nil)))))|#
+				(format t "485 PT ~&")
+				(when (wait-delete-output SolverOutputFile 5) (go resetCreate))
+				(format t "487 PT ~&")
 
-				;We should only need this on the 1st run (helps us avoid having to waste time)
+				#|;We should only need this on the 1st run (helps us avoid having to waste time)
 				(if (phys-module-first-run phys)
 					(let ((currTime (get-universal-time)))
 						(while (and (not (probe-file solverOutputFile)) (< (- (get-universal-time) currTime) 5))))
 					;Delete the output file after restart
 					(while (and (probe-file solverOutputFile) (not (handler-case (delete-file solverOutputFile)
-						(error () nil))))))
+						(error () nil))))))|#
 				;; Initialize with stable values (obtained from running sim 1 week)
 				(load-HumMod-ICs (phys-module-ics-file phys))
+				(format t "495 PT~&")
 
 (sleep 0.05)
 				;Create input file for hummod to give us a list of variables and digest the output file created by HumMod (w/ the variables). Loop back around if there is an error
@@ -516,7 +527,7 @@ t)
 							(delete-file solverOutputFile)
 							(error () nil))
 						(go getVars))
-
+(format t "522 PT ~&")
 					;;Parse the list of variables output by the ModelSolver
 					(let ((parseStart (get-universal-time)))
 						(tagbody parseVarList
