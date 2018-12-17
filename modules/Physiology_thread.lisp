@@ -411,6 +411,11 @@ t)
 			;Add closing tag
 			(setf init-vals-msg (concatenate 'string init-vals-msg "</sending_current_values></solverin>~&"))
 
+		(with-open-file
+			(messageStream	(concatenate 'string *HumModDir* "ICS_Load")
+			:direction :output :if-exists :overwrite :if-does-not-exist :create)
+			(format messageStream init-vals-msg))
+
 		;;Send new values to model solver
 		(handler-case
 			(with-open-file
