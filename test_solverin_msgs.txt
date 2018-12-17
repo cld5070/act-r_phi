@@ -1,0 +1,5 @@
+Advance Message
+<solverin><gofor><solutionint>50.0000000000</solutionint><displayint>50.0000000000</displayint></gofor></solverin>
+
+Restart Message
+<solverin><restart/></solverin>
