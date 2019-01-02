@@ -1,29 +1,29 @@
 ;;;  -*- mode: LISP; Syntax: COMMON-LISP;  Base: 10 -*-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; 
+;;;
 ;;; Author      : Dan Bothell & John Anderson
 ;;; Copyright   : (c) 2006 Dan Bothell
 ;;; Availability: Covered by the GNU LGPL, see LGPL.txt
-;;; Address     : Department of Psychology 
+;;; Address     : Department of Psychology
 ;;;             : Carnegie Mellon University
 ;;;             : Pittsburgh, PA 15213-3890
 ;;;             : db30@andrew.cmu.edu
-;;; 
-;;; 
+;;;
+;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; 
+;;;
 ;;; Filename    : utility-and-reward-1.lisp
 ;;; Version     : 2.2
-;;; 
+;;;
 ;;; Description : The procedural utility computation functions and a module
 ;;;             : for handling the "reward" given to a production.
 ;;;             :
-;;; 
-;;; Bugs        : 
+;;;
+;;; Bugs        :
 ;;;
 ;;; To do       : [ ] Consider a new command or switch which allows one to
 ;;;             :     not clear the history after propigating a reward.
-;;; 
+;;;
 ;;; ----- History -----
 ;;; 2006.05.22 Dan
 ;;;             : * Initial creation.
@@ -38,7 +38,7 @@
 ;;;             :   they turn off with the model-warning parameter.
 ;;; 2006.11.15 Dan
 ;;;             : * Changed trigger-reward so that it tests its parameter
-;;;             :   before generating the event instead of waiting for the 
+;;;             :   before generating the event instead of waiting for the
 ;;;             :   propigate-reward function to catch problems.
 ;;;             : * Changed the name of the module from utility-2 to utility
 ;;;             :   in preparation for making it the default module.
@@ -47,7 +47,7 @@
 ;;; 2007.10.26 Dan [2.1]
 ;;;             : * Added the Utility threshold parameter back into the system.
 ;;; 2008.02.26 Dan
-;;;             : * Fixed a bug in propigate-reward which allowed utility 
+;;;             : * Fixed a bug in propigate-reward which allowed utility
 ;;;             :   learning to go on even when :esc was set to nil.
 ;;; 2008.07.22 Dan
 ;;;             : * Changed compute-utility so that it has an optional parameter
@@ -61,7 +61,7 @@
 ;;;             : * Procedural now owns :dat.
 ;;; 2009.08.12 Dan
 ;;;             : * Added a utility-offset hook which is called after the normal
-;;;             :   utility for a production is computed and set (without noise).  
+;;;             :   utility for a production is computed and set (without noise).
 ;;;             :   If it returns a number that's added into the utility value.
 ;;; 2011.02.16 Dan [2.2]
 ;;;             : * Added a utility learning trace parameter which prints out
@@ -84,17 +84,17 @@
 ;;;             : * Added the ability to set :reward to t using spp to be the
 ;;;             :   equivalent of calling trigger-reward with nil (can't set the
 ;;;             :   :reward parameter to nil since that's the default and seems
-;;;             :   like a bad idea to change that).  
-;;;             : * That change requires making a change to how production 
-;;;             :   compilation determines whether or not there is a :reward 
+;;;             :   like a bad idea to change that).
+;;;             : * That change requires making a change to how production
+;;;             :   compilation determines whether or not there is a :reward
 ;;;             :   setting for the new production.  The old rule still holds --
 ;;;             :   if they're both numbers then it's the max, and if only one is
 ;;;             :   a number then the new one gets that number (now that means
-;;;             :   the other can be either t or nil).  The new change is that now 
+;;;             :   the other can be either t or nil).  The new change is that now
 ;;;             :   if neither is a number but at least one is t then the new
 ;;;             :   production will get a value of t.
 ;;; 2012.06.18 Dan
-;;;             : * Fixed a bug with the test for warning about parameter changes 
+;;;             : * Fixed a bug with the test for warning about parameter changes
 ;;;             :   so that it warns if there are any productions defined.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; General:
@@ -114,10 +114,10 @@
 ;;; on the rewards received.  The equation for the learning of production i is now:
 ;;;
 ;;; Ui(n) = Ui(n-1) + A[Ri(n) - Ui(n-1)]
-;;; 
+;;;
 ;;; A := the learning rate set by a parameter (defaults to .2).
-;;; Ri(n) := the effective reward value of production i at time n.  Like the old 
-;;; mechanim, the learning only occurs when directly triggered and all productions 
+;;; Ri(n) := the effective reward value of production i at time n.  Like the old
+;;; mechanim, the learning only occurs when directly triggered and all productions
 ;;; that have fired since the last "learning event" are updated.  The effective
 ;;; reward is the reward value at time n minus the time since the selection of
 ;;; production i.
@@ -125,14 +125,14 @@
 ;;;
 ;;; The new meechanism only needs the following general parameters:
 ;;;
-;;; dat := default action time, same as before - the default time to fire a 
+;;; dat := default action time, same as before - the default time to fire a
 ;;;        production.
 ;;; egs := the expected gain s value, same as before.
 ;;;
 ;;; utility-hook := a function that can bypass the utility computation for
 ;;;                 productions, same as before.
 ;;;
-;;; ul := utility learning, either t or nil to indicate whether or not to 
+;;; ul := utility learning, either t or nil to indicate whether or not to
 ;;;       apply the equation above.  There is no decaying version as there is with
 ;;;       the old parameter pl at this time.
 ;;; alpha := the learning rate for the equation above.  Note this differs from
@@ -143,7 +143,7 @@
 ;;; reward-hook := a function to bypass the R(n) calculation.
 ;;;
 ;;; In addition, this parameter from the old system is now available again
-;;; 
+;;;
 ;;; ut := the utility threshold.  Productions with a utility less than this
 ;;;       value will not be chosen during conflict resolution.
 ;;;
@@ -156,7 +156,7 @@
 ;;;       selection and when it fires.  Can be set directly, defaults to :dat.
 ;;; name := returns the name of the production.  Cannot be set directly.
 ;;; u := the current U(n) value for the production.  Can be set directly.
-;;; utility := the last computed utility value of the production during 
+;;; utility := the last computed utility value of the production during
 ;;;            conflict resolution.  Cannot be set directly.
 ;;; reward := a reward value to apply when this production fires if set to a
 ;;;           non-nil value (the default is nil).  Can be set directly.
@@ -168,7 +168,7 @@
 ;;; is nil.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; 
+;;;
 ;;; The code
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -185,7 +185,7 @@
 (defstruct utility
   egs esc dat ul ut
   iu nu alpha
-  utility-hook 
+  utility-hook
   reward-hook
   history
   offsets
@@ -237,13 +237,18 @@
                              0)
                            (production-u production)
                            (if (utility-offsets u)
-                               (reduce #'+ (mapcar  (lambda (x) 
+                               (reduce #'+ (mapcar  (lambda (x)
                                              (let ((val (funcall x production)))
                                                (if (numberp val)
                                                    val
                                                  0)))
                                              (utility-offsets u)))
                              0)))))
+				;Added by Dancy for Thirsty model reporting
+				(if (equal production 'report-accept)
+					(setf *acc-util* utility)
+					(when (equal production 'report-reject)
+						(setf *rej-util* utility)))
         (if save
             (setf (production-utility production) utility)
           utility)))))
@@ -269,26 +274,26 @@
          t)
         (t
          (print-warning "Trigger-reward must be called with a number or nil."))))
-                           
-(defun propagate-reward (value)  
+
+(defun propagate-reward (value)
   (let ((u (get-module utility)))
-    
+
     (dolist (hook (utility-reward-notify-hooks u))
       (funcall hook value))
-    
+
     (if (numberp value)
         (if (and (utility-esc u) (utility-ul u))
             (progn
               (when (utility-trace u)
                 (model-output " Utility updates with Reward = ~f   alpha = ~f" value  (utility-alpha u)))
-              
+
               (dolist (p-t (utility-history u))
                 (let* ((override (and (utility-reward-hook u) (funcall (utility-reward-hook u) (car p-t) value (ms->seconds (- (mp-time-ms) (cdr p-t))))))
                        (r (if (numberp override) override (- value (ms->seconds (- (mp-time-ms) (cdr p-t)))))))
-                  
+
                   (when (utility-trace u)
                     (model-output "  Updating utility of production ~S" (car p-t))
-                    (model-output "   U(n-1) = ~f   R(n) = ~f [~:[~f - ~f seconds since selection~;from reward-hook function~]]" 
+                    (model-output "   U(n-1) = ~f   R(n) = ~f [~:[~f - ~f seconds since selection~;from reward-hook function~]]"
                                   (production-u (car p-t)) r override value (ms->seconds (- (mp-time-ms) (cdr p-t)))))
                   (linear-update-utility u (car p-t) r)
                   (when (utility-trace u)
@@ -329,14 +334,14 @@
   (declare (ignore p2))
   (let ((u (get-module utility)))
     (when (and u (utility-ul u))
-      
+
       (when (utility-trace u)
         (model-output "  Updating utility of production ~S from production compilation" p3)
         (model-output "    U(n-1) = ~f   R(n) = ~f [U(n) for first parent] alpha = ~f" (production-u p3)
                       (production-u p1) (utility-alpha u)))
-      
+
       (linear-update-utility u p3 (production-u p1))
-      
+
       (when (utility-trace u)
         (model-output "    U(n) = ~f" (production-u p3))))))
 
@@ -346,47 +351,47 @@
 
 (defun utility-module-params (u param)
   (cond ((consp param)
-         
+
          ;; Changing utility parameters may lead to
          ;; to possibly trigger conflict-resolution if it were waiting
-         
+
          (un-delay-conflict-resolution)
-         
+
          (when (and (> (length (all-productions)) 0)
                     (member (car param) '(:esc :dat :ul :iu)))
            (model-warning "Changing procedural parameters when productions exist unsupported.")
            (model-warning "Results may not be what one expects."))
-         
+
          (case (car param)
            (:esc (setf (utility-esc u) (cdr param)))
-           
+
            (:egs (setf (utility-egs u) (cdr param)))
            (:ul (setf (utility-ul u) (cdr param)))
            (:dat (setf (utility-dat u) (cdr param)))
            (:iu (setf (utility-iu u) (cdr param)))
            (:nu (setf (utility-nu u) (cdr param)))
-           
+
            (:alpha (setf (utility-alpha u) (cdr param)))
            (:ult (setf (utility-trace u) (cdr param)))
-           
+
            (:ut (setf (utility-ut u) (cdr param)))
-           
-           (:utility-hook 
+
+           (:utility-hook
             (when (and (cdr param) (utility-utility-hook u))
-              (print-warning 
+              (print-warning
                "Utility-hook was set to ~S and is being overwritten"
                (utility-utility-hook u)))
             (setf (utility-utility-hook u) (cdr param)))
-           (:reward-hook 
+           (:reward-hook
             (when (and (cdr param) (utility-reward-hook u))
-              (print-warning 
+              (print-warning
                "Reward-hook was set to ~S and is being overwritten"
                (utility-reward-hook u)))
             (setf (utility-reward-hook u) (cdr param)))
            (:utility-offsets
             (if (cdr param)
               (if (member (cdr param) (utility-offsets u))
-                (print-warning 
+                (print-warning
                  "Setting parameter ~s failed because ~s already on the hook."
                  :activation-offsets
                  (cdr param))
@@ -395,20 +400,20 @@
            (:reward-notify-hook
             (if (cdr param)
               (if (member (cdr param) (utility-reward-notify-hooks u))
-                (print-warning 
+                (print-warning
                  "Setting parameter ~s failed because ~s already on the hook."
                  :reward-notify-hook
                  (cdr param))
                 (push-last (cdr param) (utility-reward-notify-hooks u)))
               (setf (utility-reward-notify-hooks u) nil)))))
-        (t 
+        (t
          (case param
            (:egs  (utility-egs u))
            (:ul (utility-ul u))
-           
+
            (:iu (utility-iu u))
            (:nu (utility-nu u))
-           
+
            (:ut (utility-ut u))
 
            (:alpha (utility-alpha u))
@@ -425,7 +430,7 @@
 
 (define-module-fct 'utility nil
   (list (define-parameter :esc :owner nil)
-        
+
         (define-parameter :egs :valid-test #'numberp :default-value 0.0
           :warning "a number" :documentation "Expected Gain S")
         (define-parameter :ul :valid-test #'tornil :default-value nil
@@ -435,37 +440,37 @@
           :warning "a number" :documentation "default U(0) value for an initial (user defined) production")
         (define-parameter :nu :valid-test #'numberp :default-value 0
           :warning "a number" :documentation "default U(0) value for a newly learned production")
-        
+
         (define-parameter :ut :valid-test #'numornil :default-value nil
           :warning "a number or nil" :documentation "Utility Threshold")
 
         (define-parameter :alpha :default-value .2
           :valid-test #'numberp :warning "a number"
           :documentation "Production learning rate")
-        
+
         (define-parameter :ult :valid-test #'tornil :default-value nil
           :warning "T or nil" :documentation "Utility learning trace")
-        
-        (define-parameter :utility-hook :valid-test #'fctornil 
+
+        (define-parameter :utility-hook :valid-test #'fctornil
           :default-value nil
-          :warning "a function or nil" 
+          :warning "a function or nil"
           :documentation "Utility computation hook")
-        (define-parameter :reward-hook :valid-test #'fctornil 
+        (define-parameter :reward-hook :valid-test #'fctornil
           :default-value nil
-          :warning "a function or nil" 
+          :warning "a function or nil"
           :documentation "Reward value hook")
-        (define-parameter :utility-offsets :valid-test #'fctornil 
+        (define-parameter :utility-offsets :valid-test #'fctornil
           :default-value nil
-          :warning "a function or nil" 
+          :warning "a function or nil"
           :documentation "Add additional utility equation components")
-        (define-parameter :reward-notify-hook :valid-test #'fctornil 
+        (define-parameter :reward-notify-hook :valid-test #'fctornil
           :default-value nil
-          :warning "a function or nil" 
+          :warning "a function or nil"
           :documentation "Functions to call when there is a reward provided"))
-  
-  :version "2.2" 
+
+  :version "2.2"
   :documentation  "A module that computes production utilities"
-    
+
   :creation (lambda (x) (declare (ignore x)) (make-utility))
   :reset #'reset-utility-module
   :params #'utility-module-params)
@@ -474,7 +479,7 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; This section is all support for spp 
+;;; This section is all support for spp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;; Taken and modified from ACT-R 5 code
@@ -487,33 +492,33 @@
         (values nil))
     (cond (production-name
            (command-output "Parameters for production ~S:" production-name)
-           
+
            (cond (parameters
                   (dolist (parameter parameters)
-                    (setf value 
+                    (setf value
                       (case parameter
                         (:name production-name)
                         (:utility (production-utility production-name))
                         (:u (production-u production-name))
                         (:at (production-at production-name))
                         (:reward (production-reward production-name))
-                        
+
                         (t (print-warning "NO PARAMETER ~A DEFINED FOR PRODUCTIONS." parameter)
                            :error)))
                     (push-last value values)
                     (command-output " ~S ~6,3F" parameter value))
                   values)
                  (t
-                  (when esc 
+                  (when esc
                     (command-output " :utility ~6,3F" (production-utility production-name)))
 
                   (command-output " :u  ~6,3F" (production-u production-name))
                   (command-output " :at ~6,3F" (production-at production-name))
-                  
-                    
+
+
                   (when (and esc ul)
                     (command-output " :reward ~6,3F" (production-reward production-name)))
-                  
+
                   production-name)))
           (t :error))))
 
@@ -535,33 +540,33 @@
 
 (defun parameters-fct (p parameters)
   "Sets the parameters of the production (internal - user should use spp)."
-  
+
   ;; Changing procedural parameters reschedules conflict resolution
   ;; if it's waiting to happen
-         
+
   (un-delay-conflict-resolution)
-         
+
   ;; Having the name of the production be p and the
   ;; value to be set called value are critical to
   ;; the functioning of the set-parameter macro...
-  
+
   (let ((values nil)
         (ul (car (no-output (sgp :ul)))))
     (if p
         (loop
-          
-          (unless parameters 
+
+          (unless parameters
             (return values))
-        
+
         (let* ((parameter (pop parameters))
                (value (pop parameters)))
-          
+
           ;; not sure about this, but I'll leave it in for now
-          
-          (when (and (listp value) 
+
+          (when (and (listp value)
                      (eq (first value) 'quote))
-            (setf value (second value)))  
-          
+            (setf value (second value)))
+
           (push-last
            (case parameter
              (:name
@@ -570,24 +575,24 @@
              (:utility
               (print-warning "PARAMETER UTILITY CANNOT BE SET.")
               :error)
-             
-             
+
+
              (:u
               (set-parameter production-u :u
                              (numberp value) "a number"))
-             
+
              (:at
               (set-parameter production-at :at
                              (nonneg value)
                              "a positive number"))
-             
+
              (:reward
               (if ul
                   (set-parameter production-reward :reward
                                  (or (eq value t) (numberp value))
                                  "a number or t")
                 (print-warning "PARAMETER REWARD CAN ONLY BE SET WHEN UL IS T.")))
-             
+
              (t
               (print-warning
                "NO PARAMETER ~A DEFINED FOR PRODUCTIONS." parameter)
@@ -603,7 +608,7 @@
 
 (defun spp-fct (parameters)
   "Inspects and sets production parameters."
-  (let ((results nil))  
+  (let ((results nil))
     (if (null parameters) ; print all parameters for all productions
         (dolist (production (all-productions))
           (push-last (production-parameter-fct production) results))
@@ -611,26 +616,26 @@
                                    (keywordp (second parameters))
                                    (and (listp (first parameters))
                                         (null (second parameters))
-                                        (not (keywordp 
-                                              (second 
+                                        (not (keywordp
+                                              (second
                                                (first parameters))))))
                                (list parameters) parameters))
         (when (atom description) (setf description (list description)))
         (if (keywordp (first description))
             (dolist (production (all-productions))
               (push-last
-               (if (and (cdr description) 
+               (if (and (cdr description)
                         (not (keywordp (second description))))
                    (parameters-fct production description)
                  (production-parameter-fct production description))
                results))
-          
+
           (dolist (production (if (atom (first description))
                                   (list (first description))
                                 (first description)))
             (if (get-production production)
                 (push-last
-                 (if (and (cddr description) 
+                 (if (and (cddr description)
                           (not (keywordp (third description))))
                      (parameters-fct production (rest description))
                    (production-parameter-fct production (rest description)))

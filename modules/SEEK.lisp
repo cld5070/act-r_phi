@@ -34,7 +34,7 @@
 	;;;Should alter this to function like FEAR module and have all of these scheduled
 	;;as periodic functions that operate in parallel
 	(update-hunger SEEKING)
-	(update-thirst SEEKING)
+	(update-thirst SEEKING (SEEKING-thirst-sim SEEKING))
 	(update-skinTemp SEEKING)
 	(let*
 		((winnerVal (highest-SEEKING SEEKING))
@@ -43,6 +43,8 @@
 			(car (define-chunks-fct (list (list (car winnerVal) 'isa 'sChunk 'sFun (car winnerVal) 'sValue (cadr winnerVal))))))))
 		(setf (SEEKING-winning-sFunction SEEKING) (car winnerVal))
 		(setf (SEEKING-winning-sValue SEEKING) (* (cadr winnerVal) (exp (SEEKING-max-seeking-val SEEKING))))
+		;(format t "US - ~s ~s ~s~&" (cadr winnerVal) (SEEKING-max-seeking-val SEEKING) (SEEKING-winning-sValue SEEKING))
+		;(format t "SEEKING VALUE - ~s:~s~&" (SEEKING-winning-sFunction SEEKING) (SEEKING-winning-sValue SEEKING))
 	 (schedule-overwrite-buffer-chunk 'sFunction sFChunk (SEEKING-internal-delay SEEKING) :module 'SEEKING :output nil)))
 
 (defun highest-SEEKING (S)
@@ -61,54 +63,93 @@
 
 ;;Thirst Value (tVal) = (osmo(mOsm/L) - base-osmo(mOsm/L)) / ((base-osmo(mOsm/L) - Thirstmin) or (ThirstMax - base-osmo(mOsm/L)))
 ;;tVal = ((cube-root(10) * tVal)^3) + NOISE
-(defun update-thirst (S)
- (if (not (phys-module-enabled (get-module physio))) 0
-	 (let*
-		((checkOsmoVal (car(get-phys-vals nil (list '("OsmBody.CellWall(mOsm/L)")))))
-		;(checkOsmoVal (car(get-phys-vals nil (list '("OsmBody.[Osm(mOsm/L)]-CellWall")))))
-		(osmoVal (if (or (eq checkOsmoVal nil)
-					(eq checkOsmoVal 0) (eq (cadar checkOsmoVal) nil)) 0
-					(read-from-string (cadar checkOsmoVal))))
-		(checkOsmoVal-base (car(get-phys-vals t (list '("OsmBody.CellWall(mOsm/L)")))))
-		;(checkOsmoVal-base (car(get-phys-vals nil (list '("OsmBody.[Osm(mOsm/L)]-CellWall")))))
-		(base-osmoVal (if (or (eq checkOsmoVal-base 0)
-			(eq checkOsmoVal-base nil) (eq (cadar checkOsmoVal-base) nil)) 0
-			(read-from-string (cadar checkOsmoVal-base))))
-		(tVal nil)
-		(subjMult (SEEKING-subj-thirst S))
-			(tMult (if (SEEKING-thirst-multiplier S) (SEEKING-thirst-multiplier S) 1))
-		(max-reward (if (SEEKING-max-seeking-val S) (SEEKING-max-seeking-val S) 1))
-		(noise-val (if (SEEKING-hom-noise S) (act-r-noise (* (SEEKING-hom-noise S) max-reward)) 0)))
+(defun update-thirst (S thirst-sim)
+"Updates thirst-based motivation (SEEKING) value.
+	@param S is SEEKING module instance/struct
+	OPTIONAL PARAMS
+	@param thirst-sim: a list containing baseline & current osmolarity
+		value that can be used if physio module isn't active (list osm-base osm-curr)"
+	;;; If we don't have an active physiology, try to use optional key params or return 0
+	(if (or (not (get-module physio)) (not (phys-module-enabled (get-module physio))))
+		(if (not thirst-sim)
+			0
+			(let*
+				((osmoVal (cadr thirst-sim))
+				 (base-osmoVal (car thirst-sim))
+				 (tVal nil)
+				 (max-reward (if (SEEKING-max-seeking-val S) (SEEKING-max-seeking-val S) 1))
+				 (noise-val (if (SEEKING-hom-noise S) (act-r-noise (* (SEEKING-hom-noise S) max-reward)) 0)))
 
-		(declare (ignore tMult))
-		(declare (ignore subjMult))
-		;(print checkOsmoVal)
-		(if (> osmoVal (SEEKING-thirst-max S))
-			(setf tVal 1)
-			(if (< osmoVal (SEEKING-thirst-min S))
-				(setf tVal -1)
-				(if (<= osmoVal base-osmoVal)
-					(setf tVal (/ (- osmoVal base-osmoVal) (- base-osmoVal (SEEKING-thirst-min S))))
-					(setf tVal (/ (- osmoVal base-osmoVal) (- (SEEKING-thirst-max S) base-osmoVal))))))
-		;(print (list base-osmoVal osmoVal (* subjMult tVal)))
+				(declare (ignore tMult))
+				(declare (ignore subjMult))
 
-		;;Could use log-type curve to convert tVal to thirst, however I will just make a linear conversion w/ added noise for now
-		;;(setf tVal (* tMult (+ (expt  (* 2.1544 tVal) 3) noise-val)))
-		;;Since BICA (2013) we've changed this to include an offset of 1/e^max_reward so a value of 0 serves as the line between positive & negative affect (in terms of value)
-		;(setf tVal (* tMult (+ (* subjMult (+ (* tVal max-reward) (exp max-reward))) noise-val)))
+				(if (> osmoVal (SEEKING-thirst-max S))
+					(setf tVal 1)
+					(if (< osmoVal (SEEKING-thirst-min S))
+						(setf tVal -1)
+						(if (<= osmoVal base-osmoVal)
+							(setf tVal (/ (- osmoVal base-osmoVal) (- base-osmoVal (SEEKING-thirst-min S))))
+							(setf tVal (/ (- osmoVal base-osmoVal) (- (SEEKING-thirst-max S) base-osmoVal))))))
 
-		(setf tVal (+ tVal noise-val))
+				(setf tVal (+ tVal noise-val))
+				;(format t "UT - ~s~&" tVal)
 
-		;(print tVal)
+				;(print tVal)
 
-		(setf tVal (exp (* (- tval 1) max-reward)))
+				;(setf tVal (exp (* tVal max-reward)))
 
-		(when (> tVal max-reward) (setf tVal max-reward))
-		(when (< tVal (SEEKING-max-neg-incentive S)) (setf tVal (SEEKING-max-neg-incentive S)))
+				;(when (> tVal max-reward) (setf tVal max-reward))
+				(when (< tVal (SEEKING-max-neg-incentive S)) (setf tVal (SEEKING-max-neg-incentive S)))
 
-		(setf (gethash 'thirstVal (SEEKING-S-vals S)) tVal)
-		tVal
-	 )))
+				(setf (gethash 'thirstVal (SEEKING-S-vals S)) tVal)
+				tVal))
+	;;; If we do have a physiology module go through normal motions
+		(let*
+			((checkOsmoVal (car(get-phys-vals nil (list '("OsmBody.CellWall(mOsm/L)")))))
+			;(checkOsmoVal (car(get-phys-vals nil (list '("OsmBody.[Osm(mOsm/L)]-CellWall")))))
+			(osmoVal (if (or (eq checkOsmoVal nil)
+						(eq checkOsmoVal 0) (eq (cadar checkOsmoVal) nil)) 0
+						(read-from-string (cadar checkOsmoVal))))
+			(checkOsmoVal-base (car(get-phys-vals t (list '("OsmBody.CellWall(mOsm/L)")))))
+			;(checkOsmoVal-base (car(get-phys-vals nil (list '("OsmBody.[Osm(mOsm/L)]-CellWall")))))
+			(base-osmoVal (if (or (eq checkOsmoVal-base 0)
+				(eq checkOsmoVal-base nil) (eq (cadar checkOsmoVal-base) nil)) 0
+				(read-from-string (cadar checkOsmoVal-base))))
+			(tVal nil)
+			(subjMult (SEEKING-subj-thirst S))
+				(tMult (if (SEEKING-thirst-multiplier S) (SEEKING-thirst-multiplier S) 1))
+			(max-reward (if (SEEKING-max-seeking-val S) (SEEKING-max-seeking-val S) 1))
+			(noise-val (if (SEEKING-hom-noise S) (act-r-noise (* (SEEKING-hom-noise S) max-reward)) 0)))
+
+			(declare (ignore tMult))
+			(declare (ignore subjMult))
+			;(print checkOsmoVal)
+			#|(if (> osmoVal (SEEKING-thirst-max S))
+				(setf tVal 1)
+				(if (< osmoVal (SEEKING-thirst-min S))
+					(setf tVal -1)
+					(if (<= osmoVal base-osmoVal)
+						(setf tVal (/ (- osmoVal base-osmoVal) (- base-osmoVal (SEEKING-thirst-min S))))
+						(setf tVal (/ (- osmoVal base-osmoVal) (- (SEEKING-thirst-max S) base-osmoVal))))))|#
+			(setf tVal (/ osmoVal base-osmoVal))
+
+			;;Could use log-type curve to convert tVal to thirst, however I will just make a linear conversion w/ added noise for now
+			;;(setf tVal (* tMult (+ (expt  (* 2.1544 tVal) 3) noise-val)))
+			;;Since BICA (2013) we've changed this to include an offset of 1/e^max_reward so a value of 0 serves as the line between positive & negative affect (in terms of value)
+			;(setf tVal (* tMult (+ (* subjMult (+ (* tVal max-reward) (exp max-reward))) noise-val)))
+
+			(setf tVal (+ tVal noise-val))
+
+			;(print tVal)
+
+			(setf tVal (* (- tval 1) (exp max-reward)))
+
+			(when (> tVal max-reward) (setf tVal max-reward))
+			(when (< tVal (SEEKING-max-neg-incentive S)) (setf tVal (SEEKING-max-neg-incentive S)))
+
+			(setf (gethash 'thirstVal (SEEKING-S-vals S)) tVal)
+			tVal
+		 )))
 
 (defun update-skinTemp (S)
 	(setf (gethash 'skinTempVal (SEEKING-S-vals S)) (SEEKING-max-neg-incentive S)))
@@ -165,11 +206,12 @@
 	(let* ((s (get-module SEEKING))
 			(affect-val 0)
 			(k-s (if (SEEKING-winning-sValue s)
-				(SEEKING-winning-sValue s) (/ 1 (exp 1)))))
+				(SEEKING-winning-sValue s) 1)))
 	 (when (and (production-sFunction production) (equal (production-sFunction production) (SEEKING-winning-sFunction s)))
 		(update-prod-SEEKING-val production)
 		(if (<= k-s (SEEKING-max-neg-incentive s))
-		 (+ affect-val (log (* (SEEKING-max-neg-incentive s) (exp (SEEKING-max-seeking-val s))))) (+ affect-val (log k-s))))))
+			(+ affect-val (log (* (SEEKING-max-neg-incentive s) (exp (SEEKING-max-seeking-val s)))))
+			(+ affect-val (log k-s))))))
 
 
 ;;intialize hash-table for SEEKING variables
@@ -250,6 +292,10 @@
 
  ;SEEKING module switch
  (enabled nil)
+
+ ; Switch to allow simulation of thirst instead of using physio module
+ ; ONLY COMES INTO USE WHEN PHYSIO MODULE IS INACTIVE EVEN IF NOT NIL
+ (thirst-sim nil)
 )
 
 (defun create-SEEKING-module (model-name)
@@ -337,7 +383,8 @@
 		(:SEEK-k (setf (SEEKING-k SEEKING) (cdr param)))
 		(:SEEK-alpha (setf (SEEKING-alpha SEEKING) (cdr param)))
 		(:SEEK-goal-list (setf (SEEKING-goal-fcns SEEKING) (cdr param)))
-		(:SEEK-enabled (setf (SEEKING-enabled SEEKING) (cdr param))))
+		(:SEEK-enabled (setf (SEEKING-enabled SEEKING) (cdr param)))
+		(:SEEK-thirst-sim (setf (SEEKING-thirst-sim SEEKING) (cdr param))))
 	(case param
 		(:SEEK-hom-noise (SEEKING-hom-noise SEEKING))
 		(:SEEK-util-offset (SEEKING-util-offset SEEKING))
@@ -347,7 +394,8 @@
 		(:SEEK-k (SEEKING-k SEEKING))
 		(:SEEK-alpha (SEEKING-alpha SEEKING))
 		(:SEEK-goal-list (SEEKING-goal-fcns SEEKING))
-		(:SEEK-enabled (SEEKING-enabled SEEKING)))
+		(:SEEK-enabled (SEEKING-enabled SEEKING))
+		(:SEEK-thirst-sim (SEEKING-thirst-sim SEEKING)))
 ))
 
 (define-module-fct 'SEEKING
@@ -402,6 +450,10 @@
 		:default-value nil)
 	 (define-parameter
 		:SEEK-enabled
+		:default-value nil)
+	 (define-parameter
+		:SEEK-thirst-sim
+		:valid-test (lambda (x) (or (not x) (listp x)))
 		:default-value nil))
 	:version "0.1"
 	:documentation "SEEKING Module (from Primary-Process Affect theory)"

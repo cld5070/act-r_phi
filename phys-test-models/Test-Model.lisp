@@ -5,7 +5,15 @@
 	;(schedule-event 0.022 'set-phys-vals :module 'physio :params (list (list (list "IVDrip.Switch" 1) (list "IVDrip.H2OSetting" 25) (list "IVDrip.ClinicalSaline" 860))) :priority :max :details "Start hypertonic saline IV")
 	(schedule-periodic-event 1 'test-record-arousal
 		:initial-delay 2 :module :physio :output nil)
+	(sgp :phys-ics-file "ICS/Racinais-2008_Hot.ICS" :phys-ics-hummod t)
 	(run run-time))
+
+(defun get-heat-ICS ()
+	(schedule-event-relative 0.020 'set-phys-vals :module 'physio
+		:params (list (list (list "AmbientTemperature.Temp(F)" 122)
+												(list "Sympathetics-Adrenal.ClampSwitch" 1)
+												(list "CorticotropinReleasingFactor.Stress" 4)))
+		:priority :max :details "Graded stress increase adrenal & CRF"))
 
 (defun run-graded-stress1 (&optional (length 20) (perc-inc 100) (num-steps 20))
 	"Runs stress in a graded manner w/ instant CRF stress reaction

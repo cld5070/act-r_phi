@@ -440,8 +440,7 @@
    (text-height :accessor text-height :initarg :text-height :initform 10)
    (str-width-fct :accessor str-width-fct :initarg :str-width-fct
                   :initform #'(lambda (str)
-                                (* 7 (length str))))
-   )
+                                (* 7 (length str)))))
   (:default-initargs
        :height 18
        :width 60

@@ -244,21 +244,6 @@ t)
 						(wait-delete-output solverOutputFile)
 						(decf num-param-changes)
 						(print "239 PT"))|#
-					;;;NEED TO CHANGE THIS. I need to wait for vals & parseout output file for *Each* parameter change
-					(format t "241 - PT~&")
-					#|(sleep 0.4)
-						(handler-case (delete-file solverOutputFile)
-							(error (e) (print (concatenate 'string "Error 217 Phys" (write-to-string e)))))
-						(let ((currTime (get-universal-time)))
-							;;We only wait so long for the file to be created
-							(handler-case
-								(while
-									(and (not (probe-file solverOutputFile))
-										(< (- (get-universal-time) currTime) timeOut)))
-								(error (e) (print (concatenate 'string "Error 224 Phys" (write-to-string e))))))
-						(handler-case (delete-file solverOutputFile)
-							(error (e) (print (concatenate 'string "Error 226 Phys" (write-to-string e)))))|#
-
 					(dolist (v checkError)
 						;;If we have an error, then we reset the entire physiology system and
 						;; (try to) update it back to its last state
@@ -382,37 +367,39 @@ t)
 		#+:ccl	(ccl::cwd "../")
 		#+:sbcl	(sb-posix:chdir *HumModDir*)
 		#+:sbcl	(sb-posix:chdir "../")
-		(setf ics-val-list (s-xml:parse-xml-file init-filename))
+		(setf ics-val-list (cdr (s-xml:parse-xml-file init-filename)))
 		(setf init-vals-msg (concatenate 'string init-vals-msg (list #\newline) "<sending_current_values>" (list #\newline)))
 
-		;Go through list returned by parsing and pull vals out
-		; and put into msg (assuming 1st 2 elements are ICS & time)
-		;(print (length (cdr ics-val-list)))
-
-		;;[NO LONGER USED] Get correct order for variables (our ICS order may be incorrect)
-		#|(setf ordered-val-list (make-list (length (cdr ics-val-list))))
-		(dolist (var-val (cdr ics-val-list))
-			;(print (remove #\Space (cadadr var-val)))
-			;(print (gethash (remove #\Space (cadadr var-val)) (phys-module-vars phys)))
-			(when (not (= prev-num (- (gethash (remove #\Space (cadadr var-val)) (phys-module-vars phys)) 1)))
-				(print (gethash (remove #\Space (cadadr var-val)) (phys-module-vars phys)))
-				(print prev-num)
-				(print (cadadr var-val)))
-			(setf prev-num (gethash (remove #\Space (cadadr var-val)) (phys-module-vars phys)))
-			(let ((l-place (gethash (remove #\Space (cadadr var-val)) (phys-module-vars phys))))
-				(setf (elt ordered-val-list l-place) (cadddr var-val))))
-		(dolist (v ordered-val-list)
-			(setf init-vals-msg
-				(format nil "~a~&<val>~a</val>" init-vals-msg v)))|#
-			(dolist (var-val (cdr ics-val-list))
-				(setf init-vals-msg
-					(concatenate 'string init-vals-msg "<val>" (remove #\Space (cadr (caddr var-val))) "</val>" (list #\newline) )))
-					;(format nil "~a~%<val>~a</val>" init-vals-msg (cadr (caddr var-val)))))
+		(if (phys-module-ics-hummod phys)
+			;If we have a HumMod style Initial Conditions file
+			(progn
+				;;Get correct order for variables (our ICS order may be incorrect)
+				(setf ordered-val-list (make-list (hash-table-count (phys-module-vars phys))))
+				(dolist (var-val ics-val-list)
+					(print (remove #\Space (cadadr var-val)))
+					;(print (gethash (remove #\Space (cadadr var-val)) (phys-module-vars phys)))
+					(when (not (= prev-num (- (gethash (remove #\Space (cadadr var-val)) (phys-module-vars phys)) 1)))
+						(print (gethash (remove #\Space (cadadr var-val)) (phys-module-vars phys)))
+						(print prev-num)
+						(print (cadadr var-val)))
+					(setf prev-num (gethash (remove #\Space (cadadr var-val)) (phys-module-vars phys)))
+					(let ((l-place (gethash (remove #\Space (cadadr var-val)) (phys-module-vars phys))))
+						(setf (elt ordered-val-list l-place) (cadddr var-val))))
+				(dolist (v ordered-val-list)
+					(setf init-vals-msg
+						(format nil "~a~&<val>~a</val>" init-vals-msg v))))
+			;Else, assume we have a ModelSolver style Initial Conditions file
+			(progn
+				;Go through list returned by parsing and pull vals out
+				; and put into msg (assuming 1st 2 elements are ICS & time)
+				(dolist (var-val ics-val-list)
+					(setf init-vals-msg
+						(concatenate 'string init-vals-msg "<val>" (remove #\Space (cadr (caddr var-val))) "</val>" (list #\newline) )))))
 			;Add closing tag
 			(setf init-vals-msg (concatenate 'string init-vals-msg "</sending_current_values></solverin>~&"))
 
 		(with-open-file
-			(messageStream	(concatenate 'string *HumModDir* "ICS_Load")
+			(messageStream	(concatenate 'string init-filename ".ICSconv")
 			:direction :output :if-exists :overwrite :if-does-not-exist :create)
 			(format messageStream init-vals-msg))
 
@@ -426,13 +413,6 @@ t)
 				#+:ccl ccl::simple-file-error
 				#+:sbcl sb-impl::simple-file-error
 				simple-error) (e) (format t "Error loading ICS file!~&" e)))
-		;;[NOT USED (Doesn't seem to be needed)] Clean up resulting output
-		#|(while (probe-file solverInputFile)) ;Wait for Model Solver to finish computation & output file
-		(let ((currTime (get-universal-time)))
-			(while (and (not (probe-file solverOutputFile))
-			(< (- (get-universal-time) currTime) 55))))
-		(while (and (probe-file solverOutputFile) (not (handler-case (delete-file solverOutputFile)
-			(error () nil)))))|#
 			;Wait for solverInput file to be digested (and get of Output files if there are any holdin up the ModelSolver digesting the input files
 			(while (probe-file solverInputFile)
 				(handler-case (delete-file solverOutputFile)
@@ -443,10 +423,8 @@ t)
 ;;Generate hash-table of physiological variables & Hash-Table of the order of the variables
 ;; and default values
 (defun create-phys-vars ()
-	(format t "PT - 437~&")
 	(let ((phys (get-module physio)))
 		(tagbody resetCreate
-			(format t "PT - 440~&")
 			(clear-phys-files)
 			(setf (phys-module-init phys) t)
 			;;Set Physiology Substrate periodic communication time (HumMod)
@@ -481,31 +459,11 @@ t)
 							#+:ccl ccl::simple-file-error
 							#+:sbcl sb-impl::simple-file-error
 							simple-error) () (go resetCreate)))
-				;(handler-case (delete-file solverOutputFile)
-				;	(error () nil))
 				;Wait for solverInput file to be digested (and get of Output files if there are any holdin up the ModelSolver digesting the input files
 				(while (probe-file solverInputFile))
-
-				#|(let ((currTime (get-universal-time)))
-					(while (and (not (probe-file solverOutputFile)) (< (- (get-universal-time) currTime) 5))))
-				(when (not (probe-file solverOutputFile))(go resetCreate))
-				;Should output two files on the reset
-				(while (and (probe-file solverOutputFile) (not (handler-case (delete-file solverOutputFile)
-					(error () nil)))))|#
-				(format t "485 PT ~&")
 				(when (wait-delete-output SolverOutputFile 5) (go resetCreate))
-				(format t "487 PT ~&")
-
-				#|;We should only need this on the 1st run (helps us avoid having to waste time)
-				(if (phys-module-first-run phys)
-					(let ((currTime (get-universal-time)))
-						(while (and (not (probe-file solverOutputFile)) (< (- (get-universal-time) currTime) 5))))
-					;Delete the output file after restart
-					(while (and (probe-file solverOutputFile) (not (handler-case (delete-file solverOutputFile)
-						(error () nil))))))|#
 				;; Initialize with stable values (obtained from running sim 1 week)
 				(load-HumMod-ICs (phys-module-ics-file phys))
-				(format t "495 PT~&")
 
 (sleep 0.05)
 				;Create input file for hummod to give us a list of variables and digest the output file created by HumMod (w/ the variables). Loop back around if there is an error
@@ -532,7 +490,6 @@ t)
 							(delete-file solverOutputFile)
 							(error () nil))
 						(go getVars))
-(format t "522 PT ~&")
 					;;Parse the list of variables output by the ModelSolver
 					(let ((parseStart (get-universal-time)))
 						(tagbody parseVarList
@@ -560,9 +517,6 @@ t)
 
 				(let ((timeOut 120))
 					(tagbody startGetVals
-						;(handler-case
-					;		(delete-file solverOutputFile)
-					;		(error () nil))
 						;;Get new value list output by the ModelSolver
 						(handler-case
 							(with-open-file
@@ -608,8 +562,6 @@ t)
 									(go parseValList))))))
 
 				(while (not (handler-case (delete-file solverOutputFile) (error () nil))))
-;(print "567 Gofo is done..")
-;sleep 10)
 				;;Set our current values
 				(setf (phys-module-physValList (get-module physio)) physValueList)
 				;;Go through lists and replace matching values in hash table
@@ -1104,6 +1056,10 @@ t)
 	;File to be used for initial conditions
 	ics-file
 
+	;Flag used to tell us whether the ICS file is one
+	; created by HumMod (thus needing to read in and converted in a way suitable for the Model Solver)
+	ics-hummod
+
 	esc
 	busy
 
@@ -1212,33 +1168,37 @@ t)
 ;Define our parameters created in define-module-fct
 (defun phys-module-params (phys param)
 	(if (consp param)
-	 (case (car param)
-		(:phys-delay
-			(setf (phys-module-delay phys) (cdr param) ))
-		(:epi-ans
-			(setf (phys-module-epi-ans phys) (cdr param) ))
-		(:phys-enabled
-			(setf (phys-module-enabled phys) (cdr param) ))
-		(:esc
-			(setf (phys-module-esc phys) (cdr param) ))
-		(:recorded-phys
-			(setf (phys-module-recordedPhys phys) (cdr param)))
-		(:phys-ics-file
-			(setf (phys-module-ics-file phys) (cdr param))))
+		(case (car param)
+			(:phys-delay
+				(setf (phys-module-delay phys) (cdr param) ))
+			(:epi-ans
+				(setf (phys-module-epi-ans phys) (cdr param) ))
+			(:phys-enabled
+				(setf (phys-module-enabled phys) (cdr param) ))
+			(:esc
+				(setf (phys-module-esc phys) (cdr param) ))
+			(:recorded-phys
+				(setf (phys-module-recordedPhys phys) (cdr param)))
+			(:phys-ics-file
+				(setf (phys-module-ics-file phys) (cdr param)))
+			(:phys-ics-HumMod
+				(setf (phys-module-ics-hummod phys) (cdr param))))
 
-	 (case param
-		(:phys-delay
-			(phys-module-delay phys))
-		(:epi-ans
-			(phys-module-epi-ans phys))
-		(:phys-enabled
-			(phys-module-enabled phys))
-		(:esc
-			(phys-module-esc phys))
-		(:recorded-phys
-			(phys-module-recordedPhys phys))
-		(:phys-ics-file
-			(phys-module-ics-file phys)))))
+		(case param
+			(:phys-delay
+				(phys-module-delay phys))
+			(:epi-ans
+				(phys-module-epi-ans phys))
+			(:phys-enabled
+				(phys-module-enabled phys))
+			(:esc
+				(phys-module-esc phys))
+			(:recorded-phys
+				(phys-module-recordedPhys phys))
+			(:phys-ics-file
+				(phys-module-ics-file phys))
+			(:phys-ics-HumMod
+				(phys-module-ics-hummod phys)))))
 
 ;Define query function for module (b = buffer)
 (defun phys-module-query (phys b slot value)
@@ -1332,7 +1292,12 @@ t)
 		:default-value "ICS/1wkNormal.ICS"
 		:valid-test (lambda (x) (typep x 'string))
 		:owner t)
-	)
+
+		(define-parameter
+		:phys-ics-HumMod
+		:documentation "Flag that tells us whether the ICS file used is from HumMod GUI"
+		:default-value nil
+		:owner t))
 	:version "1.0"
 	:documentation
 		"Module for underlying physiological substrate (via HumMod mechanisms)"
