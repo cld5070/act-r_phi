@@ -94,6 +94,36 @@
 		(error (e) (progn (print e) nil (return-from init-var-list-to-hash))))
 t)
 
+;;;Request values from Model Solver
+(defun set-as-init-cond ()
+	"Sets current state as initial conditions for model"
+	(let* ((phys (get-module physio))
+				 (solver-input-file (concatenate 'string *HumModDir* "SolverIn" (phys-module-pipeID phys)))
+				 (solver-in-msg "<solverin><newics/></solverin>")
+				 (solver-out-file (concatenate 'string *HumModDir* "SolverOut" (phys-module-pipeID phys))))
+		(with-open-file
+			(messageStream	solver-input-file
+				:direction :output :if-exists :overwrite :if-does-not-exist :create)
+			(format messageStream solver-in-msg))
+		(while (not (probe-file solver-out-file)))))
+
+(defun create-ics-from-out (out-file ics-file-name phys &optional (delete-solverout? nil))
+	"Creates a suitable initial conditions file from the given output file"
+	(let ((out-vals (cdadr (s-xml:parse-xml-file out-file)))
+				(init-str "<ics>"))
+		(loop for val in out-vals and var in (cdadr (phys-module-physVarList phys))
+			do (progn
+				(setf init-str
+					(concatenate 'string init-str "~&<var>~&<name>" (cadr var) "</name>~&<val>"
+					 (cadr val) "</val>~&</var>"))))
+		(setf init-str (concatenate 'string init-str "</ics>"))
+		(with-open-file
+			(msg-stream ics-file-name :direction :output :if-exists :overwrite
+				:if-does-not-exist :create)
+			(format msg-stream init-str)))
+		(when delete-solverout?
+			(delete-file out-file)))
+
 ;;;Advance the HumMod model a specified amount of time (mins)
 (defun advance-phys (timeSlice)
 	"Advance the modelsolver forward in time
@@ -173,6 +203,23 @@ t)
 
 		;;Record advance-phys to internal event trace
 		(push (list #'advance-phys (list timeSlice)) (phys-module-solverActionTrace phys))))
+
+;;Function to retrieve phys values for specified list
+(defun get-phys-vals (baseLine physVals)
+ (let ((myHash (phys-module-vars (get-module physio)))
+		 (varValList nil)
+		 (valList nil))
+		(if baseLine
+			(setf valList (phys-module-physValList-baseline (get-module physio)))
+			(setf valList (phys-module-physValList (get-module physio))))
+		(dolist (var physVals)
+			(let ((valNum (gethash (car var) myHash)))
+				(setf varValList
+					(list
+						(if varValList
+							(append varValList (list (append (list (car var)) (list (cadar (nthcdr valNum (cadr valList)))))))
+							(list (append (list (car var)) (list (cadar (nthcdr valNum (cadr valList)))))))))))
+		varValList))
 
 ;;;Set HumMod Vars using specified list
 (defun set-phys-vals (varValList)
@@ -303,8 +350,6 @@ t)
 
 		(handler-case (delete-file solverOutputFile)	(error () nil))))
 
-(defun new-init-cond (phys))
-
 ;;Can be used to close HumMod from terminal
 (defun close-HumMod (phys)
 	(when (and (phys-module-HProc phys) (external-process-id (phys-module-HProc phys)))
@@ -369,34 +414,14 @@ t)
 		#+:sbcl	(sb-posix:chdir "../")
 		(setf ics-val-list (cdr (s-xml:parse-xml-file init-filename)))
 		(setf init-vals-msg (concatenate 'string init-vals-msg (list #\newline) "<sending_current_values>" (list #\newline)))
-
-		(if (phys-module-ics-hummod phys)
-			;If we have a HumMod style Initial Conditions file
-			(progn
-				;;Get correct order for variables (our ICS order may be incorrect)
-				(setf ordered-val-list (make-list (hash-table-count (phys-module-vars phys))))
-				(dolist (var-val ics-val-list)
-					(print (remove #\Space (cadadr var-val)))
-					;(print (gethash (remove #\Space (cadadr var-val)) (phys-module-vars phys)))
-					(when (not (= prev-num (- (gethash (remove #\Space (cadadr var-val)) (phys-module-vars phys)) 1)))
-						(print (gethash (remove #\Space (cadadr var-val)) (phys-module-vars phys)))
-						(print prev-num)
-						(print (cadadr var-val)))
-					(setf prev-num (gethash (remove #\Space (cadadr var-val)) (phys-module-vars phys)))
-					(let ((l-place (gethash (remove #\Space (cadadr var-val)) (phys-module-vars phys))))
-						(setf (elt ordered-val-list l-place) (cadddr var-val))))
-				(dolist (v ordered-val-list)
-					(setf init-vals-msg
-						(format nil "~a~&<val>~a</val>" init-vals-msg v))))
-			;Else, assume we have a ModelSolver style Initial Conditions file
-			(progn
-				;Go through list returned by parsing and pull vals out
-				; and put into msg (assuming 1st 2 elements are ICS & time)
-				(dolist (var-val ics-val-list)
-					(setf init-vals-msg
-						(concatenate 'string init-vals-msg "<val>" (remove #\Space (cadr (caddr var-val))) "</val>" (list #\newline) )))))
-			;Add closing tag
-			(setf init-vals-msg (concatenate 'string init-vals-msg "</sending_current_values></solverin>~&"))
+		;Go through list returned by parsing and pull vals out
+		; and put into msg (assuming 1st 2 elements are ICS & time)
+		(dolist (var-val ics-val-list)
+			(setf init-vals-msg
+				(concatenate 'string init-vals-msg "<val>" (remove #\Space (cadr (caddr var-val))) "</val>" (list #\newline) )))
+		;Add closing tag
+		(setf init-vals-msg (concatenate 'string init-vals-msg "</sending_current_values>~&"))
+		(setf init-vals-msg (concatenate 'string init-vals-msg "</solverin>"))
 
 		(with-open-file
 			(messageStream	(concatenate 'string init-filename ".ICSconv")
@@ -418,7 +443,8 @@ t)
 				(handler-case (delete-file solverOutputFile)
 					(error () nil)))
 			#+:ccl	(ccl::cwd old-dir)
-			#+:sbcl	(sb-posix:chdir old-dir)))
+			#+:sbcl	(sb-posix:chdir old-dir)); (sleep 20)
+			)
 
 ;;Generate hash-table of physiological variables & Hash-Table of the order of the variables
 ;; and default values
@@ -462,8 +488,6 @@ t)
 				;Wait for solverInput file to be digested (and get of Output files if there are any holdin up the ModelSolver digesting the input files
 				(while (probe-file solverInputFile))
 				(when (wait-delete-output SolverOutputFile 5) (go resetCreate))
-				;; Initialize with stable values (obtained from running sim 1 week)
-				(load-HumMod-ICs (phys-module-ics-file phys))
 
 (sleep 0.05)
 				;Create input file for hummod to give us a list of variables and digest the output file created by HumMod (w/ the variables). Loop back around if there is an error
@@ -514,7 +538,6 @@ t)
 				;Delete output file when finished with it
 				(handler-case (delete-file solverOutputFile)
 						(error () nil))
-
 				(let ((timeOut 120))
 					(tagbody startGetVals
 						;;Get new value list output by the ModelSolver
@@ -584,6 +607,8 @@ t)
 			;;If our variable hash-table didn't get filled, run code again
 			(when (eq (hash-table-count (phys-module-vars phys)) 0)
 				(go resetCreate))
+		;; Initialize with stable values (obtained from running sim 1 week)
+		(load-HumMod-ICs (phys-module-ics-file phys))
 		(setf (phys-module-physValList phys) physValueList)
 		(setf (phys-module-physValList-baseline phys) physValueList)
 		(setf (phys-module-vars-baseLine-init phys) t))))
@@ -1014,22 +1039,37 @@ t)
 
 #|End phys state functions|#
 
-;;Function to retrieve phys values for specified list
-(defun get-phys-vals (baseLine physVals)
- (let ((myHash (phys-module-vars (get-module physio)))
-		 (varValList nil)
-		 (valList nil))
-		(if baseLine
-			(setf valList (phys-module-physValList-baseline (get-module physio)))
-			(setf valList (phys-module-physValList (get-module physio))))
-		(dolist (var physVals)
-			(let ((valNum (gethash (car var) myHash)))
-				(setf varValList
-					(list
-						(if varValList
-							(append varValList (list (append (list (car var)) (list (cadar (nthcdr valNum (cadr valList)))))))
-							(list (append (list (car var)) (list (cadar (nthcdr valNum (cadr valList)))))))))))
-		varValList))
+#|---Begin Physiological Initial Condition Functions
+		Provides some useful functions that can create initial condition files that can be used to run simulations under various conditions
+		Initial condition files help us avoid having to take the time to get to some stable state related to a particular physiological state
+|#
+(defun make-Racinais08-ICS (new-ics-file-name phys)
+	"Sets up physiology in a scenario that matches:
+		Racinais, S., Gaoua, N., & Grantham, J. (2008).
+		Hyperthermia impairs short-term memory and peripheral motor drive transmission.
+		The Journal of Physiology, 586(19), 4751-4762."
+	(schedule-event-relative 0.020 'set-phys-vals :module 'physio
+		:params (list (list (list "PostureControl.Request" 3)))
+		:priority :max :details "Change to standing posture")
+	(schedule-event-relative 0.021 'set-phys-vals :module 'physio
+		:params (list (list (list "Exercise-Control.Request" 2)))
+		:priority :max :details "Use the treadmill")
+	(schedule-event-relative 0.022 'set-phys-vals :module 'physio
+		:params (list (list (list "AmbientTemperature.Temp(F)" 122)
+												(list "RelativeHumidity.Percent" 50)))
+		:priority :max :details "Change temperature and humidity")
+	(schedule-event-relative 0.023 'advance-phys :module 'physio
+		:module :physio :priority :max :params '(15)
+		:details "Advance physiology 15 minutes")
+	(schedule-break-relative 0.024)
+	(run 0.5)
+	(set-as-init-cond)
+	(let ((solver-out-file (concatenate 'string *HumModDir* "SolverOut" (phys-module-pipeID phys)))
+		    (ics-out-file (concatenate 'string *HumModDir* "../ICS/Racinais-2008_Hot.ICS")))
+	(create-ics-from-out solver-out-file ics-out-file phys)))
+
+#|---End Physiological Initial Condition Functions---|#
+
 ;;;
 ;;;;Helpful functions for examining physiological data
 (defun get-recorded-vals ()
