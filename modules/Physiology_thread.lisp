@@ -488,8 +488,10 @@ t)
 				;Wait for solverInput file to be digested (and get of Output files if there are any holdin up the ModelSolver digesting the input files
 				(while (probe-file solverInputFile))
 				(when (wait-delete-output SolverOutputFile 5) (go resetCreate))
+				;; Initialize with stable values (default is obtained from running sim 1 week)
+				(load-HumMod-ICs (phys-module-ics-file phys))
 
-(sleep 0.05)
+;(sleep 0.05)
 				;Create input file for hummod to give us a list of variables and digest the output file created by HumMod (w/ the variables). Loop back around if there is an error
 				(tagbody getVars
 					(handler-case
@@ -607,8 +609,9 @@ t)
 			;;If our variable hash-table didn't get filled, run code again
 			(when (eq (hash-table-count (phys-module-vars phys)) 0)
 				(go resetCreate))
-		;; Initialize with stable values (obtained from running sim 1 week)
-		(load-HumMod-ICs (phys-module-ics-file phys))
+		;; If we have initial conditions for an experiment, load those initial conditions
+		(when (phys-module-ics-exp-file phys)
+			(load-HumMod-ICs (phys-module-ics-exp-file phys)))
 		(setf (phys-module-physValList phys) physValueList)
 		(setf (phys-module-physValList-baseline phys) physValueList)
 		(setf (phys-module-vars-baseLine-init phys) t))))
@@ -1098,7 +1101,7 @@ t)
 
 	;Flag used to tell us whether the ICS file is one
 	; created by HumMod (thus needing to read in and converted in a way suitable for the Model Solver)
-	ics-hummod
+	ics-exp-file
 
 	esc
 	busy
@@ -1221,8 +1224,8 @@ t)
 				(setf (phys-module-recordedPhys phys) (cdr param)))
 			(:phys-ics-file
 				(setf (phys-module-ics-file phys) (cdr param)))
-			(:phys-ics-HumMod
-				(setf (phys-module-ics-hummod phys) (cdr param))))
+			(:phys-ics-exp-file
+				(setf (phys-module-ics-exp-file phys) (cdr param))))
 
 		(case param
 			(:phys-delay
@@ -1237,8 +1240,8 @@ t)
 				(phys-module-recordedPhys phys))
 			(:phys-ics-file
 				(phys-module-ics-file phys))
-			(:phys-ics-HumMod
-				(phys-module-ics-hummod phys)))))
+			(:phys-ics-exp-file
+				(phys-module-ics-exp-file phys)))))
 
 ;Define query function for module (b = buffer)
 (defun phys-module-query (phys b slot value)
@@ -1330,13 +1333,14 @@ t)
 		:phys-ics-file
 		:documentation "File used to load initial conditions"
 		:default-value "ICS/1wkNormal.ICS"
-		:valid-test (lambda (x) (typep x 'string))
+		:valid-test (lambda (x) (or (typep x 'string) ))
 		:owner t)
 
 		(define-parameter
-		:phys-ics-HumMod
-		:documentation "Flag that tells us whether the ICS file used is from HumMod GUI"
+		:phys-ics-exp-file
+		:documentation "File used to load initial conditions for an experiment"
 		:default-value nil
+		:valid-test (lambda (x) (or (typep x 'string) (equal x nil)))
 		:owner t))
 	:version "1.0"
 	:documentation
