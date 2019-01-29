@@ -361,6 +361,7 @@ t)
 	(lambda (cond hook)
 		(declare (ignore cond hook))
 		(format t "Cleaning up ...")
+		(close-HumMod (get-module physio))
 		(ccl:quit)))
 
 ;;;Can be used to reset HumMod variables to initial model
