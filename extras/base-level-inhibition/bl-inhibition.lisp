@@ -13,7 +13,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; 
 ;;; Filename    : bl-inhibition.lisp
-;;; Version     : 1.0a1
+;;; Version     : 2.0a1
 ;;; 
 ;;; Description : A module to add the short term base-level activation inhibition 
 ;;;             : component described in:
@@ -33,13 +33,21 @@
 ;;; 2011.04.25 Dan
 ;;;             : * Updated because of the change to millisecond times being
 ;;;             :   recorded in DM parameters.
+;;; 2016.03.14 Dan
+;;;             : * Added the note about require-extra.
+;;; 2016.09.20 Dan
+;;;             : * Fixed a bug with how the monitoring of :activation-offsets
+;;;             :   checked whether the parameter was already set.
+;;; 2018.08.21 Dan [2.0a1]
+;;;             : * Added a lock for protection to work well with 7.6+.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
 ;;; 
-;;; To use this extension put this file into the modules directory before loading
-;;; the main ACT-R load file, or load it once after loading ACT-R and before defining
-;;; any models.
+;;; To use this extension call (require-extra "base-level-inhibition"), or to 
+;;; always have the extension available put this file into the modules directory 
+;;; before loading the main ACT-R load file.  You can also explicitly load it 
+;;; once after loading ACT-R and before defining any models.
 ;;;
 ;;; With this module added to the system chunk activations now have an additional
 ;;; term added to the equation when the :enable-inhibition parameter is set to t
@@ -85,35 +93,38 @@
 #-(or (not :clean-actr) :packaged-actr :ALLEGRO-IDE) (in-package :cl-user)
 
 
-(defstruct bl-inhibition enabled scale decay)
+(defstruct bl-inhibition enabled scale decay (lock (bt:make-recursive-lock "bl-inhibition")))
 
 (defun bl-inhibition-term (chunk)
   (let ((bl (get-module base-level-inhibition))
         (reference (car (chunk-reference-list chunk))))
-    (when (and bl (numberp reference) (bl-inhibition-enabled bl))
-      (- (log-coerced (+ 1.0 (expt-coerced (/ (max .05 (ms->seconds (- (mp-time-ms) reference))) (bl-inhibition-scale bl))
-                                           (- (bl-inhibition-decay bl)))))))))
+    (when (and bl (numberp reference))
+      (bt:with-recursive-lock-held ((bl-inhibition-lock bl))
+        (when (bl-inhibition-enabled bl)
+          (- (log-coerced (+ 1.0 (expt-coerced (/ (max .05 (ms->seconds (- (mp-time-ms) reference))) (bl-inhibition-scale bl))
+                                               (- (bl-inhibition-decay bl)))))))))))
 
 (defun bl-inhibition-params (module param)
-  (cond ((consp param)
-         
-         (case (car param)
-           (:enable-inhibition (setf (bl-inhibition-enabled module) (cdr param)))
-           (:inhibition-scale (setf (bl-inhibition-scale module) (cdr param)))
-           (:inhibition-decay (setf (bl-inhibition-decay module) (cdr param)))
+  (bt:with-recursive-lock-held ((bl-inhibition-lock module))
+    (cond ((consp param)
            
-           ;; force our function onto the offset list whenever
-           ;; it's changed and we're not on it
-           (:activation-offsets
-            
-            (unless (or (find 'bl-inhibition-term (cdr param))
-                        (find 'bl-inhibition-term (no-output (sgp :activation-offsets))))
-              (sgp :activation-offsets bl-inhibition-term)))))
-        (t 
-         (case param
-           (:enable-inhibition (bl-inhibition-enabled module))
-           (:inhibition-scale  (bl-inhibition-scale module))
-           (:inhibition-decay  (bl-inhibition-decay module))))))
+           (case (car param)
+             (:enable-inhibition (setf (bl-inhibition-enabled module) (cdr param)))
+             (:inhibition-scale (setf (bl-inhibition-scale module) (cdr param)))
+             (:inhibition-decay (setf (bl-inhibition-decay module) (cdr param)))
+             
+             ;; force our function onto the offset list whenever
+             ;; it's changed and we're not on it
+             (:activation-offsets
+              
+              (unless (or (find 'bl-inhibition-term (cdr param))
+                          (find 'bl-inhibition-term (no-output (car (sgp :activation-offsets)))))
+                (sgp :activation-offsets bl-inhibition-term)))))
+          (t 
+           (case param
+             (:enable-inhibition (bl-inhibition-enabled module))
+             (:inhibition-scale  (bl-inhibition-scale module))
+             (:inhibition-decay  (bl-inhibition-decay module)))))))
           
 
 (define-module-fct 'base-level-inhibition
@@ -131,7 +142,7 @@
   
   :creation (lambda (name) (declare (ignore name)) (make-bl-inhibition))
   :params 'bl-inhibition-params
-  :version "1.0a1" 
+  :version "2.0a1" 
   :documentation 
   "Module to add the option of the Lebiere & Best base-level inhibition component to activation calculations"
   )

@@ -13,7 +13,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; 
 ;;; Filename    : dm-commands.lisp
-;;; Version     : 1.0a3
+;;; Version     : 2.0
 ;;; 
 ;;; Description : ACT-R commands relavent to Declarative Memory
 ;;; 
@@ -189,6 +189,99 @@
 ;;; 2013.07.18 Dan
 ;;;             : * and then I failed to update the return-from calls within the
 ;;;             :   simulate-retrieval-request-fct function until now.
+;;; 2014.03.10 Dan [2.0]
+;;;             : * Updating to work with the chunks that don't have a chunk-type
+;;;             :   and the corresponding changes to DM.
+;;; 2014.04.01 Dan
+;;;             : * Used slots-vector-match-signature instead of doing the bit
+;;;             :   tests directly.
+;;; 2014.08.29 Dan
+;;;             : * Fixed a typo in the output of whynot-dm.
+;;; 2015.06.04 Dan
+;;;             : * Use safe-seconds->ms for creation time and references.
+;;; 2015.06.08 Dan
+;;;             : * Saved trace now holds milliseconds for -ct and -refs so print
+;;;             :   appropriately.
+;;;             : * The history table is also indexed by ms now so give an
+;;;             :   optional parameter to allow asking for the saved traces in
+;;;             :   milliseconds instead of seconds.
+;;;             : * Print-dm-finsts displays the time accurately, but still
+;;;             :   returns a float of seconds.
+;;; 2015.06.09 Dan
+;;;             : * Sdp now prints times accurately, but still returns seconds.
+;;;             : * Whynot-dm updated since last-request-time is now in ms.
+;;; 2015.07.23 Dan
+;;;             : * Added the simulate-retrieval-request-plus-seed-fct function
+;;;             :   which does the same thing as simulate-retrieval-request 
+;;;             :   except that it has a second return value which is the seed
+;;;             :   value after the retrieval process completed so that one can
+;;;             :   use that to implement an extra retrieval buffer which updates
+;;;             :   the random state appropriately.
+;;; 2015.07.24 Dan
+;;;             : * Fixed a bug with simulate-retrieval-request-plus-seed-fct since
+;;;             :   it was trying to return-from simulate-retrieval-request-fct.
+;;; 2016.01.14 Dan
+;;;             : * Fixed a bug with print-dm-finsts because it was trying to
+;;;             :   convert the conses of the finst list to seconds instead of
+;;;             :   the time in the cdr of the conses.
+;;; 2016.09.01 Dan
+;;;             : * Print-activation-trace didn't actually print the name of the
+;;;             :   chunk when the retrieval-set-hook returned a result (the main
+;;;             :   activation trace had the same bug).
+;;; 2017.02.23 Dan
+;;;             : * Added the remote whynot-dm command.
+;;;             : * Added remote print-dm-finsts and changed it to return a list
+;;;             :   of lists instead of conses.
+;;; 2017.08.07 Dan
+;;;             : * Updated the calls to compute-sji and chunks-similarity to 
+;;;             :   pass in the params for thread safety.
+;;; 2017.08.08 Dan
+;;;             : * Update calls to the activation related function from the
+;;;             :   declarative module code to pass in parameters.
+;;;             : * Finished making everything thread safe.
+;;; 2017.10.06 Dan
+;;;             : * Fixed a bug with whynot-dm-internal not returning the right
+;;;             :   value, and bugs in the calls to invalid in simulate-retrieval-
+;;;             :   request-plus-seed-fct.
+;;; 2017.10.20 Dan
+;;;             : * Added remote versions of dm and sdm.
+;;; 2017.11.14 Dan
+;;;             : * Added an external sdp.
+;;;             : * Changed the default for time-in-ms for the activation history
+;;;             :   related commands to be t.
+;;;             : * Added external versions of saved-activation-history, print-chunk-
+;;;             :   activation-trace, and print-activation-trace.
+;;; 2018.03.09 Dan
+;;;             : * Sdm needs to use decode-string-names not string->name.
+;;; 2018.04.05 Dan
+;;;             : * Splitting sdm so that only the remote version converts the
+;;;             :   strings to names to keep things Lisp side more consistent.
+;;; 2018.04.18 Dan
+;;;             : * Sjis need to be stored and returned as 2 element lists 
+;;;             :   instead of conses to avoid issues with JSON.
+;;;             : * Same with similarities.
+;;;             : * Added remote sji/add-sji and similarity/set-similarities commands.
+;;; 2018.04.20 Dan
+;;;             : * Added remote versions of get-base-level, set-base-levels,
+;;;             :   set-base-levels-fct, set-all-base-levels.
+;;; 2018.04.25 Dan
+;;;             : * Added remote clear-dm, reset-declarative-finsts, and -fct and 
+;;;             :   -plus-seed-fct versions of simulate-retrieval-request.
+;;;             : * Added the retrieval-times processor for the retrieval-history
+;;;             :   stream to return just the times and chunk names (similar to
+;;;             :   the saved-activation-history command).
+;;; 2018.04.27 Dan
+;;;             : * Moved the retrieval-times processor since the history isn't
+;;;             :   yet defined when this is loaded.
+;;; 2018.06.11 Dan
+;;;             : * Making sure that the string to name conversion is done 
+;;;             :   appropriately and only for external calls, and also redoing
+;;;             :   the doc strings for external commands to be consistent with
+;;;             :   the manual's indication of syntax.
+;;; 2018.06.13 Dan
+;;;             : * Fixed a couple typos from the previous update.
+;;; 2018.12.17 Dan
+;;;             : * The remote whynot-dm wasn't using the external version.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -236,12 +329,11 @@
                 (chunk-i (second x))
                 (chunk-j (first x)))
             (push sji returns)
-            (setf (chunk-sjis chunk-i) (remove chunk-j (chunk-sjis chunk-i) :key #'car))
-            (push (cons chunk-j sji) (chunk-sjis chunk-i)))
+            (setf (chunk-sjis chunk-i) (remove chunk-j (chunk-sjis chunk-i) :key 'car))
+            (push (list chunk-j sji) (chunk-sjis chunk-i)))
         (progn
           (print-warning "Bad Sji setting in ~S" x)
           (push :error returns))))))
-
 
 (defmacro sji (chunkj chunki)
   "Macro to return the current Sji value between chunkj and chunki"
@@ -251,9 +343,26 @@
   "Function to return current Sji value between chunkj and chunki"
   (let ((dm (get-module declarative)))
     (if dm
-        (compute-sji dm chunkj chunki)
+        (let (sji-hook mas nsji)
+          (bt:with-lock-held ((dm-param-lock dm))
+            (setf sji-hook (dm-sji-hook dm)
+              mas (dm-mas dm)
+              nsji (dm-nsji dm)))
+          (compute-sji chunkj chunki sji-hook mas nsji))
       (print-warning "No declarative memory module found"))))
 
+(defun external-sji (chunkj chunki)
+  (sji-fct (string->name chunkj) (string->name chunki)))
+
+(defun external-add-sji (&rest settings)
+  (add-sji-fct (string->name-recursive settings)))
+
+(defun external-add-sji-fct (settings)
+  (add-sji-fct (string->name-recursive settings)))
+
+(add-act-r-command "sji" 'external-sji "Get the Sji value between chunks j and i. Params: chunkj chunki.")
+(add-act-r-command "add-sji" 'external-add-sji "Set the Sji value between chunks. Params: (chunkj chunki Sji)*.")
+(add-act-r-command "add-sji-fct" 'external-add-sji-fct "Set the Sji value between chunks. Params: ((chunkj chunki Sji)*).")
 
 (defmacro similarity (chunkj chunki)
   "Macro to return the current similarity value between chunkj and chunki"
@@ -263,43 +372,60 @@
   "Function to return current similarity value between chunkj and chunki"
   (let ((dm (get-module declarative)))
     (if dm
-        (chunks-similarity dm chunkj chunki)
+        (let (sim-hook cache-sim-hook act ms md)
+          (bt:with-lock-held ((dm-param-lock dm))
+            (setf sim-hook (dm-sim-hook dm)
+              cache-sim-hook (dm-cache-sim-hook-results dm)
+              act (dm-act dm)
+              ms (dm-ms dm)
+              md (dm-md dm)))
+          (chunks-similarity dm chunkj chunki sim-hook cache-sim-hook act ms md))
       (print-warning "No declarative memory module found"))))
 
+(defun external-similarity (chunkj chunki)
+  (similarity-fct (decode-string chunkj) (decode-string chunki)))
+
+(add-act-r-command "similarity" 'external-similarity "Get the similarity value between items j and i. Params: 'itemj itemi'.")
 
 (defun clear-dm ()
   "User function to clear declarative memory - not recommended"
   (let ((dm (get-module declarative)))
     (if dm
-        (progn
-          (clrhash (dm-chunks dm))
+        (bt:with-lock-held ((dm-chunk-lock dm))
+          (setf (dm-chunks dm) nil)
           (clrhash (dm-chunk-hash-table dm))
           (print-warning "All the chunks cleared from DM.")
           t)
       (print-warning "No declarative memory module found"))))
 
+(add-act-r-command "clear-dm" 'clear-dm "Remove all chunks from declarative memory.  No params.")
 
 (defmacro dm (&rest chunks)
   "Macro to print and return chunks in declarative memory"
   `(dm-fct ',chunks))
 
-(defun dm-fct (chunk-list)
+(defun dm-internal (&rest chunk-list)
   "Function to print and return chunks in declarative memory"
-    (let ((dm (get-module declarative)))
+  (let ((dm (get-module declarative)))
+    (setf chunk-list (string->name-recursive chunk-list))
     (if dm
         (if chunk-list
-            (let ((c-l (remove-if-not 
-                       #'(lambda (x)
-                           (member (true-chunk-name-fct x)
-                                   (all-dm-chunks dm)))
-                       chunk-list)))
+            (let* ((all (all-dm-chunks dm))
+                   (c-l (remove-if-not 
+                         (lambda (x)
+                           (member (true-chunk-name-fct x) all))
+                         chunk-list)))
               (when c-l
                 (pprint-chunks-fct c-l)))
-          (when (hash-table-keys (dm-chunks dm))
+          (when (dm-chunks dm)
             (pprint-chunks-fct (all-dm-chunks dm))))
       (print-warning "No declarative memory module found"))))
-   
-   
+
+(add-act-r-command "dm" 'dm-internal "Print the representation of the chunks from declarative memory with the given names.  Params: chunk-name*")
+
+(defun dm-fct (chunk-list)
+  (apply 'dm-internal chunk-list))
+
 (defmacro get-base-level (&rest chunks)
   "Macro to return the base-level activation of a chunk in dm"
   `(get-base-level-fct ',chunks))
@@ -309,63 +435,60 @@
   (let ((dm (get-module declarative))
         (returns nil))
     (if dm
-        (let ((dm-chunks (all-dm-chunks dm)))
-          (dolist (chunk chunks (reverse returns))
+        (let ((dm-chunks (all-dm-chunks dm))
+              bl-hook blc bll ol act-scale)
+          (bt:with-lock-held ((dm-param-lock dm))
+            (setf bl-hook (dm-bl-hook dm)
+              blc (dm-blc dm)
+              bll (dm-bll dm)
+              ol (dm-ol dm)
+              act-scale (dm-act-scale dm)))
+              
+          (dolist (chunk chunks returns)
             (let ((c (true-chunk-name-fct chunk)))
               (if (member c dm-chunks)
-                  (push (base-level-activation dm c) returns)
-                (push :error returns)))))
+                  (push-last (base-level-activation dm c nil bl-hook nil blc bll ol act-scale) returns)
+                (push-last :error returns)))))
       (print-warning "No declarative memory module found"))))
       
+(defun get-base-level-external (&rest chunks)
+  (get-base-level-fct (string->name-recursive chunks)))
+
+(defun get-base-level-fct-external (chunks)
+  (get-base-level-fct (string->name-recursive chunks)))
+
+
+(add-act-r-command "get-base-level" 'get-base-level-external "Returns the base-level activation of chunks in DM. Params: chunk*")
+(add-act-r-command "get-base-level-fct" 'get-base-level-external-fct "Returns the base-level activation of chunks in DM. Params: (chunk*)")
 
 (defmacro sdm (&rest spec)
   "Macro to search for and print chunks in declarative memory"
   `(sdm-fct ',spec))
 
-(defun sdm-fct (spec)
+(defun sdm-external (&rest spec)
+  (sdm-fct (decode-string-names spec)))
+  
+(defun sdm-fct (spec)  
   "Function to search for and print chunks in declarative memory"
   (let ((dm (get-module declarative)))
     (if dm
-        (cond ((null spec) (dm))
-              ((eq (car spec) 'isa)
-               (if (chunk-type-p-fct (second spec))
-                   (let* ((chunk-spec (define-chunk-spec-fct spec))
-                          (chunks (find-matching-chunks 
-                                   chunk-spec
-                                   :chunks (apply #'append 
-                                                  (mapcar #'(lambda (x)
-                                                              (gethash 
-                                                               x 
-                                                               (dm-chunks dm)))
-                                                    (chunk-type-subtypes-fct 
-                                                     (chunk-spec-chunk-type 
-                                                      chunk-spec)))))))
-                     (when chunks
-                       (pprint-chunks-fct chunks)))
-                 (model-warning "Invalid chunk-type ~S passed to sdm" (second spec))))
-               
-              (t
-               (if (evenp (length spec))
-                   (let ((slot-names)
-                         (valid-chunk-types)
-                         (chunk-list))
-                     (dotimes (i (/ (length spec) 2))
-                       (push (nth (* i 2) spec) slot-names))
-                     (dolist (ct (no-output (chunk-type)))
-                       (when (every #'(lambda (x)
-                                        (find x (chunk-type-slot-names-fct ct)))
-                                    slot-names)
-                         (push ct valid-chunk-types)))
-                     (dolist (ct valid-chunk-types chunk-list)
-                       (let* ((chunk-spec (define-chunk-spec-fct (append (list 'isa ct) spec)))
-                              (chunks (find-matching-chunks 
-                                       chunk-spec
-                                       :chunks (gethash ct (dm-chunks dm)))))
-                         (when chunks
-                           (setf chunk-list (append chunk-list (pprint-chunks-fct chunks)))))))
-                 (model-warning "Specification list to sdm without an isa is not an even length"))))
-              
+        (if (null spec) 
+            (dm)
+          (let ((chunk-spec (define-chunk-spec-fct spec nil)))
+            (if chunk-spec
+                (let* ((filled (chunk-spec-filled-slots chunk-spec))
+                       (empty (chunk-spec-empty-slots chunk-spec))
+                       (chunk-sets (mapcar 'cdr (remove-if-not (lambda (x) 
+                                                                 (slots-vector-match-signature (car x) filled empty))
+                                                               (bt:with-lock-held ((dm-chunk-lock dm)) (dm-chunks dm)))))
+                       (chunks (mapcan (lambda (x)
+                                         (find-matching-chunks chunk-spec :chunks x))
+                                 chunk-sets)))
+                  (when chunks (pprint-chunks-fct chunks)))
+              (print-warning "Invalid chunk specification ~s passed to sdm" spec))))
       (print-warning "No declarative memory module found"))))
+
+(add-act-r-command "sdm" 'sdm-external "Print the chunks from declarative memory which match with the given specification.  Params: 'spec*' where spec ::= {modifier} slot-name slot-value")
 
 (defmacro set-similarities (&rest settings)
   "Macro to set the similarity value between chunks"
@@ -374,33 +497,43 @@
 (defun set-similarities-fct (settings)
   "Function to set the similarity value between chunks"
   (let ((returns nil))
-    (dolist (x settings (reverse returns))
+    (dolist (x settings returns)
       (if (and (listp x)
                (= (length x) 3)
                (chunk-p-fct (first x))
                (chunk-p-fct (second x))
                (numberp (third x)))
-          (let ((similarity (third x))
-                (chunk-i (second x))
-                (chunk-j (first x)))
-            (push similarity returns)
+          (let* ((similarity (third x))
+                 (chunk-i (second x))
+                 (chunk-j (first x))
+                 (ci (get-chunk chunk-i))
+                 (cj (get-chunk chunk-j)))
+            (push-last similarity returns)
             
-            (awhen (assoc chunk-j (chunk-similarities chunk-i))
-                   (setf (chunk-similarities chunk-i)
-                     (remove it (chunk-similarities chunk-i))))
-            
-            (awhen (assoc chunk-i (chunk-similarities chunk-j))
-                   (setf (chunk-similarities chunk-j)
-                     (remove it (chunk-similarities chunk-j))))
-            
-            (push (cons chunk-j similarity) 
-                  (chunk-similarities chunk-i))
-            (push (cons chunk-i similarity) 
-                  (chunk-similarities chunk-j))
-            )
+            (bt:with-recursive-lock-held ((act-r-chunk-lock ci))
+              (bt:with-recursive-lock-held ((act-r-chunk-lock cj))
+                
+                (awhen (assoc chunk-j (chunk-similarities chunk-i))
+                       (setf (chunk-similarities chunk-i) (remove it (chunk-similarities chunk-i))))
+                
+                (awhen (assoc chunk-i (chunk-similarities chunk-j))
+                       (setf (chunk-similarities chunk-j) (remove it (chunk-similarities chunk-j))))
+                
+                (push (list chunk-j similarity) (chunk-similarities chunk-i))
+                (push (list chunk-i similarity) (chunk-similarities chunk-j)))))
         (progn
           (print-warning "Bad similarity setting in ~S" x)
-          (push :error returns))))))
+          (push-last :error returns))))))
+
+(defun external-set-similarity (&rest settings)
+  (set-similarities-fct (decode-string-names settings)))
+
+(defun external-set-similarities-fct (settings)
+  (set-similarities-fct (decode-string-names settings)))
+
+(add-act-r-command "set-similarities" 'external-set-similarity "Set the Sji value between chunks. Params: '(chunkj chunki similarity)*'.")
+(add-act-r-command "set-similarities-fct" 'external-set-similarities-fct "Set the Sji value between chunks. Params: '((chunkj chunki similarity)*)'.")
+
 
 (defmacro set-base-levels (&rest settings)
   "Macro to set the base-level activation of chunks"
@@ -411,45 +544,79 @@
   (let ((base-levels nil)
         (dm (get-module declarative)))
     (if dm
-        (dolist (setting settings (reverse base-levels))
-          (if (and (chunk-p-fct (car setting)) (member (true-chunk-name-fct (car setting)) (all-dm-chunks dm))
-                   (numberp (second setting)) (or (null (third setting)) (numberp (third setting))))
-              (push (set-bl dm (true-chunk-name-fct (car setting)) (second setting) (third setting)) base-levels)
-            (progn 
-              (cond ((not (and (chunk-p-fct (car setting)) (member (car setting) (all-dm-chunks dm))))
-                     (print-warning "~S does not name a chunk in DM." (car setting)))
-                    ((not (numberp (second setting)))
-                     (print-warning "Invalid level in setting ~S" setting))
-                    (t    
-                     (print-warning "Invalid creation-time in setting ~S" setting)))
-              (push :error base-levels))))
+        (let ((all (all-dm-chunks dm))
+              bl-hook blc bll ol act-scale)
+          (bt:with-lock-held ((dm-param-lock dm))
+            (setf bl-hook (dm-bl-hook dm)
+              blc (dm-blc dm)
+              bll (dm-bll dm)
+              ol (dm-ol dm)
+              act-scale (dm-act-scale dm)))
+          (dolist (setting settings base-levels)
+            (if (and (chunk-p-fct (car setting)) (member (true-chunk-name-fct (car setting)) all)
+                     (numberp (second setting)) (or (null (third setting)) (numberp (third setting))))
+                (push-last (set-bl dm (true-chunk-name-fct (car setting)) (second setting) (third setting) bl-hook blc bll ol act-scale)
+                           base-levels)
+              (progn 
+                (cond ((not (and (chunk-p-fct (car setting)) (member (car setting) all)))
+                       (print-warning "~S does not name a chunk in DM." (car setting)))
+                      ((not (numberp (second setting)))
+                       (print-warning "Invalid level in setting ~S" setting))
+                      (t    
+                       (print-warning "Invalid creation-time in setting ~S" setting)))
+                (push-last :error base-levels)))))
       (print-warning "No declarative memory module found"))))
-  
+
+
+(defun set-base-levels-external (&rest settings)
+  (get-base-level-fct (string->name-recursive settings)))
+
+(defun set-base-levels-fct-external (settings)
+  (get-base-level-fct (string->name-recursive settings)))
+
+
+(add-act-r-command "set-base-levels" 'set-base-levels-external "Set the base-level activation of chunks in DM. Params: (chunk level {creation-time})*")
+(add-act-r-command "set-base-levels-fct" 'set-base-levels-external-fct "Set the base-level activation of chunks in DM. Params: ((chunk level {creation-time})*)")
 
 (defun set-all-base-levels (base-level &optional creation-time)
   "Function to set the base-level activation of all dm chunks"
   (let ((dm (get-module declarative)))
     (if dm
         (if (and (numberp base-level) (or (null creation-time) (numberp creation-time)))
-            (dolist (chunk (all-dm-chunks dm) t)
-              (set-bl dm chunk base-level creation-time))
+            (let (bl-hook blc bll ol act-scale)
+              (bt:with-lock-held ((dm-param-lock dm))
+                (setf bl-hook (dm-bl-hook dm)
+                  blc (dm-blc dm)
+                  bll (dm-bll dm)
+                  ol (dm-ol dm)
+                  act-scale (dm-act-scale dm)))
+              
+              (dolist (chunk (all-dm-chunks dm) t)
+                (set-bl dm chunk base-level creation-time bl-hook blc bll ol act-scale)))
           (if (numberp base-level)
               (print-warning "Invalid creation-time ~S" creation-time)
             (print-warning "Invalid level ~S" base-level)))
       (print-warning "No declarative memory module found"))))
 
 
-(defun set-bl (dm chunk base-level creation-time)
+(add-act-r-command "set-all-base-levels" 'set-all-base-levels "Set the base-level activation of all chunks in DM. Params: base-level {creation-time}")
+
+
+(defun set-bl (dm chunk base-level creation-time bl-hook blc bll ol act-scale)
   "Internal function to set the base level of a chunk"
-  (when (numberp creation-time)
-    (setf (chunk-creation-time chunk) (seconds->ms creation-time)))
-  (cond ((dm-bll dm)
-         (setf (chunk-reference-count chunk) base-level)
-         (setf (chunk-reference-list chunk)
-           (adapt-references dm base-level (chunk-creation-time chunk)))
-         (base-level-activation dm chunk))
+  (let ((c (get-chunk chunk)))
+    
+  (cond (bll
+         (bt:with-recursive-lock-held ((act-r-chunk-lock c))
+           (when (numberp creation-time)
+             (setf (chunk-creation-time chunk) (safe-seconds->ms creation-time 'set-base-levels)))
+           (setf (chunk-reference-count chunk) base-level)
+           (setf (chunk-reference-list chunk) (adapt-references dm base-level (chunk-creation-time chunk)))
+           (base-level-activation dm chunk nil bl-hook nil blc bll ol act-scale)))
         (t
-         (setf (chunk-base-level chunk) base-level))))
+         (when (numberp creation-time)
+           (setf (chunk-creation-time chunk) (safe-seconds->ms creation-time 'set-base-levels)))
+         (setf (chunk-base-level chunk) base-level)))))
 
 (defun even-references (start end n &optional (m n))
   "Distributes m references evenly along n intervals between start and end."
@@ -462,11 +629,12 @@
         (push-last time times)))))
 
 (defun adapt-references (dm references creation-time)
-  (cond ((eq (dm-ol dm) t) nil)
-        ((null (dm-ol dm))
-         (even-references creation-time (mp-time-ms) references))
-        (t
-         (even-references creation-time (mp-time-ms) references (min (dm-ol dm) references)))))
+  (let ((ol (bt:with-lock-held ((dm-param-lock dm)) (dm-ol dm))))
+    (cond ((eq ol t) nil)
+          ((null ol)
+           (even-references creation-time (mp-time-ms) references))
+          (t
+           (even-references creation-time (mp-time-ms) references (min ol references))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -483,18 +651,16 @@
   (let ((results nil)
         (dm (get-module declarative)))
     (if dm
-        (if (null parameters) ; print all parameters for all wmes
+        (if (null parameters) ; print all parameters for all chunks
             (dolist (chunk (all-dm-chunks dm) results)
               (push-last (dm-chunk-parameters-fct dm chunk) results))
-          
           (dolist (description (if (or (keywordp (first parameters))
                                        (keywordp (second parameters))
                                        (and (listp (first parameters))
                                             (null (second parameters))
-                                            (not (keywordp 
-                                                  (second 
-                                                   (first parameters))))))
-                                   (list parameters) parameters)
+                                            (not (keywordp (second (first parameters))))))
+                                   (list parameters)
+                                 parameters)
                                results)
             (when (atom description) (setf description (list description)))
             (if (keywordp (first description))
@@ -520,311 +686,307 @@
                     ; Should it print a warning?
                     (print-warning "~S does not name a chunk in DM." chunk)
                     (push-last :error results))))))))
-      
       (print-warning "No declarative memory module found"))))
+
+
+(defun external-sdp (&rest params)
+  (sdp-fct (decode-string-names params)))
+
+(add-act-r-command "sdp" 'external-sdp "Set or get declarative parameters. Params: see ACT-R manual." t)
 
 
 (defun dm-chunk-parameters-fct (dm chunk &optional parameters)
   "Internal function to return the value of declarative chunk parameter(s), or  
    print them all if none specified."
-  (let ((value nil)
-        (values nil))
+  (let ((values nil)
+        esc ol bll sa mp)
+    (bt:with-lock-held ((dm-param-lock dm)) 
+      (setf esc (dm-esc dm)
+        ol (dm-ol dm)
+        bll (dm-bll dm)
+        sa (dm-sa dm)
+        mp (dm-mp dm)))
+    
     (cond (chunk
-           (command-output "Declarative parameters for chunk ~S:" chunk)
-           
-           ;;; Update activations ignoring partial matching
-           ;;; by making the request spec only the chunk-type.
-           ;;; also turn off the activation trace 
-           
-           (when (and (dm-esc dm) (or (find :activation parameters) (find :base-level parameters) (null parameters))
-                      (not (and (numberp (chunk-retrieval-time chunk)) (= (chunk-retrieval-time chunk) (mp-time-ms)))))
-             (let ((saved-trace (dm-act dm)))
-               (setf (dm-act dm) nil)
-               (compute-activation dm chunk (define-chunk-spec-fct (list 'isa (chunk-chunk-type-fct chunk))))
-               (setf (dm-act dm) saved-trace)))
-           
-           (cond (parameters
-                  (dolist (parameter parameters)
-                    (setf value 
+           (bt:with-recursive-lock-held ((act-r-chunk-lock (get-chunk chunk)))
+             (command-output "Declarative parameters for chunk ~S:" chunk)
+             
+             ;;; Update activations ignoring partial matching
+             ;;; by making the request spec only isa chunk.
+             ;;; also turn off the activation trace 
+             
+             (when (and esc (or (find :activation parameters) (find :base-level parameters) (null parameters))
+                        (not (and (numberp (chunk-retrieval-time chunk)) (= (chunk-retrieval-time chunk) (mp-time-ms)))))
+               (compute-activation dm chunk (define-chunk-spec isa chunk)))
+             
+             (cond (parameters
+                    (dolist (parameter parameters)
+                      (multiple-value-bind (value output output-val)
                           (case parameter
-                            (:name chunk)
-                            (:activation (chunk-activation chunk))
-                            (:base-level (chunk-last-base-level chunk))
-                            (:creation-time (ms->seconds (chunk-creation-time chunk)))
+                            (:name (values chunk "~a"))
+                            (:activation (values (chunk-activation chunk) "~6,3f"))
+                            (:base-level (values (chunk-last-base-level chunk) "~6,3f"))
+                            (:creation-time (values (ms->seconds (chunk-creation-time chunk)) "~6/print-time-in-seconds/" (chunk-creation-time chunk)))
                             (:references 
-                             (cond ((null (dm-ol dm))
-                                    (cons (chunk-reference-count chunk)
-                                          (mapcar 'ms->seconds (chunk-reference-list chunk))))
-                                   ((numberp (dm-ol dm))
-                                    (cons (chunk-reference-count chunk)
-                                          (mapcar 'ms->seconds (subseq (chunk-reference-list chunk) 0 (dm-ol dm)))))
+                             (cond ((null ol)
+                                    (values (cons (chunk-reference-count chunk)
+                                                  (mapcar 'ms->seconds (chunk-reference-list chunk)))
+                                            (concatenate 'string "(" (princ-to-string (chunk-reference-count chunk)) " ~{~/print-time-in-seconds/~^ ~})")
+                                            (chunk-reference-list chunk)))
+                                   ((numberp ol)
+                                    (values (cons (chunk-reference-count chunk)
+                                                  (mapcar 'ms->seconds (subseq (chunk-reference-list chunk) 0 ol)))
+                                            (concatenate 'string "(" (princ-to-string (chunk-reference-count chunk)) " ~{~/print-time-in-seconds/~^ ~})")
+                                            (subseq (chunk-reference-list chunk) 0 ol)))
                                    (t
-                                    (list (chunk-reference-count chunk)))))
-                                   
-                            (:source-spread (chunk-source-spread chunk))
-                            (:sjis (get-all-chunk-sjis dm chunk))
-                            (:permanent-noise (chunk-permanent-noise chunk))
-                            (:similarities (get-all-chunk-similarities dm chunk))
-                            (:retrieval-time 
-                             (print-warning ":retrieval-time parameter has been renamed :last-retrieval-time")
-                             :error)
-                            (:retrieval-activation 
-                             (print-warning ":retrieval-activation parameter has been renamed :last-retrieval-activation")
-                             :error)
-                            (:last-retrieval-activation (chunk-retrieval-activation chunk))
-                            (:last-retrieval-time (if (chunk-retrieval-time chunk) (ms->seconds (chunk-retrieval-time chunk)) nil))
-                            (:reference-count (chunk-reference-count chunk))
-                            (:reference-list (mapcar 'ms->seconds (chunk-reference-list chunk)))
-                            (t (print-warning 
-                                "~A is not a declarative parameter for chunks."
-                                parameter)
-                               :error)))
-                    (push-last value values)
-                    ; ~f falls back to ~a when not a number...
-                    (unless (eq value :error)
-                      (command-output " ~S ~6,3F" parameter value)))
-                  values)
-                 
-                 
-                 (t
-                  (when (dm-esc dm)
-                    (command-output 
-                     " :Activation ~6,3F~% :Permanent-Noise ~6,3F~% :Base-Level ~6,3F"
-                     (chunk-activation chunk) 
-                     (chunk-permanent-noise chunk)
-                     (chunk-last-base-level chunk))
-                    (when (dm-bll dm)
-                      (command-output " :Creation-Time ~6,3F" (ms->seconds (chunk-creation-time chunk))
-                      (when (dm-ol dm)
-                        (command-output " :Reference-Count ~6,3F" (chunk-reference-count chunk)))
-                      (unless (eq t (dm-ol dm))
-                        (command-output " :Reference-List ~S" (mapcar 'ms->seconds (chunk-reference-list chunk))))))
-                    (when (dm-sa dm)
-                      (command-output" :Source-Spread ~6,3F~% :Sjis ~6,3F" (chunk-source-spread chunk) (get-all-chunk-sjis dm chunk)))
-                    (when (dm-mp dm)
-                      (command-output " :Similarities ~6,3F" (get-all-chunk-similarities dm chunk)))
-                    (when (chunk-retrieval-time chunk)
-                      (command-output 
-                       " :Last-Retrieval-Activation ~6,3F~% :Last-Retrieval-Time ~6,3F"
-                       (chunk-retrieval-activation chunk) 
-                       (ms->seconds (chunk-retrieval-time chunk)))))
-                  chunk)))
+                                    (values (list (chunk-reference-count chunk)) "(~d)" (chunk-reference-count chunk)))))
+                            
+                            (:source-spread (values (chunk-source-spread chunk) "~6,3f"))
+                            (:sjis (values (get-all-chunk-sjis dm chunk) "~a"))
+                            (:permanent-noise (values (chunk-permanent-noise chunk) "~6,3f"))
+                            (:similarities (values (get-all-chunk-similarities dm chunk) "~a"))
+                            (:retrieval-time (print-warning ":retrieval-time parameter has been renamed :last-retrieval-time")
+                                             :error)
+                            (:retrieval-activation (print-warning ":retrieval-activation parameter has been renamed :last-retrieval-activation")
+                                                   :error)
+                            (:last-retrieval-activation (values (chunk-retrieval-activation chunk) "~6,3f"))
+                            (:last-retrieval-time (if (chunk-retrieval-time chunk) 
+                                                      (values (ms->seconds (chunk-retrieval-time chunk)) "~6/print-time-in-seconds/" (chunk-retrieval-time chunk))
+                                                    (values nil "~a")))
+                            (:reference-count (values (chunk-reference-count chunk) " ~d"))
+                            (:reference-list (values (mapcar 'ms->seconds (chunk-reference-list chunk)) 
+                                                     "(~{~/print-time-in-seconds/~^ ~})"
+                                                     (chunk-reference-list chunk)))
+                            (t (print-warning "~A is not a declarative parameter for chunks." parameter)
+                               :error))
+                        (push-last value values)
+                        (unless (eq value :error)
+                          (command-output " ~S ~?" parameter output (list (if output-val output-val value))))))
+                    values)
+                   (t
+                    (when esc
+                      (command-output " :Activation ~6,3F~% :Permanent-Noise ~6,3F~% :Base-Level ~6,3F"
+                                      (chunk-activation chunk) (chunk-permanent-noise chunk) (chunk-last-base-level chunk))
+                      (when bll
+                        (command-output " :Creation-Time ~/print-time-in-seconds/" (chunk-creation-time chunk))
+                        (when ol
+                          (command-output " :Reference-Count  ~d" (chunk-reference-count chunk)))
+                        (unless (eq t ol)
+                          (command-output " :Reference-List (~{~/print-time-in-seconds/~^ ~})" (chunk-reference-list chunk))))
+                      (when sa
+                        (command-output" :Source-Spread ~6,3F~% :Sjis ~a" (chunk-source-spread chunk) (get-all-chunk-sjis dm chunk)))
+                      (when mp
+                        (command-output " :Similarities ~a" (get-all-chunk-similarities dm chunk)))
+                      (when (chunk-retrieval-time chunk)
+                        (command-output " :Last-Retrieval-Activation ~6,3F~% :Last-Retrieval-Time ~6/print-time-in-seconds/"
+                                        (chunk-retrieval-activation chunk) (chunk-retrieval-time chunk))))
+                    chunk))))
           (t :error))))
 
 
 (defun get-all-chunk-sjis (dm chunk)
   (let ((sjis nil)
-        (js (mapcan #'(lambda (slot)
-                        (when (chunk-p-fct (fast-chunk-slot-value-fct chunk slot))
-                          (list (fast-chunk-slot-value-fct chunk slot))))
-              (chunk-type-slot-names-fct (chunk-chunk-type-fct chunk)))))
+        (js (mapcan (lambda (slot)
+                      (let ((val (fast-chunk-slot-value-fct chunk slot)))
+                        (when (chunk-p-fct val)
+                          (list val))))
+              (chunk-filled-slots-list-fct chunk))))
     
-    (setf sjis (mapcar #'(lambda (j) (cons j (compute-sji dm j chunk))) (remove-duplicates (cons chunk js))))
+    (let (sji-hook mas nsji)
+      (bt:with-lock-held ((dm-param-lock dm))
+        (setf sji-hook (dm-sji-hook dm)
+          mas (dm-mas dm)
+          nsji (dm-nsji dm)))
+      
+      (setf sjis (mapcar (lambda (j) (list j (compute-sji j chunk sji-hook mas nsji))) (remove-duplicates (cons chunk js)))))
+    
     (dolist (x (chunk-sjis chunk))
-      (setf sjis (remove (car x) sjis :key #'car))
+      (setf sjis (remove (car x) sjis :key 'car))
       (push x sjis))
     sjis))
 
 
 (defun get-all-chunk-similarities (dm chunk)
   (let ((sims (chunk-similarities chunk)))
-    (unless (find chunk sims :key #'car)
-      (push (cons chunk (dm-ms dm)) sims))
+    (unless (find chunk sims :key 'car)
+      (push (list chunk (bt:with-lock-held ((dm-param-lock dm)) (dm-ms dm))) sims))
     sims))
 
 (defun set-dm-chunk-parameters-fct (dm chunk parameters)
   "Internal function to set the value of declarative chunk parameter(s)."
   (let ((values nil))
     (if chunk
-      (loop
-        (unless parameters 
-          (return values))
-        (let* ((parameter (pop parameters))
-               (value (pop parameters)))
-          ; not sure what this was for, but don't think it's still necessary
-          ;(when (and (listp value) (eq (first value) 'quote))
-          ;  (setf value (second value)))  
-          
-          (push-last
-           (case parameter
-             (:name
-              (print-warning "CHUNK NAME CANNOT BE SET.")
-              :error)
-             (:activation
-              (print-warning "CHUNK ACTIVATION CANNOT BE SET DIRECTLY.")
-              :error)
-             (:last-retrieval-activation
-              (print-warning "CHUNK LAST-RETRIEVAL-ACTIVATION CANNOT BE SET DIRECTLY.")
-              :error)
-             (:last-retrieval-time
-              (print-warning "CHUNK LAST-RETRIEVAL-TIME CANNOT BE SET DIRECTLY.")
-              :error)
+        (let (bll ol)
+          (bt:with-lock-held ((dm-param-lock dm))
+            (setf bll (dm-bll dm) ol (dm-ol dm)))
+          (bt:with-recursive-lock-held ((act-r-chunk-lock (get-chunk chunk)))
+            (loop
+              (unless parameters 
+                (return values))
+              (let* ((parameter (pop parameters))
+                     (value (pop parameters)))
+                (push-last
+                 (case parameter
+                   ;; Things that can't be set directly.
+                   (:name (print-warning "CHUNK NAME CANNOT BE SET.")
+                          :error)
+                   (:activation (print-warning "CHUNK ACTIVATION CANNOT BE SET DIRECTLY.")
+                                :error)
+                   (:last-retrieval-activation (print-warning "CHUNK LAST-RETRIEVAL-ACTIVATION CANNOT BE SET DIRECTLY.")
+                                               :error)
+                   (:last-retrieval-time (print-warning "CHUNK LAST-RETRIEVAL-TIME CANNOT BE SET DIRECTLY.")
+                                         :error)
+                   (:source-spread (print-warning "CHUNK SOURCE-SPREAD CANNOT BE SET DIRECTLY: SET BUFFER CHUNKS AND/OR Sjis INSTEAD.")
+                                   :error)
+                   
+                   (:base-level
+                    (cond (bll
+                           (print-warning "CHUNK BASE-LEVEL CANNOT BE SET DIRECTLY WHEN BASE LEVEL LEARNING IS ENABLED")
+                           (print-warning "SET CREATION-TIME AND/OR REFERENCES INSTEAD.")
+                           :error)
+                          ((numberp value)
+                           (setf (chunk-base-level chunk) value))
+                          (t
+                           (print-warning "CHUNK BASE-LEVEL MUST BE SET TO A NUMBER.")
+                           :error)))
+                   
+                   (:creation-time
+                    (cond ((and (numberp value) (<= value (mp-time)))
+                           (setf (chunk-creation-time chunk) (safe-seconds->ms value 'sdp))
+                           value)
+                          (t
+                           (print-warning "CHUNK CREATION-TIME MUST BE SET TO A NUMBER LESS THAN OR EQUAL TO THE CURRENT TIME.")
+                           :error)))
+                   
+                   (:reference-count
+                    (cond ((null bll)
+                           (print-warning "WHEN BLL DISABLED BASE-LEVEL SHOULD BE SET DIRECTLY")
+                           :error)
+                          ((null ol)
+                           (print-warning "WHEN OL IS DISABLED BASE-LEVEL MUST BE SET THROUGH THE REFERENCE-LIST")
+                           :error)
+                          ((not (numberp value))
+                           (print-warning "CHUNK REFERENCE-COUNT MUST BE SET TO A NUMBER")
+                           :error) 
+                          ((numberp ol) 
+                           (cond ((= (length (chunk-reference-list chunk)) value)
+                                  ;; do nothing
+                                  )
+                                 ((> (length (chunk-reference-list chunk)) value)
+                                  (setf (chunk-reference-list chunk) (subseq (chunk-reference-list chunk) 0 value)))
+                                 ((= (length (chunk-reference-list chunk)) ol)
+                                  ;; do nothing
+                                  )
+                                 (t 
+                                  (setf (chunk-reference-list chunk) (adapt-references dm value (chunk-creation-time chunk)))))
+                           (setf (chunk-reference-count chunk) value))
+                          (t ;; dm-ol = t so just set the number...
+                           (setf (chunk-reference-count chunk) value))))
+                   
+                   (:reference-list
+                    (cond ((null bll)
+                           (print-warning "WHEN BLL DISABLED BASE-LEVEL SHOULD BE SET DIRECTLY")
+                           :error)
+                          ((eq t ol)
+                           (print-warning "WHEN OL IS T BASE-LEVEL MUST BE SET THROUGH THE REFERENCE-COUNT")
+                           :error)
+                          ((not (listp value))
+                           (print-warning "CHUNK REFERENCE-LIST MUST BE SET TO A LIST OF NUMBERS")
+                           :error)
+                          ((not (every 'numberp value))
+                           (print-warning "CHUNK REFERENCE-LIST MUST BE SET TO A LIST OF NUMBERS")
+                           :error)
+                          ((numberp ol)
+                           (if (> (length value) ol)
+                               (setf (chunk-reference-list chunk) (mapcar (lambda (x) (safe-seconds->ms x 'sdp)) (subseq value 0 ol)))
+                             (setf (chunk-reference-list chunk) (mapcar (lambda (x) (safe-seconds->ms x 'sdp)) value)))
+                           (when (< (chunk-reference-count chunk) (length (chunk-reference-list chunk)))
+                             (setf (chunk-reference-count chunk) (length (chunk-reference-list chunk))))
+                           (mapcar 'ms->seconds (chunk-reference-list chunk)))
+                          (t ;; dm-ol = nil
+                           (setf (chunk-reference-count chunk) (length value))
+                           (setf (chunk-reference-list chunk) (mapcar (lambda (x) (safe-seconds->ms x 'sdp)) value))
+                           (mapcar 'ms->seconds (chunk-reference-list chunk)))))
+                   
+                   (:references
+                    (cond ((listp value)
+                           (setf (chunk-reference-count chunk) (length value))
+                           
+                           (setf (chunk-reference-list chunk)
+                             
+                             (cond ((null ol)
+                                    (mapcar (lambda (x) (safe-seconds->ms x 'sdp)) value))
+                                   (ol ;; it's a number so ignore the
+                                    ;; items in the list and even space them -
+                                    ;; that's what 4/5 does...
+                                    (adapt-references dm (length value) (chunk-creation-time chunk)))
+                                   (t nil)))
+                           
+                           (cons (chunk-reference-count chunk)
+                                 (mapcar 'ms->seconds (chunk-reference-list chunk))))
+                          
+                          ((numberp value)
+                           (setf (chunk-reference-count chunk) value)
+                           (setf (chunk-reference-list chunk)
+                             (adapt-references dm value (chunk-creation-time chunk)))
+                           
+                           (cons (chunk-reference-count chunk)
+                                 (mapcar 'ms->seconds (chunk-reference-list chunk))))
+                          (t
+                           (print-warning "CHUNK REFERENCES MUST BE SET TO A NUMBER OR A LIST.")
+                           :error)))
              
-             (:base-level
-              (cond ((dm-bll dm)
-                     (print-warning 
-                      "CHUNK BASE-LEVEL CANNOT BE SET DIRECTLY WHEN BASE LEVEL LEARNING IS ENABLED")
-                     (print-warning "SET CREATION-TIME AND/OR REFERENCES INSTEAD.")
-                     :error)
-                    ((numberp value)
-                     (setf (chunk-base-level chunk) value))
-                    (t
-                     (print-warning "CHUNK BASE-LEVEL MUST BE SET TO A NUMBER.")
-                     :error)))
-             (:creation-time
-              (cond ((and (numberp value) (<= value (mp-time)))
-                     (setf (chunk-creation-time chunk) (seconds->ms value))
-                     value)
-                    (t
-                     (print-warning
-                      "CHUNK CREATION-TIME MUST BE SET TO A NUMBER LESS THAN OR EQUAL TO THE CURRENT TIME.")
-                     :error)))
-             
-             (:reference-count
-              (cond ((null (dm-bll dm))
-                     (print-warning "WHEN BLL DISABLED BASE-LEVEL SHOULD BE SET DIRECTLY")
-                     :error)
-                    ((null (dm-ol dm))
-                     (print-warning "WHEN OL IS DISABLED BASE-LEVEL MUST BE SET THROUGH THE REFERENCE-LIST")
-                     :error)
-                    ((not (numberp value))
-                     (print-warning "CHUNK REFERENCE-COUNT MUST BE SET TO A NUMBER")
-                     :error) 
-                    ((numberp (dm-ol dm)) 
-                     (cond ((= (length (chunk-reference-list chunk)) value)
-                            ;; do nothing
-                            )
-                           ((> (length (chunk-reference-list chunk)) value)
-                            (setf (chunk-reference-list chunk) (subseq (chunk-reference-list chunk) 0 value)))
-                           ((= (length (chunk-reference-list chunk)) (dm-ol dm))
-                            ;; do nothing
-                            )
-                           (t 
-                            (setf (chunk-reference-list chunk) (adapt-references dm value (chunk-creation-time chunk)))))
-                     (setf (chunk-reference-count chunk) value))
-                    (t ;; dm-ol = t so just set the number...
-                     (setf (chunk-reference-count chunk) value))))
-             
-             (:reference-list
-              (cond ((null (dm-bll dm))
-                     (print-warning "WHEN BLL DISABLED BASE-LEVEL SHOULD BE SET DIRECTLY")
-                     :error)
-                    ((eq t (dm-ol dm))
-                     (print-warning "WHEN OL IS T BASE-LEVEL MUST BE SET THROUGH THE REFERENCE-COUNT")
-                     :error)
-                    ((not (listp value))
-                     (print-warning "CHUNK REFERENCE-LIST MUST BE SET TO A LIST OF NUMBERS")
-                     :error)
-                    ((not (every 'numberp value))
-                     (print-warning "CHUNK REFERENCE-LIST MUST BE SET TO A LIST OF NUMBERS")
-                     :error)
-                    ((numberp (dm-ol dm))
-                     (if (> (length value) (dm-ol dm))
-                         (setf (chunk-reference-list chunk) (mapcar 'seconds->ms (subseq value 0 (dm-ol dm))))
-                       (setf (chunk-reference-list chunk) (mapcar 'seconds->ms value)))
-                     (when (< (chunk-reference-count chunk) (length (chunk-reference-list chunk)))
-                       (setf (chunk-reference-count chunk) (length (chunk-reference-list chunk))))
-                     (mapcar 'ms->seconds (chunk-reference-list chunk)))
-                    (t ;; dm-ol = nil
-                     (setf (chunk-reference-count chunk) (length value))
-                     (setf (chunk-reference-list chunk) (mapcar 'seconds->ms value))
-                     (mapcar 'ms->seconds (chunk-reference-list chunk)))))
-             
-             (:references
-              (cond ((listp value)
-                     (setf (chunk-reference-count chunk) (length value))
-                     
-                     (setf (chunk-reference-list chunk)
-                     
-                       (cond ((null (dm-ol dm))
-                              (mapcar (lambda (x) (seconds->ms x)) value))
-                             ((dm-ol dm) ;; it's a number so ignore the
-                              ;; items in the list and even space them -
-                              ;; that's what 4/5 does...
-                              (adapt-references dm
-                               (length value) 
-                               (chunk-creation-time chunk)))
-                             (t nil)))
-                     
-                     (cons (chunk-reference-count chunk)
-                           (mapcar 'ms->seconds (chunk-reference-list chunk))))
-                    
-                    ((numberp value)
-                     (setf (chunk-reference-count chunk) value)
-                     (setf (chunk-reference-list chunk)
-                       (adapt-references dm
-                        value 
-                        (chunk-creation-time chunk)))
-                       
-                     (cons (chunk-reference-count chunk)
-                           (mapcar 'ms->seconds (chunk-reference-list chunk))))
-                    (t
-                     (print-warning 
-                      "CHUNK REFERENCES MUST BE SET TO A NUMBER OR A LIST.")
-                     :error)))
-             
-             (:source-spread
-              (print-warning "CHUNK SOURCE-SPREAD CANNOT BE SET DIRECTLY: SET BUFFER CHUNKS AND/OR Sjis INSTEAD.")
-              :error)
-             
-             (:sjis
-              (cond ((listp value)
-                     (dolist (sji-pair value)
-                       (let ((chunkj (car sji-pair))
-                             (sji (if (numberp (cdr sji-pair))
-                                      (cdr sji-pair)
-                                    (cadr sji-pair))))
-                         (if (numberp sji)
-                             (if (chunk-p-fct chunkj)
-                                 (add-sji-fct (list (list chunkj chunk sji)))
-                               (print-warning "~S is not a chunk"))
-                           (print-warning "Sji VALUE ~S IS NOT A NUMBER." sji))))
-                     (get-all-chunk-sjis dm chunk))
-                    (t
-                     (print-warning 
-                      "CHUNK Sjis MUST BE SET USING A LIST OF CHUNK-NUMBER PAIRS.")
-                     :error)))
-             
-             (:permanent-noise
-              (cond ((numberp value)
-                     (setf (chunk-permanent-noise chunk) value))
-                    (t
-                     (print-warning
-                      "CHUNK PERMANENT-NOISE MUST BE SET TO A NUMBER.")
-                     :error)))
-             
-             
-             (:similarities
-              (cond ((listp value)
-                     
-                     (dolist (similarity-pair value)
-                       (let ((chunkj (car similarity-pair))
-                             (similarity (if (numberp (cdr similarity-pair))
-                                             (cdr similarity-pair)
-                                           (cadr similarity-pair))))
-                         (if (numberp similarity)
-                             (if (chunk-p-fct chunkj)
-                               (progn
-                                 (awhen (assoc chunkj (chunk-similarities chunk))
-                                        (setf (chunk-similarities chunk)
-                                          (remove it (chunk-similarities chunk))))
-                                 
-                                 (push (cons chunkj similarity) 
-                                       (chunk-similarities chunk)))
-                               (print-warning "~S is not the name of a chunk." chunkj))
-                           (print-warning "CHUNK SIMILARITY VALUE ~S IS NOT A NUMBER." similarity))))
-                     
-                     (get-all-chunk-similarities dm chunk))
-                    (t
-                     (print-warning 
-                      "CHUNK SIMILARITIES MUST BE SET USING A LIST OF CHUNK-NUMBER PAIRS.")
-                     :error)))
-             
-             
-             (t (print-warning "NO PARAMETER ~s DEFINED FOR CHUNKS."
-                             parameter)
-                :error))
-           values)))
+                   (:sjis
+                    (cond ((listp value)
+                           (dolist (sji-pair value)
+                             (let ((chunkj (car sji-pair))
+                                   (sji (if (numberp (cdr sji-pair))
+                                            (cdr sji-pair)
+                                          (cadr sji-pair))))
+                               (if (numberp sji)
+                                   (if (chunk-p-fct chunkj)
+                                       (add-sji-fct (list (list chunkj chunk sji)))
+                                     (print-warning "~S is not the name of a chunk." chunkj))
+                                 (print-warning "Sji VALUE ~S IS NOT A NUMBER." sji))))
+                           (get-all-chunk-sjis dm chunk))
+                          (t
+                           (print-warning "CHUNK Sjis MUST BE SET USING A LIST OF CHUNK-NUMBER PAIRS.")
+                           :error)))
+                   
+                   (:permanent-noise
+                    (cond ((numberp value)
+                           (setf (chunk-permanent-noise chunk) value))
+                          (t
+                           (print-warning "CHUNK PERMANENT-NOISE MUST BE SET TO A NUMBER.")
+                           :error)))
+                   
+                   (:similarities
+                    (cond ((listp value)
+                           (dolist (similarity-pair value)
+                             (let ((chunkj (car similarity-pair))
+                                   (similarity (if (numberp (cdr similarity-pair))
+                                                   (cdr similarity-pair)
+                                                 (cadr similarity-pair))))
+                               (if (numberp similarity)
+                                   (if (chunk-p-fct chunkj)
+                                       (progn
+                                         (awhen (assoc chunkj (chunk-similarities chunk))
+                                                (setf (chunk-similarities chunk)
+                                                  (remove it (chunk-similarities chunk))))
+                                         
+                                         (push (list chunkj similarity) 
+                                               (chunk-similarities chunk)))
+                                     (print-warning "~S is not the name of a chunk." chunkj))
+                                 (print-warning "CHUNK SIMILARITY VALUE ~S IS NOT A NUMBER." similarity))))
+                           
+                           (get-all-chunk-similarities dm chunk))
+                          (t
+                           (print-warning "CHUNK SIMILARITIES MUST BE SET USING A LIST OF CHUNK-NUMBER PAIRS.")
+                           :error)))
+                   
+                   (t (print-warning "NO PARAMETER ~s DEFINED FOR CHUNKS." parameter)
+                      :error))
+                 values)))))
       :error)))
 
 ;;; 
@@ -834,200 +996,194 @@
 (defun reset-declarative-finsts ()
   (let ((dm (get-module declarative)))
     (if dm
-        (setf (dm-finsts dm) nil)
+        (bt:with-lock-held ((dm-state-lock dm)) (setf (dm-finsts dm) nil))
       (print-warning "No declarative module found - cannot reset the finsts."))))
+
+(add-act-r-command "reset-declarative-finsts" 'reset-declarative-finsts "Clear all of the finsts marking recently retrieved chunks in declarative memory. No params.")
 
 (defun print-dm-finsts ()
   (let ((dm (get-module declarative)))
     (when dm
-      ;; get-module will report a warning if it's not found
-      
-      (remove-old-dm-finsts dm)
-      
-      (let ((max-name-len (max 11
-                               (if (dm-finsts dm)
-                                   (apply #'max 
-                                          (mapcar #'(lambda (x)
-                                                      (length (symbol-name (car x))))
-                                            (dm-finsts dm)))
+      (let* ((finsts (remove-old-dm-finsts dm))
+             (max-name-len (max 11
+                               (if finsts
+                                   (apply 'max 
+                                          (mapcar (lambda (x)
+                                                    (length (symbol-name (car x))))
+                                            finsts))
                                  0))))
         
-        (command-output  "~%~va    Time Stamp~%~v,1,0,'-a"
-          max-name-len "Chunk name" 
-          (+ 14 max-name-len) "")
+        (command-output  "~%~va    Time Stamp~%~v,1,0,'-a" max-name-len "Chunk name" (+ 14 max-name-len) "")
         
-        (dolist (x (dm-finsts dm) (mapcar (lambda (y) (cons (car y) (ms->seconds (cdr y)))) (dm-finsts dm)))
-          (command-output  "~va    ~8,3f" max-name-len
-                          (car x) (ms->seconds (cdr x))))))))
+        (dolist (x finsts (mapcar (lambda (x) (list (car x) (ms->seconds (cdr x)))) finsts))
+          (command-output  "~va    ~8/print-time-in-seconds/" max-name-len (car x) (cdr x)))))))
+
+(add-act-r-command "print-dm-finsts" 'print-dm-finsts "Print a table showing any finsts marking recently retrieved chunks in declarative memory. No params.")
 
 
-(defun print-activation-trace (time)
-  
+(defun print-activation-trace (time &optional (time-in-ms t))
   (let ((dm (get-module declarative)))
     (if dm
-        (let ((data (gethash time (dm-trace-table dm))))
+        (let* ((index (if time-in-ms time (safe-seconds->ms time 'print-activation-trace)))
+               (data (gethash index (bt:with-lock-held ((dm-state-lock dm)) (dm-trace-table dm))))
+               (sact (bt:with-lock-held ((dm-param-lock dm)) (dm-sact dm))))
           (if data
               (progn
                 (if (sact-trace-only-recent data)
-                    (when (dm-act-level (dm-sact dm) 'high)
+                    (when (dm-act-level sact 'high)
                       (command-output "Only recently retrieved chunks: ~s" (sact-trace-recents data)))
                   (when (sact-trace-remove-recent data)
-                    (when (dm-act-level (dm-sact dm) 'high)
+                    (when (dm-act-level sact 'high)
                       (command-output "Removing recently retrieved chunks:")
                       (dolist (x (sact-trace-recents data))
                         (command-output "~s" x)))))
 
-                (when (dm-act-level (dm-sact dm) 'medium)
+                (when (dm-act-level sact 'medium)
                   (dolist (x (sact-trace-matches data))
                     (command-output "Chunk ~s matches" x)))
                       
-                (when (dm-act-level (dm-act dm) 'high)
+                (when (dm-act-level sact 'high)
                   (dolist (x (sact-trace-no-matches data))
                     (command-output "Chunk ~s does not match" x)))
       
                 (when (sact-trace-esc data)
                   (dolist (chunk (sact-trace-chunks data))
-                    (print-chunk-activation-details dm data chunk)))
-
+                    (print-chunk-activation-details chunk sact)))
 
                 (case (sact-trace-result-type data)
                   (:force
-                   (when (dm-act-level (dm-sact dm) 'low)
+                   (when (dm-act-level sact 'low)
                      (command-output 
-                      "Retrieval-set-hook function forced retrieval of" (sact-trace-result data))))
+                      "Retrieval-set-hook function forced retrieval of chunk ~s" (sact-trace-result data))))
                   
                   (:force-fail
-                   (when (dm-act-level (dm-sact dm) 'low)
+                   (when (dm-act-level sact 'low)
                      (command-output "Retrieval-set-hook function forced retrieval failure")))
+                  
                   (:fail         
-                   
-                   (when (dm-act-level (dm-sact dm) 'low)
+                   (when (dm-act-level sact 'low)
                      (if (sact-trace-result data)
                          (command-output "No chunk above the retrieval threshold: ~f" (sact-trace-result data))
                        (command-output "No matching chunk found retrieval failure"))))
                   
                   (:single
-                   (when (dm-act-level (dm-sact dm) 'low)
+                   (when (dm-act-level sact 'low)
                      (command-output "Chunk ~s with activation ~f is the best"
                                    (car (sact-trace-result data)) (cdr (sact-trace-result data)))))
                   
                   (:multi
-                   (when (dm-act-level (dm-sact dm) 'low)
+                   (when (dm-act-level sact 'low)
                      (command-output "Chunk ~s chosen among the chunks with activation ~f"
                                    (car (sact-trace-result data)) (cdr (sact-trace-result data)))))))
-                    
+            
             (model-warning "No activation trace information available for time ~S" time)))
       (print-warning "No declarative module available for reporting activation trace."))))
 
+(add-act-r-command "print-activation-trace" 'print-activation-trace "Prints out the activation trace from the saved data at the specified time. Params: time {ms?}")
 
-(defun print-chunk-activation-details (dm data chunk)
-  (declare (ignore data))
-  (when (dm-act-level (dm-sact dm) 'medium)
+(defun print-chunk-activation-details (chunk sact)
+  (when (dm-act-level sact 'medium)
     (command-output "Computing activation for chunk ~s" (sact-chunk-name chunk)))
   
-  (when (dm-act-level (dm-sact dm) 'medium)
+  (when (dm-act-level sact 'medium)
     (command-output "Computing base-level"))
   
   (case (sact-chunk-bl-style chunk)
     
     (:hook 
-     (when (dm-act-level (dm-sact dm) 'medium)
+     (when (dm-act-level sact 'medium)
        (command-output "base-level hook returns: ~f" (sact-chunk-bl-result chunk))))
     
     (:learn 
-     (when (dm-act-level (dm-sact dm) 'medium)
+     (when (dm-act-level sact 'medium)
        (command-output "Starting with blc: ~f" (sact-chunk-blc chunk)))
      
      (if (sact-chunk-zero-ref chunk)
-         (when (dm-act-level (dm-sact dm) 'low)
+         (when (dm-act-level sact 'low)
            (command-output "Cannot compute base-level for a chunk with no references."))
        
-       (when (dm-act-level (dm-sact dm) 'medium)
-         (command-output "Computing base-level from ~d references ~S" 
+       (when (dm-act-level sact 'medium)
+         (command-output "Computing base-level from ~d references (~{~/print-time-in-seconds/~^ ~})" 
                        (sact-chunk-bl-count chunk) (sact-chunk-bl-refs chunk))
-         (command-output "  creation time: ~f decay: ~f  Optimized-learning: ~s" 
+         (command-output "  creation time: ~/print-time-in-seconds/ decay: ~f  Optimized-learning: ~s" 
                        (sact-chunk-bl-ct chunk) (sact-chunk-decay chunk) (sact-chunk-ol chunk))
          (command-output "base-level value: ~f" (sact-chunk-base-level chunk)))))
     
     (:simple 
      (if (sact-chunk-base-level chunk)
-         (when (dm-act-level (dm-sact dm) 'medium)
+         (when (dm-act-level sact 'medium)
            (command-output "User provided chunk base-level: ~f" (sact-chunk-base-level chunk)))
-       (when (dm-act-level (dm-sact dm) 'medium)
+       (when (dm-act-level sact 'medium)
          (command-output "Starting with blc: ~f" (sact-chunk-blc chunk))))))
   
-  (when (dm-act-level (dm-sact dm) 'medium)
+  (when (dm-act-level sact 'medium)
     (command-output "Total base-level: ~f" (sact-chunk-bl-result chunk)))
   
   (when (sact-chunk-sa chunk)
-    (when (dm-act-level (dm-sact dm) 'medium)
+    (when (dm-act-level sact 'medium)
       (command-output "Computing activation spreading from buffers")))
   
   (case (sact-chunk-sa chunk)
     (:hook 
-     (when (dm-act-level (dm-act dm) 'medium)
+     (when (dm-act-level sact 'medium)
        (command-output "spreading activation hook returns: ~f" (sact-chunk-sa-value chunk))))
     (:full
      (dolist (buffer (reverse (sact-chunk-sa-buffers chunk)))
        
-       (when (dm-act-level (dm-sact dm) 'medium)
-         (command-output "  Spreading ~f from buffer ~s chunk ~s" 
-                       (third buffer) (first buffer) (second buffer)))
+       (when (dm-act-level sact 'medium)
+         (command-output "  Spreading ~f from buffer ~s chunk ~s" (third buffer) (first buffer) (second buffer)))
        
-       (when (dm-act-level (dm-sact dm) 'medium)
+       (when (dm-act-level sact 'medium)
          (command-output "    sources of activation are: ~s" (mapcar 'car (nthcdr 3 buffer))))
        
        (dolist (sji (nthcdr 3 buffer))
-         (when (dm-act-level (dm-sact dm) 'medium)
+         (when (dm-act-level sact 'medium)
            (command-output "    Spreading activation  ~f from source ~s level  ~f times Sji ~f"
                          (second sji) (first sji) (third sji) (fourth sji)))))
      
-     (when (dm-act-level (dm-sact dm) 'medium)
+     (when (dm-act-level sact 'medium)
        (command-output "Total spreading activation: ~f" (sact-chunk-sa-value chunk)))))
   
-  
   (when (sact-chunk-pm chunk)
-    (when (dm-act-level (dm-sact dm) 'medium)
+    (when (dm-act-level sact 'medium)
       (command-output "Computing partial matching component")))
   
   (case (sact-chunk-pm chunk)
     (:hook
-     (when (dm-act-level (dm-sact dm) 'medium)
+     (when (dm-act-level sact 'medium)
        (command-output "partial matching hook returns: ~f" (sact-chunk-pm-value chunk))))
     (:full
      (dolist (slot (sact-chunk-pm-tests chunk))
-       (when (dm-act-level (dm-sact dm) 'medium)
+       (when (dm-act-level sact 'medium)
          (command-output "  comparing slot ~S" (first slot))
-         (command-output "  Requested: ~s ~s  Chunk's slot value: ~s"
-                       (second slot) (third slot) (fourth slot))
+         (command-output "  Requested: ~s ~s  Chunk's slot value: ~s" (second slot) (third slot) (fourth slot))
          (command-output "  similarity: ~f" (fifth slot))
          (command-output "  effective similarity value is ~f" (sixth slot))))
      
-     (when (dm-act-level (dm-sact dm) 'medium)
+     (when (dm-act-level sact 'medium)
        (command-output "Total similarity score ~f" (sact-chunk-pm-value chunk)))))
-  
   
   (case (sact-chunk-noise chunk)
     (:hook
-     (when (dm-act-level (dm-sact dm) 'medium)
+     (when (dm-act-level sact 'medium)
        (command-output "noise hook returns: ~f" (sact-chunk-noise-p chunk))))
     (:full
-     (when (dm-act-level (dm-sact dm) 'medium)
+     (when (dm-act-level sact 'medium)
        (command-output "Adding transient noise ~f" (sact-chunk-noise-t chunk))
        (command-output "Adding permanent noise ~f" (sact-chunk-noise-p chunk)))))
   
-  
-  (when (dm-act-level (dm-sact dm) 'low)
+  (when (dm-act-level sact 'low)
     (command-output "Chunk ~s has an activation of: ~f" (sact-chunk-name chunk) (sact-chunk-total chunk))))
 
-(defmacro print-chunk-activation-trace (chunk-name time)
-  `(print-chunk-activation-trace-fct ',chunk-name ,time))
 
-(defun print-chunk-activation-trace-fct (chunk-name time)
-  
+(defmacro print-chunk-activation-trace (chunk-name time &optional (time-in-ms t))
+  `(print-chunk-activation-trace-fct ',chunk-name ,time ,time-in-ms))
+
+(defun print-chunk-activation-trace-fct (chunk-name time &optional (time-in-ms t))
   (let ((dm (get-module declarative)))
     (if dm
-        (let ((data (gethash time (dm-trace-table dm))))
+        (let* ((index (if time-in-ms time (safe-seconds->ms time 'print-activation-trace)))
+               (data (gethash index (bt:with-lock-held ((dm-state-lock dm)) (dm-trace-table dm)))))
           (if data
               (cond ((and (sact-trace-remove-recent data)                
                           (find chunk-name (sact-trace-recents data)))
@@ -1043,7 +1199,7 @@
                      (command-output "Chunk ~s was not considered." chunk-name))
                     (t 
                      (let ((chunk (find chunk-name (sact-trace-chunks data) :key 'sact-chunk-name)))
-                       (print-chunk-activation-details dm data chunk)
+                       (print-chunk-activation-details chunk (bt:with-lock-held ((dm-param-lock dm)) (dm-sact dm)))
                        (values (sact-chunk-total chunk) (sact-chunk-bl-result chunk) 
                                (sact-chunk-sa-value chunk) (sact-chunk-pm-value chunk)
                                (case (sact-chunk-noise chunk)
@@ -1052,40 +1208,171 @@
                                  (:full
                                   (+ (sact-chunk-noise-t chunk)
                                      (sact-chunk-noise-p chunk))))))))
-            
             (model-warning "No activation trace information available for time ~S" time)))
       (print-warning "No declarative module available for reporting activation trace."))))
+
+
+(defun print-chunk-activation-trace-external (chunk-name time &optional (time-in-ms t))
+  (print-chunk-activation-trace-fct (string->name chunk-name) time time-in-ms))
+
+(add-act-r-command "print-chunk-activation-trace" 'print-chunk-activation-trace-external 
+                   "Prints out the activation trace from the saved data for a specific chunk at the specified time. Params: chunk time {ms?}")
+
+(defun printed-chunk-activation-details (chunk sact)
+  (let ((s (make-string-output-stream)))
+    (when (dm-act-level sact 'medium)
+      (format s "Computing activation for chunk ~s~%" (sact-chunk-name chunk)))
+    
+    (when (dm-act-level sact 'medium)
+      (format s "Computing base-level~%"))
+    
+    (case (sact-chunk-bl-style chunk)
+      
+      (:hook 
+       (when (dm-act-level sact 'medium)
+         (format s "base-level hook returns: ~f~%" (sact-chunk-bl-result chunk))))
+      
+      (:learn 
+       (when (dm-act-level sact 'medium)
+         (format s "Starting with blc: ~f~%" (sact-chunk-blc chunk)))
+       
+       (if (sact-chunk-zero-ref chunk)
+           (when (dm-act-level sact 'low)
+             (format s "Cannot compute base-level for a chunk with no references.~%"))
+         
+         (when (dm-act-level sact 'medium)
+           (format s "Computing base-level from ~d references (~{~/print-time-in-seconds/~^ ~})~%" 
+                           (sact-chunk-bl-count chunk) (sact-chunk-bl-refs chunk))
+           (format s "  creation time: ~/print-time-in-seconds/ decay: ~f  Optimized-learning: ~s~%" 
+                           (sact-chunk-bl-ct chunk) (sact-chunk-decay chunk) (sact-chunk-ol chunk))
+           (format s "base-level value: ~f~%" (sact-chunk-base-level chunk)))))
+      
+      (:simple 
+       (if (sact-chunk-base-level chunk)
+           (when (dm-act-level sact 'medium)
+             (format s "User provided chunk base-level: ~f~%" (sact-chunk-base-level chunk)))
+         (when (dm-act-level sact 'medium)
+           (format s "Starting with blc: ~f~%" (sact-chunk-blc chunk))))))
+    
+    (when (dm-act-level sact 'medium)
+      (format s "Total base-level: ~f~%" (sact-chunk-bl-result chunk)))
+    
+    (when (sact-chunk-sa chunk)
+      (when (dm-act-level sact 'medium)
+        (format s "Computing activation spreading from buffers~%")))
+    
+    (case (sact-chunk-sa chunk)
+      (:hook 
+       (when (dm-act-level sact 'medium)
+         (format s "spreading activation hook returns: ~f~%" (sact-chunk-sa-value chunk))))
+      (:full
+       (dolist (buffer (reverse (sact-chunk-sa-buffers chunk)))
+         
+         (when (dm-act-level sact 'medium)
+           (format s "  Spreading ~f from buffer ~s chunk ~s~%" (third buffer) (first buffer) (second buffer)))
+         
+         (when (dm-act-level sact 'medium)
+           (format s "    sources of activation are: ~s~%" (mapcar 'car (nthcdr 3 buffer))))
+         
+         (dolist (sji (nthcdr 3 buffer))
+           (when (dm-act-level sact 'medium)
+             (format s "    Spreading activation  ~f from source ~s level  ~f times Sji ~f~%"
+                             (second sji) (first sji) (third sji) (fourth sji)))))
+       
+       (when (dm-act-level sact 'medium)
+         (format s "Total spreading activation: ~f~%" (sact-chunk-sa-value chunk)))))
+    
+    (when (sact-chunk-pm chunk)
+      (when (dm-act-level sact 'medium)
+        (format s "Computing partial matching component~%")))
+    
+    (case (sact-chunk-pm chunk)
+      (:hook
+       (when (dm-act-level sact 'medium)
+         (format s "partial matching hook returns: ~f~%" (sact-chunk-pm-value chunk))))
+      (:full
+       (dolist (slot (sact-chunk-pm-tests chunk))
+         (when (dm-act-level sact 'medium)
+           (format s "  comparing slot ~S~%" (first slot))
+           (format s "  Requested: ~s ~s  Chunk's slot value: ~s~%" (second slot) (third slot) (fourth slot))
+           (format s "  similarity: ~f~%" (fifth slot))
+           (format s "  effective similarity value is ~f~%" (sixth slot))))
+       
+       (when (dm-act-level sact 'medium)
+         (format s "Total similarity score ~f~%" (sact-chunk-pm-value chunk)))))
+    
+    (case (sact-chunk-noise chunk)
+      (:hook
+       (when (dm-act-level sact 'medium)
+         (format s "noise hook returns: ~f~%" (sact-chunk-noise-p chunk))))
+      (:full
+       (when (dm-act-level sact 'medium)
+         (format s "Adding transient noise ~f~%" (sact-chunk-noise-t chunk))
+         (format s "Adding permanent noise ~f~%" (sact-chunk-noise-p chunk)))))
+    
+    (when (dm-act-level sact 'low)
+      (format s "Chunk ~s has an activation of: ~f~%" (sact-chunk-name chunk) (sact-chunk-total chunk)))
+    (get-output-stream-string s)))
+  
+(defun printed-chunk-activation-trace (chunk-name time &optional (time-in-ms t))
+  (let ((dm (get-module declarative)))
+    (if dm
+        (let* ((index (if time-in-ms time (safe-seconds->ms time 'print-activation-trace)))
+               (data (gethash index (bt:with-lock-held ((dm-state-lock dm)) (dm-trace-table dm)))))
+          (if data
+              (cond ((and (sact-trace-remove-recent data)                
+                          (find chunk-name (sact-trace-recents data)))
+                     (format nil "Chunk ~s was not considered because it was recently retrieved.~%" chunk-name))
+                    ((and (sact-trace-only-recent data)
+                          (not (find chunk-name (sact-trace-recents data))))
+                     (format nil "Chunk ~s was not considered because it was not recently retrieved.~%" chunk-name))
+                    ((find chunk-name (sact-trace-no-matches data))
+                     (format nil "Chunk ~s did not match the request.~%" chunk-name))
+                    ((null (sact-trace-esc data))
+                     (format nil "No activation calculation when :esc is nil.~%"))
+                    ((not (find chunk-name (sact-trace-chunks data) :key 'sact-chunk-name))
+                     (format nil "Chunk ~s was not considered.~%" chunk-name))
+                    (t 
+                     (let ((chunk (find chunk-name (sact-trace-chunks data) :key 'sact-chunk-name)))
+                       (printed-chunk-activation-details chunk (bt:with-lock-held ((dm-param-lock dm)) (dm-sact dm))))))
+            (format nil "#|Warning: No activation trace information available for time ~S |#~%" time)))
+      (format nil "#|Warning: No declarative module available for reporting activation trace. |#~%"))))
 
 
 (defun saved-activation-history ()
   (let ((dm (get-module declarative)))
     (if dm
         (let ((result nil)
-              (data (dm-trace-table dm)))
+              (data (bt:with-lock-held ((dm-state-lock dm)) (dm-trace-table dm)))
+              (sact (bt:with-lock-held ((dm-param-lock dm)) (dm-sact dm))))
           
-          (if (and (dm-sact dm) (hash-table-p data))
+          (if (and sact (hash-table-p data))
               (progn
                 (maphash (lambda (key value)
                            (push (cons key (mapcar 'sact-chunk-name (sact-trace-chunks value))) result))
                          data)
-                (sort result #'< :key 'car))
+                (sort result '< :key 'car))
             (model-warning "No activation trace information available.")))
       (print-warning "No declarative module available for reporting activation trace."))))
+
+(add-act-r-command "saved-activation-history" 'saved-activation-history "Returns a list of the lists of times and chunks for which activation data has been recorded. No params.")
+
 
 
 (defmacro whynot-dm (&rest chunks)
   `(whynot-dm-fct ',chunks))
 
-(defun whynot-dm-fct (chunks)
+(defun whynot-dm-internal (&rest chunks)
   (if (current-model) 
       (let* ((dm (get-module declarative))
-             (last (dm-last-request dm)))
+             (last (bt:with-lock-held ((dm-state-lock dm)) (dm-last-request dm)))
+             (esc (bt:with-lock-held ((dm-param-lock dm)) (dm-esc dm))))
         (cond ((null last)
                (command-output "No retrieval request has been made."))
               ((not (last-request-p last))
                (command-output "Bad last-request stored -- contact Dan."))
               ((last-request-invalid last)
-               (command-output "Last retrieval request was at time ~f but was invalid because: ~a" (last-request-time last)
+               (command-output "Last retrieval request was at time ~/print-time-in-seconds/ but was invalid because: ~a" (last-request-time last)
                                (case (last-request-invalid last)
                                  (:too-many "too many :recently-retrieved specifications")
                                  (:bad-modifier ":recently-retrieved had a modifier other than = or -.")
@@ -1096,51 +1383,51 @@
                                  (:mp-not-num ":mp-value was not a number or nil.")))
                (pprint-chunk-spec (last-request-spec last)))
               (t
-               (command-output "Retrieval request made at time ~f:" (last-request-time last))
+               (command-output "Retrieval request made at time ~/print-time-in-seconds/:" (last-request-time last))
                (pprint-chunk-spec (last-request-spec last))
                
-               (dolist (chunk (if (null chunks) (all-dm-chunks dm) chunks))
-                 (command-output "")
-                 (if (chunk-p-fct chunk)
-                     (if (chunk-in-dm chunk)
-                         (progn
-                           (pprint-chunks-fct (list chunk))
-                           (when (dm-esc dm)
-                             (sdp-fct (list chunk))
-                             (command-output ""))
-                           (if (find chunk (last-request-matches last))
-                               (progn
-                                 (command-output "~s matched the request" chunk)
-                                 (if (dm-esc dm)
-                                     (cond ((eq chunk (car (last-request-best last)))
-                                            (if (>= (chunk-retrieval-activation chunk) (last-request-rt last))
-                                                (command-output "~s was the chunk chosen to be retrieved" chunk)
-                                              (command-output "~s was below the retrieval theshold ~f" chunk (last-request-rt last))))
-                                           ((find chunk (last-request-best last))
-                                            (if (>= (chunk-retrieval-activation chunk) (last-request-rt last))
-                                                (command-output "~s was not chosen among those with the highest activation" chunk)
-                                              (command-output "~s was below the retrieval theshold ~f" chunk (last-request-rt last))))
-                                           (t
-                                            (if (>= (chunk-retrieval-activation chunk) (last-request-rt last))
-                                                (command-output "~s did not have the highest activation" chunk)
-                                              (command-output "~s was below the retrieval theshold ~f" chunk (last-request-rt last)))))
-                                   (if (eq chunk (car (last-request-best last)))
-                                       (command-output "~s was the chunk chosen to be retrieved" chunk)
-                                     (command-output "~s was not chosen as the chunk to be retrieved" chunk))))
-                             
-                             
-                             (cond ((and (eq (last-request-finst last) :marked)
-                                         (not (find chunk (last-request-finst-chunks last))))
-                                    (command-output "~s was not considered because it was not :recently-retrieved" chunk))
-                                   ((and (eq (last-request-finst last) :unmarked)
-                                         (find chunk (last-request-finst-chunks last)))
-                                    (command-output "~s was not considered because it was :recently-retrieved" chunk))
-                                   ((> (chunk-creation-time chunk) (last-request-time last))
-                                    (command-output "~s was not considered because it was not in declarative memory at the time of the request" chunk))
-                                   (t
-                                    (command-output "~s did not match the request" chunk)))))
-                       (command-output "Chunk ~s is not in the model's declarative memory." chunk))
-                   (command-output "~s does not name a chunk in the current model." chunk)))
+               (dolist (chunk-name (if (null chunks) (all-dm-chunks dm) chunks))
+                 (let ((chunk chunk-name)) ;; they're converted before they get here now
+                   (command-output "")
+                   (if (chunk-p-fct chunk)
+                       (if (chunk-in-dm chunk)
+                           (progn
+                             (pprint-chunks-fct (list chunk))
+                             (when esc
+                               (sdp-fct (list chunk))
+                               (command-output ""))
+                             (if (find chunk (last-request-matches last))
+                                 (progn
+                                   (command-output "~s matched the request" chunk)
+                                   (if esc
+                                       (cond ((eq chunk (car (last-request-best last)))
+                                              (if (>= (chunk-retrieval-activation chunk) (last-request-rt last))
+                                                  (command-output "~s was the chunk chosen to be retrieved" chunk)
+                                                (command-output "~s was below the retrieval threshold ~f" chunk (last-request-rt last))))
+                                             ((find chunk (last-request-best last))
+                                              (if (>= (chunk-retrieval-activation chunk) (last-request-rt last))
+                                                  (command-output "~s was not chosen among those with the highest activation" chunk)
+                                                (command-output "~s was below the retrieval threshold ~f" chunk (last-request-rt last))))
+                                             (t
+                                              (if (>= (chunk-retrieval-activation chunk) (last-request-rt last))
+                                                  (command-output "~s did not have the highest activation" chunk)
+                                                (command-output "~s was below the retrieval threshold ~f" chunk (last-request-rt last)))))
+                                     (if (eq chunk (car (last-request-best last)))
+                                         (command-output "~s was the chunk chosen to be retrieved" chunk)
+                                       (command-output "~s was not chosen as the chunk to be retrieved" chunk))))
+                               
+                               (cond ((and (eq (last-request-finst last) :marked)
+                                           (not (find chunk (last-request-finst-chunks last))))
+                                      (command-output "~s was not considered because it was not :recently-retrieved" chunk))
+                                     ((and (eq (last-request-finst last) :unmarked)
+                                           (find chunk (last-request-finst-chunks last)))
+                                      (command-output "~s was not considered because it was :recently-retrieved" chunk))
+                                     ((> (chunk-creation-time chunk) (last-request-time last))
+                                      (command-output "~s was not considered because it was not in declarative memory at the time of the request" chunk))
+                                     (t
+                                      (command-output "~s did not match the request" chunk)))))
+                         (command-output "Chunk ~s is not in the model's declarative memory." chunk))
+                     (command-output "~s does not name a chunk in the current model." chunk))))
                (sort (copy-list (last-request-matches last)) (lambda (x y) 
                                                                (if (= (chunk-retrieval-activation x)
                                                                       (chunk-retrieval-activation y))
@@ -1152,108 +1439,141 @@
                                                                     (chunk-retrieval-activation y))))))))
     (print-warning "Whynot-dm called with no current model.")))
 
+(defun whynot-dm-external (&rest chunks)
+  (apply 'whynot-dm-internal (string->name-recursive chunks)))
+
+(add-act-r-command "whynot-dm" 'whynot-dm-external "Print the declarative memory matching information based on the last retrieval request. Params: chunk-name*.")
+
+(defun whynot-dm-fct (chunks)
+  (apply 'whynot-dm-internal chunks))
 
 (defmacro simulate-retrieval-request (&rest spec)
   `(simulate-retrieval-request-fct ',spec))
 
 (defun simulate-retrieval-request-fct (spec-list)
+  (values (simulate-retrieval-request-plus-seed-fct spec-list)))
+
+(defun simulate-retrieval-request-plus-seed-fct (spec-list)
   (let ((dm (get-module declarative)))
     (if dm
         (let ((seed (car (no-output (sgp :seed))))
-              (finsts (dm-finsts dm))
-              (act (dm-act dm))
-              (temp-mp nil))
-          (unwind-protect 
+              end-seed starting-finsts esc rt  er 
+              mp offsets blc bll ol act-scale
+              sa spreading-hook w-hook sji-hook mas nsji
+              pm-hook ms md sim-hook cache-sim-hook
+              noise-hook ans bl-hook)
+          
+          (bt:with-lock-held ((dm-state-lock dm))
+            (setf starting-finsts (dm-finsts dm)))
+
+          (bt:with-lock-held ((dm-param-lock dm))
+            (setf
+             rt (dm-rt dm)
+             mp (dm-mp dm)
+             esc (dm-esc dm)
+             offsets (dm-offsets dm)
+             blc (dm-blc dm)
+             bll (dm-bll dm)
+             ol (dm-ol dm)
+             act-scale (dm-act-scale dm)  
+             sa (dm-sa dm)
+             spreading-hook (dm-spreading-hook dm)
+             w-hook (dm-w-hook dm)
+             sji-hook (dm-sji-hook dm)
+             mas (dm-mas dm)
+             nsji (dm-nsji dm)
+             pm-hook (dm-partial-matching-hook dm)
+             ms (dm-ms dm)
+             md (dm-md dm)
+             sim-hook (dm-sim-hook dm)
+             cache-sim-hook (dm-cache-sim-hook-results dm)
+             noise-hook (dm-noise-hook dm)
+             ans (dm-ans dm)
+             er (dm-er dm)
+             bl-hook (dm-bl-hook dm)))
+          
+          (values 
+           (unwind-protect 
             (let ((request (define-chunk-spec-fct spec-list)))
               (if (act-r-chunk-spec-p request)
                   
-                  (let* ((ct (chunk-spec-chunk-type request))
-                         (chunk-list (apply #'append 
-                                            (mapcar #'(lambda (x) 
-                                                        (gethash x (dm-chunks dm)))
-                                              (chunk-type-subtypes-fct ct)))))
-    
-                    (when (member :recently-retrieved (chunk-spec-slots request))
-                      (let ((recent (chunk-spec-slot-spec request :recently-retrieved)))
-                        (cond ((> (length recent) 1)
-                               (print-warning "Invalid retrieval request.")
-                               (print-warning ":recently-retrieved parameter used more than once.")
-                               (return-from simulate-retrieval-request-fct))
-                              ((not (or (eq '- (caar recent)) (eq '= (caar recent))))
-                               (print-warning "Invalid retrieval request.")
-                               (print-warning ":recently-retrieved parameter's modifier can only be = or -.")
-                               (return-from simulate-retrieval-request-fct))
-                              ((not (or (eq t (third (car recent)))
-                                        (eq nil (third (car recent)))
-                                        (and (eq 'reset (third (car recent)))
-                                             (eq '= (caar recent)))))
-                               (print-warning "Invalid retrieval request.")
-                               (print-warning ":recently-retrieved parameter's value can only be t, nil or reset.")
-                               (return-from simulate-retrieval-request-fct))
-                              
-                              (t ;; it's a valid request
-               
-                               ;; remove any old finsts 
-               
-                               (remove-old-dm-finsts dm)
-                               
-                               (if (eq 'reset (third (car recent)))
-                                   (setf (dm-finsts dm) nil)
-                 
-                                 (cond ((or (and (eq t (third (car recent)))   ;; = request t
-                                                 (eq (caar recent) '=)) 
-                                            (and (null (third (car recent)))   ;; - request nil
-                                                 (eq (caar recent) '-)))
-                        
-                                        ;; only those chunks marked are available
-                                        (setf chunk-list (mapcar #'car (dm-finsts dm)))
-                                        
-                                        (command-output "Only recently retrieved chunks: ~s" chunk-list))
-                                       (t
-                        
-                                        (command-output "Removing recently retrieved chunks:")
-                        
-                                        (setf chunk-list 
-                                          (remove-if #'(lambda (x)
-                                                         (when (member x (dm-finsts dm) 
-                                                                       :key #'car
-                                                                       :test #'eq-chunks-fct)
-                                                           (command-output "~s" x)
-                                                           t))
-                                                     chunk-list)))))))))
-    
-                    (when (member :mp-value (chunk-spec-slots request))
-                      (let ((mp-value (chunk-spec-slot-spec request :mp-value)))
-                        (cond ((> (length mp-value) 1)
-                               (print-warning "Invalid retrieval request.")
-                               (print-warning ":mp-value parameter used more than once.")
-                               (return-from simulate-retrieval-request-fct))
-                              ((not (eq '= (caar mp-value)))
-                               (print-warning "Invalid retrieval request.")
-                               (print-warning ":mp-value parameter's modifier can only be =.")
-                               (return-from simulate-retrieval-request-fct))
-                              ((not (numornil (third (car mp-value))))
-                               (print-warning "Invalid retrieval request.")
-                               (print-warning ":mp-value parameter's value can only be nil or a number.")
-                               (return-from simulate-retrieval-request-fct))
-                              (t ;; it's a valid request
-                               (setf temp-mp (list (dm-mp dm)))
-                               (setf (dm-mp dm) (third (car mp-value)))))))
+                  (let* ((filled (chunk-spec-filled-slots request))
+                         (empty (chunk-spec-empty-slots request))
+                         (chunk-list (mapcan (lambda (x) 
+                                               (if (slots-vector-match-signature (car x) filled empty)
+                                                   (copy-list (cdr x))
+                                                 nil))
+                                       (bt:with-lock-held ((dm-chunk-lock dm)) (dm-chunks dm)))))
                     
+                    (flet ((invalid (warnings)
+                                    (dolist (x warnings)
+                                      (print-warning x))
+                                    (return-from simulate-retrieval-request-plus-seed-fct)))
                     
-                    (setf request (strip-request-parameters-from-chunk-spec request))
+                      (when (member :recently-retrieved (chunk-spec-slots request))
+                        (let ((recent (chunk-spec-slot-spec request :recently-retrieved)))
+                          (cond ((> (length recent) 1)
+                                 (invalid '("Invalid retrieval request." ":recently-retrieved parameter used more than once.")))
+                                ((not (or (eq '- (caar recent)) (eq '= (caar recent))))
+                                 (invalid '("Invalid retrieval request." ":recently-retrieved parameter's modifier can only be = or -.")))
+                                ((not (or (eq t (third (car recent)))
+                                          (eq nil (third (car recent)))
+                                          (and (eq 'reset (third (car recent)))
+                                               (eq '= (caar recent)))))
+                                 (invalid '("Invalid retrieval request." ":recently-retrieved parameter's value can only be t, nil, or reset.")))
+                                
+                                (t ;; it's a valid value for recently-retrieved
+                                 
+                                 (if (eq 'reset (third (car recent)))
+                                     (bt:with-lock-held ((dm-state-lock dm))
+                                       (setf (dm-finsts dm) nil))
+                                   
+                                   (let ((finsts (remove-old-dm-finsts dm)))
+                                     
+                                     (cond ((or (and (eq t (third (car recent)))   ;; = request t
+                                                     (eq (caar recent) '=)) 
+                                                (and (null (third (car recent)))   ;; - request nil
+                                                     (eq (caar recent) '-)))
+                                            
+                                            ;; only those chunks marked are available
+                                            
+                                            (setf chunk-list (intersection (mapcar 'car finsts) chunk-list))
+                                            
+                                            (command-output "Only recently retrieved chunks: ~s" chunk-list))
+                                           (t
+                                            
+                                            (command-output "Removing recently retrieved chunks:")
+                                            
+                                            (setf chunk-list 
+                                              (remove-if (lambda (x)
+                                                           (when (member x finsts :key 'car :test 'eq-chunks-fct)
+                                                             (command-output "~s" x)
+                                                             t))
+                                                         chunk-list))))))))))
+                      
+                      (when (member :mp-value (chunk-spec-slots request))
+                        (let ((mp-value (chunk-spec-slot-spec request :mp-value)))
+                          (cond ((> (length mp-value) 1)
+                                 (invalid '("Invalid retrieval request." ":mp-value parameter used more than once.")))
+                                ((not (eq '= (caar mp-value)))
+                                 (invalid '("Invalid retrieval request." ":mp-value parameter's modifier can only be =.")))
+                                ((not (numornil (third (car mp-value))))
+                                 (invalid '("Invalid retrieval request." ":mp-value parameter's value can only be nil or a number.")))
+                                
+                                (t ;; it's a valid request
+                                 (setf mp (third (car mp-value)))))))
+                      
+                    
                     
                     ;; don't print the activation trace info (should it still?, but if so
                     ;; what to do about which 'trace' to use since this is a command it
                     ;; should go to the command stream but activation computations go to
                     ;; the model stream...
                     
-                    (setf (dm-act dm) nil)
-                    
                     (let ((best-val nil)
                           (best nil)
                           (chunk-set 
-                           (cond ((or (null (dm-esc dm)) (null (dm-mp dm)))
+                           (cond ((or (null esc) (null mp))
                                   (let ((found nil))
                                     (dolist (name chunk-list found)
                                       (if (match-chunk-spec-p name request)
@@ -1261,37 +1581,31 @@
                                             (command-output "Chunk ~s matches" name)
                                             (push-last name found))
                                         (command-output "Chunk ~s does not match" name)))))
-                                 (t
-                                  ;; with esc and pm on then want to use
+                                 (t ;; partial matching
                                   ;; everything that fits the general pattern:
-                                  ;; correct type
-                                  ;; slots with a binding not nil
-                                  ;; empty slots are empty
-                                  ;; >, <, >=, and <= tests met
-                        
-                                  (let* ((matches (find-matching-chunks 
-                                                   (define-chunk-spec-fct 
-                                                       (append (list 'isa (chunk-spec-chunk-type request))
-                                                               (mapcan #'(lambda (x)
-                                                                           (cond ((eq (car x) '=)
-                                                                                  (if (third x)
-                                                                                      (list '- (second x) nil)
-                                                                                    (list '= (second x) nil)))
-                                                                                 ((eq (car x) '-)
-                                                                                  (unless (third x) x))
-                                                                                 ;;; make sure the comparison tests match
-                                                                                 (t x)))
-                                                                 (chunk-spec-slot-spec request))))
-                                                   :chunks chunk-list))
+                                  ;; filled and empty slots (already handled)
+                                  ;; also test the inequalities >, <, >=, and <=                         
+                                  (let* ((extra-spec (mapcan (lambda (x)
+                                                               (unless (or (eq (car x) '=) (eq (car x) '-) (keywordp (second x))) 
+                                                                 x))
+                                                       (chunk-spec-slot-spec request)))
+                                         (matches (if extra-spec
+                                                      (find-matching-chunks (define-chunk-spec-fct extra-spec) :chunks chunk-list)
+                                                    (nreverse chunk-list)))
                                          (non-matches (set-difference chunk-list matches)))
                                     
                                     (dolist (c non-matches)
                                       (command-output "Chunk ~s does not match" c))
                                     matches)))))
             
-                      (if (dm-esc dm)
+                      (if esc
                           (dolist (x chunk-set)
-                            (compute-activation dm x request)
+                            (compute-activation dm x request :params-provided t
+                                  :act nil :sact nil :mp mp :esc esc :offsets offsets 
+                                  :blc blc :bll bll :ol ol :act-scale act-scale
+                                  :sa sa :spreading-hook spreading-hook :w-hook w-hook :sji-hook sji-hook 
+                                  :mas mas :nsji nsji :pm-hook pm-hook :ms ms :md md :sim-hook sim-hook
+                                  :cache-sim-hook cache-sim-hook :noise-hook noise-hook :ans ans :bl-hook bl-hook)
                             
                             (cond ((null best-val)
                                    (setf best-val (chunk-activation x))
@@ -1309,26 +1623,25 @@
                         (setf best chunk-set))
                       
                       (when (> (length best) 1)
-                        (if (dm-er dm)
+                        (if er
                             (let ((b (random-item best)))
                               (setf best (cons b (remove b best))))
-                          (setf best (sort best #'string<))))
+                          (setf best (sort best 'string<))))
             
                       (cond ((or (null best) 
-                                 (and (dm-esc dm)
-                                      (< best-val (dm-rt dm))))
+                                 (and esc
+                                      (< best-val rt)))
                              (if (null best)
-                               (command-output "No matching chunk found retrieval failure"))
-                             (progn
-                               (setf best nil)
-                               (command-output "No chunk above the retrieval threshold: ~f" (dm-rt dm))))
+                                 (command-output "No matching chunk found retrieval failure")
+                               (command-output "No chunk above the retrieval threshold: ~f" rt)))
                    
                             ((= (length best) 1)
-                   
                              (command-output "Chunk ~s with activation ~f is the best" (car best) (chunk-activation (car best))))
+                            
                             (t
                              (let ((best1 (car best)))
                                (command-output "Chunk ~s chosen among the chunks with activation ~f" best1 (chunk-activation best1)))))
+                      
                       (sort chunk-set (lambda (x y) 
                                         (if (= (chunk-activation x)
                                                (chunk-activation y))
@@ -1337,17 +1650,35 @@
                                               (or (and p1 p2 (< p1 p2))
                                                   (and p1 (null p2))))
                                           (> (chunk-activation x)
-                                             (chunk-activation y)))))))
+                                             (chunk-activation y))))))))
                 (print-warning "Invalid request specification passed to simulate-retrieval-request.")))
                       
                       
             (progn ;; restore the parameters that were cleared/saved
-              (no-output (sgp-fct (list :seed seed)))
-              (setf (dm-finsts dm) finsts)
-              (setf (dm-act dm) act)
-              (when temp-mp
-                (setf (dm-mp dm) (car temp-mp))))))
+              (no-output 
+               (setf end-seed (car (sgp :seed))) 
+               (sgp-fct (list :seed seed)))
+              (bt:with-lock-held ((dm-state-lock dm))
+                (setf (dm-finsts dm) starting-finsts))))
+           end-seed))
       (print-warning "No declarative memory module available.  Simulate-retrieval-request cannot perform the request."))))
+
+
+(defun external-simulate-retrieval-request (&rest spec)
+  (simulate-retrieval-request-fct (decode-string-names spec)))
+
+(defun external-simulate-retrieval-request-fct (spec)
+  (simulate-retrieval-request-fct (decode-string-names spec)))
+
+(defun external-simulate-retrieval-request-plus-seed-fct (spec)
+  (simulate-retrieval-request-plus-seed-fct (decode-string-names spec)))
+
+
+(add-act-r-command "simulate-retrieval-request" 'external-simulate-retrieval-request "Given the specification of a retrieval request, output the activation trace of what would happen if that request were made now. Params: 'request-details*'.")
+(add-act-r-command "simulate-retrieval-request-fct" 'external-simulate-retrieval-request-fct "Given the specification of a retrieval request, output the activation trace of what would happen if that request were made now. Params: '(request-details*)'.")
+(add-act-r-command "simulate-retrieval-request-plus-seed-fct" 'external-simulate-retrieval-request-plus-seed-fct "Given the specification of a retrieval request, output the activation trace of what would happen if that request were made now. Params: '(request-details*)'.")
+
+
 
 #|
 This library is free software; you can redistribute it and/or

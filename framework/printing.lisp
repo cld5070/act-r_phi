@@ -13,7 +13,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; 
 ;;; Filename    : printing.lisp
-;;; Version     : 1.0
+;;; Version     : 1.3
 ;;; 
 ;;; Description : Module that provides model output control.
 ;;; 
@@ -109,6 +109,76 @@
 ;;;             :   thread which "runs" the model and an error results.  The 
 ;;;             :   fix is to specify :sharing :lock in the open command and
 ;;;             :   that has to happen here.
+;;; 2014.06.26 Dan
+;;;             : * More error protection around the setting of :v and :cmdt
+;;;             :   when files/streams are used.
+;;; 2014.08.14 Dan
+;;;             : * The :show-all-slots parameter is unnecessary now.
+;;; 2015.06.01 Dan [1.1]
+;;;             : * Adding a one-time-model-warning command (it's in misc-utils
+;;;             :   with the other output commands) which allows one to specify
+;;;             :   a "tag" for the warning and it will only print a warning
+;;;             :   with a given tag (equal test) the first time it occurs after 
+;;;             :   a reset.
+;;; 2016.04.11 Dan [1.2]
+;;;             : * Adding a parameter to have the module save the trace info
+;;;             :   whether or not it's being printed and a command to print
+;;;             :   out a saved trace at any detail level for an optionally
+;;;             :   specified subsegment.  For now this is going to be crude and
+;;;             :   just store a list of the formatted output for each event
+;;;             :   since that's easy but costly in terms of space.  Some sort 
+;;;             :   of caching would probably be better for space (since something
+;;;             :   like conflict-resolution is going to show up a lot) but has
+;;;             :   a bigger time cost since a lookup would have to happen for
+;;;             :   every event.
+;;; 2016.04.12 Dan
+;;;             : * Added a get-saved-trace function to allow access to the data
+;;;             :   without having to print it out or wrap it in a no-output, and
+;;;             :   include the time and output level with that.
+;;; 2016.04.13 Dan
+;;;             : * Fixed a copy-and-paste error in get-saved-trace.
+;;; 2016.04.14 Dan
+;;;             : * Might as well save the event itself and recreate the trace
+;;;             :   after the fact if needed. 
+;;;             : * Don't return the trace items from show-saved-trace since
+;;;             :   get-saved-trace can be used for that -- have each do its
+;;;             :   own thing.
+;;; 2016.04.21 Dan
+;;;             : * Minor improvement to internals of show and get saved-trace.
+;;; 2016.09.28 Dan
+;;;             : * Changed printing-module-event-hook to just be nil or cons since
+;;;             :   there's only one meta-process.
+;;; 2017.02.27 Dan
+;;;             : * Clear the capture warnings flag and any recorded warnings 
+;;;             :   when the module is reset.  [Clears all of them since it's a
+;;;             :   class allocated slot, but since there's only one mp a reset
+;;;             :   affects all models anyway.]
+;;; 2017.06.15 Dan
+;;;             : * Wrapped the lock around the warning capture clearing for
+;;;             :   thread safety.
+;;;             : * Make event-displayed-p, filter-events, and filter-output-events
+;;;             :   thread safe.
+;;; 2017.06.16 Dan
+;;;             : * Use the trace lock for access to the saved trace info.
+;;; 2017.07.13 Dan
+;;;             : * Protect the cbct parameter through show-copy-buffer-trace.
+;;; 2017.09.19 Dan [1.3]
+;;;             : * Remove the :save-trace parameter because that functionality
+;;;             :   is being handled by a history stream now outside of the
+;;;             :   module.
+;;; 2018.02.05 Dan
+;;;             : * Allow the :trace-filter parameter to accept a command name
+;;;             :   string.
+;;;             : * Update event-displayed-p to accept a real event or id, and
+;;;             :   always pass the id to the trace-filter fn.
+;;; 2018.02.07 Dan
+;;;             : * The trace filter needs to get the model name.
+;;; 2018.02.22 Dan
+;;;             : * Add a remote version of event-displayed-p.
+;;; 2018.06.14 Dan
+;;;             : * Updated doc string for event-displayed-p command.
+;;; 2019.01.16 Dan
+;;;             : * Adjust filter-event so it only needs to grab the lock once.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -137,154 +207,180 @@
 
 (defun create-printing-module (model-name)
   (declare (ignore model-name))
-  (make-printing-module))
+  (make-instance 'printing-module))
 
 (defun verify-printing-param (param)
   (or (null param) (eq param t) (streamp param) (pathnamep param)
       (and (stringp param) (parse-namestring param))))
 
+(defun safe-close-printing-stream (stream cmd)
+  (multiple-value-bind (result err)
+      (ignore-errors (close stream))
+    (when (and err (subtypep (type-of err) 'condition))
+      (print-warning "Error encountered when trying to close the file associated with the ~s parameter:~% ~s" cmd err))
+    result))
+
+(defun safe-open-printing-stream (name cmd)
+  (multiple-value-bind (result err)
+      (ignore-errors (open (parse-namestring name)
+                           :direction :output :if-exists :append 
+                           :if-does-not-exist :create
+                           #+:ccl :sharing #+:ccl :lock))
+    (when (and err (subtypep (type-of err) 'condition))
+      (print-warning "Error encountered when trying to open the file associated with the ~s parameter:~% ~s" cmd err)
+      (print-warning "The ~s parameter is being set to t instead." cmd))
+    result))
 
 (defun printing-module-param (module param)
-  (if (consp param)
-      (case (car param)
-        (:v
-         (when (act-r-output-file (printing-module-v module))
-           (close (act-r-output-stream (printing-module-v module)))
-           (setf (act-r-output-file (printing-module-v module)) nil))
-         (setf (act-r-output-stream (printing-module-v module))
-           (cond ((or (pathnamep (cdr param)) (stringp (cdr param)))
-                  (setf (act-r-output-file (printing-module-v module)) t)
-                  (open (parse-namestring (cdr param))
-                        :direction :output :if-exists :append 
-                        :if-does-not-exist :create
-                        #+:ccl :sharing #+:ccl :lock))
-                 (t 
-                  (setf (act-r-output-file (printing-module-v module)) nil)
-                  (cdr param)))))
-        (:cmdt
-         (when (act-r-output-file (printing-module-c module))
-           (close (act-r-output-stream (printing-module-c module)))
-           (setf (act-r-output-file (printing-module-c module)) nil))
-         (setf (act-r-output-stream (printing-module-c module))
-           (cond ((or (pathnamep (cdr param)) (stringp (cdr param)))
-                  (setf (act-r-output-file (printing-module-c module)) t)
-                  (open (parse-namestring (cdr param))
-                        :direction :output :if-exists :append 
-                        :if-does-not-exist :create
-                        #+:ccl :sharing #+:ccl :lock))
-                 (t 
-                  (setf (act-r-output-file (printing-module-c module)) nil)
-                  (cdr param)))))
-        (:trace-filter
-         (setf (printing-module-filter module) (cdr param)))
-        (:trace-detail
-         (setf (printing-module-detail module) (cdr param)))
-        (:model-warnings
-         (setf (printing-module-model-warnings module) (cdr param)))
-        (:show-all-slots
-         (setf (printing-module-show-all-slots module) (cdr param)))
-        (:cbct
-         (setf (printing-module-cbct module) (cdr param))))
-    
-    (case param
-      (:v (act-r-output-stream (printing-module-v module)))
-      (:cmdt (act-r-output-stream (printing-module-c module)))
-      (:trace-filter (printing-module-filter module))
-      (:trace-detail (printing-module-detail module))
-      (:model-warnings (printing-module-model-warnings module))
-      (:show-all-slots (printing-module-show-all-slots module))
-      (:cbct (printing-module-cbct module)))))
+  (bt:with-recursive-lock-held ((printing-module-param-lock module)) 
+    (if (consp param)
+        (case (car param)
+          (:v
+           (when (act-r-output-file (printing-module-v module))
+             (safe-close-printing-stream (act-r-output-stream (printing-module-v module)) :v)
+             (setf (act-r-output-file (printing-module-v module)) nil))
+           (setf (act-r-output-stream (printing-module-v module))
+             (cond ((or (pathnamep (cdr param)) (stringp (cdr param)))
+                    (aif (safe-open-printing-stream (cdr param) :v)
+                         (progn
+                           (setf (act-r-output-file (printing-module-v module)) t)
+                           it)
+                         t))
+                   (t 
+                    (setf (act-r-output-file (printing-module-v module)) nil)
+                    (cdr param)))))
+          (:cmdt
+           (when (act-r-output-file (printing-module-c module))
+             (safe-close-printing-stream (act-r-output-stream (printing-module-c module)) :cmdt)
+             (setf (act-r-output-file (printing-module-c module)) nil))
+           (setf (act-r-output-stream (printing-module-c module))
+             (cond ((or (pathnamep (cdr param)) (stringp (cdr param)))
+                    (aif (safe-open-printing-stream (cdr param) :cmdt)
+                         (progn
+                           (setf (act-r-output-file (printing-module-c module)) t)
+                           it)
+                         t))
+                   (t 
+                    (setf (act-r-output-file (printing-module-c module)) nil)
+                    (cdr param)))))
+          (:trace-filter
+           (setf (printing-module-filter module) (cdr param)))
+          (:trace-detail
+           (setf (printing-module-detail module) (cdr param)))
+          (:model-warnings
+           (setf (printing-module-model-warnings module) (cdr param)))
+          (:cbct
+           (setf (printing-module-cbct module) (cdr param)))
+          
+          )
+      
+      (case param
+        (:v (act-r-output-stream (printing-module-v module)))
+        (:cmdt (act-r-output-stream (printing-module-c module)))
+        (:trace-filter (printing-module-filter module))
+        (:trace-detail (printing-module-detail module))
+        (:model-warnings (printing-module-model-warnings module))
+        (:cbct (printing-module-cbct module))
+        ))))
 
 (defun reset-printing-module (module)
-  (when (act-r-output-file (printing-module-v module))
-    (close (act-r-output-stream (printing-module-v module)))
-    (setf (act-r-output-file (printing-module-v module)) nil))
-  (setf (act-r-output-stream (printing-module-v module)) t)
+  (bt:with-recursive-lock-held ((printing-module-param-lock module))
+    (when (act-r-output-file (printing-module-v module))
+      (close (act-r-output-stream (printing-module-v module)))
+      (setf (act-r-output-file (printing-module-v module)) nil))
+    (setf (act-r-output-stream (printing-module-v module)) t)
   
-  (when (act-r-output-file (printing-module-c module))
-    (close (act-r-output-stream (printing-module-c module)))
-    (setf (act-r-output-file (printing-module-c module)) nil))
-  (setf (act-r-output-stream (printing-module-c module)) t)
+    (when (act-r-output-file (printing-module-c module))
+      (close (act-r-output-stream (printing-module-c module)))
+      (setf (act-r-output-file (printing-module-c module)) nil))
+    (setf (act-r-output-stream (printing-module-c module)) t)
   
-  (setf (printing-module-filter module) nil)
-  (setf (printing-module-detail module) 'high)
-  (setf (printing-module-suppress-cmds module) nil))
+    (setf (printing-module-one-time-tags module) nil)
+    (setf (printing-module-filter module) nil)
+    (setf (printing-module-detail module) 'high)
+    (setf (printing-module-suppress-cmds module) nil))
+    
+    
+  (bt:with-recursive-lock-held ((printing-module-lock module))
+    (setf (printing-module-capture-warnings module) nil)
+    (setf (printing-module-captured-warnings module) nil)))
 
 
-(define-module-fct 'printing-module 
-    nil 
+(defun delete-printing-module (module)
+  (reset-printing-module module)
+  )
+
+(define-module-fct 'printing-module nil 
   (list 
-   (define-parameter :v 
-       :documentation "Verbose controls model output"
+   (define-parameter :v :documentation "Verbose controls model output"
      :default-value t
      :warning "must be t, nil, a stream, pathname or namestring"
      :valid-test 'verify-printing-param)
-   (define-parameter :cmdt
-       :documentation "Commands trace controls output of commands"
+   (define-parameter :cmdt :documentation "Commands trace controls output of commands"
      :default-value t
      :warning "must be t, nil, a stream, pathname or namestring"
      :valid-test 'verify-printing-param)
-   (define-parameter :trace-filter
-       :documentation "Function to limit output shown in the trace"
+   (define-parameter :trace-filter :documentation "Function to limit output shown in the trace"
      :default-value nil
-     :warning "must be a function name or nil"
-     :valid-test 'fctornil)
-   (define-parameter :trace-detail
-       :documentation "Determines which events show in the trace"
+     :warning "must be a function, string naming a command, or nil"
+     :valid-test 'local-or-remote-function-or-nil)
+   (define-parameter :trace-detail :documentation "Determines which events show in the trace"
      :default-value 'medium
      :warning "Must be one of high, medium, or low"
      :valid-test (lambda (x)
                    (or (eq x 'high)
                        (eq x 'medium)
                        (eq x 'low))))
-   (define-parameter :model-warnings
-       :documentation "Whether to output model warnings"
+   (define-parameter :model-warnings :documentation "Whether to output model warnings"
      :default-value t
      :warning "must be t or nil"
      :valid-test 'tornil)
-   (define-parameter :show-all-slots
-       :documentation "Whether or not to show unfilled extended slots when printing chunks"
+   (define-parameter :cbct :documentation "Whether or not to show an event in the trace when a buffer copies a chunk"
      :default-value nil
      :warning "must be t or nil"
      :valid-test 'tornil)
-   (define-parameter :cbct
-       :documentation "Whether or not to show an event in the trace when a buffer copies a chunk"
-     :default-value nil
-     :warning "must be t or nil"
-     :valid-test 'tornil))
-  :version "1.0"
+   )
+  :version "1.3"
   :documentation "Coordinates output of the model."
   :creation 'create-printing-module
   :reset 'reset-printing-module
-  :delete 'reset-printing-module
+  :delete 'delete-printing-module
   :params 'printing-module-param)
 
-
 (defun filter-output-events (event)
-  (with-model-fct (if (evt-model event) (evt-model event) (first (mp-models))) ;; just use the first if there isn't one (a break event)
-    (list (list 'filter-test event))))
+  (with-model-eval (if (act-r-event-model event) (act-r-model-name (act-r-event-model event)) (first (mp-models))) ;; just use the first if there isn't one (a break event)
+    (filter-test event)))
 
 (defun filter-test (event)
   (let ((module (get-module printing-module)))
-    (and module 
-         (case (printing-module-detail module)
-           (low (eq (evt-output event) 'low))
-           (medium (or (eq (evt-output event) 'low)
-                       (eq (evt-output event) 'medium)))
-           (high t))
-             
-         (or (null (printing-module-filter module))
-             (and (printing-module-filter module)
-                  (funcall (printing-module-filter module) event))))))
+    (when module 
+      (let (d f)
+        (bt:with-recursive-lock-held ((printing-module-param-lock module)) 
+          (setf d (printing-module-detail module))
+          (setf f (printing-module-filter module)))
+        (and (case d
+               (low (eq (act-r-event-output event) 'low))
+               (medium (or (eq (act-r-event-output event) 'low)
+                           (eq (act-r-event-output event) 'medium)))
+               (high t))
+             (or (null f)
+                 (dispatch-apply f (act-r-event-num event))))))))
 
 
-(defun event-displayed-p (event)
-  (and (act-r-event-p event)
-       (evt-output event)
-       (filter-output-events event)))
+(defun event-displayed-p (evt)
+  (let ((event (if (act-r-event-p evt) evt (get-event-by-id evt))))
+    (and event
+         (act-r-event-output event)
+         (filter-output-events event))))
+
+(add-act-r-command "event-displayed-p" 'event-displayed-p "Return whether the specified event will be shown in the trace based on its output value, the current trace detail, and the current trace filter. Params: event-id")
+
 
 (defun show-copy-buffer-trace ()
-  (printing-module-cbct (get-module printing-module)))
+  (let ((module (get-module printing-module)))
+    (bt:with-recursive-lock-held ((printing-module-param-lock module))
+      (printing-module-cbct module))))
+
 
 #|
 This library is free software; you can redistribute it and/or

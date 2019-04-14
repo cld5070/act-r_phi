@@ -51,8 +51,13 @@ destroy .splash
 
 # Here's where the real work takes place...
 
-global quit_now
+
 set quit_now ""
+
+proc set_quit_now {val} {
+  global quit_now
+  set quit_now $val
+}
 
 # close the console window if it's open 
 
@@ -62,37 +67,17 @@ if {$tcl_platform(platform) != "unix"} {console hide}
 
 wm withdraw .
 
-proc set_quit_now {val} {
-  global quit_now
-  set quit_now $val
-}
-
 file delete [file join [pwd] "error.log"]
 
-while {$quit_now != 1} {
+interp create env_instance
+load {} Tk env_instance
+env_instance alias set_return_result set_quit_now
+env_instance alias console console
+env_instance eval {source "server.tcl"}
 
-  global quit_now
+if {$quit_now == ""} {tkwait variable quit_now}
 
-  set quit_now ""
-  interp create env_instance
-  load {} Tk env_instance
-  env_instance alias set_return_result set_quit_now
-  env_instance alias console console
-  env_instance eval {source "server.tcl"}
-  # this is the same race condition that I had
-  # problems with in the main code, but here
-  # it's not really a problem because the chance
-  # that a user could close the control panel
-  # between the if and the then is virtually
-  # impossible particularly because the setting
-  # of quit_now happens for each of the items
-  # on the control panel...
-  if {$quit_now == ""} {tkwait variable quit_now}
-  interp delete env_instance
-}
-
-# chances are that it'll never get to here, but
-# always safest to have a default case
+interp delete env_instance
 
 exit
 

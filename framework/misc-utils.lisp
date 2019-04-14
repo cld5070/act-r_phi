@@ -13,7 +13,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; 
 ;;; Filename    : misc-utils.lisp
-;;; Version     : 1.0
+;;; Version     : 2.0
 ;;; 
 ;;; Description : Various useful functions that don't seem to belong anywhere
 ;;;               else (many of which come directly from the old RPM code).
@@ -196,6 +196,158 @@
 ;;; 2013.01.07 Dan
 ;;;             : * Added a check for a current meta-process to print-warning to
 ;;;             :   avoid a problem with checking for the current model.
+;;; 2014.03.21 Dan
+;;;             : * Moved circular-references here. 
+;;; 2014.03.27 Dan
+;;;             : * Moved replace-variables here.
+;;; 2014.04.07 Dan
+;;;             : * Moved chunk-spec-variable-p here as well.
+;;; 2014.05.20 Dan
+;;;             : * Moved objs-max-val here from vision.
+;;; 2014.05.21 Dan
+;;;             : * Added an objs-min-val as well.
+;;;             : * Added a pz macro.
+;;; 2014.06.18 Dan
+;;;             : * Added test to dist to make sure that it ignores non-numbers
+;;;             :   in the vectors.
+;;; 2014.09.29 Dan
+;;;             : * Changed string-to-lines from a defmethod to defun since it
+;;;             :   isn't called with different object types anyway.
+;;; 2014.10.14 Dan
+;;;             : * Change seconds->ms to multiply by 1000 instead of using 
+;;;             :   round with .001 because of issues with converting large
+;;;             :   times: (round (* 24 60 60) .001) doesn't result in 86400000
+;;;             :   in some Lisps for example.
+;;; 2015.06.01 Dan
+;;;             : * Added the one-time-model-warning command which is like model-
+;;;             :   warning except that there's an a parameter before the control
+;;;             :   string and args which is the "tag".  The first time a warning 
+;;;             :   with that tag is called since reset the warning is printed,
+;;;             :   but all subsequent calls will be ignored and result in no
+;;;             :   output and will also not evaluate the args.
+;;;             : * Changed the "time-size" testing to check for accuracy at the
+;;;             :   1 millisecond level by default instead of 50ms as was done
+;;;             :   before since it's acutally going to be used again with the
+;;;             :   *seconds->ms-accuracy-limit* variable which holds the approximate
+;;;             :   time in seconds beyond which the current floating point format
+;;;             :   may not accurately represent 1 ms.
+;;;             : * Added the safe-seconds->ms command which tests the value
+;;;             :   provided against *seconds->ms-accuracy-limit* and issues a
+;;;             :   one time warning if the provided seconds value is above that
+;;;             :   limit.
+;;; 2015.06.02 Dan
+;;;             : * Added an optional parameter to safe-seconds->ms to provide a
+;;;             :   name that will be included in the warning.
+;;;             : * Check the absolute value of the time since something like
+;;;             :   creation time for declarative items is sometimes specified
+;;;             :   as a negative.
+;;; 2015.06.03 Dan
+;;;             : * Some more adjustments to safe-seconds->ms and the variables
+;;;             :   that were holding the time accuracy info.  Now *time-size-test-list*
+;;;             :   is just an alist of a type and the actual number for the limit 
+;;;             :   calculated directly from the float info instead of by a
+;;;             :   search and safe-seconds->ms considers the specific type of the 
+;;;             :   number it was passed instead of assuming the default floating point
+;;;             :   format so that one can use an appropriate float format for a
+;;;             :   particular number without having to change the default and
+;;;             :   recompile everything i.e. (run-until-time 10000.5d0).
+;;;             : * Added a declaim for get-module-fct since that's called because
+;;;             :   of the warning in safe-seconds->ms.
+;;; 2015.06.08 Dan
+;;;             : * New format function for printing a millisecond time in seconds
+;;;             :   without loss of accuracy that converting to a float might have.
+;;;             :   It is used like this: (format t "~10/print-time-in-seconds/" ms-time)
+;;;             :   The only modifier it uses is the first one which specifies the min width.
+;;; 2016.05.31 Dan
+;;;             : * Added finish-output to print-warning and model-warning since
+;;;             :   at least one Lisp seems to buffer *error-output* for some 
+;;;             :   crazy reason!
+;;;             : * Using the finish-format macro instead now since there are
+;;;             :   other places that have the same issue.
+;;; 2016.06.24 Dan
+;;;             : * Create a single 'dummy' broadcast stream to use for suppress-
+;;;             :   warnings instead of creating a fresh one each time.
+;;; 2016.11.16 Dan [2.0]
+;;;             : * Rework how the output macros operate to work with the central
+;;;             :   dispatch system.
+;;;             :   Now, when the underlying parameter is t (:v or :cmdt) and for
+;;;             :   all the warning output instead of writing directly to that
+;;;             :   stream (*standard-output* or *error-output*) it sends
+;;;             :   the string to a "trace" command which could be monitored by
+;;;             :   anyone that wants to record/output that information.  
+;;;             :   If the parameter is a file or stream however all the output
+;;;             :   still goes there instead.
+;;;             :   Also adding commands so remote systems can send output to
+;;;             :   model, command, or warning systems.
+;;; 2016.12.01 Dan
+;;;             : * Added string->name which returns (intern (string-upcase <>))
+;;;             :   if it's passed a string otherwise just return the passed value.
+;;; 2017.01.20 Dan
+;;;             : * Updated one-time-model-warning to remove the unneeded let.
+;;; 2017.01.26 Dan
+;;;             : * Added string->number.
+;;; 2017.02.08 Dan
+;;;             : * Removed an unnecessary gensym from one-time-model-warning.
+;;; 2017.02.24 Dan
+;;;             : * Suppress-warnings doesn't work anymore since they aren't
+;;;             :   being written to *error-output*.  Replacing that with a 
+;;;             :   capture and return mechanism.  Call suppress-and-capture-warnings
+;;;             :   to shunt all warnings into a list and prevent their dispatching.
+;;;             :   Only one entity can suppress warnings at a time and suppress-...
+;;;             :   will return a unique tag if you are the one that actually
+;;;             :   suppressed them.  To reenable their output you need to call 
+;;;             :   unsuppress-warnings and provide the tag you got when suppressing
+;;;             :   them, and if the optional is true it will return the list of the
+;;;             :   warnings which were captured.  
+;;; 2017.03.08 Dan
+;;;             : * All the coordinate code now accepts any sequence instead of
+;;;             :   requiring vectors or coercing everything to vectors.
+;;; 2017.03.30 Dan
+;;;             : * Moved print-warning to the structures file.
+;;;             : * Changed meta-p-current-model usage to *current-act-r-model*.
+;;; 2017.03.31 Dan
+;;;             : * Removed the cannot-define-model macro from meta-p-output.
+;;; 2017.05.09 Dan
+;;;             : * Print-time-in-seconds now rounds the time it's passed because
+;;;             :   some of those times can be floats (they shouldn't but that's
+;;;             :   more things to fix), and it also handles negative numbers
+;;;             :   better.
+;;; 2017.06.15 Dan
+;;;             : * Make the output commands thread safe.
+;;; 2017.07.13 Dan
+;;;             : * Add the act-r-output command which sends to the general-trace.
+;;;             :   It has no connection to printing module and just sends the
+;;;             :   output directly to the trace.
+;;;             : * Moved the print-error-message functions here.
+;;; 2017.08.30 Dan
+;;;             : * Added capture-command-output macro for use internally for now.
+;;;             :   It could capture 'unwanted' output because anything that 
+;;;             :   outputs to the command stream for that model will be captured
+;;;             :   not just those commands wrapped in the macro, but until I
+;;;             :   come up with a better option I'm using this...
+;;; 2017.09.07 Dan
+;;;             : * Adjusted string->name to deal with keywords encoded in strings
+;;;             :   better.
+;;; 2017.10.20 Dan
+;;;             : * Adjusted string->name again to have it return numbers as a
+;;;             :   number instead of interning them as symbols.
+;;; 2018.02.02 Dan
+;;;             : * Removed capture-model-output and capture-command-output.
+;;;             : * Also removed *one-stream-hack*!
+;;;             : * Fixed one-time-model-output since it held a lock while
+;;;             :   making the call to the dispatched command which also needed
+;;;             :   the lock.
+;;;             : * Actually still need capture-command-output...
+;;; 2018.06.11 Dan
+;;;             : * Add a safety precaution to string->name and turn off *read-eval*
+;;;             :   when checking for a number.
+;;; 2018.09.17 Dan
+;;;             : * Moved color->name here.
+;;; 2019.01.15 Dan
+;;;             : * Minor tweak to chunk-spec-variable-p to avoid converting the
+;;;             :   symbol to a string twice.
+;;; 2019.02.05 Dan
+;;;             : * Adjustments because meta-p-models is now an alist.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -255,11 +407,11 @@
 #-(or (not :clean-actr) :packaged-actr :ALLEGRO-IDE) (in-package :cl-user)
 
 
-(declaim (ftype (function (t &optional t) t) chunk-spec-variable-p))
 (declaim (ftype (function (t) t) act-r-random))
 (declaim (ftype (function () t) current-model))
-(declaim (ftype (function () t) current-mp-fct))
 (declaim (ftype (function () t) mp-models))
+(declaim (ftype (function (t) t) get-module-fct))
+(declaim (ftype (function (t &rest t) t) evaluate-act-r-command))
 
 ;;; WHILE      [Macro]
 ;;; From _On Lisp_.
@@ -362,24 +514,6 @@
 
 
 
-;;; print-warning
-;;;
-;;; (defmacro print-warning (control-string &rest args))
-;;;
-;;; control-string is a control-string as would be passed to the format function
-;;; args are the arguments to use in that control string
-;;;
-;;; control-string and args are passed to format on the stream *error-output* 
-;;; with the text "#|Warning: " proceeding it and "|#" after it so that it would 
-;;; appear as a comment if the stream were to be read.
-;;;
-;;; nil is returned.  
-
-(defmacro print-warning (message &rest arguments)
-  "Outputs a warning of message and arguments."
-  `(format *error-output* "~&#|Warning~:[~*~;~@[ (in model ~a)~]~]: ~@? |#~%" (and (current-mp-fct) (> (length (mp-models)) 1)) (current-model) ,message ,@arguments))
-
-
 (defun hash-table-keys (ht)
   "Return the list of current keys in a hash-table"
   (let ((keys nil))
@@ -397,7 +531,8 @@
 
 (defun seconds->ms (x)
   "Rounds a time in seconds to an integer number of milliseconds"
-  (round x .001))
+  (round (* x 1000)))
+
 
 (defun ms->seconds (x)
   "Converts an integer number of milliseconds to a floating point number of seconds"
@@ -488,6 +623,17 @@
       (push item lis)
     (nconc (subseq lis 0 position) (list item) (nthcdr position lis))))
 
+#|
+
+doesn't seem to be any better...
+
+(defun splice-into-position-des (l p i)
+  (if (zerop p)
+      (rplaca (rplacd (nthcdr 0 l) (cons (car l) (nthcdr 1 l))) i)
+    (rplacd (nthcdr (1- p) l) (cons i (nthcdr p l)))))
+|#
+
+
 
 ;;; MKLIST      [Function]
 ;;; Description : From Graham's _On Lisp_, make sure we have a list.
@@ -501,25 +647,73 @@
 ;;; since they are macros that are used by lots of the internal
 ;;; functions they need to be defined early in the loading.
 
+(defmacro act-r-output (control-string &rest args)
+  `(progn
+     (evaluate-act-r-command "general-trace" (format nil "~@?~%" ,control-string ,@args))
+     nil))
+
+(defun act-r-output-internal (string)
+  (evaluate-act-r-command "general-trace" (format nil "~a~%" string))
+  nil)
+
+
 (defmacro model-output (control-string &rest args)
   (let ((module (gensym))
-        (present (gensym)))
+        (present (gensym))
+        (stream (gensym)))
     `(multiple-value-bind (,module ,present)
-       (get-module-fct 'printing-module)
-     (when (and ,present (act-r-output-stream (printing-module-v ,module)))
-       (format (act-r-output-stream (printing-module-v ,module)) 
-           "~&~@?~%" ,control-string ,@args)))))
+         (get-module-fct 'printing-module)
+       (when ,present 
+         (let (,stream)
+           (bt:with-recursive-lock-held ((printing-module-param-lock ,module))
+             (setf ,stream (act-r-output-stream (printing-module-v ,module))))
+           (when ,stream
+             (evaluate-act-r-command "model-output" (format nil "~@?" ,control-string ,@args)))))
+       nil)))
+
+(defun model-output-internal (string)
+  (multiple-value-bind (module present)
+      (get-module-fct 'printing-module)
+    (when present 
+      (let (stream)
+        (bt:with-recursive-lock-held ((printing-module-param-lock module))
+          (setf stream (act-r-output-stream (printing-module-v module))))
+        (when stream
+          (if (eq t stream)
+              (evaluate-act-r-command "model-trace" (format nil "~&~a~%" string))
+            (format stream "~&~a~%" string))))))
+  nil)
+
 
 (defmacro command-output (control-string &rest args)
   (let ((module (gensym))
-        (present (gensym)))
+        (present (gensym))
+        (suppress (gensym))
+        (stream (gensym)))
     `(multiple-value-bind (,module ,present)
          (get-module-fct 'printing-module)
-       (when (and ,present 
-                  (not (printing-module-suppress-cmds ,module))
-                  (act-r-output-stream (printing-module-c ,module)))
-         (format (act-r-output-stream (printing-module-c ,module)) 
-             "~&~@?~%" ,control-string ,@args)))))
+       (when ,present 
+         (let (,suppress ,stream)
+           (bt:with-recursive-lock-held ((printing-module-param-lock ,module))
+             (setf ,suppress (printing-module-suppress-cmds ,module))
+             (setf ,stream (act-r-output-stream (printing-module-c ,module))))
+           (when (and ,stream (not ,suppress))
+             (evaluate-act-r-command "command-output" (format nil "~@?" ,control-string ,@args)))))
+       nil)))
+
+(defun command-output-internal (string)
+  (multiple-value-bind (module present)
+      (get-module-fct 'printing-module)
+    (when present 
+      (let (suppress stream)
+        (bt:with-recursive-lock-held ((printing-module-param-lock module))
+          (setf suppress (printing-module-suppress-cmds module))
+          (setf stream (act-r-output-stream (printing-module-c module))))
+        (when (and stream (not suppress))
+          (if (eq t stream)
+              (evaluate-act-r-command "command-trace" (format nil "~&~a~%" string))
+            (format stream "~&~a~%" string))))))
+  nil)
 
 
 (defmacro no-output (&rest commands)
@@ -530,32 +724,46 @@
     `(multiple-value-bind (,module ,present)
          (get-module-fct 'printing-module)
        (when ,present
-         (let ((,current (printing-module-suppress-cmds ,module)))
-                         
-           (setf (printing-module-suppress-cmds ,module) t) 
+         (let (,current)
+           (bt:with-recursive-lock-held ((printing-module-param-lock ,module))
+             (setf ,current (printing-module-suppress-cmds ,module))
+             (setf (printing-module-suppress-cmds ,module) t))
            (unwind-protect 
                (progn ,@commands)
-             (setf (printing-module-suppress-cmds ,module) ,current)))))))
-     
+             (bt:with-recursive-lock-held ((printing-module-param-lock ,module))
+               (setf (printing-module-suppress-cmds ,module) ,current))))))))
+
+
 (defmacro suppress-warnings (&rest commands)
   "Suppress all ACT-R warnings while evaluating ACT-R commands"
-  (let ((module (gensym))
-        (present (gensym))
-        (current (gensym)))
-    `(if (current-model)
-         (multiple-value-bind (,module ,present)
-             (get-module-fct 'printing-module)
-           (when ,present
-             (let ((*error-output* (make-broadcast-stream))
-                   (,current (printing-module-model-warnings ,module)))
-               (setf (printing-module-model-warnings ,module) nil) 
-               (unwind-protect 
-                   (progn ,@commands)
-                 (setf (printing-module-model-warnings ,module) ,current)))))
-       (let ((*error-output* (make-broadcast-stream)))
-         ,@commands))))
-  
+  (let ((key (gensym)))
+    `(let ((,key (suppress-and-capture-warnings)))
+        (unwind-protect 
+            (progn ,@commands)
+          (unsuppress-warnings ,key)))))
 
+
+(defun suppress-and-capture-warnings ()
+  (bt:with-recursive-lock-held ((printing-module-lock *act-r-warning-capture*))
+    (if (printing-module-capture-warnings *act-r-warning-capture*)
+        nil
+      (let ((key (symbol-name (gensym))))
+        (setf (printing-module-capture-warnings *act-r-warning-capture*) key)
+        (setf (printing-module-captured-warnings *act-r-warning-capture*) nil)
+        key))))
+
+(defun unsuppress-warnings (key &optional return)
+  (bt:with-recursive-lock-held ((printing-module-lock *act-r-warning-capture*))
+    (if (and (stringp key) (string-equal key (printing-module-capture-warnings *act-r-warning-capture*)))
+        (prog1
+            (if return
+                (printing-module-captured-warnings *act-r-warning-capture*)
+              nil)
+          (setf (printing-module-capture-warnings *act-r-warning-capture*) nil)
+          (setf (printing-module-captured-warnings *act-r-warning-capture*) nil))
+      nil)))
+
+#|
 (defmacro capture-model-output (&rest commands)
   "Return the string of all model output from commands"
   (let ((module (gensym))
@@ -582,69 +790,173 @@
                (get-output-stream-string ,out-stream)
              (close ,out-stream)))))))
 
-  
+
+
+
+
+
 ;;; Put this in for now because while the output goes to the 
 ;;; same place, the streams aren't equal between *error-output*
 ;;; and *standard-output* so it ends up doubling the model warnings.
 ;;; I do NOT like this solution, but for now it's the easiest/only
 ;;; way I can come up with.
+;;;
+;;; Not writing directly to *error-output* anymore so this isn't needed,
+;;; but leaving it here for now just because there are other
+;;; things which check it that aren't being updated yet.
 
 (defparameter *one-stream-hack* #+(or :digitool :ccl) t
                                 #-(or :digitool :ccl) nil)
 
+|#
+
+(defmacro capture-command-output (&rest commands)
+  "Return the string of all command output from commands"
+  (let ((module (gensym))
+        (present (gensym))
+        (current-c (gensym))
+        (out-stream (gensym)))
+    `(multiple-value-bind (,module ,present)
+         (get-module-fct 'printing-module)
+       (when ,present
+         (let ((,out-stream (make-string-output-stream))
+               (,current-c (printing-module-c ,module)))
+                         
+           (setf (printing-module-c ,module) (make-act-r-output :stream ,out-stream))
+           
+           (unwind-protect 
+               (progn ,@commands)
+             (progn
+               (setf (printing-module-c ,module) ,current-c)))
+           (prog1 
+               (get-output-stream-string ,out-stream)
+             (close ,out-stream)))))))
+
 (defmacro model-warning (control-string &rest args)
   (let ((module (gensym))
         (present (gensym))
-        (stream (gensym)))
+        (test (gensym)))
     `(multiple-value-bind (,module ,present)
-       (get-module-fct 'printing-module)
-     (when (and ,present (act-r-output-stream (printing-module-v ,module)))
-       (let ((,stream (act-r-output-stream (printing-module-v ,module))))
-         (cond ((null (printing-module-model-warnings ,module))
-                ;; just suppress the warnings
-                nil)
-               ((or (null ,stream)
-                    (eq ,stream *error-output*)
-                    *one-stream-hack*
-                    (and (eq ,stream t) (eql *error-output* *standard-output*)))
-                (format *error-output* 
-                    "~&#|Warning~:[~*~; (in model ~a)~]: ~@? |#~%" (> (length (mp-models)) 1) (current-model) ,control-string ,@args))
-               (t
-                (format *error-output* 
-                    "~&#|Warning~:[~*~; (in model ~a)~]: ~@? |#~%" (> (length (mp-models)) 1) (current-model) ,control-string ,@args)
-                (format ,stream 
-                    "~&#|Warning~:[~*~; (in model ~a)~]: ~@? |#~%" (> (length (mp-models)) 1) (current-model) ,control-string ,@args)
-                nil)))))))
+         (get-module-fct 'printing-module)
+       (when ,present
+         (let (,test)
+           (bt:with-recursive-lock-held ((printing-module-param-lock ,module))
+             (setf ,test (and (act-r-output-stream (printing-module-v ,module)) (printing-module-model-warnings ,module))))
+           (when ,test
+             (evaluate-act-r-command "model-warning" (format nil "~@?" ,control-string ,@args)))))
+       nil)))
+
+(defun model-warning-internal (string)
+  (multiple-value-bind (module present)
+      (get-module-fct 'printing-module)
+    (when present
+      (bt:with-recursive-lock-held ((printing-module-lock module))
+        (bt:with-recursive-lock-held ((printing-module-param-lock module))
+          (when (act-r-output-stream (printing-module-v module))
+            (let ((stream (act-r-output-stream (printing-module-v module))))
+              (cond ((null (printing-module-model-warnings module))
+                     ;; if warnings disabled ignore
+                     )
+                    ((printing-module-capture-warnings module)
+                     ;; warnings are being suppressed so just record them
+                     (push-last string (printing-module-captured-warnings module)))
+                    ((eq t stream)
+                     ;; just send it to the warning-trace 
+                     (evaluate-act-r-command "warning-trace" (format nil "~&#|Warning~:[~*~; (in model ~a)~]: ~a |#~%" 
+                                                               (> (length (mp-models)) 1) (current-model) string)))
+                    (t
+                     ;; it's a custom stream so send it there and to the warning-trace
+                     
+                     (let ((out (format nil "~&#|Warning~:[~*~; (in model ~a)~]: ~a |#~%" 
+                                  (> (length (mp-models)) 1) (current-model) string)))
+                       
+                       (evaluate-act-r-command "warning-trace" out)
+                       
+                       (format stream out))))))))))
+  nil)
+
+
+(defmacro one-time-model-warning (tag control-string &rest args)
+  (let ((module (gensym))
+        (present (gensym))
+        (output (gensym)))
+    `(multiple-value-bind (,module ,present)
+         (get-module-fct 'printing-module)
+       (when ,present
+         (let ((,output nil))
+           (bt:with-recursive-lock-held ((printing-module-param-lock ,module))
+             (when (and (act-r-output-stream (printing-module-v ,module)) (printing-module-model-warnings ,module))
+               (setf ,output (not (find ,tag (printing-module-one-time-tags ,module) :test 'equal)))))
+           (when ,output (evaluate-act-r-command "one-time-model-warning" ,tag (format nil "~@?" ,control-string ,@args)))))
+       nil)))
+
+(defun one-time-model-warning-internal (tag string)
+  (multiple-value-bind (module present)
+      (get-module-fct 'printing-module)
+    (when present
+      (bt:with-recursive-lock-held ((printing-module-lock module))
+        (bt:with-recursive-lock-held ((printing-module-param-lock module))
+          (when (act-r-output-stream (printing-module-v module))
+            (let ((stream (act-r-output-stream (printing-module-v module))))
+              (unless (find tag (printing-module-one-time-tags module) :test 'equal)
+                (push tag (printing-module-one-time-tags module))
+                (cond ((null (printing-module-model-warnings module))
+                     ;; if warnings disabled ignore
+                     )
+                    ((printing-module-capture-warnings module)
+                     ;; warnings are being suppressed so just record them
+                     (push-last string (printing-module-captured-warnings module)))
+                    ((eq t stream)
+                     ;; just send it to the warning-trace 
+                     (evaluate-act-r-command "warning-trace" (format nil "~&#|Warning~:[~*~; (in model ~a)~]: ~a |#~%" 
+                                                               (> (length (mp-models)) 1) (current-model) string)))
+                    (t
+                     ;; it's a custom stream so send it there and to the warning-trace
+                     
+                     (let ((out (format nil "~&#|Warning~:[~*~; (in model ~a)~]: ~a |#~%" 
+                                  (> (length (mp-models)) 1) (current-model) string)))
+                       
+                       (evaluate-act-r-command "warning-trace" out)
+                       
+                       (format stream out)))))))))))
+  nil)
+
+
 
 
 (defmacro meta-p-output (control-string &rest args)
   (let ((module (gensym))
         (present (gensym))
         (stream (gensym))
-        (model (gensym))
         (used-streams (gensym))
         (m (gensym))
-        (previous-model (gensym)))
-    `(if (current-mp)
-         (cannot-define-model
-           (let ((,used-streams nil)
-                 (,previous-model (current-model-struct)))
-             
-             (unwind-protect 
-                 (dolist (,m (meta-p-model-order (current-mp)))
-                   (let ((,model (gethash ,m (meta-p-models (current-mp)))))
-                     (setf (meta-p-current-model (current-mp)) ,model)
-                     
-                     (multiple-value-bind (,module ,present)
-                         (get-module-fct 'printing-module)
-                       (when (and ,present (act-r-output-stream (printing-module-v ,module)))
-                         (let ((,stream (act-r-output-stream (printing-module-v ,module))))
-                           (unless (member ,stream ,used-streams)
-                             (push ,stream ,used-streams)
-                             (format ,stream "~&~@?~%" ,control-string ,@args)))))))
-               (setf (meta-p-current-model (current-mp)) ,previous-model)))
-           nil)
-       (print-warning "No current meta-process in call to meta-p-output"))))
+        (mp (gensym))
+        (order (gensym)))
+    `(let ((,used-streams nil)
+           (,mp (current-mp))
+           ,order)
+       (bt:with-lock-held ((meta-p-models-lock ,mp))
+         (setf ,order (meta-p-model-order ,mp)))
+       (dolist (,m ,order)
+         (let ((*current-act-r-model* (cdr (assoc ,m (bt:with-lock-held ((meta-p-models-lock ,mp)) (meta-p-models ,mp))))))
+           (multiple-value-bind (,module ,present)
+               (get-module-fct 'printing-module)
+             (when ,present
+               (let (,stream)
+                 (bt:with-recursive-lock-held ((printing-module-param-lock ,module))
+                   (setf ,stream (act-r-output-stream (printing-module-v ,module))))
+                 
+                 (when ,stream
+                   (unless (member ,stream ,used-streams)
+                     (push ,stream ,used-streams)
+                     (if (eq t ,stream)
+                         (evaluate-act-r-command "model-output" (format nil "~@?" ,control-string ,@args))
+                       (format ,stream "~&~@?~%" ,control-string ,@args)))))))))
+       nil)))
+
+
+;; don't exponse meta-p-output remotely for now 
+
 
 (defun rad->deg (r)
   "Converts radians into degrees."
@@ -658,20 +970,24 @@
   (* (/ pi 180) d))
 
 (defmacro px (vpt)
-  "X coordinate of an XY vector."
-  `(svref ,vpt 0))
+  "X coordinate of an XY sequence."
+  `(elt ,vpt 0))
 
 (defmacro py (vpt)
-  "Y coordinate of an XY vector."
-  `(svref ,vpt 1))
+  "Y coordinate of an XY sequence."
+  `(elt ,vpt 1))
+
+(defmacro pz (vpt)
+  "Z coordinate of an XYZ sequence."
+  `(elt ,vpt 2))
 
 (defmacro vr (vrt)
   "R component of an r-theta vector."
-  `(svref ,vrt 0))
+  `(elt ,vrt 0))
 
 (defmacro vtheta (vrt)
   "Theta component of an r-theta vector."
-  `(svref ,vrt 1))
+  `(elt ,vrt 1))
 
 
 (defun vpt= (vpt1 vpt2)
@@ -681,17 +997,12 @@
 (defun round-xy (loc)
   (map 'vector #'round loc))
 
-(defgeneric polar-move-xy (loc move)
-  (:documentation  
-   "Given an xy location and a polar displacement, return new xy"))
 
-(defmethod polar-move-xy ((loc vector) (move vector))
+(defun polar-move-xy (loc move)
   (round-xy
    (list (+ (px loc) (* (px move) (cos (py move))))
          (+ (py loc) (* (px move) (sin (py move)))))))
 
-(defmethod polar-move-xy ((loc list) (move list))
-  (polar-move-xy (coerce loc 'vector) (coerce move 'vector)))
 
 ;;; DIST      [Function]
 ;;; Description : Computes the distance between two points in N-dimensional space
@@ -700,7 +1011,9 @@
 
 (defun dist (loc1 loc2)
   (sqrt (reduce '+ (map 'vector (lambda (x1 x2)
-                                  (expt (- x1 x2) 2))
+                                  (if (and (numberp x1) (numberp x2))
+                                      (expt (- x1 x2) 2)
+                                    0))
                      loc1 loc2) :initial-value 0)))
 
 
@@ -785,6 +1098,39 @@
              (setf out-lst (list obj)))))))
 
 
+;; similar functions for non-objects using a general accessor
+
+
+(defun objs-min-val (list accessor)
+  (let ((value nil)
+        (matches nil))
+          
+    (dolist (y list)
+      (let ((cur-val (funcall accessor y)))
+        (if (or (null value) 
+                (< cur-val value))
+            (progn
+              (setf value cur-val)
+              (setf matches (list y)))
+          (when (= cur-val value)
+            (push y matches)))))
+    matches))
+
+(defun objs-max-val (list accessor)
+  (let ((value nil)
+        (matches nil))
+          
+    (dolist (y list)
+      (let ((cur-val (funcall accessor y)))
+        (if (or (null value) 
+                (> cur-val value))
+            (progn
+              (setf value cur-val)
+              (setf matches (list y)))
+          (when (= cur-val value)
+            (push y matches)))))
+    matches))
+
 ;;; MKSTR      [Function]
 ;;; Date        : 97.07.02
 ;;; Description : From Graham's _On Lisp_, makes sure we have a string.
@@ -795,6 +1141,30 @@
     (dolist (a args) (princ a s))))
 
 
+(defun string->name (s)
+  (if (stringp s)
+      (if (eq (char s 0) #\:)
+          (intern (string-upcase (subseq s 1)) :keyword)
+        (let ((n (ignore-errors (let ((*read-eval* nil)) (read-from-string s)))))
+          (if (numberp n)
+              n
+            (intern (string-upcase s)))))
+    s))
+
+(defun string->number (s)
+  (if (stringp s) 
+      (let ((n (ignore-errors (read-from-string s))))
+        (if (numberp n)
+            n
+          s))
+    s))
+
+(defun make-string-name (s)
+  (when (symbolp s)
+    (setf s (symbol-name s)))
+  (if (stringp s)
+      (string-downcase s)
+    (string-downcase (princ-to-string s))))
 
 (defgeneric random-item (seq)
   (:documentation "Returns a random item from a sequence using act-r-random."))
@@ -903,55 +1273,127 @@
   (not (eq x y)))
 
 
-(defmethod string-to-lines ((s string))
+(defun string-to-lines (s)
   (aif (position #\Newline s)
     (append (mklist (subseq s 0 it))
             (string-to-lines (subseq s (1+ it) (length s))))
     (list s)))
 
-;;; A specific value of nil may be important to some things, so that's why it
-;;; returns a second value of t on success.
 
-(defun verify-single-explicit-value (slot-specs module cmd slot)
-  (cond ((zerop (length slot-specs))
-         (print-warning 
-          "~a command to ~s module requires a value for the ~a slot." 
-          cmd module slot))
-        ((> (length slot-specs) 1)
-         (print-warning 
-          "~a slot may only be specified once in a ~a command to the ~s module." 
-          slot cmd module))
-        ((not (eql '= (caar slot-specs)))
-         (print-warning 
-          "~a slot may only have the = modifier in a ~a command to the ~s module." 
-          slot cmd module))
-        ((chunk-spec-variable-p (third (car slot-specs)))
-         (print-warning 
-          "~a slot must be explict - not a variable in a ~a command to the ~s module." 
-          slot cmd module))
-        (t
-         (values (third (car slot-specs)) t))))   
+(defun find-float-time-limit (size &optional (digits 3))
+  (let* ((radix (float-radix (coerce 1.0 size)))
+         (precision (float-precision (coerce 1.0 size)))
+         (significant (log (expt radix precision) 10)))
+    
+    (cons size (coerce (expt 10 (/ (floor (- significant digits) .1) 10)) size))))
 
+(defvar *time-size-test-list* (mapcar 'find-float-time-limit
+                                (list 'short-float 'single-float 'double-float 'long-float)))
 
-(defun find-float-time-limit (size &optional (delta .05))
-  (do* ((offset (coerce delta size))
-        (low (* .5 offset))
-        (high (+ offset low))
-        (e 0 (1+ e))
-        (test (coerce (expt 2 e) size) (coerce (expt 2 e) size)))
-       ((or (> e 100) (< (- (+ test offset) test) low) (> (- (+ test delta) test) high)) (1- e))))
-
-(defvar *time-size-test-list* (sort (let ((res nil)
-                                          (vals (list 'short-float 'single-float 'double-float 'long-float)))
-                                      (dolist (type (pushnew *read-default-float-format* vals) res)
-                                        (let ((size (find-float-time-limit type)))
-                                          (aif (find size res :key 'car)
-                                               (progn
-                                                 (push-last type (cdr it)))
-                                               (push (list size type) res))))) #'< :key 'car))
-
-(defvar *time-size-current-limit* (seconds->ms (expt 2 (find-float-time-limit *read-default-float-format*))))
+;(defvar *time-size-current-limit* (seconds->ms (expt 2 (find-float-time-limit *read-default-float-format*))))
 (defvar *time-size-current-type* *read-default-float-format*)                                    
+
+
+(defun safe-seconds->ms (seconds &optional fname)
+  (when (floatp seconds)
+    (let* ((type (type-of seconds))
+           (size (assoc type *time-size-test-list*)))
+      (when (null size)
+        (setf size (find-float-time-limit type))
+        (push-last size *time-size-test-list*))
+      
+      (when (> (abs seconds) (cdr size))
+        (let* ((larger (find-if (lambda (x) (> (cdr x) (cdr size))) *time-size-test-list*))
+               (marker (case (car larger) (single-float #\f) (double-float #\d) (long-float #\L)))
+               (options (list "specify the time in milliseconds if the command that was used has such an option"
+                              "use a rational number instead of a float e.g. 1234567/1000 instead of 1234.567")))
+          (when larger
+            (push-last (format nil "change the default floating point format to a higher precision type like ~s and recompile the ACT-R sources" (car larger))
+                       options))
+          (when marker
+            (push-last (format nil "directly specify the time as a higher precision floating point type e.g. 1234.567~c0" marker)
+                       options))
+          (one-time-model-warning :large-seconds "A time of ~f seconds was specified~@[ in a call to the ~a command~] which is beyond the limit to accurately represent time in milliseconds for the floating point type of that number (~s).~%To avoid potential problems you could do one of the following:~%~{ - ~a~%~}"
+                                seconds fname (car size) options)))))
+  (round (* seconds 1000)))
+                            
+
+(defun circular-references (dependencies)
+  "Modify the dependencies lists passed and return t if there are any circularities"
+  (dolist (x dependencies)
+    (dolist (y (cdr x))
+      (awhen (find y dependencies :test (lambda (i j) (if (listp (car j))
+                                                          (find i (car j))
+                                                        (eq i (car j)))))
+             (setf (cdr x) (append (cdr x) (cdr it))))))
+  
+  (some (lambda (x) 
+          (if (listp (car x))
+              (some (lambda (z) (find z (cdr x))) (car x))
+            (find (car x) (cdr x)))) dependencies))
+
+
+(defun chunk-spec-variable-p (chunk-spec-slot-value &optional (char #\=))
+  (when (symbolp chunk-spec-slot-value) 
+    (let ((s (symbol-name chunk-spec-slot-value)))
+      (and (> (length s) 1)
+           (char-equal (char s 0) char)))))
+
+(defun replace-variables (arg bindings)
+  (cond ((and (consp arg) (eq (last arg) arg))  ;; detect that it's something like (a . b)
+         (cons (replace-variables (car arg) bindings)
+               (replace-variables (cdr arg) bindings)))
+         
+         ((listp arg) 
+          (mapcar (lambda (x)
+                    (replace-variables x bindings))
+            arg))
+        ((chunk-spec-variable-p arg) 
+         (aif (assoc arg bindings)
+              (cdr it)
+              arg))
+        (t arg)))
+
+
+;;; convert a color to the string or use the default
+;;; if not valid or given.
+
+(defun color->name (color &optional (default "black"))
+  (cond ((or (eq color t) (null color))
+         default)
+        ((symbolp color)
+         (string-downcase (symbol-name color)))
+        ((stringp color)
+         color)
+        (t default)))
+
+
+;;; Functions that are callable as format directives
+
+
+(defun cl-user::print-time-in-seconds (stream time colon-p atsign-p &optional (width 0) padchar commachar)
+  (declare (ignore colon-p atsign-p padchar commachar))
+  (multiple-value-bind (sec ms) (truncate (abs (round time)) 1000)
+    (let* ((digits (format nil "~:[~;-~]~d.~3,'0d" (minusp time) sec ms))
+           (pad (max 0 (- width (length digits)))))
+      (format stream "~va~a" pad "" digits))))
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; ACL and CCL don't seem to print the text provided in an error
+;;; call normally so create a special format function so that the
+;;; created error strings can be more informative.
+
+#-(or :allegro :ccl) (defun cl-user::print-error-message (stream error colon-p atsign-p &optional (width 0) padchar commachar)
+                   (declare (ignore colon-p atsign-p width padchar commachar))
+                   (format stream "~s" error))
+
+#+(or :allegro :ccl) (defun cl-user::print-error-message (stream error colon-p atsign-p &optional (width 0) padchar commachar)
+         (declare (ignore colon-p atsign-p width padchar commachar))
+         (format stream "#<~a " (type-of error))
+         (write error :stream stream :escape nil)
+         (format stream  ">"))
 
 
 #|

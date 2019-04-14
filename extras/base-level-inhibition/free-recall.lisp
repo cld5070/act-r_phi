@@ -3,6 +3,7 @@
 ;;; Free recall procedure without tagging to illustrate the benefits of base-level inhibition
 
 (clear-all)
+(require-extra "base-level-inhibition")
 
 ;; Variables for recording the activation and retrieval times data for graphing
 (defvar *retrieval-log* nil)
@@ -76,7 +77,7 @@
   nil)
 
 (defun save-reference-time (chunk)
-  (when (eq (chunk-chunk-type-fct chunk) 'memory)
+  (when (numberp (chunk-slot-value-fct chunk 'index))
     (push (mp-time) (cdar *retrieval-log*))))
 
 
@@ -104,8 +105,8 @@
          (real-steps (round last-time (* x-inc .05)))
          (xscale (/ 600 last-time)))
     
-    (add-text-to-exp-window :x 5 :y 5 :text (format nil "~3,2f" *max-activation*))
-    (add-text-to-exp-window :x 5 :y 290 :text (format nil "~3,2f" *min-activation*))
+    (add-text-to-exp-window win (format nil "~3,2f" *max-activation*) :x 5 :y 5 )
+    (add-text-to-exp-window win (format nil "~3,2f" *min-activation*) :x 5 :y 290 )
                                 
     (dolist (chunk *activation-lists*)
       (let ((color (pop colors))
@@ -116,7 +117,7 @@
                 (x (round (* (car data) xscale)))
                 (y (round (- 300 (* (- (cdr data) *min-activation*) yscale)))))
             (when last-x ;(and nil last-x)
-              (add-line-to-exp-window (list (+ 30 last-x) last-y) (list (+ 30 x) y) :color color))
+              (add-line-to-exp-window win (list (+ 30 last-x) last-y) (list (+ 30 x) y) color))
             (setf last-x x)
             (setf last-y y)))
 
@@ -127,7 +128,7 @@
               (let* ((x1 (round (* (cadr retrieval) xscale)))
                      (x2 (min (1- x1) (round (* (cddr retrieval) xscale)))))
                 (dotimes (i 4)
-                  (add-line-to-exp-window (list (+ x1 30) (+ 308 i)) (list (+ x2 30) (+ 308 i)) :color color)))))))))
+                  (add-line-to-exp-window win (list (+ x1 30) (+ 308 i)) (list (+ x2 30) (+ 308 i)) color)))))))))
   
   
 
@@ -139,8 +140,8 @@
 (sgp :esc t :lf 0.25 :bll 0.5 :ol nil :ga 0.0 :ans 0.25 :rt -10.0 :v nil)
 
 
-(chunk-type memory index)
-(chunk-type goal)
+(chunk-type memory index (memory t))
+
 
 (add-dm 
  (zero isa memory index 0)
@@ -154,13 +155,12 @@
  (eight isa memory index 8)
  (nine isa memory index 9))
 
-(define-chunks (g isa goal))
+(define-chunks g)
 
 ;;; Retrieval Production
 
 (p retrieve
    =goal>
-     isa goal
    ?retrieval>
      buffer empty
    state  free

@@ -1,27 +1,27 @@
-;;;  -*- mode: LISP; Package: CL-USER; Syntax: COMMON-LISP;  Base: 10 -*-
+;;;  -*- mode: LISP; Syntax: COMMON-LISP;  Base: 10 -*-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
+;;; 
 ;;; Author      : Mike Byrne & Dan Bothell
 ;;; Address     : Rice University, MS-25
 ;;;             : Psychology Department
 ;;;             : Houston,TX 77251-1892
 ;;;             : byrne@acm.org
-;;;
+;;; 
 ;;; Copyright   : (c)1998-2007 Mike Byrne/Dan Bothell
 ;;; Availability: Covered by the GNU LGPL, see LGPL.txt
-;;;
+;;; 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
+;;; 
 ;;; Filename    : vision.lisp
-;;; Version     : 3.2
-;;;
-;;; Description : Source code for the ACT-R 6 Vision Module.
+;;; Version     : 7.3.3
+;;; 
+;;; Description : Source code for the ACT-R Vision Module.  
 ;;;
 ;;; Bugs        : [X] Should object-present-p do a chunk match to determine if
 ;;;                   the object is still the "same"?  I'm doing that now, but
 ;;;                   may want to consider something else long term...
-;;;                   UPDATE: not doing the chunk test now because it results
-;;;                   in differences where a change is not re-encoded that
+;;;                   UPDATE: not doing the chunk test now because it results 
+;;;                   in differences where a change is not re-encoded that 
 ;;;                   which should be with update-attended-loc.  May still
 ;;;                   want to consider other options.
 ;;;             : [ ] Not so much a bug, but an inconsistency with the old
@@ -34,7 +34,7 @@
 ;;;                   downstream from the extra call in other modules or code.
 ;;;                   Only really matters if one has set the seed explicitly
 ;;;                   to produce a specific output (the testing traces).  Shouldn't
-;;;                   cause problems otherwise.
+;;;                   cause problems otherwise.  
 ;;;             : [X] Current module doesn't work quite the same as the old version
 ;;;                   when items overlap in the display.  Particularly, a screen
 ;;;                   change during an attention shift for items at the same location
@@ -59,7 +59,7 @@
 ;;;                   *Essentially added an "undefined" attended status for
 ;;;                   *items that are no longer in the visicon - it always
 ;;;                   *returns nil for the query regardless of the request
-;;;                   *which varies from the old module because the old one would
+;;;                   *which varies from the old module because the old one would 
 ;;;                   *consider items no longer in the display as "attended nil".
 ;;;                   -- changed this because if it's a visual-location then it
 ;;;                   should return "attended nil" as t if it's truely not attended.
@@ -71,17 +71,17 @@
 ;;;                   when deleteing visicon chunks and test-feats is true.
 ;;;                   Pretty low priority since most people use add/delete/update
 ;;;                   for performance and test-feats can have a noticeable cost.
-;;;             : [X] There is no feat-table now!
+;;;             : [X] There is no feat-table now! 
 ;;;                   Should the feat-table be purged other than on a clear, for
 ;;;                   instance if an object goes away without a clear?
 ;;;             : [ ] Does test-feats do the right thing in enter-into-visicon
 ;;;                   with respect to checking the real-visual-value i.e. does
 ;;;                   that always get set correctly elsewhere or can that break
 ;;;                   with a custom device?
-;;;
+;;; 
 ;;; ----- History ----- [look also at function comments]
 ;;;
-;;; 2007.05.23 Dan
+;;; 2007.05.23 Dan 
 ;;;             : * Start of a rewrite to use chunks internally for the visicon
 ;;;             :   and as the objects themselves.
 ;;;             : * Will work in conjunction with updated device interface, devices,
@@ -97,7 +97,7 @@
 ;;;             : * Modified visicon-chunks to sort based on x-y coordinates to
 ;;;             :   provide more consistency across platforms/Lisps since the
 ;;;             :   visicon hash-table doesn't maintain the entry order.  It's
-;;;             :   a slight performance hit, but consistency in the tutorial
+;;;             :   a slight performance hit, but consistency in the tutorial 
 ;;;             :   and elsewhere is worth it (for now at least, and it could
 ;;;             :   be put onto a parameter to check if people don't like it).
 ;;; 2007.07.06 Dan
@@ -161,13 +161,13 @@
 ;;;             :   device...
 ;;; 2008.01.09 Dan
 ;;;             : * To maintain the determinism of things the chunks to be
-;;;             :   stuffed are first sorted by name before a random one is
+;;;             :   stuffed are first sorted by name before a random one is 
 ;;;             :   picked.  Shouldn't be too much of a performance hit and
 ;;;             :   it's needed if the test models are to always produce the
 ;;;             :   same traces.
 ;;; 2008.01.16 Dan
 ;;;             : * Fixed a bug in icon-entry that could throw a warning if the
-;;;             :   visual-location being used in an attention shift hadn't
+;;;             :   visual-location being used in an attention shift hadn't 
 ;;;             :   orignially come from the vision module.
 ;;; 2008.01.31 Dan
 ;;;             : * Added in a version of the add-screen-object and delete-screen-object
@@ -193,20 +193,20 @@
 ;;;             :   Thus, unlike the old version of the module, requests like
 ;;;             :   this wouldn't work as expected prior to this fix:
 ;;;             :   +visual-location> isa visual-location value "a"
-;;;             :   for "standard" text display items because the default operation
-;;;             :   for text items is to set the value slot to text in the
+;;;             :   for "standard" text display items because the default operation 
+;;;             :   for text items is to set the value slot to text in the 
 ;;;             :   visual-location chunk and that's what the comparison was using.
 ;;;             :   Now, when the chunk-real-visual-value parameter is set, that's
 ;;;             :   what gets used for the value slot tests.
 ;;; 2008.02.15 Dan
-;;;             : * Added a remove-finst function since update-cursor-feat
+;;;             : * Added a remove-finst function since update-cursor-feat 
 ;;;             :   called it!
 ;;; 2008.03.13 Dan
 ;;;             : * Changed the priority on the set-visloc-default request
 ;;;             :   action that gets scheduled to have a value of 9 which puts
-;;;             :   it just below the implicit buffer clearing due to the
+;;;             :   it just below the implicit buffer clearing due to the 
 ;;;             :   request.  That makes it very unlikely that a cooccuring
-;;;             :   proc-display will sneak in between the clearing of the
+;;;             :   proc-display will sneak in between the clearing of the 
 ;;;             :   buffer and the changing of the defaults and thus stuff
 ;;;             :   an "unwanted" chunk in there.  It could avoid that by
 ;;;             :   scheduling the priority higher than the clear, but I don't
@@ -216,8 +216,8 @@
 ;;;             :   for which the attended status was being checked was still
 ;;;             :   a valid member of the visicon.  Brings up a question which
 ;;;             :   I've added under bugs - what's the right status for such
-;;;             :   a chunk?  Should it just always "fail" the query?
-;;;             : * A related question the test model brought up is what
+;;;             :   a chunk?  Should it just always "fail" the query?  
+;;;             : * A related question the test model brought up is what 
 ;;;             :   about when there are "overlapping" features - should they
 ;;;             :   share a finst?
 ;;;             : * Fixed an issue with enter-into-visicon because it didn't
@@ -226,7 +226,7 @@
 ;;; 2008.03.31 Dan
 ;;;             : * Changed visicon-chunks so that it has an optional parameter
 ;;;             :   which indicates when to sort things.  Only using that for
-;;;             :   the print-visicon command and find-location requests now to
+;;;             :   the print-visicon command and find-location requests now to 
 ;;;             :   improve performance and still maintain the "cross platform"
 ;;;             :   consistency.
 ;;; 2008.04.01 Dan
@@ -236,10 +236,10 @@
 ;;;             :   as a parameter.  Otherwise they're the same commands.
 ;;; 2008.04.07 Dan
 ;;;             : * Added an automatic call to stuff-visloc-buffer when a
-;;;             :   set-visloc-default request is made to trigger any possible
-;;;             :   stuffing based on the new settings.
+;;;             :   set-visloc-default request is made to trigger any possible 
+;;;             :   stuffing based on the new settings. 
 ;;;             : * Adding a new parameter :auto-attend.
-;;;             :   When it is set to t (defaults to nil) it will cause the
+;;;             :   When it is set to t (defaults to nil) it will cause the 
 ;;;             :   vision module to automatically start a move-attention after
 ;;;             :   a successful visual-location request completes to attend
 ;;;             :   to that visual-location.
@@ -247,7 +247,7 @@
 ;;;             :   where the result of the visual-location request aren't
 ;;;             :   that important and one is just going to attend it anyway.
 ;;;             :   Saves some productions in the model but doesn't affect the
-;;;             :   timing because the request is delayed 50ms to compensate for
+;;;             :   timing because the request is delayed 50ms to compensate for 
 ;;;             :   the skipped production.
 ;;;             :   The module is not marked as busy during the 50ms delay.  So
 ;;;             :   one should be careful about using explicit move-attention
@@ -260,13 +260,13 @@
 ;;; 2008.04.10 Dan
 ;;;             : * Added a new parameter :test-feats which can allow for some
 ;;;             :   significant improvements in run time for proc-display calls
-;;;             :   if it is set to nil (the default value is t).  There are
+;;;             :   if it is set to nil (the default value is t).  There are 
 ;;;             :   limited situations where one can safely set it to nil:
 ;;;             :   - All proc-display calls specify :clear t
-;;;             :   - If each visual item in the device returns the "same" chunk
-;;;             :     from build-vis-locs-for every time (by same it means same
+;;;             :   - If each visual item in the device returns the "same" chunk 
+;;;             :     from build-vis-locs-for every time (by same it means same 
 ;;;             :     name though the contents could differ)
-;;;             :   The next step is to update the built in devices so that
+;;;             :   The next step is to update the built in devices so that 
 ;;;             :   they satisfy the second situation and thus work correctly
 ;;;             :   with the parameter set to nil.
 ;;; 2008.05.22 Dan
@@ -274,7 +274,7 @@
 ;;              :   model through an assign-finst request with a "bad" value.
 ;;; 2008.06.20 Dan
 ;;;             : * Removed the -fct from slot-specs-to-chunk-spec-list and
-;;;             :   slot-specs-to-chunk-spec since the macros were removed from
+;;;             :   slot-specs-to-chunk-spec since the macros were removed from 
 ;;;             :   the chunk-spec code.
 ;;; 2008.07.02 Dan [3.0b2]
 ;;;             : * Added code to delete the "internal" visicon chunks when a
@@ -284,7 +284,7 @@
 ;;;             :   yet been copied for the buffer.
 ;;; 2008.07.14 Dan
 ;;;             : * Fixed an issue when test-feats was t that overlapping text
-;;;             :   could persist - the old icon entry may stick around when
+;;;             :   could persist - the old icon entry may stick around when 
 ;;;             :   :clear t not given to proc-display.
 ;;; 2008.07.15 Dan
 ;;;             : * Changed the output setting for find-loc-failure so that it
@@ -300,13 +300,13 @@
 ;;; 2008.08.11 Dan [3.0b3]
 ;;;             : * Adding a new query to the module to allow one to detect
 ;;;             :   visual changes other than through the visual-location buffer
-;;;             :   stuffing.
-;;;             :
+;;;             :   stuffing. 
+;;;             :   
 ;;;             :   There's a new parameter called :scene-change-threshold
 ;;;             :   and if during a proc-display the computed change equals
 ;;;             :   or exceeds that setting the scene-change query of the visual
 ;;;             :   buffer will go true.
-;;;             :   It will stay true for a time equal to the :visual-onset-span
+;;;             :   It will stay true for a time equal to the :visual-onset-span 
 ;;;             :   value.
 ;;;             :   It can also be explicitly cleared by using the new request
 ;;;             :   which takes no parameters and no time:
@@ -314,25 +314,25 @@
 ;;;             :       isa clear-scene-change
 ;;;             :   It is also cleared with the existing clear request:
 ;;;             :     +visual>
-;;;             :       isa clear
+;;;             :       isa clear 
 ;;;             :   The change computation is computed as a proportion of
-;;;             :   items which differ between the two sets and the setting of the
+;;;             :   items which differ between the two sets and the setting of the 
 ;;;             :   :scene-change-threshold must be a value in the range 0.0-1.0.
-;;;             :
+;;;             :   
 ;;;             :   Here's the computation used to determine the change value:
-;;;             :
+;;;             :   
 ;;;             :   ov = the set of items in the visicon when proc-display called.
 ;;;             :   o  = the number of items in ov.
 ;;;             :   d  = number of items from ov not in the new visicon.
 ;;;             :   n  = number of items in the new visicon which were not in ov.
-;;;             :
+;;;             :   
 ;;;             :   change = (d+n)/(o+n)
-;;;             :
-;;;             :   If o and n are both 0 then the change is 0.
+;;;             :   
+;;;             :   If o and n are both 0 then the change is 0.    
 ;;; 2008.08.13 Dan
 ;;;             : * Added a new query for the visual buffer: scene-change-value.
 ;;;             :   It's mostly there as a debugging aid to show what the last
-;;;             :   scene-change proprotion was through the buffer-status
+;;;             :   scene-change proprotion was through the buffer-status 
 ;;;             :   command.  However, it can be queried normally.  The value
 ;;;             :   given should be a number.  If the last scene-change had a
 ;;;             :   proportion of change greater than that value the query will
@@ -344,7 +344,7 @@
 ;;;             :   fast-merging to the process-display code.  About the same
 ;;;             :   speed-wise for small (0~15) displays, but significantly
 ;;;             :   faster as they get larger.
-;;;             : * Added a new command remove-visual-finsts since people have
+;;;             : * Added a new command remove-visual-finsts since people have 
 ;;;             :   been using proc-display :clear t to do that even without
 ;;;             :   "changing" the display.
 ;;;             : * Fixed a bug related to "proc-display :clear t" - when the
@@ -357,13 +357,13 @@
 ;;;             :   It was already setting and clearing a lock, but just wasn't
 ;;;             :   testing for it...
 ;;; 2009.04.29 Dan
-;;;             : * Changed the phrase parsing so that the phrase! chunk gets a
+;;;             : * Changed the phrase parsing so that the phrase! chunk gets a 
 ;;;             :   color based on the majority color among the individual words.
 ;;;             :   Also added a colors slot to hold the list of item colors
 ;;;             :   corresponding to the words and objects slots.
 ;;; 2009.08.27 Dan
 ;;;             : * Changed visicon-update so that it has an optional parameter
-;;;             :   to determine whether or not it needs to count the visicon
+;;;             :   to determine whether or not it needs to count the visicon 
 ;;;             :   items for return.
 ;;;             : * Modified delete-screen-object (and thus delete-visicon-item)
 ;;;             :   so that the internal chunk gets purged if :delete-visicon-chunks
@@ -372,27 +372,27 @@
 ;;;             : * Added optional update parameters to the internal add-screen-object
 ;;;             :   and delete-screen-object and the user commands add-visicon-item
 ;;;             :   and delete-visicon-item so that multiple adds & deletes can avoid
-;;;             :   all having to run the updating code.  One benefit to that is that
-;;;             :   it won't always be the first item added to the screen that gets
+;;;             :   all having to run the updating code.  One benefit to that is that 
+;;;             :   it won't always be the first item added to the screen that gets 
 ;;;             :   stuffed if one doesn't want that.
-;;;             : * Added an update-visicon-item command to go along with the
+;;;             : * Added an update-visicon-item command to go along with the 
 ;;;             :   add- and delete- ones.  It has a required parameter of the object
 ;;;             :   an optional parameter for updating (like add and delete now have)
 ;;;             :   and two possible keword parameters :same-chunks and :chunks.
-;;;             :   It works in one of three ways based on which if any of the
+;;;             :   It works in one of three ways based on which if any of the 
 ;;;             :   keyword parameters are provided (if the parameters are invalid
 ;;;             :   then it just prints a warning and does nothing):
 ;;;             :
-;;;             :   - If neither is given then it does the same thing as if the object
+;;;             :   - If neither is given then it does the same thing as if the object 
 ;;;             :   had been deleted and then added again.
 ;;;             :
-;;;             :   - If :chunks is non-nil and is either a symbol naming a chunk or a
+;;;             :   - If :chunks is non-nil and is either a symbol naming a chunk or a 
 ;;;             :   list of chunk names all of which correspond to the chunk(s) that
 ;;;             :   were originally added to the visicon for the object with add-visicon-
-;;;             :   item then it will update the module's internal representation of
+;;;             :   item then it will update the module's internal representation of 
 ;;;             :   those features.
 ;;;             :
-;;;             :   - If :chunks is nil but :same-chunks is t then it will call
+;;;             :   - If :chunks is nil but :same-chunks is t then it will call 
 ;;;             :   build-vis-locs-for for that object and treat the list of chunks
 ;;;             :   that are returned the same as if the :chunks parameter had been
 ;;;             :   given with that list.
@@ -408,16 +408,16 @@
 ;;;             : * Fixed an issue with a '(lambda ...)  in synthesize-phrase
 ;;;             :   because LispWorks doesn't like that construct.
 ;;; 2010.02.04 Dan
-;;;             : * Make sure tracking keeps a finst on something tracked for
+;;;             : * Make sure tracking keeps a finst on something tracked for 
 ;;;             :   longer than the finst duration time.
 ;;; 2010.02.12 Dan
 ;;;             : * Let a move-attention break tracking without having to
-;;;             :   explicitly clear it first.  The issue was that tracking
+;;;             :   explicitly clear it first.  The issue was that tracking 
 ;;;             :   keeps the module busy so the move-attention would jam, but
 ;;;             :   now it ignores that jam if it's due to tracking.
 ;;; 2010.02.18 Dan
 ;;;             : * Fixed a bug which could cause problems with a device that
-;;;             :   was modifying the chunks for its features prior to a
+;;;             :   was modifying the chunks for its features prior to a 
 ;;;             :   proc-display call.  Within-move was returning the original
 ;;;             :   chunk and not the internal copy and featlis-to-chunks was
 ;;;             :   using that orignial chunk to set the icon-entry for the
@@ -453,7 +453,7 @@
 ;;;             :   from being called (cases 6, 7, 8, and 9).
 ;;;             : * Don't set the object's screen-pos slot in update-tracking-mth
 ;;;             :   now except in the cases where it won't get set via update-tracking-loc-chunk.
-;;;             :   That prevents an issue with deleting that visicion chunk
+;;;             :   That prevents an issue with deleting that visicion chunk 
 ;;;             :   later in most cases.  May want to not set it at all in those
 ;;;             :   cases.
 ;;; 2011.01.19 Dan
@@ -511,13 +511,13 @@
 ;;; 2011.05.16 Dan
 ;;;             : * Replaced pm-warning calls with model-warning.
 ;;; 2011.11.09 Dan
-;;;             : * Commented out the *enable-package-locked-errors* line for ACL
-;;;             :   because it no longer seems to be necessary and it sets up a
+;;;             : * Commented out the *enable-package-locked-errors* line for ACL 
+;;;             :   because it no longer seems to be necessary and it sets up a 
 ;;;             :   dangerous situation for users since that setting enables the
 ;;;             :   redefinition of CL functions without warning.
-;;;             : * Added a new function add-word-characters which allows the
-;;;             :   user to modify how text strings get broken into "words"
-;;;             :   by specifying additional characters to include in sequences
+;;;             : * Added a new function add-word-characters which allows the 
+;;;             :   user to modify how text strings get broken into "words" 
+;;;             :   by specifying additional characters to include in sequences 
 ;;;             :   along with those that are alphanumericp.
 ;;; 2011.11.14 Dan
 ;;;             : * Added a new request parameter to visual-location requests
@@ -525,9 +525,9 @@
 ;;;             :   The new :nearest options are clockwise and counterclockwise.
 ;;;             :   That is computed relative to a center point specified
 ;;;             :   by the new request parameter :center which should be either
-;;;             :   a visual-location or visual-object.  If :center is not
+;;;             :   a visual-location or visual-object.  If :center is not 
 ;;;             :   specified then the default center point is used which is
-;;;             :   0,0 but can be changed with the set-visual-center-point
+;;;             :   0,0 but can be changed with the set-visual-center-point 
 ;;;             :   command (note that open-exp-window will automatically set
 ;;;             :   the visual center point to the center of the window it opens).
 ;;;             : * Added current-x, current-y, clockwise, and counterclockwise
@@ -538,13 +538,13 @@
 ;;;             :   to the features.
 ;;; 2012.01.24 Dan
 ;;;             : * Added a warning to process-display to note that it should
-;;;             :   not be called more than once at a time because that can cause
+;;;             :   not be called more than once at a time because that can cause 
 ;;;             :   issues with the re-attending, but since people may be using
 ;;;             :   that as a hack to force a particular chunk to buffer stuff
 ;;;             :   in the vis-loc buffer it's a model warning so it can be
 ;;;             :   turned off.
 ;;; 2012.01.25 Dan
-;;;             : * Changed the order in which the events are scheduled in
+;;;             : * Changed the order in which the events are scheduled in 
 ;;;             :   update-attended-loc because it can affect when the next
 ;;;             :   conflict-resolution occurs.  This doesn't address the
 ;;;             :   bigger issue, but it at least fixes the only such case I
@@ -553,7 +553,7 @@
 ;;;             : * Added some code to avoid a warning about not having a current
 ;;;             :   location when one isn't really needed anyway.
 ;;; 2012.06.26 Dan
-;;;             : * The currently-attended and current-marker are both cleared
+;;;             : * The currently-attended and current-marker are both cleared 
 ;;;             :   if the model processes a new device to avoid re-encoding
 ;;;             :   something from the new window that happens to be at the
 ;;;             :   same coordinates as the item last attended in the previous
@@ -567,8 +567,8 @@
 ;;;             :   of the state transitions.
 ;;; 2012.12.19 Dan
 ;;;             : * Added xyz-loc to get the vector of screen-x, screen-y, and
-;;;             :   distance.
-;;;             : * Use xyz-loc in the nearest calculation so that distance
+;;;             :   distance. 
+;;;             : * Use xyz-loc in the nearest calculation so that distance 
 ;;;             :   matters too (doesn't change anything for default 2D devices).
 ;;; 2013.07.24 Dan
 ;;;             : * Added a run-time warning if a move-attention request doesn't
@@ -584,12 +584,12 @@
 ;;; 2014.01.24 Dan
 ;;;             : * Changed build-string-feats so that it automatically handles
 ;;;             :   newlines so the results are consistent among the devices.
-;;;             :   Has two additional keyword params now:
+;;;             :   Has two additional keyword params now: 
 ;;;             :    line-height - how much to increase the y-pos for each newline
 ;;;             :    x-fct - an optional function which can be used to determine
 ;;;             :      the starting x coordinate for the current line.  If provided
 ;;;             :      it will be called once for each line of text being passed
-;;;             :      three values: the string of the line of text, the value of
+;;;             :      three values: the string of the line of text, the value of 
 ;;;             :      the start-x parameter, and the obj parameter.  If it returns
 ;;;             :      a number that will override start-x.
 ;;; 2014.02.12 Dan
@@ -598,9 +598,9 @@
 ;;;             : * Removed the abstract-letter and abstract-number chunk-types
 ;;;             :   since they aren't being used.
 ;;;             : * Changed the chunk-types for text, empty-space, oval, and
-;;;             :   cursor to add a slot to each which is the same as the name
-;;;             :   of the type with a default value of t.  That makes them
-;;;             :   distinct types under the inheritance of the static typing
+;;;             :   cursor to add a slot to each which is the same as the name 
+;;;             :   of the type with a default value of t.  That makes them 
+;;;             :   distinct types under the inheritance of the static typing 
 ;;;             :   mechanism.
 ;;; 2014.02.14 Dan [3.2]
 ;;;             : * The default distance for visual locations is now measured in
@@ -616,47 +616,538 @@
 ;;; 2014.02.18 Dan
 ;;;             : * Fixed a bug with visual-location request's processing of the
 ;;;             :   :center parameter.
+;;; 2014.03.17 Dan [4.0]
+;;;             : * Start the change to being consistent with chunks without types.
+;;;             : * Changed the module warning function to indicate that it's a
+;;;             :   chunk-spec being passed in even though it's ignored.
+;;;             : * Changed the query-buffer call to be consistent with the new
+;;;             :   internal code.
+;;; 2014.05.20 Dan
+;;;             : * Start the real conversion to chunks without types.  Change 
+;;;             :   the request method and initial chunk-type specifications.
+;;;             : * Lots of minor cleanup along the way.
+;;;             : * Added an update-new to visicon-update and removed the 
+;;;             :   update-new and check-finsts from find-location.
+;;; 2014.05.21 Dan
+;;;             : * Within-move now considers distance when computing the angle
+;;;             :   difference instead of just using an xy pixel distance.
+;;;             : * Featlis-to-chunks doesn't use the loc parameter so take it
+;;;             :   out.
+;;; 2014.05.23 Dan
+;;;             : * When creating the sub-letter features for items automatically
+;;;             :   create chunks for the feature values if they are symbols.
+;;; 2014.05.30 Dan
+;;;             : * Use the test-for-clear-request function in pm-module-request.
+;;; 2014.07.07 Dan
+;;;             : * The doc string doesn't need to indicate that it uses chunks
+;;;             :   internally anymore.
+;;; 2014.08.13 Dan
+;;;             : * The set-visloc-default-request needs to strip the SET-VISLOC-DEFAULT
+;;;             :   slot from the spec.
+;;; 2014.10.29 Dan
+;;;             : * Changed the last-command reported for a visual-location 
+;;;             :   buffer 'find' request from visual-location to find-location.
+;;; 2014.10.29 Dan
+;;;             : * Added safety tests to set-char-feature-set and returns t/nil
+;;;             :   now instead of the char-feats object.
+;;; 2014.12.08 Dan
+;;;             : * Added chunks for the colors pink, light-blue, purple, and
+;;;             :   brown to cover all the ones used by the AGI.
 ;;; 2014.12.15 Dan
 ;;;             : * Fixed a bug with chop-string that caused problems if there
 ;;;             :   was an empty line in the input string.
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;; General description of update
-;;;
-;;; The idea is to take advantage of the capabilities in ACT-R 6 to use chunks
-;;; for the visicon.  Replace build-features-for with build-vis-locs-for that just
-;;; needs to return a list of chunks which can be subtypes of visual-location.  That
-;;; allows the modeler more freedom in representation.  Along with that, the "find-
-;;; location" requests will now use the full power of the general chunk matcher which
-;;; means that slots can be specified any number of times and variables will
-;;; be available that would allow for something like saying "find a location where
-;;; the x and y coordinates are the same" or "find a location where the width
-;;; is greater than the height".
-;;;
-;;; Along with that will be a corresponding shift from feat-to-dmo to vis-loc-to-obj
-;;; which again will shift toward returning the chunk representation directly.
-;;;
-;;; It should be completely backward compatible with existing models, but not
-;;; with existing devices or code that takes advantage of "hidden" features of
-;;; the vision module (some undocumented capabilities like attn-trace have been
-;;; removed to simplify the support code, but if people really need those they
-;;; can be restored later).
-;;;
-;;; This does sacrifice a lot of the OO functionality for features and specs,
-;;; but my observation is that many  users aren't taking advantage of that
-;;; now and in fact some don't want to bother with it to the point that they
-;;; implement a complete replacement module for vision instead of creating a new
-;;; device to use (yes, really)!  The hope is that by making it chunk based it will
-;;; be more accessible to the average user without giving up too much that the
-;;; advanced user relies on.
-;;;
-;;; Because it's going to be less restrictive in terms of the find-locations that
-;;; it can do there is the the possibility of abusing the system in a "super-human"
-;;; way, but that's an issue in other parts of the system as well and one of those
-;;; things that the modeler will have to consider his/her own feelings of
-;;; what's plausible.  Basically, the idea is that the tool is very flexible
-;;; and it's up to the users to determine how best to use it for their purposes.
-;;;
+;;; 2015.03.18 Dan
+;;;             : * Explicitly turn off the pretty printer during print-icon-
+;;;             :   feature to avoid weird line breaks in the visicon output.
+;;; 2015.03.20 Dan
+;;;             : * Failures for both buffers now set the buffer failure flag
+;;;             :   using set-buffer-failure.
+;;; 2015.03.23 Dan
+;;;             : * The visual buffer failures are now marked as to whether it
+;;;             :   was a requested encoding or an automatic one which failed.
+;;; 2015.04.21 Dan [4.1]
+;;;             : * New parameter :unstuff-visual-location which indicates 
+;;;             :   whether or not stuffed visual-location chunks should be cleared
+;;;             :   automatically by the module.  Defaults to nil.  Can be set to
+;;;             :   t which means clear it after :VISUAL-ONSET-SPAN or a number
+;;;             :   which is the time to clear in seconds.
+;;; 2015.04.22 Dan
+;;;             : * Also allow a value of new for :unstuff-visual-location which
+;;;             :   means that it can be overwritten by a new chunk to stuff.
+;;; 2015.05.20 Dan
+;;;             : * Move-attention requests now work better when given a location
+;;;             :   chunk that wasn't returned by vision because it tests the
+;;;             :   features in that chunk against the items in the visicon 
+;;;             :   which are within the move distance and picks the item from
+;;;             :   those which match the most features instead of just whichever
+;;;             :   was closest.  For example if one makes this request now 
+;;;             :   where X and Y are the coordinates of a button it will always
+;;;             :   return the text of the button instead of randomly choosing
+;;;             :   either the button or the text (since they were equally close):
+;;;             :     (define-chunks (loc screen-x X screen-y Y kind text))
+;;;             :     (module-request 'visual (define-chunk-spec isa move-attention screen-pos loc))
+;;;             : * Added the vis-loc-slots slot to the vision module and the
+;;;             :   method record-vis-loc-slots so that the device can tell the
+;;;             :   vision module what the valid coordinate slots are after
+;;;             :   calling vis-loc-coordinate-slots when a device is installed.
+;;; 2015.05.29 Dan
+;;;             : * Added the clear-all-finsts request to the visual buffer.
+;;; 2015.06.04 Dan
+;;;             : * Use safe-seconds->ms for converting the params now.
+;;;             : * Use ms internally for :visual-attention-latency.
+;;; 2015.06.05 Dan
+;;;             : * All scheduling done in ms or with the new schedule-event-now.
+;;; 2015.07.28 Dan
+;;;             : * Changed the logical to ACT-R-support in the require-compiled.
+;;;             : * Changed default of :unstuff-visual-location to t.
+;;; 2015.07.29 Dan [4.2]
+;;;             : * Changed the way the check-unstuff-buffer action is scheduled
+;;;             :   because that's now the precondition and unstuff-buffer is the
+;;;             :   actual action.
+;;;             : * Splitting the unstuff- parameter into two parameters:
+;;;             :   :unstuff-visual-location can be nil, t, or # and indicates
+;;;             :     whether to take a stuffed chunk out of the buffer and
+;;;             :     defaults to t.
+;;;             :   :overstuff-visual-location determines whether or not to 
+;;;             :     stuff a new chunk overtop of a previously stuffed chunk
+;;;             :     and defaults to nil.
+;;;             : * When an unstuff is scheduled save it so that it can be
+;;;             :   deleted if another gets scheduled.
+;;; 2015.08.03 Dan
+;;;             : * Find best features uses the internal visaul vis-loc-slots
+;;;             :   instead of calling vis-loc-coordiate-slots again.
+;;; 2015.08.17 Dan
+;;;             : * Changed the randomize-time calls which were used with times
+;;;             :   in ms to randomize-time-ms.
+;;; 2015.08.19 Dan
+;;;             : * Tracking needs to use chunk-difference-to-chunk-spec instead
+;;;             :   of just chunk-name-to-chunk-spec because it may need to remove
+;;;             :   slots from the current buffer chunk, but those wouldn't show
+;;;             :   up in the spec for the new loc/obj chunk.
+;;; 2015.08.20 Dan
+;;;             : * Fixed a safety check in process-display for dividing by 0,
+;;;             :   which shouldn't happen anyway.
+;;;             : * Only schedule clear-process-display-called if process-display
+;;;             :   isn't set to avoid multiple events.
+;;; 2015.09.16 Dan [5.0]
+;;;             : * Changed the visual buffer to be trackable and record the
+;;;             :   request so that it can be sent to complete-request.  The
+;;;             :   clear action will automatically clear everything because it
+;;;             :   now calls complete-all-module-requests with the module's name,
+;;;             :   but all the others will need to handle that.
+;;;             : * Added the last-visual-request slot to the module class to
+;;;             :   hold the request for completion.
+;;;             : * The start-tracking request completes eventhough it leaves
+;;;             :   the module busy because that seems like the right way to
+;;;             :   handle that.
+;;; 2016.07.08 Dan [5.1]
+;;;             : * If the module is tracking something and the tracked object
+;;;             :   chunk in the visual buffer has a screen-pos slot that matches
+;;;             :   the chunk in the visual-location buffer then it should 
+;;;             :   update that visual-location chunk even if there's a feature
+;;;             :   mismatch otherwise -- could happen because of some custom
+;;;             :   device code using modified chunks.
+;;;             : * Added the parameter :tracking-clear which if set to t clears
+;;;             :   the attended-loc when tracking fails and if it's set to nil
+;;;             :   the loc remains which means it will attend the nearest thing
+;;;             :   to where it left off (assuming it's within the move tolerance).
+;;;             :   The default is t to be backward compatible.
+;;; 2016.07.15 Dan
+;;;             : * The unstuff-buffer event didn't specify the module as vision
+;;;             :   but does now.
+;;; 2016.07.20 Dan [6.0]
+;;;             : * CLOF is back!  It turns out that with delete-visicon-chunks
+;;;             :   enabled it's possible to end up in a situation where the 
+;;;             :   current-marker chunk gets deleted before it gets a replacement.
+;;;             :   There are a couple of ways to address that, but it seems the
+;;;             :   easiest is to bring back a separate slot to hold the position
+;;;             :   information outside of a chunk so it'll still be available
+;;;             :   even if the chunk is deleted.
+;;;             : * Encoding-complete and get-obj-at-location now take the position
+;;;             :   vector (clof) as a parameter in addition to the location chunk
+;;;             :   since the chunk could be deleted by the time the event occurs.
+;;;             : * Clear clof in the reset function and the clear action.
+;;; 2016.07.21 Dan
+;;;             : * Updated featlis-to-focus to check whether it has a real chunk
+;;;             :   for the location or not and use the clof value (converted to
+;;;             :   a chunk) if needed.
+;;; 2016.12.14 Dan [7.0]
+;;;             : * Start of work to scrap the whole device concept!  It doesn't
+;;;             :   really work in a distributed system -- can't create a Lisp
+;;;             :   object in external system and having a stub on the Lisp side
+;;;             :   reduces the flexibility.  Also moving away from passing 
+;;;             :   chunks into the module.  
+;;;             :   The current plan is to only expose the add/delete/modify feature
+;;;             :   interface.
+;;;             :   The features are provided as slot-value triples to allow for
+;;;             :   the 'real visaul value' approach to be used for any feature,
+;;;             :   and if a kind is provided then it uses the "default" object
+;;;             :   creation code of isa <kind> (minus positional slots) (plus any 
+;;;             :   other slots with third or second value).
+;;;             :   The module creates the chunk internally to avoid issues with
+;;;             :   having to copy things repeatedly and it automatically schedules
+;;;             :   the proc-display whenever there's a change.  To replace the 
+;;;             :   vis-loc-to-obj method when the "default" approach doesn't work
+;;;             :   there'll be a parameter to specify a function to call through
+;;;             :   the dispatcher to return an object description given a feature.
+;;; 2016.12.15 Dan
+;;;             : * Need to add a lock for visicon access because the feature
+;;;             :   updating functions could be called in parallel from external
+;;;             :   code with each other or proc-display.
+;;;             : * Moved the lock-device functionality here from the device
+;;;             :   interface since it was only vision anyway.
+;;; 2016.12.16 Dan
+;;;             : * Handle the scheduling of proc-display automatically, and have
+;;;             :   that call process-display if it's OK to do so.  Requires 
+;;;             :   adding some slots and removing a few from the module to better
+;;;             :   track things now -- only schedule one proc-display at a time
+;;;             :   no matter how many visicon changes happen and don't schedule
+;;;             :   another until that actually processes the display.  The 
+;;;             :   proc-display in the event queue may not actually correspond
+;;;             :   to a visicon update because it might be an unlock-vision 
+;;;             :   that happens later which actually results in calling process-
+;;;             :   display.  There's a new event, visicon-update, which is 
+;;;             :   going to call a dispatcher function (called "visicon-update")
+;;;             :   that corresponds to the actual change.
+;;;             : * Lots of updates to process-display to handle the new simplified
+;;;             :   feature mechanism -- synthed feats probably don't work right 
+;;;             :   at this point in several places so don't try to use that yet.
+;;; 2016.12.21 Dan
+;;;             : * Lots of modifications to the attending code to work with the
+;;;             :   new approach.  Many places are 'unfinished' because tracking
+;;;             :   and optimize-visual nil (char-primitives and synthisizing)
+;;;             :   are currently not being dealt with.  There's also just a stub
+;;;             :   for specifying a conversion function -- the slot feature-to-object
+;;;             :   is intended to hold a string with a dispatch command name for
+;;;             :   specifying the function (maybe through a parameter, but it could
+;;;             :   also be part of a new 'install-device' mechanism).
+;;; 2017.01.03 Dan
+;;;             : * Check-finsts doesn't use the synthed-from flag and just checks
+;;;             :   whether the items still have an id in the visicon (not quite
+;;;             :   the same as before and need to fix the synthed features at
+;;;             :   some point).
+;;;             : * Fixed duplicate feature output from print-visicon.
+;;; 2017.01.04 Dan
+;;;             : * Fixed bug in insert-into-visicon because the splicing result
+;;;             :   still needs to be recorded.
+;;;             : * Pad the locations in print-visicon on the left.
+;;; 2017.01.05 Dan
+;;;             : * Add the code to create an interface for vision along with the
+;;;             :   init and reset functions which do things previously handled in
+;;;             :   install-device.
+;;;             : * Shadow the :show-focus parameter -- it should probably be 
+;;;             :   moved here eventually.
+;;; 2017.01.06 Dan
+;;;             : * Build-string-feats now just creates the feature list as 
+;;;             :   used by add-visicon-features including the extra single
+;;;             :   quotes for strings.
+;;;             : * Find-location doesn't try to remap the value slot now since
+;;;             :   that's already taken care of in the feature creation.
+;;; 2017.01.11 Dan
+;;;             : * Moved the show-focus parameter here instead of just shadowing.
+;;; 2017.01.18 Dan
+;;;             : * Removed the echo-act-r-output from commands.  The assumption
+;;;             :   now is that echoing is handled by the user.
+;;;             : * Use handle-evaluate-results.
+;;; 2017.01.20 Dan
+;;;             : * Don't need to get the vision module in the init function if
+;;;             :   it's not doing anything...
+;;; 2017.01.24 Dan
+;;;             : * Only call device-update-attended-loc if the clof actually
+;;;             :   changes for efficiency since it goes out through the central
+;;;             :   dispatcher.
+;;; 2017.01.30 Dan
+;;;             : * Add-act-r-command call parameters reordered.
+;;; 2017.02.08 Dan
+;;;             : * Reworked the local versions of some remote commands to not
+;;;             :   go out through the dispatcher.
+;;;             : * Define-interface now uses optional parameters instead of 
+;;;             :   keyword parameters.
+;;; 2017.02.09 Dan
+;;;             : * Added a new chunk-type, line-location, because the default
+;;;             :   feature creation mechanisms now expose those slots for the
+;;;             :   find-location action.  If the virtual device were built 
+;;;             :   differently that wouldn't be necessary, but it uses the
+;;;             :   simplest mechanisms at this point so adding this in for now.
+;;; 2017.02.24 Dan
+;;;             : * The clear method now calls set-current-marker instead of
+;;;             :   directly modifying the clof.
+;;; 2017.03.06 Dan
+;;;             : * When creating the visual-object chunk carry the 'distance'
+;;;             :   slot over with the height and width since that's necessary
+;;;             :   for computing the effective width for Fitts' law in a cursor
+;;;             :   movement.
+;;; 2017.03.07 Dan
+;;;             : * Removed the update-cursor-feat method.
+;;; 2017.03.08 Dan
+;;;             : * Fixed a bug with remove-visicon-interface because the fct
+;;;             :   to delete all the visicon items is delete-all-visicon-features.
+;;;             : * Fixed bugs in modify-visicon-features and process-display.
+;;; 2017.03.16 Dan
+;;;             : * Fixed an issue with delete-visicon-features because the 
+;;;             :   simple check for an item being a chunk and then delaying
+;;;             :   the real test until proc-display doesn't work if the item
+;;;             :   is being removed because of removing the device upon reset.
+;;;             : * Add a warning to build-string-feats about non-optimized not
+;;;             :   being available (and use char to avoid a compiler warning).
+;;; 2017.06.02 Dan
+;;;             : * Wrap the evaluate-act-r-command calls in handle-evaluate-results.
+;;; 2017.06.14 Dan
+;;;             : * The remove-vision-interface function needs to return true for
+;;;             :   remove-device to accept it.
+;;; 2017.06.19 Dan
+;;;             : * Adding in locks to protect access to parameters, the vis-loc-slots,
+;;;             :   and the build-string-feats use of other-word-chars.
+;;; 2017.06.22 Dan
+;;;             : * Visicon-lock protects visicon-updates and visicon itself.
+;;;             : * proc-display-lock protects scheduled-proc-display, proc-display-locks,
+;;;             :   and blocked-proc-display.
+;;; 2017.06.23 Dan
+;;;             : * Added names for all the locks.
+;;;             : * Made the proc-display-lock recursive for now because it's
+;;;             :   easier than figuring out where they're overlapping.
+;;; 2017.06.28 Dan
+;;;             : * Protect access to new-span and finst-span in order to make
+;;;             :   print-visicon safe.
+;;;             : * Commented out object-present-p and removed icon-entry since
+;;;             :   they aren't used (kept object-present-p for reference since
+;;;             :   EMMA uses it and will need to update that at some point).
+;;; 2017.08.09 Dan
+;;;             : * Replaced a call to capture-model-output with printed-chunk-spec
+;;;             :   instead.
+;;;             : * Update the buffer-status functions to return the string.
+;;;             : * Added printed-visicon to return the output string.
+;;;             : * Update the reset and clear code to directly change slot values
+;;;             :   instead of relying on the attn-module methods.
+;;;             : * Also don't use set/clear-attended methods.
+;;; 2017.08.10 Dan
+;;;             : * Finish protecting the slots/methods currently accessed by
+;;;             :   the code made available through the interface.
+;;; 2017.08.11 Dan
+;;;             : * Fixed a missing ) in find-current-locs-with-specs.
+;;; 2017.08.23 Dan
+;;;             : * Removed the dummy functions for external 'signals'.
+;;; 2017.09.06 Dan
+;;;             : * Make printed-visicon available remotely.
+;;; 2017.09.13 Dan
+;;;             : * Fixed a bug with how build-string-feats determined the width
+;;;             :   of words.
+;;; 2017.09.21 Dan
+;;;             : * Schedule visicon-update signal directly without the dummy fn.
+;;; 2017.12.19 Dan
+;;;             : * Figured out why there was an extra random call relative to
+;;;             :   previous versions -- find-best-feature was trying to determine
+;;;             :   if a chunk had been modified using chunk-copied-from-fct but
+;;;             :   the chunk it was copied from had been deleted.  Using both
+;;;             :   return values from chunk-copied-from-fct works however.
+;;;             : * And also need to set the merge function for visual-tstamp
+;;;             :   to be the greater of the two stamps.
+;;; 2018.01.02 Dan
+;;;             : * Fixed a bug with the previous update because the tstamp merge
+;;;             :   function was only set on the real-visual-value and not the
+;;;             :   tstamp and was also setting the real-visual-value to the tstamp.
+;;; 2018.01.26 Dan
+;;;             : * Changed the buffer-status functions to omit the extra newline.
+;;; 2018.01.30 Dan
+;;;             : * Fixed a bug with convert-visicon-chunk-to-vis-loc when there
+;;;             :   is no difference in the features.
+;;; 2018.02.07 Dan
+;;;             : * Fixed a bug with stuff-visloc-buffer because it was calling
+;;;             :   purge-chunk instead of purge-chunk-fct.
+;;; 2018.03.07 Dan
+;;;             : * Reworking how vis-loc-slots are handled.  Now, it's a param
+;;;             :   stored with the chunk itself, but since the vision module is
+;;;             :   creating the chunks it isn't really usable yet.  Needs to be
+;;;             :   provided with add-visicon-features somehow.
+;;;             : * Don't require the vision module for the approach-width fn
+;;;             :   and return nil if it can't be computed.
+;;; 2018.03.08 Dan
+;;;             : * Move the chunk-type and chunks for cursor items to the cursor
+;;;             :   handling code.
+;;; 2018.03.12 Dan
+;;;             : * Chunk-to-visual-position can be used to convert an object or
+;;;             :   loc chunk to an x,y,z list of the item's position and is 
+;;;             :   available remotely.
+;;; 2018.03.14 Dan
+;;;             : * Update-attended-loc signal now gets model and loc.
+;;; 2018.03.16 Dan
+;;;             : * Build-string-feats now takes an x and y offset value which
+;;;             :   is added to the location of each one.
+;;; 2018.03.23 Dan
+;;;             : * Need to record which features have been updated during
+;;;             :   proc-display because need update-attended-loc to be able to
+;;;             :   detect that.
+;;; 2018.04.26 Dan [7.1]
+;;;             : * Removed the test-feats parameter and class slot since it
+;;;             :   isn't used anymore (maybe there'll be a use for it again
+;;;             :   at some point, but not currently).
+;;; 2018.04.27 Dan
+;;;             : * Removed visual-object-type chunk parameter since it wasn't
+;;;             :   being used and replaced get-obj-at-location with one that
+;;;             :   doesn't use scale since it's unused anyway.
+;;;             : * Protect all the tracking related slots with the marker-lock.
+;;;             : * Automatically adjust size for updated visicon items.
+;;;             : * Changed the trace details for assign-finst request to show
+;;;             :   only the object or location and not the module.
+;;; 2018.05.02 Dan 
+;;;             : * Adjusted how valid-vis-loc-chunk works to improve performance.
+;;;             :   The module is required and the loc-slot list can be passed in
+;;;             :   as an optional.
+;;; 2018.05.03 Dan [7.2]
+;;;             : * Reworked how add-features-to-visicon gets called to make it
+;;;             :   more like define-chunk, add-dm, etc.
+;;;             : * Now store three chunks in the vision module for the features:
+;;;             :   the visual-location and visual-object like before and now
+;;;             :   have the "feature" chunk which is the visicon entry have the
+;;;             :   searchable slot values so I don't need to juggle those things
+;;;             :   when finding and creating the object.  The object definition
+;;;             :   is currently stored in chunk-real-visual-value for creation
+;;;             :   when necessary and the location chunk is in the chunk-feature-
+;;;             :   values parameter.
+;;;             : * Print-visicon now sorts the slots based on how many chunks
+;;;             :   have a value so that the sparse slots are to the right.
+;;; 2018.05.04 Dan
+;;;             : * Renamed the chunk parameters from feature-values -> visual-loc
+;;;             :   and real-visaul-value -> visual-obj-spec to make it easier
+;;;             :   to understand.
+;;;             : * Allow some 'parameters' in add-features-to-visicon so that
+;;;             :   one can specify the :x-slot, :y-slot, :z-slot, and :width-fn
+;;;             :   on a feature-by-feature basis.
+;;; 2018.05.07 Dan
+;;;             : * Fixed a bug in convert-loc-to-object with the warning output.
+;;;             : * Fixed a bug in process-display with the updates because the
+;;;             :   obj-spec needs to keep the nils, but flatten drops them...
+;;; 2018.05.16 Dan
+;;;             : * Add-visicon-features needs to add the default slot values from
+;;;             :   the isas if there are any and not already specified.
+;;; 2018.05.17 Dan
+;;;             : * The set-visloc-default request does not need the type slot
+;;;             :   since an isa in the request could be subtyped from any type
+;;;             :   to include the defaults (the only reason for specifying a 
+;;;             :   type at this point).
+;;;             : * Find location needs to use the visicon-entry of the current
+;;;             :   marker for mapping 'current' values since they may not be
+;;;             :   present in the location chunk itself.
+;;;             : * Ignore features with non-numeric values when using lowest
+;;;             :   and highest instead of just failing.
+;;; 2018.05.18 Dan
+;;;             : * Actually check whether or not there are any matching features
+;;;             :   before attempting to apply the lowest/highest constraints.
+;;;             : * Adjust how the obj-spec is created for modifications since
+;;;             :   the nil values when a list provided means don't apply.
+;;;             : * Add-visicon-features needs to set the custom loc slot names
+;;;             :   before computing default size.
+;;; 2018.05.21 Dan
+;;;             : * Create a device that can be installed to specify the custom
+;;;             :   feature-to-object command.  The device is called object-
+;;;             :   creator and the details must be the command.  Protect the
+;;;             :   feature-to-object slot with the vision module's param lock.
+;;; 2018.05.22 Dan
+;;;             : * Removed the distance slot from the visual-object chunk-type.
+;;;             : * Changed the parameters for remove-visual-finsts from keyword
+;;;             :   to optional and added a remote version.
+;;;             : * Added a remote set-visloc-default which does the string
+;;;             :   to name parsing (the Lisp function itself doesn't).
+;;;             : * Added remote set-visual-center-point and have the main
+;;;             :   function return a list of x,y instead of a vector.
+;;; 2018.05.23 Dan
+;;;             : * Need to set the approach-width param for the object chunk
+;;;             :   from the location/feature.
+;;;             : * Wrap a handler-case around the approach-width computation
+;;;             :   and use the default calculation if the custom width-fn 
+;;;             :   doesn't return a number.
+;;;             : * Modify-visicon-features needs to make sure that the object
+;;;             :   value for a slot is maintained in the feature if only the
+;;;             :   location value is changed.
+;;;             : * Only allow the feature-id for deletion and not the loc-chunk
+;;;             :   name (why did I have that option?).
+;;; 2018.06.01 Dan
+;;;             : * Param-lock was moved to the pm-module class.
+;;; 2018.06.12 Dan
+;;;             : * Only external commands should do string->name mapping.
+;;; 2018.06.13 Dan
+;;;             : * Fix build-string-feats since it was doing the double quoting
+;;;             :   for strings.
+;;; 2018.06.14 Dan
+;;;             : * The visicon-entry and visual-loc chunk params now merge with
+;;;             :   :second-if instead of :second.
+;;; 2018.06.28 Dan
+;;;             : * Fixed a bug with process-display because it would try to
+;;;             :   transfer a finst for items marked new.
+;;; 2018.07.26 Dan [7.3]
+;;;             : * Don't handle tracked requests anymore.
+;;; 2018.09.13 Dan [7.3.1]
+;;;             : * Always generate the update-attended-loc signal regardless
+;;;             :   of whether :show-focus is set.
+;;;             : * Send the window updates as notifications instead of that being
+;;;             :   handled by a monitor in the AGI -- it shouldn't need to know
+;;;             :   about how any module works.
+;;;             : * Make sure the marker-lock is held when calling set-current-
+;;;             :   marker because it doesn't grab it directly.
+;;; 2018.09.17 Dan
+;;;             : * Don't need the declaim since it color->name was moved to
+;;;             :   misc-utils.
+;;; 2018.09.18 Dan
+;;;             : * Notify the device when it's installed of the currently attended
+;;;             :   location if there is one.
+;;;             : * Generate a signal of "installing-visual-device" with the device
+;;;             :   for all installs.
+;;; 2018.09.19 Dan [7.3.2]
+;;;             : * Adding a hook function parameter for overriding the default
+;;;             :   encoding time :visual-encoding-hook.
+;;;             :   Only allow one command to be set and warn if changed.
+;;;             :   It will pass four parameters: the currently attended location 
+;;;             :   as an x,y list (if there is one) or nil if there is not,
+;;;             :   the new location as an x,y list, the feature chunk, and the
+;;;             :   scale.  There are 3 return value options:
+;;;             :    - nil
+;;;             :         this means use the normal operations
+;;;             :    - a number 
+;;;             :         this represents a time in seconds after which the encoding-
+;;;             :         complete will be scheduled
+;;;             :    - anything else
+;;;             :         this means do not schedule an encoding-complete and it
+;;;             :         is up to the hook function's mechanisms to do so using
+;;;             :         the schedule-encoding-complete command.
+;;;             : * Added the schedule-encoding-complete command which takes one
+;;;             :   parameter which is a delay time in seconds.  It schedules the
+;;;             :   encoding-complete action to occur after that delay based on
+;;;             :   the features during the last move-attention request.
+;;; 2018.09.20 Dan
+;;;             : * Fixed a bug with the device installation function.
+;;;             : * Added the "visual-clear" signal which gets called if a clear
+;;;             :   request is made.
+;;;             : * Changed the signal to installing-vision-device since that's
+;;;             :   the interface name.
+;;; 2018.09.21 Dan
+;;;             : * Update-attended-loc also needs to check the encoding-hook.
+;;; 2018.09.24 Dan
+;;;             : * Update-attended-loc can't hold the marker-lock when it calls
+;;;             :   the encoding-hook fn since that hook might want to call
+;;;             :   schedule-encoding-complete itself -- which also means that 
+;;;             :   the last-attention-params need to be set before calling the
+;;;             :   hook.
+;;; 2018.10.25 Dan
+;;;             : * Fixed a bug in the warning for approach-width.
+;;; 2018.11.01 Dan [7.3.3]
+;;;             : * Need to return the default width if approach-width fails 
+;;;             :   because a value of nil will likely lead to errors elsewhere.
+;;;             : * To get that, going to monitor the param.
+;;; 2018.12.06 Dan 
+;;;             : * Add a safety check to add-visicon-features to catch if a
+;;;             :   slot spec has a list with more than two values.
+;;; 2018.12.11 Dan
+;;;             : * Work around for a bug in format with ccl 1.12-dev.
+;;; 2019.02.22 Dan [8.0]
+;;;             : * Fix a bug in within-move when items have different z coords.
+;;;             :   Now it just calculates the angle without having to go to
+;;;             :   pixels.  In the 2D space, the previous one assumed a 
+;;;             :   calculation based on the points being equidistant from a
+;;;             :   center "viewing" position, but now the assumption is that
+;;;             :   it's the angle based on the "viewing axis" being through the
+;;;             :   given point along the z axis.  Both are simplifications to 
+;;;             :   avoid having to know head and eye geometry as well as head
+;;;             :   position.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 
@@ -665,39 +1156,27 @@
 #+(and :clean-actr (not :packaged-actr) :ALLEGRO-IDE) (in-package :cg-user)
 #-(or (not :clean-actr) :packaged-actr :ALLEGRO-IDE) (in-package :cl-user)
 
-(require-compiled "GENERAL-PM" "ACT-R6:support;general-pm")
-
-
-;#+:allegro (eval-when (:compile-toplevel :Load-toplevel :execute)
-;             (setf *enable-package-locked-errors* nil))
-
-
-;(eval-when (:compile-toplevel :Load-toplevel :execute)
-;  (proclaim '(optimize (speed 3) (space 0))))
-
-
-(declaim (ftype (function (t) t) default-target-width))
+(require-compiled "GENERAL-PM" "ACT-R-support:general-pm")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(suppress-extension-warnings)
-
-(extend-chunks synth-feat :copy-function identity)
-(extend-chunks visual-new-p)
-
 
 (defclass vision-module (attn-module)
-  ((visicon :accessor visicon :initarg :visicon :initform (make-hash-table :test #'equalp))
+  ((visicon :accessor visicon :initarg :visicon :initform nil)
+   (visicon-lock :accessor visicon-lock :initform (bt:make-recursive-lock "visicon-lock")) ;; protect visicon, visicon-updates, and finst-lst
+   (proc-display-locks :accessor proc-display-locks :initform 0)
+   (visicon-updates :accessor visicon-updates :initarg :visicon-updates :initform nil)
+   (scheduled-proc-display :accessor scheduled-proc-display :initform nil)
+   (blocked-proc-display :accessor blocked-proc-display :initform nil)
    (optimize-visual :accessor optimize-p :initarg :optimize-p :initform t)
-   (move-attention-latency :accessor move-attn-latency :initarg :move-attn-latency :initform 0.085)
+   (move-attention-latency :accessor move-attn-latency :initarg :move-attn-latency :initform 85)
    (tracked-object :accessor tracked-obj :initarg :tracked-obj :initform nil)
    (tracked-object-last-location :accessor tracked-obj-lastloc :initarg :tracked-obj-lastloc :initform nil)
-   (tracked-object-last-feat :accessor tracked-obj-last-feat :initarg :tracked-obj-last-feat :initform nil)
    (tracked-object-last-obj :accessor tracked-obj-last-obj :initarg :tracked-obj-last-obj :initform nil)
    (last-scale :accessor last-scale :initarg :last-scale :initform nil)
    (moving-attention :accessor moving-attention :initarg :moving-attention :initform nil)
    (move-allowance :accessor move-allowance :initarg :move-allowance :initform 0)
-   (synthd-objs :accessor synthd-objs :initarg :synthd-objs :initform (make-hash-table))
+   (synthd-objs :accessor synthd-objs :initarg :synthd-objs :initform (make-hash-table)) 
    (found-locs :accessor found-locs :initarg :found-locs :initform (make-hash-table))
    (feature-sets :accessor feature-sets :initarg :feature-sets :initform (all-feature-sets))
    (active-cfs :accessor active-cfs :initarg :active-cfs :initform nil)
@@ -705,11 +1184,10 @@
    (finst-lst :accessor finst-lst :initarg :finst-lst :initform nil)
    (finst-span :accessor finst-span :initarg :finst-span :initform 3.0)
    (new-span :accessor new-span :initarg :new-span :initform 0.5)
-   (default-spec :accessor default-spec :initarg :default-spec :initform nil)  ;; (define-chunk-spec isa visual-location screen-x lowest :attended new)
+   (default-spec :accessor default-spec :initarg :default-spec :initform nil)  
    (visual-lock :accessor visual-lock :initform nil)
    (last-obj :accessor last-obj :initform nil) ;; added for use in tracking
    (auto-attend :accessor auto-attend :initform nil)
-   (test-feats :accessor test-feats :initform t) ;; runtime optimization parameter
    (purge-visicon :accessor purge-visicon :initform t)
    (scene-change :accessor scene-change :initform nil)
    (change-threshold :accessor change-threshold :initform 0.25)
@@ -720,199 +1198,482 @@
    (current-cursor :accessor current-cursor :initform nil)
    (other-word-chars :accessor other-word-chars :initform nil)
    (center-point :accessor center-point :initform (vector 0 0))
-   (process-display-called :accessor process-display-called :initform nil))
+   (vis-loc-slots :accessor vis-loc-slots :initform '(screen-x screen-y distance))
+   (tracking-clear :accessor tracking-clear :initform nil)
+   (clof :accessor clof :initform nil)
+   (feature-to-object :accessor feature-to-object :initform nil)
+   (show-focus-p :accessor show-focus-p :initform nil)
+   (visicon-updated :accessor visicon-updated :initform nil)
+   (encoding-hook :accessor encoding-hook)
+   (last-attention-params :accessor last-attention-params :initform nil)
+   (default-width :accessor default-width :initform nil)
+   
+   (marker-lock :accessor marker-lock :initform (bt:make-recursive-lock "visual-markers")) ;; clof, current-marker, currently-attended, last-obj, tracked-*, failure slots, and scene-change
+   (text-parse-lock :accessor text-parse-lock :initform (bt:make-lock "visual-text-parse")) ;; other-word-chars
+   (vis-loc-lock :accessor vis-loc-lock :initform (bt:make-lock "visual-vis-loc")) ;; vis-loc-slots and center-point
+   (proc-display-lock :accessor proc-display-lock :initform (bt:make-recursive-lock "visual-proc-display")) ;; protect the proc-display-locks, scheduled-proc-display, and blocked-proc-display slots
+   )
   (:default-initargs
-    :name :VISION
-    :version-string "3.2"))
+      :name :VISION
+    :version-string "7.3.3"))
 
 
-(defmethod vis-loc-to-obj (device vis-loc)
-  (declare (ignore device))
-  (let ((ct (chunk-slot-value-fct vis-loc 'kind)))
-    (fill-default-vis-obj-slots (car (define-chunks-fct `((isa ,ct)))) vis-loc)))
-
-
-(defun merge-visicon-entry (first second)
-  (declare (ignore first))
-  (chunk-visicon-entry second))
-
-(extend-chunks visicon-entry :copy-function identity :merge-function merge-visicon-entry)
-
-(extend-chunks visual-feature-name :copy-function identity :merge-function merge-visicon-entry)
-
-(defun hash-visual-chunk-contents (chunk)
-  (let* ((ct (chunk-chunk-type-fct chunk))
-         (res (list ct)))
-    (dolist (slot (chunk-type-slot-names-fct ct) res)
-      (if (and (eq slot 'value) (chunk-real-visual-value chunk))
-          (push (chunk-real-visual-value chunk) res)
-        (push (true-chunk-name-fct (fast-chunk-slot-value-fct chunk slot)) res)))))
-
-(defmethod clear-process-display-called ((vis-mod vision-module))
-  (setf (process-display-called vis-mod) nil))
-
-
-(defmethod process-display ((devin device-interface)
-                            (vis-mod vision-module) &optional (clear nil))
-  "Build a new visicon and initiate any buffer stuffing that may result"
-
-  (let ((feature-list nil)
-        (tempicon nil)
-        (o (hash-table-count (visicon vis-mod)))
-        (n 0)
-        (d 0))
-    ;; make sure a device is actually installed
-    (unless (device devin)
-      (print-warning "Cannot process display--no device is installed.")
-      (return-from process-display nil))
-
-    (when (process-display-called vis-mod)
-      (model-warning "Proc-display should not be called more than once at the same ACT-R time."))
-
-    (setf (process-display-called vis-mod) t)
-    (schedule-event-relative 0 'clear-process-display-called :module :vision :destination :vision :priority :min :output nil :maintenance t)
-
-    ;; make sure it's safe to change things right now
-    ;; and save the clear status if not for future use
-
-    (unless (zerop (locks devin))
-      (push clear (pending-procs devin))
-      (return-from process-display nil))
-
-
-    ;; If the device has changed then remove the current attended item and loc marker because
-    ;; it shouldn't re-encode at that point in the new device.
-
-    (when (and (last-processed-device devin) (not (eq (last-processed-device devin) (device devin))))
-      (setf (currently-attended vis-mod) nil)
-      (setf (current-marker vis-mod) nil))
-
-    ;; record the last device processed
-    (setf (last-processed-device devin) (device devin))
+(defun visual-location-slots (chunk vis-m)
+  (or (chunk-vis-loc-slots chunk) (bt:with-lock-held ((vis-loc-lock vis-m)) (vis-loc-slots vis-m))))
 
 
 
-    ;; build the temp visicon
-    (time (setf feature-list (flatten (build-vis-locs-for (device devin) vis-mod))))
 
-    (when (with-cursor-p devin)
 
-      (awhen (cursor-to-vis-loc (device devin))
-             (setf (current-cursor vis-mod) it)
-             (push it feature-list)))
+(defun greater-tstamp (c1 c2) 
+  (let ((a (chunk-visual-tstamp c1))
+        (b (chunk-visual-tstamp c2)))
+    (cond ((and (numberp a) (numberp b)) (if (> a b) a b))
+          ((numberp a) a)
+          ((numberp b) b)
+          (t a))))
 
-    ;; Verify that they're all valid visicon items (chunks which are subtypes of visual-location)
-    ;; and make sure that they've got size and distance values
 
-    (dolist (x feature-list)
-      (if (and (chunk-p-fct x)
-               (chunk-type-subtype-p-fct (chunk-chunk-type-fct x) 'visual-location))
+(defun greater-tstamp-value (c1 c2) 
+  (let ((a (chunk-visual-tstamp c1))
+        (b (chunk-visual-tstamp c2)))
+    (cond ((and (numberp a) (numberp b)) (if (> a b) (chunk-visual-obj-spec c1) (chunk-visual-obj-spec c2)))
+          ((numberp a) (chunk-visual-obj-spec c1))
+          ((numberp b) (chunk-visual-obj-spec c2))
+          (t (chunk-visual-obj-spec c1)))))
 
-          (progn
+(suppress-extension-warnings)
 
-            (unless (numberp (chunk-slot-value-fct x 'size))
-              (compute-vis-loc-size x))
+(extend-chunks synth-feat :copy-function identity)
 
-            (unless (numberp (chunk-slot-value-fct x 'distance))
-              (set-chunk-slot-value-fct x 'distance (view-dist vis-mod)))
+(extend-chunks visual-new-p)
 
-            (push (setf (chunk-visicon-entry x)
-                    (if (test-feats vis-mod)
-                        (hash-visual-chunk-contents x)
-                      x))
-                  tempicon)
+(extend-chunks visicon-entry :copy-function identity :merge-function :second-if)
 
-            (setf (chunk-visual-feature-name x) x))
+(extend-chunks visual-tstamp :copy-function identity :merge-function greater-tstamp)
 
+
+(extend-chunks visual-obj-spec :copy-function identity :merge-function greater-tstamp-value)
+
+(extend-chunks visual-loc :copy-function identity :merge-function :second-if)
+
+(extend-chunks visual-approach-width-fn :copy-function identity)
+
+(extend-chunks vis-loc-slots :copy-function identity)
+
+(unsuppress-extension-warnings)
+
+
+(defun convert-loc-to-object (vis-mod loc)
+  (let* ((f->o (bt:with-recursive-lock-held ((param-lock vis-mod)) (feature-to-object vis-mod)))
+         (result (when f->o (string->name (dispatch-apply f->o loc))))
+         (c (if (and result (chunk-p-fct result))
+                result
+              (progn
+                (when (and f->o result)
+                  (print-warning "Invalid result ~s from object-creator command ~s.  Using default approach." result f->o))
+                (car (define-chunks-fct (list (chunk-visual-obj-spec loc))))))))
+    (if c
         (progn
-          (print-warning "Invalid visicon item ~s found when processing the display.  Must be a chunk which is a subtype of visual-location." x)
-          (setf feature-list (remove x feature-list)))))
+          (setf (chunk-visicon-entry c) (chunk-visicon-entry loc))
+          (setf (chunk-visual-approach-width-fn c) (chunk-visual-approach-width-fn loc))
+          c)
+      (print-warning "Failed to convert location ~s to a chunk using default mechanism." loc))))
 
 
-    ;; if clear, then remove all the old entries first
-    ;; do both of these steps iteratively so that the individual chunks can
-    ;; be purged if desired.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Create a device for specifying the feature-to-object
+;;; command instead of making it yet another parameter.
+;;;
+;;; The device is called object-creator and the details must
+;;; be the command to install.  Only one can be installed at
+;;; a time, but currently only the interface can specify that
+;;; not the device so have to deal with the details here (at
+;;; least for now).  Instead of having vision notify the device,
+;;; which would be the typical approach, this device just sets
+;;; the slot in the vision module to have the function called.
 
-    (when clear
-      (setf d o)
-      (when (purge-visicon vis-mod)
-        (maphash (lambda (key value)
-                   (declare (ignore key))
-                   (when (chunk-p-fct value)
-                     (purge-chunk-fct value)))
-                 (visicon vis-mod)))
-      (clrhash (visicon vis-mod))
 
-      ;; just punt the finsts??
-      ;; should something be able to survive a :clear ?
+(defun init-object-creator (device-list)
+  (cond ((not (= 3 (length device-list)))
+         (print-warning "Object-creator device requires a creation command as the third value."))
+        ((not (local-or-remote-function-p (third device-list)))
+         (print-warning "Object-creator device requires a valid function or command as the third value."))
+        ((not (string-equal (first device-list) "vision"))
+         (print-warning "Object-creator device can only be installed for the vision interface."))
+        (t
+         (let* ((vis-mod (get-module :vision))
+                (current (bt:with-recursive-lock-held ((param-lock vis-mod)) (feature-to-object vis-mod))))
+           (when current
+             (remove-device (list "vision" "object-creator" current))
+             (print-warning "Removing previous object-creator device because only one can be installed."))
+           (bt:with-recursive-lock-held ((param-lock vis-mod)) (setf (feature-to-object vis-mod) (third device-list)))))))
 
-      (setf (finst-lst vis-mod) nil))
+(add-act-r-command "init-object-creator" 'init-object-creator "Internal command for installing an object-creator device. Do not call directly.")
 
-    (unless clear
 
-      ;; take the old ones out of the visicon
+(defun remove-object-creator (device-list)
+  (let* ((vis-mod (get-module :vision))
+         (current (bt:with-recursive-lock-held ((param-lock vis-mod)) (feature-to-object vis-mod))))
+    (when current
+      (if (equalp (third device-list) current)
+          (bt:with-recursive-lock-held ((param-lock vis-mod)) 
+            (setf (feature-to-object vis-mod) nil)
+            t)  
+        (print-warning "Attempt to remove an object-creator with command ~s which doesn't match currently installed ~s."
+                       (third device-list) current)))))
+  
+(add-act-r-command "remove-object-creator" 'remove-object-creator "Internal command for installing an object-creator device. Do not call directly.")
+                            
+(define-device "object-creator" "init-object-creator" "remove-object-creator")
 
-      (maphash (lambda (key val)
-                 (unless (find key tempicon :test 'equal)
 
-                   ;; Not a repeat chunkname or a match to one of the new items
 
-                   ;; increment the number of deleted items
-                   (incf d)
+;; Since can't test the type use this function to determine if something
+;; is valid as a visual-location chunk.  At this point the only constraints
+;; are that it have x and y coordinates
 
-                   ;; If desired delete the internal chunk now
-                   (when (purge-visicon vis-mod)
-                     (purge-chunk-fct val))
+(defun valid-vis-loc-chunk (chunk vis-m &optional slots)
+  (unless slots (setf slots (visual-location-slots chunk vis-m)))
+  (and (chunk-p-fct chunk)
+       (fast-chunk-slot-value-fct chunk (first slots))
+       (fast-chunk-slot-value-fct chunk (second slots))))
 
-                   ;; take this out of the visicon now
-                   (remhash key (visicon vis-mod))))
-               (visicon vis-mod)))
 
-    ;; compute how many new items there are
+(defun set-default-vis-loc-slots (x y z)
+  (let ((vis-m (get-module :vision)))
+    (if vis-m
+        (if (every 'valid-slot-name (list x y z))
+            (bt:with-lock-held ((vis-loc-lock vis-m)) (setf (vis-loc-slots vis-m) (list x y z)))
+          (dolist (name (list x y z))
+            (unless (valid-slot-name name)
+              (print-warning "Slot ~s is not valid in call to set-default-vis-loc-slots." name))))
+      (print-warning "No vision module available in call to set-default-vis-loc-slots."))))
 
-    (setf n (+ (length tempicon) d (- o)))
 
-    ;; put the new ones in
+(defmethod set-current-marker ((vis-mod vision-module) marker &optional lof)
+  (let ((old-clof (clof vis-mod)))
+    (cond ((null marker)
+           (setf (current-marker vis-mod) nil)
+           (setf (clof vis-mod) nil))
+          ((chunk-p-fct marker)
+           (setf (clof vis-mod) (xyz-loc marker vis-mod))
+           (setf (current-marker vis-mod) marker))
+          (lof
+           (setf (current-marker vis-mod) marker)
+           (setf (clof vis-mod) lof))
+          (t
+           (print-warning "Invalid current-marker encountered in vision module: ~s" marker)
+           (setf (current-marker vis-mod) nil)
+           (setf (clof vis-mod) nil)
+           (return-from set-current-marker)))
+    (when (not (equalp old-clof (clof vis-mod))) 
+      (evaluate-act-r-command "update-attended-loc" (current-model) (coerce (clof vis-mod) 'list))
+      (awhen (bt:with-recursive-lock-held ((param-lock vis-mod)) (show-focus-p vis-mod))
+             ;; send window handler messages
+             (let ((update-list
+                    (if (clof vis-mod)
+                        (list "attention" (px (clof vis-mod)) (py (clof vis-mod)) (color->name it "red"))
+                      (list "clearattention"))))
+               ;; should keep track internally, but for now just rely upon the main installer
+               (dolist (d (current-devices "vision"))
+                 (notify-device d update-list)))))))
 
-    (mapcar #'(lambda (vl) (enter-into-visicon vl vis-mod)) feature-list)
 
-    ;; other bookkeeping
+(add-act-r-command "update-attended-loc" nil "Signal called when visual attention moves which can be monitored. Should not be called. Params: model-name [xyz-list | nil]")
 
-    ;; don't need to do this since
-    ;; presumably the cursor-to-visloc
-    ;; should have the right value already...
-    ;(synch-mouse devin)
 
-    (when (tracked-obj-last-feat vis-mod)
-      (update-tracking-mth vis-mod t))
+;; Vision module needs to notify the device about the attended location when it
+;; is installed if the focus is being shown.
 
-    ;; Compute the change value and determine if the flag should be
-    ;; set at this time.
 
-    (let ((change-val (if (zerop (+ d n))
-                          0
-                        (* 1.0 (/ (+ d n) (+ o n))))))
-        (setf (scene-change vis-mod) (cons change-val (mp-time-ms))))
+(defun visual-device-install (device)
+  (let ((vis-mod (get-module :vision)))
+    (awhen (bt:with-recursive-lock-held ((param-lock vis-mod)) (show-focus-p vis-mod))
+           (when (bt:with-lock-held ((marker-lock vis-mod)) (clof vis-mod))
+             (notify-device device (list "attention" (px (clof vis-mod)) (py (clof vis-mod)) (color->name it "red"))))))
+  (dispatch-apply "installing-vision-device" device))
+  
+(add-act-r-command "installing-vision-device" nil "Signal that a new device is being installed for the vision interface.  Params: device")
 
-    (visicon-update vis-mod)))
+(add-act-r-command "visual-device-install" 'visual-device-install "Notify a newly installed visual device of the attended location and generate installing-visual-device signal. Do not call.")
+   
+(define-interface "vision" "visual-device-install" nil)
+
+
+
+
+
+(defmethod lock-vision ((vis-mod vision-module))
+  "Place a lock on proc-display to prevent it from actually occuring"
+  (bt:with-recursive-lock-held ((proc-display-lock vis-mod))
+    (incf (proc-display-locks vis-mod))))
+
+(defmethod unlock-vision ((vis-mod vision-module))
+  "Remove one of the locks from proc-display and run it now if all locks are
+   removed and there was a blocked call"
+  (bt:with-recursive-lock-held ((proc-display-lock vis-mod))
+    (unless (zerop (proc-display-locks vis-mod))
+      (decf (proc-display-locks vis-mod)))
+    
+    (when (and (zerop (proc-display-locks vis-mod)) (blocked-proc-display vis-mod))
+      (proc-display vis-mod))))
+
+
+(defmethod schedule-proc-display ((vis-mod vision-module))
+  (bt:with-recursive-lock-held ((proc-display-lock vis-mod))
+    (unless (scheduled-proc-display vis-mod)
+      (setf (scheduled-proc-display vis-mod) 
+        (schedule-event-now 'proc-display :module :vision :destination :vision :priority -100 :output 'high :maintenance t)))))
+
+(defmethod proc-display ((vis-mod vision-module))
+  (bt:with-recursive-lock-held ((proc-display-lock vis-mod))
+    (cond ((zerop (proc-display-locks vis-mod))
+           (setf (scheduled-proc-display vis-mod) nil)
+           (setf (blocked-proc-display vis-mod) nil)
+           (process-display vis-mod))
+          (t
+           (setf (blocked-proc-display vis-mod) t)))))
+
+
+(defun visicon-less-than (c1 xyz-c1 c2 xyz-c2)
+  (or (< (px xyz-c1) (px xyz-c2))
+      (and (= (px xyz-c1) (px xyz-c2))
+           (< (py xyz-c1) (py xyz-c2)))
+      (and (= (px xyz-c1) (px xyz-c2))
+           (= (py xyz-c1) (py xyz-c2))
+           (< (pz xyz-c1) (pz xyz-c2)))
+      (and (= (px xyz-c1) (px xyz-c2))
+           (= (py xyz-c1) (py xyz-c2))
+           (= (pz xyz-c1) (pz xyz-c2))
+           (string< (symbol-name c1) (symbol-name c2)))))
+
+
+(defmethod insert-into-visicon ((vis-mod vision-module) chunk &optional xyz-loc)
+  ;; keep visicon ordered by location at all times now
+  (bt:with-recursive-lock-held ((visicon-lock vis-mod))
+    (if (null (visicon vis-mod))
+        (setf (visicon vis-mod) (list chunk))
+      (progn
+        (when (null xyz-loc)
+          (setf xyz-loc (xyz-loc chunk vis-mod)))
+        
+        (let ((pos (position-if (lambda (c)
+                                  (visicon-less-than chunk xyz-loc c (xyz-loc c vis-mod)))
+                                (visicon vis-mod))))
+          (cond ((null pos)
+                 (push-last chunk (visicon vis-mod)))
+                ((zerop pos)
+                 (push chunk (visicon vis-mod)))
+                (t
+                 (setf (visicon vis-mod) (splice-into-position-des (visicon vis-mod) pos chunk)))))))))
+
+
+
+(defmethod process-display ((vis-mod vision-module))
+  "Build a new visicon and initiate any buffer stuffing that may result"
+  
+  (let ((deleted nil)
+        (transfer-finsts nil)
+        (updates nil)
+        (tempicon nil)
+        o
+        (n 0)
+        (d 0)
+        (c nil))
+    
+        
+    ;; Verify that they're all valid visicon items (chunks with first 2 coordinates)
+    ;; and make sure that they've got size and distance values
+    
+    (bt:with-recursive-lock-held ((visicon-lock vis-mod))
+      
+      (setf (visicon-updated vis-mod) nil)
+      
+      (setf o (length (visicon vis-mod)))
+      
+      (dolist (x (visicon-updates vis-mod))
+        (case (car x)
+          (:add
+           (let ((visicon-chunk (cdr x)))
+             (setf (chunk-visual-tstamp visicon-chunk) (mp-time-ms))
+             (setf (chunk-visual-new-p visicon-chunk) 'new)
+             (push visicon-chunk tempicon)))
+          
+          (:delete
+           (let ((visicon-chunk (cdr x)))
+             
+             (cond ((find visicon-chunk (visicon vis-mod))
+                    (incf d)
+                    (setf (visicon vis-mod) (remove visicon-chunk (visicon vis-mod)))
+                    (when (eq t (feat-attended visicon-chunk vis-mod))
+                      (push visicon-chunk transfer-finsts)))
+                   ((find visicon-chunk tempicon)
+                    (setf tempicon (remove visicon-chunk tempicon)))
+                   (t 
+                    (print-warning "Attempt to delete visicon feature ~s which is not in the visicon." visicon-chunk)))
+             (push visicon-chunk deleted)))
+          
+          (:delete-all
+           
+           (dolist (y (visicon vis-mod))
+             (incf d) 
+             (push y deleted)
+             (when (eq (feat-attended y vis-mod) t)
+               (push y transfer-finsts)))
+           
+           (setf (visicon vis-mod) nil)
+           (setf tempicon nil)
+           (setf updates nil))
+          
+          (:update
+           (push-last (cdr x) updates))))
+      
+      (setf (visicon-updates vis-mod) nil)
+    
+      (dolist (x updates)
+        (let* ((visicon-chunk (first x))
+               (loc-chunk (chunk-visual-loc visicon-chunk))
+               (mods (rest x))
+               (specs (do ((l mods (cddr l))
+                           (r nil (push-last (cons (first l) (if (listp (second l)) (second l) (list (second l)))) r)))
+                          ((null l) r)))
+               (loc-slots (visual-location-slots visicon-chunk vis-mod))
+               (loc-mods (mapcan (lambda (x) 
+                                   (if (= (length x) 2)
+                                       (list (first x) (second x))
+                                     (when (second x)  ;; don't want nil second values when the length is 3
+                                       (list (first x) (second x))))) 
+                           specs)) 
+               (obj-mods (mapcan (lambda (x) 
+                                   (unless (find (first x) loc-slots)
+                                     (if (= 3 (length x))                         ;; don't want nil values here
+                                         (when (third x)
+                                           (list (cons (first x) (third x))))
+                                       (list (cons (first x) (second x))))))
+                           specs))
+               
+               (obj-spec (do ((l (chunk-visual-obj-spec visicon-chunk) (cddr l))
+                              (r nil (push-last (cons (first l) (second l)) r)))
+                             ((null l) r)))
+               (visicon-mods (mapcan (lambda (x) 
+                                       (list (first x) (or (third x)
+                                                           (and (= (length x) 3)
+                                                                (cdr (assoc (first x) obj-spec)))
+                                                           (second x)))) ;; don't want nil values here unless both nil
+                               specs))
+               (previous-pos (xyz-loc loc-chunk vis-mod)))
+          
+          (mod-chunk-fct visicon-chunk visicon-mods)
+          (mod-chunk-fct loc-chunk loc-mods)
+          
+          ;; have to merge the object spec with mods directly since it's not a chunk
+          
+          (let ()
+            
+            (dolist (m obj-mods)
+              (aif (assoc (car m) obj-spec)
+                   (if (cdr m)
+                       (setf (cdr it) (cdr m))
+                     (setf obj-spec (remove it obj-spec)))
+                   (push-last m obj-spec)))
+
+            ;; flatten the conses keeping the nils...
+            
+            (setf (chunk-visual-obj-spec visicon-chunk) (do ((final-spec nil)
+                                                             (feats obj-spec (rest feats)))
+                                                            ((null feats) final-spec)
+                                                          (push-last (caar feats) final-spec)
+                                                          (push-last (cdar feats) final-spec))))
+            
+            
+          ;; set default size and dist. if not already
+          
+          (let ((view-dist (bt:with-recursive-lock-held ((param-lock vis-mod)) (view-dist vis-mod))))                                                         
+            (unless (numberp (fast-chunk-slot-value-fct loc-chunk (third loc-slots)))
+              (set-chunk-slot-value-fct loc-chunk (third loc-slots) view-dist))
+            (unless (numberp (fast-chunk-slot-value-fct visicon-chunk (third loc-slots)))
+              (set-chunk-slot-value-fct visicon-chunk (third loc-slots) view-dist)))
+                                            
+          ;; always recompute the size to be safe
+          (compute-vis-loc-size loc-chunk vis-mod)
+          (compute-vis-loc-size visicon-chunk vis-mod)
+          
+          
+          (when (find visicon-chunk (visicon vis-mod))
+            
+            (pushnew visicon-chunk (visicon-updated vis-mod))
+            
+            (pushnew visicon-chunk c) ;; only count changed once
+            
+            (let ((new-pos (xyz-loc loc-chunk vis-mod)))
+              (unless (equalp previous-pos new-pos)
+                (setf (visicon vis-mod) (remove visicon-chunk (visicon vis-mod)))
+                (insert-into-visicon vis-mod visicon-chunk new-pos))))))
+      
+      (dolist (x tempicon)
+        (insert-into-visicon vis-mod x))
+
+      (dolist (x transfer-finsts)
+        (awhen (find x (visicon vis-mod) :test 'equal-chunks-fct)
+               (transfer-finst x it vis-mod))))
+    
+    (when (purge-visicon vis-mod)
+      (dolist (x deleted)
+        (when (chunk-p-fct x)
+          (when (chunk-p-fct (chunk-visual-loc x))
+            (purge-chunk-fct (chunk-visual-loc x)))
+          (purge-chunk-fct x))))
+    
+    (let (tracked)
+      (bt:with-lock-held ((marker-lock vis-mod))
+        
+        (when (tracked-obj vis-mod)
+          (setf tracked t))
+        
+        ;; Compute the change value and determine if the flag should be
+        ;; set at this time.
+        
+        (setf n (length tempicon))
+        (setf c (length c))
+        
+        (let ((change-val (if (zerop (+ o n))
+                              0
+                            (* 1.0 (/ (+ d n c) (+ o n))))))
+          (setf (scene-change vis-mod) (cons change-val (mp-time-ms)))))
+      
+      (when tracked
+        (update-tracking-mth vis-mod t)))
+    
+    (update-new vis-mod)
+    (check-finsts vis-mod)
+    
+    (update-attended-loc vis-mod)
+    (stuff-visloc-buffer vis-mod)
+    
+    ;; a non-maintenance event to possibly trigger conflict-resolution
+    ;; just incase a "non-change" (no buffer stuffing or other events were
+    ;; generated) might trigger something
+    
+    (schedule-event-now "visicon-update" :module :vision :output 'medium)))
+
+
+(add-act-r-command "visicon-update" nil "Indicate when the vision module updates the visicon for monitoring purposes. No params. Do not call directly.")
 
 
 (defmethod visicon-chunks ((vis-mod vision-module) &optional sorted)
-  (let ((values nil))
-    (maphash #'(lambda (key val)
-                 (declare (ignore key))
-                 (push val values))
-             (visicon vis-mod))
-    (if sorted
-        (sort values #'loc-sort)
-      values)))
+  (declare (ignore sorted))
+  (bt:with-recursive-lock-held ((visicon-lock vis-mod))
+    (visicon vis-mod)))
 
 
-(defun loc-sort (i1 i2)
-  (let ((x1 (chunk-slot-value-fct i1 'screen-x))
-        (x2 (chunk-slot-value-fct i2 'screen-x))
-        (y1 (chunk-slot-value-fct i1 'screen-y))
-        (y2 (chunk-slot-value-fct i2 'screen-y)))
+(defun loc-sort (i1 i2 vis-mod)
+  (let* ((slots1 (visual-location-slots i1 vis-mod))
+         (slots2 (visual-location-slots i2 vis-mod))
+         (x1 (chunk-slot-value-fct i1 (first slots1)))
+         (x2 (chunk-slot-value-fct i2 (first slots2)))
+         (y1 (chunk-slot-value-fct i1 (second slots1)))
+         (y2 (chunk-slot-value-fct i2 (second slots2))))
     (and (numberp x1) (numberp x2) (numberp y1) (numberp y2)
          (or
           (< x1 x2)
@@ -920,196 +1681,208 @@
                (< y1 y2))
           (and (= x1 x2) (= y1 y2) (string< (symbol-name i1) (symbol-name i2)))))))
 
-(defmethod update-cursor-feat ((devin device-interface) (vis-mod vision-module))
-  (when (and (with-cursor-p devin) (device devin))
-    (let ((new-pos (get-mouse-coordinates (device devin)))
-          (cur-crsr (current-cursor vis-mod)))
-
-      (when (and cur-crsr (not (vpt= new-pos (xy-loc cur-crsr))))
-
-        ;; if it has moved just punt the old one and get a new one instead of
-        ;; trying to modify the existing chunk values like was done previously
-
-        (remove-finst vis-mod cur-crsr)
-
-        (let ((entry (gethash (chunk-visicon-entry cur-crsr) (visicon vis-mod))))
-
-          (when entry
-            (when (purge-visicon vis-mod)
-              (purge-chunk-fct entry))
-
-            ;; take this out of the visicon now
-            (remhash (chunk-visicon-entry cur-crsr) (visicon vis-mod))))
-
-        (setf cur-crsr nil))
-
-      (when (null cur-crsr)
-          (awhen (cursor-to-vis-loc (device devin))
-                 (if (and (chunk-p-fct it)
-                          (chunk-type-subtype-p-fct (chunk-chunk-type-fct it) 'visual-location))
-                     (progn
-                       (setf (current-cursor vis-mod) it)
-
-                       (unless (numberp (chunk-slot-value-fct it 'size))
-                         (compute-vis-loc-size it))
-
-                       (unless (numberp (chunk-slot-value-fct it 'distance))
-                         (set-chunk-slot-value-fct it 'distance (view-dist vis-mod)))
-
-                       (setf (chunk-visicon-entry it)
-                         (if (test-feats vis-mod)
-                             (hash-visual-chunk-contents it)
-                           it))
-
-                       (setf (chunk-visual-feature-name it) it)
-
-                       (enter-into-visicon it vis-mod)
-                       ;; Might have been looking at it so update that now (didn't do this previously)
-                       (visicon-update vis-mod))
-
-                   (print-warning "Invalid cursor ~s found when updating the cursor feature." it)))))))
 
 
-(defun xy-loc (chunk)
-  (vector (fast-chunk-slot-value-fct chunk 'screen-x)
-          (fast-chunk-slot-value-fct chunk 'screen-y)))
+(defun xy-loc (chunk &optional vis-m)
+  (unless vis-m (setf vis-m (get-module :vision)))
+  (let ((slots (visual-location-slots chunk vis-m)))
+    (vector (fast-chunk-slot-value-fct chunk (first slots))
+            (fast-chunk-slot-value-fct chunk (second slots)))))
 
-(defun xyz-loc (chunk)
-  (vector (fast-chunk-slot-value-fct chunk 'screen-x)
-          (fast-chunk-slot-value-fct chunk 'screen-y)
-          (fast-chunk-slot-value-fct chunk 'distance)))
+(defun xyz-loc (chunk &optional vis-m)
+  (unless vis-m (setf vis-m (get-module :vision)))
+  (let ((slots (visual-location-slots chunk vis-m)))
+    (vector (fast-chunk-slot-value-fct chunk (first slots))
+            (fast-chunk-slot-value-fct chunk (second slots))
+            (fast-chunk-slot-value-fct chunk (third slots)))))
 
-(defgeneric visicon-update (vis-mod &optional count)
-  (:documentation "To be called after every time the visicon changes."))
 
-(defmethod visicon-update ((vis-mod vision-module) &optional (count t))
-  (check-finsts vis-mod)
-  (update-attended-loc vis-mod)
-  (stuff-visloc-buffer vis-mod)
-  (when count
-    (length (visicon-chunks vis-mod))))
+(defun chunk-to-visual-position (chunk)
+  (when (chunk-p-fct chunk)
+    (let* ((screen-pos (chunk-slot-value-fct chunk 'screen-pos))
+           (pos-chunk (and (chunk-p-fct screen-pos) screen-pos)))
+      (coerce (xyz-loc (or pos-chunk chunk)) 'list))))
 
+(defun external-chunk-to-visual-position (chunk)
+  (chunk-to-visual-position (string->name chunk)))
+
+(add-act-r-command "chunk-to-visual-position" 'external-chunk-to-visual-position "If a chunk represents a visual location or visual object return the x,y,z position. Params: chunk-name")
 
 (defgeneric update-attended-loc (vis-mod)
   (:documentation  "If the attended location needs an update, update."))
 
 (defmethod update-attended-loc ((vis-mod vision-module))
-  ;; if we're tracking or moving around, ignore this
-  (when (or (tracked-obj-last-feat vis-mod) (moving-attention vis-mod)
-            (eq 'BUSY (exec-s vis-mod)))
-    (return-from update-attended-loc nil))
-  ;; when do we update?
-  ;; [1] when we're looking at an object and it's gone
-  ;; [2] when we're looking at nothing and something appears
-  (when (or (and (currently-attended vis-mod)
-                 (or
-                  ;; it's not in the visicon
-                  (not (gethash (currently-attended vis-mod) (visicon vis-mod)))
-                  ;; there isn't a feature like it in the visicon -- not needed now?
-                  ;(not (and (chunk-p-fct (currently-attended vis-mod)) (object-present-p vis-mod (currently-attended vis-mod))))
-                  ))
-            (and (current-marker vis-mod)
-                 (null (currently-attended vis-mod))
-                 (within-move vis-mod (xy-loc (current-marker vis-mod)))))
+  (let (attended tracked moving marker clof scale)
+    (bt:with-lock-held ((marker-lock vis-mod))
+      (setf attended (currently-attended vis-mod))
+      (setf tracked (tracked-obj vis-mod))
+      (setf moving (moving-attention vis-mod))
+      (setf marker (current-marker vis-mod))
+      (setf clof (clof vis-mod))
+      (setf scale (last-scale vis-mod))
+      
+      ;; set them here incase the hook calls
+      ;; schedule-encoding-complete
+      (setf (last-attention-params vis-mod) (list marker clof scale :requested nil)))
+    
+    
+    ;; if we're tracking or moving around, ignore this 
+    (when (or tracked moving (eq 'BUSY (exec-s vis-mod)))
+      (return-from update-attended-loc nil))
+    
+    ;; when do we update?
+    ;; [1] when we're looking at an object and it's gone
+    ;; [2] when we're looking at nothing and something appears 
+    ;; [3] NEW we're looking at an object and it's been changed
+    ;;     (previously not possible)
+    
+    
+    (let ((visicon-chunk (when (chunk-p-fct attended)
+                           (chunk-visicon-entry attended))))
+      (when (or (and attended
+                     (not (find visicon-chunk (bt:with-recursive-lock-held ((visicon-lock vis-mod)) (visicon vis-mod)))))
+                
+                (and marker
+                     (null attended)
+                     (within-move vis-mod clof))
+                
+                (and attended
+                     (find visicon-chunk (bt:with-recursive-lock-held ((visicon-lock vis-mod)) (visicon-updated vis-mod)))))
+        
+        ;; Change it now to avoid problems with simultaneous non-scheduled updates
+        
+        (change-state vis-mod :exec 'busy)
+        
+        ;; Still want to schedule the change so that it gets recorded properly
+        ;; for module tracking purposes.
+        
+        (schedule-event-now 'change-state :params (list vis-mod :exec 'busy) :module :vision :output nil :priority :max)
+        
+        ;; need to check with the encoding-hook
+        
+        (let (hook override)
+          (bt:with-recursive-lock-held ((param-lock vis-mod))
+            (setf hook (encoding-hook vis-mod)))
+          
+          (when hook 
+            (setf override (dispatch-apply hook (coerce clof 'list) (coerce clof 'list) marker scale)))
+             
+          (bt:with-lock-held ((marker-lock vis-mod))
+            (cond ((null override)
+                   (setf (last-attention-params vis-mod) nil)
+                   (schedule-event-relative (randomize-time-ms (move-attn-latency vis-mod)) 'encoding-complete
+                                            :time-in-ms t :destination :vision :module :vision 
+                                            :params (list marker clof scale :requested nil)
+                                            :output 'medium
+                                            :details (concatenate 'string "Encoding-complete " (symbol-name marker) " "  (symbol-name scale))))
+                ((numberp override)
+                 (when (minusp override)
+                   (print-warning "Encoding hook returned a negative encoding time ~f. Using 0 instead." override)
+                   (setf override 0))
+                 (setf (last-attention-params vis-mod) nil)
+                 (schedule-event-relative (randomize-time-ms (safe-seconds->ms override 'move-attention)) 'encoding-complete
+                                          :time-in-ms t :destination :vision :module :vision 
+                                          :params (list marker clof scale :requested nil)
+                                          :output 'medium
+                                          :details (concatenate 'string "Encoding-complete " (symbol-name marker) " "  (symbol-name scale))))
+                (t ;;  
+                 ))))))))
 
-    ;; Change it now to avoid problems with simultaneous non-scheduled updates
-
-    (change-state vis-mod :exec 'busy)
-
-    ;; Still want to schedule the change so that it gets recorded properly
-    ;; for module tracking purposes.
-
-    (schedule-event-relative 0 'change-state :params (list vis-mod :exec 'busy) :module :vision :output nil :priority :max)
-
-    (schedule-event-relative
-     (randomize-time (move-attn-latency vis-mod))
-     'encoding-complete
-     :destination :vision
-     :module :vision
-     :params `(,(current-marker vis-mod) ,(last-scale vis-mod) :requested nil)
-     :details (concatenate 'string "Encoding-complete "
-                (symbol-name (current-marker vis-mod))
-                " "  (symbol-name (last-scale vis-mod)))
-     :output 'medium)))
 
 
-(defun objs-max-val (list accessor)
-  (let ((value nil)
-        (matches nil))
 
-    (dolist (y list)
-      (let ((cur-val (funcall accessor y)))
-        (if (or (null value)
-                (> cur-val value))
-            (progn
-              (setf value cur-val)
-              (setf matches (list y)))
-          (when (= cur-val value)
-            (push y matches)))))
-    matches))
+(defmethod check-unstuff-buffer ((module vision-module) buffer chunk)
+  (let ((current (buffer-read buffer)))
+    (and
+     current
+     (multiple-value-bind (copy was-copy) (chunk-copied-from-fct current)
+       (declare (ignore copy))
+       (and was-copy                                     ;; unchanged
+            (eq chunk (chunk-visicon-entry current))     ;; matches the stuffed entry
+            (query-buffer buffer '(buffer unrequested))))))) ;; and was actually stuffed
 
+
+(defun convert-visicon-chunk-to-vis-loc (chunk)
+  (aif (chunk-visual-loc chunk)
+       (progn
+         (setf (chunk-visual-tstamp it) (chunk-visual-tstamp chunk))
+        it)
+       chunk))
 
 (defmethod stuff-visloc-buffer ((vis-mod vision-module))
+  (let ((old (buffer-read 'visual-location)))
+    (when (and (or (null old)
+                   (and (overstuff-loc vis-mod)
+                        ;; just check unmodified and stuffed
+                        ;; since can't compare to visicon because
+                        ;; the old feature may be gone now
+                        (multiple-value-bind (x unmodified-copy) (chunk-copied-from-fct old) (declare (ignore x)) unmodified-copy)
+                        (query-buffer 'visual-location '(buffer unrequested))))
+               (zerop (bt:with-recursive-lock-held ((proc-display-lock vis-mod)) (proc-display-locks vis-mod)))
+               (not (bt:with-lock-held ((marker-lock vis-mod)) (tracked-obj vis-mod))))
+      (awhen (find-current-locs-with-spec vis-mod (default-spec vis-mod))
+             (let* ((chunk (random-item (sort (objs-max-val it 'chunk-visual-tstamp) 'string< :key 'symbol-name)))
+                    (vl-chunk (convert-visicon-chunk-to-vis-loc chunk))
+                    (unstuff (bt:with-recursive-lock-held ((param-lock vis-mod)) (unstuff-loc vis-mod))))
+               (if (and old (equal-chunks-fct old vl-chunk)) ;; don't stuff the same chunk again
+                   (purge-chunk-fct vl-chunk)
+                 
+                 (progn
+                   (if old
+                       (schedule-overwrite-buffer-chunk 'visual-location vl-chunk 0 :time-in-ms t :module :vision :requested nil :priority 10)
+                     (schedule-set-buffer-chunk 'visual-location vl-chunk 0 :time-in-ms t :module :vision :requested nil :priority 10))
+                   
+                   (lock-vision vis-mod)
+                   
+                   (schedule-event-now 'unlock-vision :module :vision :destination :vision :priority 9 :output nil :maintenance t)
+                   ;(schedule-event-now 'delete-chunk-fct :module :vision :params (list vl-chunk) :priority 8 :output nil :maintenance t)
+                   
+                   
+                   (when unstuff
+                     (let ((delay (if (numberp unstuff) unstuff (bt:with-recursive-lock-held ((param-lock vis-mod)) (new-span vis-mod)))))
+                       
+                       (awhen (unstuff-event vis-mod)
+                              (delete-event it))
+                       (setf (unstuff-event vis-mod)
+                         (schedule-event-relative delay 'unstuff-buffer :maintenance t :params (list 'visual-location chunk) 
+                                                  :destination :vision :module :vision :output nil :time-in-ms t
+                                                  :precondition 'check-unstuff-buffer)))))))))))
 
-  (unless (or (buffer-read 'visual-location)
-              (not (zerop (locks (current-device-interface))))
-              (tracked-obj-last-feat vis-mod))
-    (awhen (find-current-locs-with-spec vis-mod (default-spec vis-mod))
 
-           (schedule-set-buffer-chunk 'visual-location
-                                      (random-item (sort (objs-max-val it 'chunk-visual-tstamp) #'string< :key #'symbol-name))
-                                      0
-                                      :module :vision
-                                      :requested nil
-                                      :priority 10)
-           (lock-device (current-device-interface))
-           (schedule-event-relative 0 'unlock-device
-                                :module :vision
-                                :destination :device
-                                :priority 9
-                                :output nil
-                                :maintenance t))))
-
-
-(defun test-attended (attended-spec chunk)
+(defun test-attended (vm attended-spec chunk)
   "Assume it's a visual-location chunk, but could be either
    the key or value from the visicon or it could be an unrelated location chunk"
-
+  
   ;; Let the unrelated chunk match to attended nil now
   ;; instead of failing all queries as was the case previously
-
-  (let* ((vm (get-module :vision))
-         (visicon-key (chunk-visicon-entry chunk))
-         (visicon-value (aif (and visicon-key (gethash visicon-key (visicon vm)))
-                             it
-                             chunk))
+  
+  (let* ((visicon-value chunk)
          (value (third attended-spec))
          (result nil)
          (marker (feat-attended visicon-value vm)))
-
-
+    
     (cond ((eq value 'new)
            (setf result (eq marker 'new)))
           ((null value)
            (setf result (or (eq marker 'new) (eq marker nil))))
           (t
            (setf result (eq marker t))))
-
+    
     (if (eq (car attended-spec) '-)
         (not result)
       result)))
 
-(defun matching-attended-chunks (attended-spec chunks)
-  (remove-if-not (lambda (x) (test-attended attended-spec x)) chunks))
-
+(defun matching-attended-chunks (vm attended-spec chunks)
+  (remove-if-not (lambda (x) (test-attended vm attended-spec x)) chunks))
 
 (defun set-visual-center-point (x y)
-  (if (get-module :vision)
-      (if (and (numberp x) (numberp y))
-          (setf (center-point (get-module :vision)) (vector x y))
-        (print-warning "X and Y values must be numbers for set-visual-center-point."))
-    (print-warning "No vision module available so cannot set center point.")))
+  (aif (get-module :vision)
+       (if (and (numberp x) (numberp y))
+           (bt:with-lock-held ((vis-loc-lock it)) (setf (center-point it) (vector x y)) (list x y))
+         (print-warning "X and Y values must be numbers for set-visual-center-point."))
+       (print-warning "No vision module available so cannot set center point.")))
 
+(add-act-r-command "set-visual-center-point" 'set-visual-center-point "Set the default reference point about which the vision module determines clockwise and couterclockwise. Params: x y")
 
 ;;; Because screen y coordinates are "upside down" the results are backwards and
 ;;; nearest clockwise is max angle-between and nearest counterclockwise is min angle-between
@@ -1123,274 +1896,176 @@
   (let ((a (- (2-points->angle center p1) (2-points->angle center p2))))
     (if (minusp a)
         (+ (* 2 pi) a)
-        a)))
+      a)))
 
 
 (defmethod find-current-locs-with-spec ((vis-mod vision-module) spec)
   "Assume that it's a valid visual-location chunk-spec with at most 1
    attended slot specification one nearest spec and one center spec"
-
-  (let* ((main-spec (strip-request-parameters-from-chunk-spec spec))
-         (attended (when (slot-in-chunk-spec-p spec :attended)
-                     (car (chunk-spec-slot-spec spec :attended))))
-         (slots (chunk-spec-slot-spec main-spec))
-         (current (current-marker vis-mod))
-         (current-type (when current (chunk-chunk-type-fct current)))
-         (nearest (when (slot-in-chunk-spec-p spec :nearest)
-                    (car (chunk-spec-slot-spec spec :nearest))))
-         (center (if (and (slot-in-chunk-spec-p spec :center) (chunk-p-fct (third (car (chunk-spec-slot-spec spec :center))))
-                          (or (chunk-type-subtype-p-fct (chunk-chunk-type-fct (third (car (chunk-spec-slot-spec spec :center)))) 'visual-location)
-                              (chunk-type-subtype-p-fct (chunk-chunk-type-fct (third (car (chunk-spec-slot-spec spec :center)))) 'visual-object)))
-                     (if (chunk-type-subtype-p-fct (chunk-chunk-type-fct (third (car (chunk-spec-slot-spec spec :center)))) 'visual-location)
-                         (xy-loc (third (car (chunk-spec-slot-spec spec :center))))
-                       (xy-loc (fast-chunk-slot-value-fct (third (car (chunk-spec-slot-spec spec :center))) 'screen-pos)))
-                   (center-point vis-mod)))
+  (let (current clof)
+    (bt:with-lock-held ((marker-lock vis-mod))
+      (setf current (current-marker vis-mod)
+        clof (clof vis-mod)))
+    
+    (when current
+      (setf current (chunk-visicon-entry current)))
+    
+  (let* ((attended (first (chunk-spec-slot-spec spec :attended)))
+         (slots (remove-if 'keywordp (chunk-spec-slot-spec spec) :key 'spec-slot-name))
+         (current-valid (chunk-p-fct current))
+         (current-slots (when (and current current-valid) (chunk-filled-slots-list-fct current)))
+         (nearest (spec-slot-value (first (chunk-spec-slot-spec spec :nearest))))
          (min-max-tests nil))
-
-
+    
     ;; Remap all current values to the current chunk
-
-    (if current
-        (dolist (x slots)
-          (when (eq (third x) 'current)
-            (if (find (second x) (chunk-type-slot-names-fct current-type))
-                (if (and (eq (second x) 'value) (chunk-real-visual-value current))
-                   (setf (third x) (chunk-real-visual-value current))
-                  (setf (third x) (chunk-slot-value-fct current (second x))))
-              (progn
-                (print-warning "Current visual-location does not have a slot named ~S so it is ignored in the request."
-                               (second x))
-                (setf slots (remove x slots))))))
-      (dolist (x slots)
-        (when (eq (third x) 'current)
-          (print-warning "There is no currently attended location.  So, request specifying ~S as current is being ignored."
-                         (second x))
-          (setf slots (remove x slots)))))
-
-    ;; Remove all tests for highest and lowest for later
-
+    
     (dolist (x slots)
-      (when (or (eq (third x) 'lowest)
-                (eq (third x) 'highest))
+      (when (eq (spec-slot-value x) 'current)
+        (if (find (spec-slot-name x) current-slots)
+            (setf (spec-slot-value x) (chunk-slot-value-fct current (spec-slot-name x)))
+          (progn
+            (if current-valid
+                (print-warning "Current visual-location does not have a slot named ~S so it is ignored in the request." (spec-slot-name x))
+              (print-warning "There is no currently attended location.  So, request specifying ~S as current is being ignored." (spec-slot-name x)))
+            (setf slots (remove x slots))))))
+    
+    ;; Remove all tests for highest and lowest for later
+    
+    (dolist (x slots)
+      (when (or (eq (spec-slot-value x) 'lowest)
+                (eq (spec-slot-value x) 'highest))
         (push-last x min-max-tests)
         (setf slots (remove x slots))))
-
+    
     ;; update the finsts and new markers if attended is needed
-
+    
     (when attended
       (update-new vis-mod)
       (check-finsts vis-mod))
-
+    
     ;; find the chunks that match
-
+    
     (let ((possible-chunks (if attended
-                               (matching-attended-chunks attended (visicon-chunks vis-mod t))
+                               (matching-attended-chunks vis-mod attended (visicon-chunks vis-mod t))
                              (visicon-chunks vis-mod t)))
-          (changed nil))
-
-      ;; Hack to reassign value slots as needed before testing
-
-      (dolist (check possible-chunks)
-        (when (chunk-real-visual-value check)
-          (push (cons check (chunk-slot-value-fct check 'value)) changed)
-          (fast-set-chunk-slot-value-fct check 'value (chunk-real-visual-value check))))
-
-    (let ((matching-chunks (find-matching-chunks (slot-specs-to-chunk-spec (chunk-spec-chunk-type main-spec) slots)
-                                                 :chunks possible-chunks :variable-char #\&)))
-      ;; apply all of the lowest/highest constraints
-      ;; in the order provided
-
-      (dolist (x min-max-tests)
-        (let ((value nil)
-              (truth (first x))
-              (slot (second x))
-              (test (third x)))
-
-          ;; find the min/max value
-          (dolist (y matching-chunks)
-            (let ((cur-val (fast-chunk-slot-value-fct y slot)))
-              (unless (numberp cur-val)
-                (setf value :fail)
-                (print-warning "Cannot apply ~S constraint because not all chunks have a numerical value." x)
-                (return))
-              (when (or (null value)
-                        (and (eq test 'lowest)
-                             (< cur-val value))
-                      (and (eq test 'highest)
-                           (> cur-val value)))
-                (setf value cur-val))))
-
-          (setf matching-chunks (remove-if-not (lambda (z)
-                                                 (if (eq truth '=)
-                                                     (= value z)
-                                                   (not (= value z))))
-                                               matching-chunks
-                                               :key (lambda (z)
-                                                      (fast-chunk-slot-value-fct z slot))))))
-
-      ;; if there's a nearest constraint then
-      ;; apply that filter now
-
-      (when (and nearest matching-chunks)
-
-        (if (or (eq (third nearest) 'current)
-                (eq (third nearest) 'current-x)
-                (eq (third nearest) 'current-y)
-                (eq (third nearest) 'current-distance)
-                (and (chunk-p-fct (third nearest))
-                     (chunk-type-subtype-p-fct (chunk-chunk-type-fct (third nearest)) 'visual-location)))
-
-            (let ((value nil)
-                  ;(truth (first nearest))
-                  (test (third nearest))
-                  (matches nil)
-                  (current-loc (aif (current-marker vis-mod)
-                                    it
-                                    (progn
-                                      (when (or (eq (third nearest) 'current)
-                                                (eq (third nearest) 'current-x)
-                                                (eq (third nearest) 'current-y)
-                                                (eq (third nearest) 'current-distance))
-                                        (model-warning "No location has yet been attended so current is assumed to be at 0,0,~d." (view-dist vis-mod)))
-                                      (car (define-chunks-fct `((isa visual-location screen-x 0 screen-y 0 distance ,(view-dist vis-mod))))))))
-                  (nearest-coords (unless (or (eq (third nearest) 'current)
-                                              (eq (third nearest) 'current-x)
-                                              (eq (third nearest) 'current-y)
-                                              (eq (third nearest) 'current-distance))
-                                    (let ((coords (xyz-loc (third nearest))))
-                                      (if (every 'numberp coords)
-                                          coords
-                                        (progn
-                                          (unless (numberp (aref coords 0))
-                                            (model-warning "No screen-x value in chunk ~s for nearest test.  Assuming screen-x 0." (third nearest)))
-                                          (unless (numberp (aref coords 1))
-                                            (model-warning "No screen-y value in chunk ~s for nearest test.  Assuming screen-y 0." (third nearest)))
-                                          ;; don't warn if distance is missing
-                                          (vector (if (numberp (aref coords 0)) (aref coords 0) 0)
-                                                  (if (numberp (aref coords 1)) (aref coords 1) 0)
-                                                  (if (numberp (aref coords 2)) (aref coords 2) (view-dist vis-mod)))))))))
-
-
-              ;; find the min value
+          )
+      
+      
+      (let ((matching-chunks (find-matching-chunks (slot-specs-to-chunk-spec slots)
+                                                   :chunks possible-chunks :variable-char #\&)))
+        ;; apply all of the lowest/highest constraints
+        ;; in the order provided
+        
+        (when matching-chunks
+          (dolist (x min-max-tests)
+            (let ((value :fail)
+                  (op (spec-slot-op x))
+                  (slot (spec-slot-name x))
+                  (test (spec-slot-value x)))
+              
+              ;; find the min/max value
               (dolist (y matching-chunks)
-                (let ((cur-val (cond ((eq test 'current)
-                                      (dist (xyz-loc y) (xyz-loc current-loc)))
-                                     ((eq test 'current-x)
-                                      (abs (- (fast-chunk-slot-value-fct y 'screen-x) (fast-chunk-slot-value-fct current-loc 'screen-x))))
-                                     ((eq test 'current-y)
-                                      (abs (- (fast-chunk-slot-value-fct y 'screen-y) (fast-chunk-slot-value-fct current-loc 'screen-y))))
-                                     ((eq test 'current-distance)
-                                      (abs (- (fast-chunk-slot-value-fct y 'distance) (fast-chunk-slot-value-fct current-loc 'distance))))
-                                     (t
-                                      (dist (xyz-loc y) nearest-coords)))))
-                  (if (or (null value)
-                          (< cur-val value))
-                      (progn
-                        (setf value cur-val)
-                        (setf matches (list y)))
-                    (when (= cur-val value)
-                      (push y matches)))))
+                (let ((cur-val (fast-chunk-slot-value-fct y slot)))
+                  (when (numberp cur-val)
+                    ;(setf value :fail)
+                    ;(print-warning "Cannot apply ~S constraint because not all chunks have a numerical value." x)
+                    ;(return))
+                    (when (or (eq value :fail) 
+                              (and (eq test 'lowest)
+                                   (< cur-val value))
+                              (and (eq test 'highest)
+                                   (> cur-val value)))
+                      (setf value cur-val)))))
+              
+              (if (eq value :fail)
+                  (print-warning "Cannot apply ~S constraint because no chunks which match the other features have a numerical value." x)
+                (setf matching-chunks (find-matching-chunks (define-chunk-spec-fct (list op slot value)) :chunks matching-chunks))))))
+        
+        ;; if there's a nearest constraint then
+        ;; apply that filter now
+        
+        (when (and nearest matching-chunks)
+          (cond ((find nearest '(current-x current-y current-distance))
+                 (let* ((view-dist (bt:with-recursive-lock-held ((param-lock vis-mod)) (view-dist vis-mod)))
+                        (current-val (aif clof 
+                                          (case nearest 
+                                            (current-x (px clof)) 
+                                            (current-y (py clof)) 
+                                            (current-distance (pz clof)))
+                                          (progn 
+                                            (model-warning "No location has yet been attended so current is assumed to be at 0,0,~d." view-dist)
+                                            (case nearest (current-x 0) (current-y 0) (current-distance view-dist))))))
+                   ;; find those matching min value
+                   
+                   (setf matching-chunks (objs-min-val matching-chunks 
+                                                       (lambda (x) 
+                                                         (let ((slots (visual-location-slots x vis-mod)))
+                                                           (abs (- current-val (chunk-slot-value-fct x
+                                                                                                     (case nearest 
+                                                                                                       (current-x (first slots)) 
+                                                                                                       (current-y (second slots)) 
+                                                                                                       (current-distance (third slots))))))))))))
+                
+                ((find nearest '(clockwise counterclockwise))
+                 (let* ((center-spec (spec-slot-value (first (chunk-spec-slot-spec spec :center))))
+                        (center (cond ((or (null center-spec)
+                                           (not (chunk-p-fct center-spec)))
+                                       (bt:with-lock-held ((vis-loc-lock vis-mod)) (center-point vis-mod)))
+                                      ((valid-vis-loc-chunk center-spec vis-mod)
+                                       (xy-loc center-spec vis-mod))
+                                      ((and (chunk-slot-value-fct center-spec 'screen-pos)
+                                            (valid-vis-loc-chunk (chunk-slot-value-fct center-spec 'screen-pos) vis-mod))
+                                       (xy-loc (chunk-slot-value-fct center-spec 'screen-pos) vis-mod))
+                                      (t
+                                       (bt:with-lock-held ((vis-loc-lock vis-mod)) (center-point vis-mod)))))
+                        (current-point (aif clof 
+                                            it
+                                            (progn 
+                                              (model-warning "No location has yet been attended so current is assumed to be at 0,0.")
+                                              (vector 0 0)))))
+                   
+                   (setf matching-chunks (if (eq nearest 'clockwise)
+                                             (objs-max-val matching-chunks 
+                                                           (lambda (x) 
+                                                             (angle-between current-point (xy-loc x vis-mod) center)))
+                                           (objs-min-val matching-chunks 
+                                                         (lambda (x) 
+                                                           (angle-between current-point (xy-loc x vis-mod) center)))))))     
+                ((eq nearest 'current)
+                 (let ((nearest-coords (aif clof 
+                                            it
+                                            (let ((view-dist (bt:with-recursive-lock-held ((param-lock vis-mod)) (view-dist vis-mod))))
+                                                   (model-warning "No location has yet been attended so current is assumed to be at 0,0,~d." view-dist)
+                                                   (vector 0 0 view-dist)))))
+                   
+                   (setf matching-chunks (objs-min-val matching-chunks 
+                                                       (lambda (x) 
+                                                         (dist (xyz-loc x vis-mod) nearest-coords))))))
+                
+                ((valid-vis-loc-chunk nearest vis-mod)
+                 (let* ((coord-slots (visual-location-slots nearest vis-mod))
+                        (nearest-coords (if (numberp (chunk-slot-value-fct nearest (third coord-slots)))
+                                            (xyz-loc nearest vis-mod)
+                                          (vector (chunk-slot-value-fct nearest (first coord-slots))
+                                                  (chunk-slot-value-fct nearest (second coord-slots))
+                                                  (bt:with-recursive-lock-held ((param-lock vis-mod)) (view-dist vis-mod))))))
+                   
+                   (setf matching-chunks (objs-min-val matching-chunks 
+                                                       (lambda (x) 
+                                                         (dist (xyz-loc x vis-mod) nearest-coords))))))
+                
+                (t
+                 (print-warning "Nearest test in a visual-location request must be current, current-x, current-y, clockwise, counterclockwise, or a chunk with valid coordinates.")
+                 (print-warning "Ignoring nearest request for ~S." nearest))))
+        
+        matching-chunks)))))
 
-              (setf matching-chunks matches))
-
-          (if (or (eq (third nearest) 'clockwise)
-                  (eq (third nearest) 'counterclockwise))
-
-              (let ((value nil)
-                    (test (third nearest))
-                    (matches nil)
-                    (current-point (aif (current-marker vis-mod)
-                                        (xy-loc it)
-                                        (progn
-                                          (model-warning "No location has yet been attended so current is assumed to be at 0,0.")
-                                          (vector 0 0)))))
-
-                ;; find the min value
-                (dolist (y matching-chunks)
-                  (let ((cur-val (angle-between current-point (xy-loc y) center)))
-
-                    (if (or (null value)
-                            (and (eq test 'clockwise) (> cur-val value))
-                            (and (eq test 'counterclockwise) (< cur-val value)))
-
-                        (progn
-                          (setf value cur-val)
-                          (setf matches (list y)))
-                      (when (= cur-val value)
-                        (push y matches)))))
-
-                (setf matching-chunks matches))
-
-            (progn
-              (print-warning "Nearest test in a visual-location request must be current, current-x, current-y, clockwise, counterclockwise, or a chunk that is a subtype of visual-location.")
-              (print-warning "Ignoring nearest request for ~S." (third nearest))))))
-
-      ;; undo the value slots that were changed for matching purposes
-
-      (dolist (restore changed)
-        (fast-set-chunk-slot-value-fct (car restore) 'value (cdr restore)))
-
-      matching-chunks))))
-
-(extend-chunks visual-tstamp)
-
-(defun enter-into-visicon (vis-loc vis-mod)
-
-  (let* ((existing (gethash (chunk-visicon-entry vis-loc) (visicon vis-mod)))
-         (tstamp (if existing (chunk-visual-tstamp existing) (mp-time-ms)))
-         (new (if existing (chunk-visual-new-p existing) 'new))
-         (entry (copy-chunk-fct vis-loc)))
-
-    (when existing
-      ;; take the old one out of the visicon
-      (remhash (chunk-visicon-entry existing) (visicon vis-mod))
-
-      ;; transfer any finst from the old to the new
-
-      (let ((finst (find (chunk-visicon-entry existing) (finst-lst vis-mod) :key 'id :test 'equal)))
-        (when finst
-          (setf (id finst) (chunk-visicon-entry existing))))
 
 
-      ;; catch the possibility of a constituent part of a synthed feature being replaced...
-
-      (dolist (x (finst-lst vis-mod))
-        (when (and (synthed-from x) (find (chunk-visicon-entry existing) (synthed-from x) :test 'equal))
-          (setf (synthed-from x) (substitute (chunk-visicon-entry existing) (chunk-visicon-entry existing) (synthed-from x) :test 'equal))))
-
-      ; not needed since currently-attended is now always a visicon-entry
-      ;(when (eq (currently-attended vis-mod) (chunk-visicon-entry existing))
-      ;  (setf (currently-attended vis-mod) vis-loc))
-
-      ;; after updating the new entry delete the old chunk if
-      ;; set to do so since it shouldn't be needed now
-
-      (when (purge-visicon vis-mod)
-        (unless (eq existing (current-marker vis-mod))
-          (purge-chunk-fct existing))))
-
-    (setf (gethash (chunk-visicon-entry vis-loc) (visicon vis-mod)) entry)
-
-    (setf (chunk-visual-tstamp entry) tstamp)
-    (setf (chunk-visual-new-p entry) new)
-
-    ;; probably dont want to do this for each item, right?
-    ;; it should happen in the calling function - process-display or add-item...
-    ;; (update-new vis-mod)
-
-    ;; for consistency - let the user hard code the location
-    ;; chunks into the model if desired and this keeps things
-    ;; recorded properly.
-
-    ;; Why would this have been done since it's only the entry that matters?
-    ;(setf (chunk-visual-tstamp vis-loc) tstamp)
-
-    entry))
 
 
 ;;;; ---------------------------------------------------------------------- ;;;;
 ;;;;  Supporting NEW tags
-
 
 
 (defun tstamp-elapsed (vis-loc)
@@ -1398,18 +2073,18 @@
 
 (defun checknew (vis-loc vis-mod)
   (when (and (eq (chunk-visual-new-p vis-loc) 'NEW)
-             (> (tstamp-elapsed vis-loc) (new-span vis-mod)))
+             (> (tstamp-elapsed vis-loc) (bt:with-recursive-lock-held ((param-lock vis-mod)) (new-span vis-mod))))
     (setf (chunk-visual-new-p vis-loc) nil))
   vis-loc)
 
 (defmethod update-new ((vis-mod vision-module))
-  (mapc #'(lambda (vl) (checknew vl vis-mod)) (visicon-chunks vis-mod)))
+  (bt:with-recursive-lock-held ((visicon-lock vis-mod)) (mapc (lambda (vl) (checknew vl vis-mod)) (visicon vis-mod))))
 
 
 ;;;; FInsts
 
 (defclass finst ()
-  ((id :accessor id :initarg :id :initform nil) ;; the visicon key
+  ((id :accessor id :initarg :id :initform nil) ;; the visicon key 
    (tstamp :accessor tstamp :initarg :tstamp :initform 0.0)
    (synthed-from :accessor synthed-from :initarg :synthed-from :initform nil)))
 
@@ -1417,93 +2092,97 @@
   (:documentation  "Update finsts against what's on the display."))
 
 (defmethod check-finsts ((vis-mod vision-module))
-  (setf (finst-lst vis-mod)
-    (delete-if #'(lambda (f)
-                   (or (and (not (synthed-from f))
-                            (null (gethash (id f) (visicon vis-mod))))
-                       (and (synthed-from f)
-                            (not (some (lambda (x) (gethash x (visicon vis-mod))) (synthed-from f))))
-                       (> (- (mp-time-ms) (tstamp f))
-                          (finst-span vis-mod))))
-                   (finst-lst vis-mod))))
+  (bt:with-recursive-lock-held ((visicon-lock vis-mod))
+    (setf (finst-lst vis-mod)
+      (delete-if (lambda (f) 
+                   (or 
+                    ; not quite sure why the first one is like that, but neither useful currently
+                    ;(and (not (synthed-from f))
+                    ;     (find (id f) (visicon vis-mod)))
+                    ;(and (synthed-from f)
+                    ;     (not (some (lambda (x) (find x (visicon vis-mod))) (synthed-from f))))
+                    
+                    ; instead just check whether it's in the visicon now and worry about
+                    ; synthed feats at this point
+                    (not (find (id f) (visicon vis-mod)))
+                    (> (- (mp-time-ms) (tstamp f))
+                       (bt:with-recursive-lock-held ((param-lock vis-mod)) (finst-span vis-mod)))))
+                 (finst-lst vis-mod)))))
 
 
 (defgeneric feat-attended (feat vis-mod)
   (:documentation  "Return the attended status of a visicon feature object."))
 
 (defmethod feat-attended (loc vis-mod)
-  (if (find (chunk-visicon-entry loc) (finst-lst vis-mod) :key (lambda (x) (cons (id x) (synthed-from x))) :test (lambda (item list) (member item list :test 'equal)))
-      t
-    (when (gethash (chunk-visicon-entry loc) (visicon vis-mod))
-      (if (eq (chunk-visual-new-p loc) 'NEW)
-          'NEW
-        nil))))
+  (bt:with-recursive-lock-held ((visicon-lock vis-mod))
+    (if (find loc (finst-lst vis-mod) :key (lambda (x) (cons (id x) (synthed-from x))) :test (lambda (item list) (member item list :test 'equal)))
+        t
+      (when (find loc (visicon vis-mod))
+        (if (eq (chunk-visual-new-p loc) 'NEW)
+            'NEW
+          nil)))))
 
-(defun add-finst (vis-mod loc-or-obj)
-  (let* ((feature (chunk-visicon-entry loc-or-obj))
-         (current (when feature (gethash feature (visicon vis-mod)))))
+(defun add-finst (vis-mod loc-or-obj) 
+  (let* ((current (chunk-visicon-entry loc-or-obj)))
     (if current
-        (progn
-          (aif (find feature (finst-lst vis-mod) :key 'id :test 'equal)
+        (bt:with-recursive-lock-held ((visicon-lock vis-mod))
+          (aif (find current (finst-lst vis-mod) :key 'id :test 'equal)
                (setf (tstamp it) (mp-time-ms))
-
+               
                (push
-                (make-instance 'finst :id feature :tstamp (mp-time-ms)
+                (make-instance 'finst :id current :tstamp (mp-time-ms)
                   :synthed-from (chunk-synth-feat loc-or-obj))
                 (finst-lst vis-mod)))
-
-          (if (chunk-synth-feat loc-or-obj)
-              (dolist (x (chunk-synth-feat loc-or-obj))
-                (setf (chunk-visual-new-p (gethash x (visicon vis-mod))) nil))
-            (setf (chunk-visual-new-p (gethash feature (visicon vis-mod))) nil))
-
+          
+          (aif (chunk-synth-feat loc-or-obj)
+               (dolist (x it)
+                 ;; This is broken, and will need to be fixed when synthed feats come back
+                 (setf (chunk-visual-new-p (gethash x (visicon vis-mod))) nil)
+                 )
+               (setf (chunk-visual-new-p current) nil))
+          
           (when (> (length (finst-lst vis-mod)) (num-finst vis-mod))
             (sort-finsts vis-mod)
             (pop (finst-lst vis-mod))))
       (model-warning "~S does not name an object or feature in the current visicon. No finst created." loc-or-obj))))
 
+(defun transfer-finst (from to vis-mod)
+  (bt:with-recursive-lock-held ((visicon-lock vis-mod))
+    (let ((f (find from (finst-lst vis-mod) :key (lambda (x) (cons (id x) (synthed-from x))) :test (lambda (item list) (member item list :test 'equal)))))
+      (setf (chunk-visual-tstamp to) (tstamp f))
+      (setf (chunk-visual-new-p to) (chunk-visual-new-p from))
+      
+      ;; synthed-from isn't being handled yet...
+      (when (eq from (id f))
+        (setf (id f) to)))))
 
-(defun remove-finst (vis-mod loc-or-obj)
+
+(defun remove-finst (vis-mod loc-or-obj) 
   (let ((name (chunk-visicon-entry loc-or-obj)))
-
-    (setf (finst-lst vis-mod) (remove name (finst-lst vis-mod) :key 'id :test 'equal))
-    (setf (finst-lst vis-mod) (remove name (finst-lst vis-mod) :key 'synthed-from :test 'equal))))
+    (bt:with-recursive-lock-held ((visicon-lock vis-mod))
+      (setf (finst-lst vis-mod) (remove name (finst-lst vis-mod) :key 'id :test 'equal))
+      (setf (finst-lst vis-mod) (remove-if (lambda (x) (find name (synthed-from x) :test 'equal)) (finst-lst vis-mod))))))
 
 
 (defgeneric assign-finst (vis-mod &key object location)
   (:documentation "Assign a finst to an object or location."))
 
 (defmethod assign-finst ((vm vision-module) &key object location)
+  
   (if (and (null object) (null location))
-    (print-warning "ASSIGN-FINST called with two null arguments")
+      (print-warning "ASSIGN-FINST called without a valid object or location")
     (add-finst vm (if object object location))))
-
 
 
 (defgeneric sort-finsts (vis-mod)
   (:documentation  "Sort finsts according to time stamp."))
 
 (defmethod sort-finsts ((vis-mod vision-module))
-  (setf (finst-lst vis-mod) (sort (finst-lst vis-mod) #'< :key #'tstamp)))
+  (bt:with-recursive-lock-held ((visicon-lock vis-mod))
+    (setf (finst-lst vis-mod) (sort (finst-lst vis-mod) '< :key 'tstamp))))
 
 
 
-;;; OBJECT-PRESENT-P      [Method]
-;;; Description : A visual object is present if its ID is still in the icon
-;;;             : or if all the features from which it was synthesized are
-;;;             : still in the icon.
-
-(defgeneric object-present-p (vis-mod obj-id)
-  (:documentation  "Returns NIL if the object ID passed to it is no longer in the icon."))
-
-(defmethod object-present-p ((vis-mod vision-module) obj-id)
-  (if (chunk-synth-feat obj-id)
-
-      ;; For an object synthesized from features check all the features
-
-      (every (lambda (x) (gethash (chunk-visicon-entry x) (visicon vis-mod))) (chunk-synth-feat obj-id))
-
-    (gethash (chunk-visicon-entry obj-id) (visicon vis-mod))))
 
 
 ;;; WITHIN-MOVE      [Method]
@@ -1511,89 +2190,95 @@
 ;;; Description : Simply walk the icon and accumulate features that are within
 ;;;             : the movement tolerance.
 
-(defgeneric within-move (vis-mod xy-loc)
+;;; 2014.05.21
+;;; The assumption with how this was is that the viewing vector was perpendicular
+;;; to the viewing surface because the move distance was a circle about the target
+;;; point.  Adding the distance dimension into the calculation assumes the same thing --
+;;; the viewing vector is along the distance-axis through the xy-loc of the item.
+;;; Then the items that match are those which fall within the cone defined by the 
+;;; move-allowance angle.  It's a little ugly, but avoids having to determine the
+;;; head position and deal with the fact that the screen is a plane (not all items
+;;; are really at the same distance) and other real 3d stuff...
+
+;;; 2019.02.22
+;;; The previous calculation didn't take z into account correctly.  There's no need
+;;; to go to pixels because it's just the angle that we care about.
+
+(defgeneric within-move (vis-mod xyz-loc)
   (:documentation "Return a list of icon feature within the move allowance of loc."))
 
-(defmethod within-move ((vis-mod vision-module) xy-loc)
-  (if (= (move-allowance vis-mod) 0)
-    (feat-match-xy (visicon-chunks vis-mod) xy-loc)
+(defmethod within-move ((vis-mod vision-module) xyz-loc)
+  (let ((accum nil)
+        )
+    (bt:with-recursive-lock-held ((visicon-lock vis-mod))
+      (dolist (value (visicon vis-mod))
+        (when (or (and (= (move-allowance vis-mod) 0)
+                       (let ((coord-slots (visual-location-slots value vis-mod)))
+                         (and (= (px xyz-loc) (fast-chunk-slot-value-fct value (first coord-slots))) 
+                              (= (py xyz-loc) (fast-chunk-slot-value-fct value (second coord-slots)))
+                              (= (pz xyz-loc) (fast-chunk-slot-value-fct value (third coord-slots))))))
+                  (and (> (move-allowance vis-mod) 0)
+                       (>= (move-allowance vis-mod) (angle-between-vectors xyz-loc (xyz-loc value vis-mod)))))
+          (push value accum))))
+      accum))
 
-    (let ((max (pm-angle-to-pixels (move-allowance vis-mod)))
-          (accum nil))
-      (maphash (lambda (key value)
-                 (declare (ignore key))
-                 (when (>= max (dist (xy-loc value) xy-loc))
-                   (push value accum)))
-               (visicon vis-mod))
-      accum)))
+;; assume that the current viewing angle is along the z axis through the 
+;; initial point, v1, to simplify things, and then can consider the 
+;; first angle as 0,0,1 and translate the other accordingly.
 
-(defmethod feat-match-xy (feat-list xy-loc)
+(defun angle-between-vectors (v1 v2)
+  (rad->deg (acos (/ (pz v2) (sqrt (+ (expt (- (px v2) (px v1)) 2)
+                                      (expt (- (py v2) (py v1)) 2)
+                                      (expt (pz v2) 2)))))))
+
+
+(defmethod feat-match-xyz (feat-list xyz-loc vis-m)
   (let ((outlis nil)
-        (x (px xy-loc))
-        (y (py xy-loc)))
+        (x (px xyz-loc))
+        (y (py xyz-loc))
+        (z (pz xyz-loc)))
     (dolist (chunk feat-list)
-      (when (and (= x (fast-chunk-slot-value-fct chunk 'screen-x))
-                 (= y (fast-chunk-slot-value-fct chunk 'screen-y)))
-        (push chunk outlis)))
-    outlis))
+      (let ((coord-slots (visual-location-slots chunk vis-m)))
+        (when (and (= x (fast-chunk-slot-value-fct chunk (first coord-slots))) 
+                   (= y (fast-chunk-slot-value-fct chunk (second coord-slots)))
+                   (= z (fast-chunk-slot-value-fct chunk (third coord-slots))))
+          (push chunk outlis))))
+      outlis))
 
 
 ;;; ENCODING-COMPLETE      [Method]
 ;;; Description : Several things to do when focusing attention on a location.
-;;;             : [1] Make the location attended, set state to FREE.
 
-;;;             : [3] If there was nothing there, or we were non-conserving
-;;;             :     get the thing at that location.
-;;;             : [4] If there is something, synch it up with the location
-;;;             :     chunk.
-;;;             : [5] If requested, print it.
-
-(defgeneric encoding-complete (vis-mod loc-dmo scale &key requested)
+(defgeneric encoding-complete (vis-mod loc-dmo position scale &key requested)
   (:documentation "When MOVE-ATTENTION completes, focus on a place with this."))
 
-(defmethod encoding-complete ((vis-mod vision-module) loc scale &key (requested t))
-
+(defmethod encoding-complete ((vis-mod vision-module) loc position scale &key (requested t))
+  
   (setf (moving-attention vis-mod) nil)
   (change-state vis-mod :exec 'free :proc 'free)
-  (setf (current-marker vis-mod) loc)
+  
+  (let ((return-obj (get-obj-at-location vis-mod loc position scale)))
+    
+      
+      (if return-obj
+          (progn
+            (bt:with-lock-held ((marker-lock vis-mod))
+              (set-current-marker vis-mod loc position)
+              (setf (currently-attended vis-mod) return-obj))
+            (attend-to-object vis-mod return-obj :requested requested)
+            return-obj)
+        
+        (bt:with-lock-held ((marker-lock vis-mod))
+          (set-current-marker vis-mod loc position)
+          (setf (currently-attended vis-mod) nil)
+          (setf (last-obj vis-mod) nil)
+          (set-buffer-failure 'visual :ignore-if-full t :requested requested)
+          (setf (attend-failure vis-mod) t)
+          
+          (schedule-event-now 'no-visual-object-found :maintenance t :module :vision :output 'medium :details "No visual-object found")
+          
+          nil))))
 
-  (let ((return-obj (get-obj-at-location vis-mod loc scale)))
-
-    (if return-obj
-        (progn
-          (set-attended vis-mod (chunk-visicon-entry return-obj))
-          (attend-to-object vis-mod return-obj :requested requested)
-
-          return-obj)
-
-      (progn
-        (clear-attended vis-mod)
-        (setf (last-obj vis-mod) nil)
-        (setf (attend-failure vis-mod) t)
-
-        (schedule-event-relative 0 'no-visual-object-found :maintenance t :module :vision :output 'medium :details "No visual-object found")
-
-        nil))))
-
-
-(defun icon-entry (vis-mod visual-object)
-  "Given a visual object chunk return the visicon key of the location which it came from
-   or the one that's in the visicon that best matches it now, or if there isn't one
-   which matches the 'original' then just return the one associated with the object now"
-  (let* ((loc-name (fast-chunk-slot-value-fct visual-object 'screen-pos))
-         (original (chunk-visicon-entry loc-name)))
-
-    (cond ((gethash original (visicon vis-mod))
-           original)
-          ((chunk-p-fct original)
-
-           (aif (car (find-matching-chunks (chunk-name-to-chunk-spec original) :chunks (visicon-chunks vis-mod)))
-                (chunk-visicon-entry it)
-                (chunk-visicon-entry visual-object)))
-          (t
-           (aif (car (find-matching-chunks (chunk-name-to-chunk-spec loc-name) :chunks (visicon-chunks vis-mod)))
-                (chunk-visicon-entry it)
-                (chunk-visicon-entry visual-object))))))
 
 (defun no-visual-object-found ()
   "Dummy function to indicate failure to encode - someone may want to do something with this later"
@@ -1601,41 +2286,54 @@
 
 
 (defmethod attend-to-object ((vis-mod vision-module) obj &key (requested t))
-
+  
   ;;; put the chunk in the buffer
-
-  (schedule-set-buffer-chunk 'visual obj 0 :module :vision :priority 10 :requested requested)
-
+  
+  (schedule-set-buffer-chunk 'visual obj 0 :time-in-ms t :module :vision :priority 10 :requested requested)
+  
   ;; record the object for tracking purposes
-
-  (setf (last-obj vis-mod) obj)
-
+  
+  (bt:with-lock-held ((marker-lock vis-mod))
+    (setf (last-obj vis-mod) obj))
+  
   ;; update the time-stamp on the finst if it's already attended or
   ;; add a new finst if it's not
+  
+  (bt:with-recursive-lock-held ((visicon-lock vis-mod))
+    (aif (member obj (finst-lst vis-mod) :key 'id :test 'equal)
+         
+         (setf (tstamp (first it)) (mp-time-ms))
+         
+         (add-finst vis-mod obj))))
 
-  (aif (member (icon-entry vis-mod obj) (finst-lst vis-mod) :key #'id :test 'equal)
 
-       (setf (tstamp (first it)) (mp-time-ms))
-
-       (add-finst vis-mod obj)))
-
-
-(defgeneric get-obj-at-location (vis-mod loc scale)
+(defgeneric get-obj-at-location (vis-mod loc xyz-loc scale)
   (:documentation  "Given a location and a scale, return a chunk representing what's there."))
 
-(defmethod get-obj-at-location ((vis-mod vision-module) loc scale)
-  (let ((xy-loc (xy-loc loc)))
+#|
 
-    (cond ((eq scale 'PHRASE)
-           (get-phrase-at vis-mod loc))
-          ((and (eq scale 'WORD) (not (optimize-p vis-mod)))
-           (get-word-at-noopt vis-mod loc))
-          (t
-           (let ((feat-lis (within-move vis-mod xy-loc)))
-             (when (eq scale 'WORD)
-               (setf feat-lis (text-feats feat-lis)))
-             (when feat-lis
-               (featlis-to-focus vis-mod loc feat-lis)))))))
+Ignoring all the scale details for now...
+
+(defmethod get-obj-at-location ((vis-mod vision-module) loc xyz-loc scale)
+  (cond ((eq scale 'PHRASE)
+         (get-phrase-at vis-mod loc))
+        ((and (eq scale 'WORD) (not (bt:with-recursive-lock-held ((param-lock vis-mod)) (optimize-p vis-mod))))
+         (get-word-at-noopt vis-mod loc))
+        (t
+         (let ((feat-lis (within-move vis-mod xyz-loc)))
+           (when (eq scale 'WORD)
+             (setf feat-lis (text-feats feat-lis)))
+           (when feat-lis
+             (featlis-to-focus vis-mod loc xyz-loc feat-lis))))))
+|#
+
+(defmethod get-obj-at-location ((vis-mod vision-module) loc xyz-loc scale)
+  (declare (ignore scale))
+  (let ((feat-lis (within-move vis-mod xyz-loc)))
+    (when feat-lis
+      (featlis-to-focus vis-mod loc xyz-loc feat-lis))))
+
+
 
 (defun text-feats (feat-lst)
   "Given a list, return only those features which are TEXT features."
@@ -1644,97 +2342,1832 @@
 
 ;;; FEATLIS-TO-FOCUS      [Method]
 
-(defgeneric featlis-to-focus (vis-mod loc-dmo feat-lst)
-  (:documentation  "Given the source location and a list of features, return the DMO that should be the focus."))
+(defgeneric featlis-to-focus (vis-mod loc xyz-loc feat-lis)
+  (:documentation  "Given the source location, the attended position, and a list of features within the movement tolerance of that position, return the chunk that should be the focus."))
 
-(defmethod featlis-to-focus ((vis-mod vision-module) loc feat-lis)
-  (let* ((best-feature
-          (find-best-feature vis-mod feat-lis
-                             (aif (chunk-p-fct (gethash (chunk-visicon-entry loc) (visicon vis-mod)))
-                                 (gethash (chunk-visicon-entry loc) (visicon vis-mod))
-                               loc)))
 
-         (dmo-lis (featlis-to-chunks vis-mod (xy-loc best-feature)
-                                     (feat-match-xy feat-lis (xy-loc best-feature))))
-         (return-chunk (determine-focus-dmo vis-mod dmo-lis best-feature)))
-
+(defmethod featlis-to-focus ((vis-mod vision-module) loc xyz-loc feat-lis)
+  (let* ((best-feature (find-best-feature vis-mod feat-lis 
+                                          (if (chunk-p-fct loc)
+                                              loc
+                                            (car (define-chunks-fct (list (mapcan (lambda (x y) (list x y)) '(screen-x screen-y distance) (coerce xyz-loc 'list))))))
+                                          xyz-loc))
+         
+         
+         (object ;; unlike older systems this must return a single chunk
+          ;; not a list of everything that happens to be co-located
+          (if (bt:with-recursive-lock-held ((param-lock vis-mod)) (optimize-p vis-mod))
+              ;; just convert the best feature
+              (featlis-to-object-chunks vis-mod (list best-feature))
+            ;; otherwise there could be char-primitives that need to be synthisized into a character (or word?)
+            ;; should make sure the best is char-primitive as well before doing that...
+            (featlis-to-object-chunks vis-mod (feat-match-xyz feat-lis (xyz-loc best-feature vis-mod) vis-mod)))))
+    
     ;; don't mark everything just the one that's being returned   (dolist (obj dmo-lis)
+    
+    (when object
+      (set-chunk-slot-value-fct object 'screen-pos
+                                (if (chunk-p-fct loc)
+                                    loc ;; use the loc provided regardless
+                                  ;;;  Otherwise use the cannonical loc for that item
+                                  (chunk-visual-loc best-feature))))
+    object))
 
-    (when return-chunk
-      (set-chunk-slot-value-fct return-chunk 'screen-pos loc) ;;;  Should it use the cannonical loc instead? (gethash best-feature (visicon vis-mod))
-      )
 
-    return-chunk))
-
-;;; DETERMINE-FOCUS-DMO      [Method]
-;;; Date        : 99.03.29
-;;; Description : Basically, look for a DMO with the same ID as the feature.
-;;;             : If none, see if the DMO was synthesized from that feature.
-;;;             : If none of those, return a random one.
-
-(defgeneric determine-focus-dmo (vis-mod dmo-lst feat)
-  (:documentation  "Determine which DMO corresponds to <feat>, which should be the 'best' feature."))
-
-(defmethod determine-focus-dmo ((vis-mod vision-module) (dmo-lis list) feat )
-  (when (= 1 (length dmo-lis))
-    (return-from determine-focus-dmo (first dmo-lis)))
-  (aif (member (chunk-visicon-entry feat) dmo-lis :key #'chunk-visicon-entry :test 'equal)
-       (first it)
-       (print-warning "Multiple matching chunks found for attention shift.  This should not happen.  Please report the warning to Dan.")
-     ;(dolist (dmo dmo-lis (random-item dmo-lis))
-     ; (when (member feat
-     ;               (synthed-to-features vis-mod dmo nil))
-     ;   (return-from determine-focus-dmo dmo)))))
-       ))
-
-(defun merge-visual-object (first second)
-  (declare (ignore second))
-  (chunk-visual-object first))
-
-(extend-chunks visual-object :copy-function identity :merge-function merge-visual-object)
 
 ;;; FEATLIS-TO-chunks      [Method]
 ;;; Date        : 99.03.29
-;;; Description : Actually, some of the features could be CHAR-PRIMITIVE
-;;;             : features, in which case they're part of characters.  Save
+;;; Description : Actually, some of the features could be CHAR-PRIMITIVE 
+;;;             : features, in which case they're part of characters.  Save 
 ;;;             : those out and make a character out of 'em.
 
-(defgeneric featlis-to-chunks (vis-mod loc feat-lis)
+(defgeneric featlis-to-object-chunks (vis-mod feat-lis)
   (:documentation  "Given a list of features, make a chunk for each."))
 
-(defmethod featlis-to-chunks ((vis-mod vision-module) (loc vector) (feat-lis list))
-  (let ((primitive-feats nil)
+(defmethod featlis-to-object-chunks ((vis-mod vision-module) (feat-lis list))
+  (let ( ;; (primitive-feats nil)
         (chunk-lis nil))
     (dolist (feat feat-lis)
+#|    ;; If it's a char primitive, save it, otherwise just convert it.
+      (if (eq (chunk-slot-value-fct feat 'kind) 'char-primitive)
+          (push feat primitive-feats)
+|#  
+      
+      (let ((obj (convert-loc-to-object vis-mod feat)))
+        (when (chunk-p-fct obj)
+          (setf (chunk-visicon-entry obj) (chunk-visicon-entry feat))
+          (push obj chunk-lis))))
+#|    )
+      (when primitive-feats ;; need to double-check there wasn't anything else -- what about a button with the oval and the primitives...
+        (push (synthesize-letter vis-mod primitive-feats) chunk-lis))
+|#
+    ;; should only be one...
+    (first chunk-lis)))
 
-      ;; If it's a char primitive, push the feature, else push the feature chunk.
-      (if (chunk-type-subtype-p-fct (chunk-chunk-type-fct feat) 'char-primitive)
-        (push feat primitive-feats)
-        (let ((obj (vis-loc-to-obj (aif (chunk-visual-object feat)
-                                        it
-                                        (current-device))
-                                   (chunk-visual-feature-name feat))))
-          (if (and (chunk-p-fct obj)
-                   (chunk-type-subtype-p-fct (chunk-chunk-type-fct obj) 'visual-object))
-              (progn
-                (setf (chunk-visicon-entry obj) (chunk-visicon-entry feat))
-                ;; (set-chunk-slot-value-fct obj 'screen-pos feat)
-                (push obj chunk-lis))
-            (print-warning "vis-loc-to-obj returned ~S which is not a chunk that is a subtype of visual-object" obj))))
-      )
-    (when primitive-feats
-      (push (synthesize-letter vis-mod primitive-feats) chunk-lis))
-    chunk-lis))
+
+
+
+;;; FIND-BEST-FEATURE      [Method]
+;;; Date        : 99.03.29
+;;; Description : The "best" feature is the one with the same ID as the spec. 
+;;;             : The next best feature is one that matches the spec and is
+;;;             : nearest to that location.  Failing any matches to the spec,
+;;;             : then return the nearest feature.
+
+
+(defun find-best-feature (vis-mod feat-lis loc xyz)
+  (let ((entry (chunk-visicon-entry loc)))
+    (if (and entry (chunk-p-fct entry) (find entry feat-lis) (some 'identity (multiple-value-list (chunk-copied-from-fct loc))) (= (chunk-visual-tstamp loc) (chunk-visual-tstamp entry)))
+        ;; If the chunk has an entry from the viscion, that entry is in the list of features, the chunk
+        ;; itself hasn't been modified, and it's got the same timestamp as the visicon chunk
+        ;; (the feature hasn't been changed either) then that entry is the best possible feature.
+        entry
+      ;; otherwise just find the feature among those within range which
+      ;; best match the location chunk provided keeping in mind that the
+      ;; visicon chunks hold the 'object' values while the provided chunk
+      ;; should have the 'feature' values.
+      (let ((matches (let* ((spec nil)
+                            (chunk (if (chunk-p-fct (chunk-visicon-entry loc)) (chunk-visicon-entry loc) loc))
+                            (positions (visual-location-slots chunk vis-mod))) ;; skip location of the target
+
+                       (dolist (s (chunk-filled-slots-list-fct chunk))
+                         (unless (find s positions)
+                           (push (cons s (fast-chunk-slot-value-fct chunk s)) spec)))
+                       
+                       
+                       (objs-max-val feat-lis (lambda (x) 
+                                                (let ((c 0)) 
+                                                  (dolist (s spec c)
+                                                    (when (chunk-slot-equal (cdr s) (chunk-slot-value-fct x (car s)))
+                                                      (incf c)))))))))
+        (if matches
+            (random-item (nearest-feat vis-mod matches xyz))
+          (random-item (nearest-feat vis-mod feat-lis xyz)))))))
+
+
+(defun nearest-feat (vis-mod feat-list xyz-loc)
+  "Returns list of features nearest to a given location"
+  (unless (vectorp xyz-loc)
+    (setf xyz-loc (xyz-loc xyz-loc vis-mod)))
+  (when feat-list
+    (objs-min-val feat-list (lambda (x) (dist (xyz-loc x vis-mod) xyz-loc)))))
+
+
+;;; UPDATE-TRACKING-MTH      [Method]
+;;; Date        : 97.05.15
+;;; Description : Updating is kind of a pain.  First, if the tracked object
+;;;             : hasn't moved, then do nothing.  If it has moved, however,
+;;;             : there's a lot of bookkeeping to be done:
+
+#|
+
+Additional ACT-R 6 mechanism to properly deal with buffer issues.
+
+Whenever there's a change to the display the buffers will be updated as follows:
+
+   First, if the build-features-for returns nil then assume
+   that the tracked object is out of sight now.  As with an
+   encoding failure, clear visual, set the error state, and
+   stop the tracking.
+
+  If both buffers are empty:
+
+   A new location is created and the object is modified
+   to have that as its screen-pos.  Both chunks (the
+   new loc. and the object) are stuffed into the buffers.
+
+  If vis-loc empty, visual holds the tracked item:
+
+   Create a new location chunk and stuff it into
+   the visual-location buffer.  Modify the chunk in the
+   visual buffer to have that screen-pos.
+
+  vis-loc holds tracked item's loc. and visual is empty:
+
+   Modify the chunk in the visual-location buffer with
+   the new info and put the object back into the visual
+   buffer (it shouldn't have to be modified at all since
+   its loc. is in the vis-loc buffer).
+
+  both buffers hold the appropriate chunks:
+
+   Modify the chunk in the visual-location buffer,
+   no other changes necessary.
+
+  If either buffer holds a chunk that isn't related
+  to the tracked item:
+
+   Make the appropriate updates to the underlying chunks
+   as needed (modify the chunk in the buffer if it's
+   the tracked one or create/modify the internal one)
+   but don't overwrite a non-tracked chunk in a buffer.
+|#
+
+
+(defgeneric start-tracking (vis-mod)
+  (:documentation  "Begin tracking currently attended object"))
+
+(defmethod start-tracking ((vis-mod vision-module))
+  (let* ((current (bt:with-lock-held ((marker-lock vis-mod)) (currently-attended vis-mod)))
+         (current-visicon-entry (when (chunk-p-fct current) (chunk-visicon-entry current))))
+    (bt:with-recursive-lock-held ((visicon-lock vis-mod))
+      (cond ((null current)
+             (print-warning "Request to track object but nothing is currently being attended."))
+            ((null current-visicon-entry)
+             (print-warning "Last attended object does not have a visicon entry and cannot be tracked."))
+            ((not (find current-visicon-entry (visicon vis-mod)))
+             (print-warning "Last attended object no longer in the visicon and cannot be tracked."))
+            (t 
+             (change-state vis-mod :exec 'BUSY)
+             (bt:with-lock-held ((marker-lock vis-mod))
+               (setf (tracked-obj vis-mod) current-visicon-entry)
+               (setf (tracked-obj-lastloc vis-mod) nil)  ;; don't assume anything about vis-loc buffer at this point
+               (let ((vis-obj (buffer-read 'visual))) ;; should always be empty since the request clears it but
+                 ;; if not record it for later checking
+                 (if (and vis-obj (eq (chunk-copied-from-fct vis-obj) (last-obj vis-mod)))
+                     (setf (tracked-obj-last-obj vis-mod) vis-obj)
+                   (setf (tracked-obj-last-obj vis-mod) nil))))
+             
+             (update-tracking-mth vis-mod)
+        
+             (tracked-obj vis-mod))))))
+
+
+;;; When tracking it may be necessary to get the name of
+;;; the chunk from the vis-loc buffer to set the internal
+;;; information correctly.  This method does that, but
+;;; it must be scheduled approproately to ensure the right
+;;; chunk gets recorded.  
+;;; It could be possible for something else to intrude and
+;;; mess this up, but the default mechanisms shouldn't 
+;;; result in problems.
+
+(defmethod update-tracking-loc-chunk ((vis-mod vision-module) &optional (modify nil))
+  (let ((vis-loc (buffer-read 'visual-location)))
+    
+    (bt:with-lock-held ((marker-lock vis-mod))
+      (setf (tracked-obj-lastloc vis-mod) vis-loc)
+      (setf (current-marker vis-mod) vis-loc))
+    
+    (when modify 
+      (mod-buffer-chunk 'visual (list 'screen-pos vis-loc)))))
+
+;;; Record the visual object chunk placed into the buffer
+;;; for later comparisons when needed
+
+(defmethod update-tracking-obj-chunk ((vis-mod vision-module))
+  (bt:with-lock-held ((marker-lock vis-mod))
+    (setf (tracked-obj-last-obj vis-mod) (buffer-read 'visual))))
+
+
+(defgeneric update-tracking-mth (vis-mod &optional from-proc-display)
+  (:documentation  "Update the state of a tracked object"))
+
+(defmethod update-tracking-mth ((vis-mod vision-module) &optional from-proc-display)
+  
+  (flet ((tracking-failed ()
+                          (schedule-clear-buffer 'visual 0 :time-in-ms t :module :vision :output 'high :priority 13)
+                          (change-state vis-mod :exec 'free :proc 'free)
+                          (bt:with-lock-held ((marker-lock vis-mod))
+                            (setf (currently-attended vis-mod) nil)
+                            (setf (attend-failure vis-mod) t)
+                            (setf (tracked-obj vis-mod) nil)
+                            (setf (last-obj vis-mod) nil)
+                          
+                            (when (tracking-clear vis-mod)
+                              (set-current-marker vis-mod nil)))
+                          
+                          (set-buffer-failure 'visual :ignore-if-full t)
+                          (return-from update-tracking-mth nil)))
+    
+    (bt:with-recursive-lock-held ((visicon-lock vis-mod))      
+      (let (tracked
+            still-available
+            old-loc
+            old-obj
+            tracked-loc)
+        
+        (bt:with-lock-held ((marker-lock vis-mod))
+          (setf tracked (tracked-obj vis-mod))
+          (setf still-available (find tracked (visicon vis-mod)))
+          (setf old-loc (tracked-obj-lastloc vis-mod))
+          (setf old-obj (tracked-obj-last-obj vis-mod)))
+        
+        (unless still-available
+          (tracking-failed))
+        
+        (setf tracked-loc (chunk-visual-loc tracked))
+        
+        (let ((vis-loc-chunk (buffer-read 'visual-location))
+              (vis-obj-chunk (buffer-read 'visual)))
+          
+        ;; we don't have an old-loc but the one currently in the
+        ;; visual-location buffer is the screen-pos of the old-obj
+        ;; should make that the old-loc.  This is the 5.1 fix.
+        
+          (when (and (null old-loc) old-obj vis-loc-chunk
+                     (chunk-slot-equal vis-loc-chunk (fast-chunk-slot-value-fct old-obj 'screen-pos)))
+            (setf old-loc vis-loc-chunk))
+        
+          
+        
+          (let ((new-obj (convert-loc-to-object vis-mod tracked)))
+          
+            (unless new-obj ;; for some reason we have a location but no object
+              (tracking-failed))
+          
+            (bt:with-lock-held ((marker-lock vis-mod))
+              (set-current-marker vis-mod tracked)
+              (setf (last-obj vis-mod) new-obj))
+          
+          ;; For the following events need to set priority of the buffer setting
+          ;; so that if there's a find-location scheduled but not completed this 
+          ;; happens first, so that the find-loc overwrites.  Thus the priorities > 10.
+          
+          (flet ((set-vis-loc ()
+                              (schedule-set-buffer-chunk 'visual-location tracked-loc 0 :time-in-ms t :module :vision 
+                                                         :output 'high :requested nil :priority 15)
+                              ;; need to make sure the chunk being set in the buffer isn't deleted before it gets there
+                              (when from-proc-display
+                                (lock-vision vis-mod)
+                                (schedule-event-now 'unlock-vision :module :vision
+                                                    :destination :vision :priority 14
+                                                    :output nil :maintenance t)))
+                 (mod-vis-loc ()
+                              (schedule-mod-buffer-chunk 'visual-location (chunk-difference-to-chunk-spec tracked-loc vis-loc-chunk) 0
+                                                         :time-in-ms t :module :vision :output 'high :priority 15))
+                 (set-vis-obj ()
+                              (schedule-set-buffer-chunk 'visual new-obj 0 :time-in-ms t :module :vision 
+                                                         :output 'high :requested nil :priority 14))
+                 (mod-vis-obj ()
+                              (schedule-mod-buffer-chunk 'visual (chunk-difference-to-chunk-spec new-obj vis-obj-chunk) 0
+                                                         :time-in-ms t :module :vision :output 'high :priority 14))
+                 (update-loc (mod)
+                             (schedule-event-now 'update-tracking-loc-chunk :module :vision
+                                                 :destination :vision :params (if mod (list t) nil) :priority 13 :output nil))
+                 (update-obj ()
+                             (schedule-event-now 'update-tracking-obj-chunk :module :vision
+                                                 :destination :vision :params nil :priority 12 :output nil)))
+            
+            ;;; Make sure there's still a finst on the tracked item
+            
+            (aif (member tracked (finst-lst vis-mod) :key 'id :test 'equal)
+                 (setf (tstamp (first it)) (mp-time-ms))
+                 (add-finst vis-mod tracked))
+            
+            (cond ((and (null vis-loc-chunk)
+                        (null vis-obj-chunk))
+                   ;; Stuff both buffers and then update the obj with the buffer-chunk's name
+                   (set-vis-loc)
+                   (set-vis-obj)
+                   (update-loc t)
+                   (update-obj))
+                  
+                  ((and (null vis-loc-chunk)
+                        (eq vis-obj-chunk old-obj))
+                   ;; stuff the new location and modify the visual buffer with the new info
+                   (set-vis-loc)
+                   (mod-vis-obj)
+                   (update-loc t))
+                  
+                  ((null vis-loc-chunk) 
+                   ;; stuff a new location chunk and don't touch the chunk in the visual buffer
+                   (set-vis-loc)
+                   (update-loc nil))
+                  
+                  ((and (eq vis-loc-chunk old-loc)
+                        (null vis-obj-chunk))
+                   ;; Modify the chunk in the visual-location buffer put new obj into visual buffer
+                   (mod-vis-loc)
+                   (set-vis-obj)
+                   (update-loc t)
+                   (update-obj))
+                  
+                  ((and (eq vis-loc-chunk old-loc)
+                        (eq vis-obj-chunk old-obj))
+                   ;; Modify both chunks and make sure the obj points to the right loc just to be safe.
+                   (mod-vis-loc)
+                   (mod-vis-obj)
+                   (update-loc t))
+                  
+                  ((eq vis-loc-chunk old-loc) 
+                   ;; just modify the loc and don't know about the visual buffer
+                   (mod-vis-loc))
+                  
+                  ((null vis-obj-chunk) 
+                   ;; Don't know about the vis-loc buffer just put the new object in place 
+                   ;; setting the screen-pos if it isn't
+                   
+                   (unless (chunk-slot-value-fct new-obj 'screen-pos)
+                     (set-chunk-slot-value-fct new-obj 'screen-pos tracked-loc))
+                   
+                   (set-vis-obj)
+                   (update-obj))
+                  
+                  ((eq vis-obj-chunk old-obj) 
+                   ;; Just modify the object chunk and set the screen-pos if necessary
+                   
+                   (unless (chunk-slot-value-fct new-obj 'screen-pos)
+                     (set-chunk-slot-value-fct new-obj 'screen-pos tracked-loc))
+                   (mod-vis-obj))
+                  
+                  (t ;; Don't do anything 
+                   ))))))
+    nil)))
+
+
+;;; REMOVE-TRACKING      [Method]
+;;; Date        : 97.05.15
+;;; Description : When tracking stops, the slots for tracked objects need to
+;;;             : to be cleared, and the ACT hook functions need to be cleared.
+
+(defgeneric remove-tracking (vis-mod)
+  (:documentation  "Clears out all the tracking stuff"))
+
+(defmethod remove-tracking ((vis-mod vision-module))
+  (bt:with-lock-held ((marker-lock vis-mod))
+    (setf (tracked-obj-lastloc vis-mod) nil)
+    (setf (tracked-obj-last-obj vis-mod) nil)
+    (setf (tracked-obj vis-mod) nil))
+  (change-state vis-mod :exec 'FREE))
+
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+(defmethod clear :after ((vis-mod vision-module))
+  (bt:with-lock-held ((marker-lock vis-mod))
+    (setf (currently-attended vis-mod) nil)
+      ;; handles clof and current-marker
+    (set-current-marker vis-mod nil)
+    
+    (setf (last-obj vis-mod) nil)
+  
+    (setf (loc-failure vis-mod) nil)
+    (setf (attend-failure vis-mod) nil)
+  
+    (setf (scene-change vis-mod) nil)
+    (setf (last-attention-params vis-mod) nil))
+  
+  (remove-tracking vis-mod)
+  (dispatch-apply "visual-clear"))
+
+(add-act-r-command "visual-clear" nil "Signal to indicate that the vision module has executed a clear request.  No params.")
+
+;;; FIND-LOCATION      [Method]
+;;; Date        : 98.08.11R (rewrite), delta 99.06.24
+;;; Description : To find a location, we need to search the icon.  To do this,
+;;;             : construct a feature spec based on the parameters passed,
+;;;             : and filter the list to those that match the spec.  This 
+;;;             : should be faster for large icons because it makes only
+;;;             : one pass over the icon.  Regardless, some
+;;;             : post-processing of that list might be necessary if LOWEST
+;;;             : or HIGHEST was passed as a coordinate or if NEAREST is 
+;;;             : true.
+;;;             : Once we have a list, randomly pick one (that may change in
+;;;             : the future) feature and build a location out of it.
+
+(defgeneric find-location (vis-mod chunk-spec)
+  (:documentation  "Given a set of constraints, build a DMO for that screen location if one matches."))
+
+(defmethod find-location ((vis-mod vision-module) chunk-spec)
+  (let ((loc (awhen (find-current-locs-with-spec vis-mod chunk-spec)
+                    (construct-location vis-mod (random-item (objs-max-val it 'chunk-visual-tstamp)) chunk-spec))))
+    (if loc
+        (let ((vl-loc (convert-visicon-chunk-to-vis-loc loc)))
+          (bt:with-lock-held ((marker-lock vis-mod)) (setf (loc-failure vis-mod) nil))
+          (schedule-set-buffer-chunk 'visual-location vl-loc 0 :time-in-ms t :module :vision :priority 10)
+          (lock-vision vis-mod)
+          (schedule-event-now 'unlock-vision 
+                              :module :vision
+                              :destination :vision
+                              :priority 9
+                              :output nil
+                              :maintenance t)
+          ;(schedule-event-now 'delete-chunk-fct :module :vision :params (list vl-loc) :priority 8 :output nil :maintenance t)
+          )
+      (progn
+        (set-buffer-failure 'visual-location)
+        (bt:with-lock-held ((marker-lock vis-mod)) (setf (loc-failure vis-mod) t))
+        (schedule-event-now 'find-loc-failure :module :vision :output 'low)))
+    
+    (when (and loc (auto-attend vis-mod))
+      (schedule-event-now 'visual-auto-attend :destination :vision :output t
+                          :module :vision :details (concatenate 'string "automatically attending " (symbol-name loc))))
+    loc))
+
+
+(defmethod visual-auto-attend ((vis-mod vision-module))
+  (aif (buffer-read 'visual-location)
+       (progn   
+         ;; mark the module as busy between now and the attention shift
+         (change-state vis-mod :exec 'BUSY :proc 'BUSY)
+         
+         ;; schedule the attention shift to be 50ms from now - should probably use the default action time
+         ;; instead but not going to do that at this point...
+         
+         (schedule-event-relative 50 'move-attention :time-in-ms t :params (list :location it) :destination :vision :output 'medium
+                                  :module :vision :details (concatenate 'string "Move-attention " (symbol-name it)) :priority 0)
+         
+         ;; Hack to clear the module state just before the attention shift so as not to 
+         ;; jam things.
+         
+         (schedule-event-relative 50 'change-state :time-in-ms t :params (list :exec 'free :proc 'free) :destination :vision :output nil
+                                  :module :vision :priority 1))
+       
+       (model-warning "Auto-attend failed because visual-location buffer was empty.")))
+
+
+(defun find-loc-failure ()
+  "Dummy event function to signal a find-location failure in the trace"
+  )
+
+
+
+(defgeneric construct-location (vis-mod feat spec)
+  (:documentation  "Find or build a DMO based on a feature and the spec used to generate that feature."))
+
+(defmethod construct-location ((vis-mod vision-module) loc spec)
+  
+  ;; record that this loc was found with this spec
+  (setf (gethash (chunk-visicon-entry loc) (found-locs vis-mod)) spec)
+  loc)
+
+;;; MOVE-ATTENTION      [Method]
+;;; Date        : 97.02.09
+;;; Description : This is a toplevel command for the Vision Module, causing
+;;;             : attention to move.  Latencey is 185 ms, so nothing actually
+;;;             : happens right away other than setting state variables.
+;;;             : A method is dispatched based on the scale that's passed.
+
+(defgeneric move-attention (vis-mod &key location scale)
+  (:documentation "Shift attention to a particular location at a particular scale."))
+
+(defmethod move-attention ((vis-mod vision-module) &key location scale)
+  (let (tracked old-clof clof latency hook override)
+    
+    (bt:with-lock-held ((marker-lock vis-mod))
+      (setf tracked (tracked-obj vis-mod))
+      
+      
+      (when (and (eq (exec-s vis-mod) 'BUSY) (not (tracked-obj vis-mod)))
+        (model-warning "Attention shift requested at ~S while one was already in progress." (mp-time))
+        (return-from move-attention))
+      
+      (setf (moving-attention vis-mod) t)
+           
+      (when tracked (remove-tracking vis-mod))
+      (setf (currently-attended vis-mod) nil)
+      (setf old-clof (clof vis-mod))
+             
+      (set-current-marker vis-mod location)
+      
+      (setf clof (clof vis-mod))
+      (setf (last-scale vis-mod) scale)
+      (setf (attend-failure vis-mod) nil)
+      
+      (setf (last-attention-params vis-mod) (list location clof scale)))
+           
+    (bt:with-recursive-lock-held ((param-lock vis-mod))
+      (setf latency (move-attn-latency vis-mod))
+      (setf hook (encoding-hook vis-mod)))
+             
+    (when hook 
+      (setf override (dispatch-apply hook (coerce old-clof 'list) (coerce clof 'list) location scale)))
+             
+    (cond ((null override)
+           (bt:with-lock-held ((marker-lock vis-mod))
+             (setf (last-attention-params vis-mod) nil))
+           (schedule-event-relative (randomize-time-ms latency) 'encoding-complete
+                                    :time-in-ms t :destination :vision :module :vision :params (list location clof scale) :output 'medium
+                                    :details (concatenate 'string "Encoding-complete " (symbol-name location) " " (symbol-name scale))))
+          ((numberp override)
+           (when (minusp override)
+             (print-warning "Encoding hook returned a negative encoding time ~f. Using 0 instead." override)
+             (setf override 0))
+           (bt:with-lock-held ((marker-lock vis-mod))
+             (setf (last-attention-params vis-mod) nil))
+           (schedule-event-relative (randomize-time-ms (safe-seconds->ms override 'move-attention)) 'encoding-complete
+                                    :time-in-ms t :destination :vision :module :vision :params (list location clof scale) :output 'medium
+                                    :details (concatenate 'string "Encoding-complete " (symbol-name location) " " (symbol-name scale))))
+          (t ;; 
+           ))
+    
+    (change-state vis-mod :exec 'BUSY :proc 'BUSY)))
+
+
+(defun schedule-encoding-complete (delay)
+  (let ((vis-mod (get-module :vision)))
+    (when vis-mod
+      (bt:with-lock-held ((marker-lock vis-mod))
+        (aif (last-attention-params vis-mod)
+            (progn
+              (unless (and (numberp delay) (not (minusp delay)))
+                (print-warning "Invalid delay time passed to schedule-encoding-complete ~s. Using 0 instead." delay)
+                (setf delay 0))
+              (schedule-event-relative (randomize-time-ms (safe-seconds->ms delay 'schedule-encoding-complete)) 'encoding-complete
+                                             :time-in-ms t :destination :vision :module :vision :params it :output 'medium
+                                       :details (concatenate 'string "Encoding-complete " (symbol-name (first it)) " " (symbol-name (third it))))
+              (setf (last-attention-params vis-mod) nil))
+             (print-warning "Schedule-encoding-complete called but there are no attention parameters available."))))))
+
+(add-act-r-command "schedule-encoding-complete" 'schedule-encoding-complete "Command for a visual encoding hook function to call to schedule the encoding-complete action. Params: delay.")
+        
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun create-vision-module (model-name)
+  (declare (ignore model-name))
+  (make-instance 'vision-module))
+
+(defun reset-vision-module (vis-mod)
+  
+  (reset-pm-module vis-mod)
+  
+  (bt:with-lock-held ((marker-lock vis-mod))
+    (setf (currently-attended vis-mod) nil)
+    (setf (current-marker vis-mod) nil)
+    (setf (clof vis-mod) nil)
+    
+    (setf (last-obj vis-mod) nil)
+      
+    (setf (loc-failure vis-mod) nil)
+    (setf (attend-failure vis-mod) nil)
+    (setf (scene-change vis-mod) nil)
+    (setf (last-attention-params vis-mod) nil))
+  
+  (remove-tracking vis-mod)
+  
+  (bt:with-recursive-lock-held ((proc-display-lock vis-mod))
+    (setf (proc-display-locks vis-mod) 0) 
+    (setf (scheduled-proc-display vis-mod) nil)
+    (setf (blocked-proc-display vis-mod) nil))
+  
+  
+  (bt:with-recursive-lock-held ((visicon-lock vis-mod))
+    (setf (visicon vis-mod) nil)
+    (setf (visicon-updates vis-mod) nil)
+    (setf (finst-lst vis-mod) nil))
+  
+  (clrhash (found-locs vis-mod))
+  
+  (setf (current-cursor vis-mod) nil)
+  
+  
+  (setf (last-scale vis-mod) nil)
+  
+  #| not used for now
+  (set-cfs-mth vis-mod :RM-ORIG)
+  |#
+  
+  (setf (synthd-objs vis-mod) (clrhash (synthd-objs vis-mod)))
+  
+
+  (bt:with-lock-held ((text-parse-lock vis-mod))
+    (setf (other-word-chars vis-mod) nil))
+  
+  (bt:with-lock-held ((vis-loc-lock vis-mod))
+    (setf (center-point vis-mod) (vector 0 0)))
+  
+  ;; Chunks and chunk-types
+  
+  ;; objects 
+  
+  (chunk-type visual-object screen-pos value status color height width)
+  
+  (chunk-type (text (:include visual-object)) (text t))
+  (chunk-type (oval (:include visual-object)) (oval t))
+  (chunk-type (line (:include visual-object)) (line t) end1-x end1-y end2-x end2-y)
+  
+  ;; locations
+  
+  (chunk-type visual-location screen-x screen-y distance kind color value height width size)
+  (chunk-type (line-location (:include visual-location)) end1-x end1-y end2-x end2-y)
+  
+  
+  ;; loc request
+  
+  (chunk-type (set-visloc-default (:include visual-location)) (set-visloc-default t))
+  
+  ;; obj requests
+  
+  (chunk-type vision-command cmd)
+  (chunk-type (move-attention (:include vision-command)) (cmd move-attention) screen-pos scale)
+  (chunk-type (start-tracking (:include vision-command)) (cmd start-tracking))
+  (chunk-type (assign-finst (:include vision-command)) (cmd assign-finst) object location)
+  (chunk-type (clear-scene-change (:include vision-command)) (cmd clear-scene-change))
+  (chunk-type (clear-all-finsts (:include vision-command)) (cmd clear-all-finsts))
+  
+  ;; chunks for features and requests
+  
+  (dolist (chunk '(lowest highest current current-x current-distance
+                          current-y clockwise counterclockwise external
+                          internal text box line oval char-primitive 
+                          new find-location))
+    (unless (chunk-p-fct chunk)
+      (define-chunks-fct `((,chunk name ,chunk)))
+      (make-chunk-immutable chunk)))
+  
+  (dolist (chunk '(move-attention assign-finst start-tracking clear-scene-change set-visloc-default clear-all-finsts))
+    (unless (chunk-p-fct chunk)
+      (define-chunks-fct `((,chunk isa ,chunk)))
+      (make-chunk-immutable chunk)))
+  
+  ;; default colors
+  
+  (chunk-type color color)
+
+  (dolist (chunk '(black red blue green white magenta yellow
+                         cyan dark-green dark-red dark-cyan dark-blue
+                         dark-magenta dark-yellow light-gray dark-gray gray
+                         pink light-blue purple brown))
+    (unless (chunk-p-fct chunk)
+      (define-chunks-fct `((,chunk color ,chunk)))
+      (make-chunk-immutable chunk)))  
+  
+  
+  ;; unused and not listed in manual currently
+  
+  (chunk-type (phrase! (:include visual-object)) (phrase! t) objects words colors)
+  (chunk-type (char-primitive (:include visual-location)) (kind char-primitive) left right)
+  (chunk-type (empty-space (:include visual-object)) (empty-space t))
+
+  
+  (setf (default-spec vis-mod) (define-chunk-spec screen-x lowest :attended new)))
+
+(defun clear-scene-change (vis-mod)
+  (bt:with-lock-held ((marker-lock vis-mod))
+    (setf (scene-change vis-mod) nil)))
+
+(defun clear-all-finsts (vis-mod)
+  (bt:with-recursive-lock-held ((visicon-lock vis-mod))
+    (setf (finst-lst vis-mod) nil)))
+
+(defun query-vision-module (vis-mod buffer slot value)
+  (bt:with-lock-held ((marker-lock vis-mod))
+    (case buffer
+      (visual
+       (cond ((and (eq slot 'state) (eq value 'error))
+              (attend-failure vis-mod))
+             ((eq slot 'scene-change)
+              (let ((change-detect (and (numberp (car (scene-change vis-mod)))
+                                        (>= (car (scene-change vis-mod)) (change-threshold vis-mod))
+                                        (<= (mp-time-ms) (+ (cdr (scene-change vis-mod)) (bt:with-recursive-lock-held ((param-lock vis-mod)) (new-span vis-mod)))))))
+                (or (and change-detect value)
+                    (null (or change-detect value)))))
+             ((eq slot 'scene-change-value)
+              (and (numberp value)
+                   (numberp (car (scene-change vis-mod)))
+                   (>= (car (scene-change vis-mod)) value)))
+             (t (generic-state-query vis-mod buffer slot value))))
+      (visual-location
+       (case slot
+         (state
+          (case value
+            (busy nil) ;; visual-location requests are always free
+            (free t)
+            (error (loc-failure vis-mod))
+            (t (print-warning "Invalid query made of the visual-location buffer with slot ~S and value ~S" slot value))))
+         (attended
+          (let ((vis-loc-chunk (buffer-read 'visual-location)))
+            (when vis-loc-chunk
+              (let* ((old-loc  (chunk-visicon-entry vis-loc-chunk))
+                     (loc (if (chunk-p-fct old-loc) old-loc vis-loc-chunk)))
+                (update-new vis-mod)
+                (check-finsts vis-mod)
+                
+                (test-attended vis-mod (list '= :attended value) loc))))))))))
+
+
+(defmethod warn-vision ((vis-mod vision-module) buffer-name chunk-spec)
+  (declare (ignore chunk-spec))
+  (when (and (eq buffer-name 'visual)
+             (null (visual-lock vis-mod)))
+    (lock-vision vis-mod)
+    (setf (visual-lock vis-mod) t)))
+
+
+(defmethod pm-module-last-cmd-name ((vis-mod vision-module) buffer-name chunk-spec)
+  (declare (ignorable vis-mod))
+  (case buffer-name
+    (visual-location (if (chunk-spec-slot-spec chunk-spec 'set-visloc-default)
+                         'set-visloc-default
+                       'find-location))
+    ;; shouldn't happen since they've all got a cmd slot...
+    (visual :bad-command)))
+
+
+
+
+
+(defmethod pm-module-request ((vis-mod vision-module) buffer-name chunk-spec)
+  (case buffer-name
+    (visual
+     
+     (when (visual-lock vis-mod)
+       (setf (visual-lock vis-mod) nil)
+       (schedule-event-now 'unlock-vision :module :vision :destination :vision
+                           :priority :min :output nil :maintenance t))
+     
+     (cond ((test-for-clear-request chunk-spec)
+            (schedule-event-now 'clear :module :vision :destination :vision :output 'low))
+           
+           ((= (length (chunk-spec-slot-spec chunk-spec 'cmd)) 1)
+            
+            
+            (let ((cmd (spec-slot-value (first (chunk-spec-slot-spec chunk-spec 'cmd)))))
+              (case cmd
+                (clear-all-finsts
+                 (schedule-event-now 'clear-all-finsts :module :vision :destination :vision :output 'low))
+                (clear-scene-change
+                 (schedule-event-now 'clear-scene-change :module :vision :destination :vision :output 'low))
+                (start-tracking
+                 (schedule-event-now 'start-tracking :destination :vision :module :vision :output 'medium))
+                (assign-finst
+                 (let ((object (if (slot-in-chunk-spec-p chunk-spec 'object) 
+                                   (verify-single-explicit-value chunk-spec 'object :vision 'assign-finst)
+                                 nil))
+                       (location (if (slot-in-chunk-spec-p chunk-spec 'location)
+                                     (verify-single-explicit-value chunk-spec 'location :vision 'assign-finst)
+                                   nil)))
+                   
+                   (if (or object location)
+                       (schedule-event-now 'assign-finst :params (list vis-mod :object object :location location)
+                                           :module :vision :output 'medium :details (format nil "assign-finst ~a ~a" (if object 'object 'location) (if object object location)))
+                     (print-warning "An object or location is required for an assign-finst request"))))
+                (move-attention
+                 (let ((sp (verify-single-explicit-value chunk-spec 'screen-pos :vision 'move-attention))
+                       (scale (if (slot-in-chunk-spec-p chunk-spec 'scale)
+                                  (verify-single-explicit-value chunk-spec 'scale :vision 'move-attention)
+                                nil)))
+                   (if (valid-vis-loc-chunk sp vis-mod)
+                       (schedule-event-now 'move-attention 
+                                           :params (list vis-mod :scale scale :location sp)
+                                           :details (concatenate 'string "Move-attention " (symbol-name sp)" " (symbol-name scale))
+                                           :module :vision)
+                     (progn
+                       (print-warning "screen-pos value ~s in a move-attention request was not a valid chunk" sp)))))
+                (t
+                 (print-warning "Invalid command ~a sent to the visual buffer" cmd)))))
+           (t
+            (print-warning "Invalid request sent to the visual buffer~%~a" (printed-chunk-spec chunk-spec)))))
+    
+    (visual-location
+     
+     (cond ((> (length (chunk-spec-slot-spec chunk-spec :attended)) 1)
+            (print-warning ":attended specification only allowed once in a visual-location request."))
+           ((> (length (chunk-spec-slot-spec chunk-spec :nearest)) 1)
+            (print-warning ":nearest specification only allowed once in a visual-location request."))
+           ((> (length (chunk-spec-slot-spec chunk-spec :center)) 1)
+            (print-warning ":center specification only allowed once in a visual-location request."))
+           ((chunk-spec-slot-spec chunk-spec 'set-visloc-default)
+            (let* ((specs (chunk-spec-slot-spec chunk-spec 'set-visloc-default))
+                   (spec (first specs))
+                   
+                   )
+              (cond ((> (length specs) 1)
+                     (print-warning "set-visloc-default slot can only be specified once in a visual-location request."))
+                    ((not (eq '= (spec-slot-op spec)))
+                     (print-warning "set-visloc-default slot must use the = test in a visual-location request."))
+                    (t
+                     (schedule-event-now 'set-visloc-default-request :module :vision 
+                                         :destination :vision 
+                                         :details "Set-visloc-default" 
+                                         :output 'medium
+                                         :priority 9 ; just below the buffer clearing by the production
+                                         :params (list chunk-spec))))))
+           (t
+            (schedule-event-now 'find-location :module :vision 
+                                :destination :vision 
+                                :details "Find-location" 
+                                :output 'medium
+                                :params (list chunk-spec)))))))
+
+
+
+(defun params-vision-module (vis-mod param)
+  (bt:with-recursive-lock-held ((param-lock vis-mod))
+    (if (consp param)
+        (case (car param)
+          (:visual-encoding-hook
+           (when (and (cdr param) (encoding-hook vis-mod))
+             (print-warning ":visual-encoding-hook parameter being changed from ~s to ~s." (encoding-hook vis-mod) (cdr param)))
+           (setf (encoding-hook vis-mod) (cdr param)))
+          (:optimize-visual
+           (if (cdr param)
+               (setf (optimize-p vis-mod) (cdr param))
+             (print-warning "Vision module does not currently support :optimize-visual set to nil")))
+          (:viewing-distance (setf (viewing-distance vis-mod) (cdr param))
+                             (when (and (numberp (viewing-distance vis-mod)) (numberp (ppi vis-mod)))
+                               (setf (view-dist vis-mod) (round (* (viewing-distance vis-mod) (ppi vis-mod))))))
+          (:pixels-per-inch (setf (ppi vis-mod) (cdr param))
+                            (when (and (numberp (viewing-distance vis-mod)) (numberp (ppi vis-mod)))
+                              (setf (view-dist vis-mod) (round (* (viewing-distance vis-mod) (ppi vis-mod))))))
+          (:visual-attention-latency
+           (setf (move-attn-latency vis-mod) (safe-seconds->ms (cdr param) 'sgp))
+           (cdr param))
+          (:scene-change-threshold
+           (setf (change-threshold vis-mod) (cdr param)))
+          (:visual-finst-span
+           (setf (finst-span vis-mod) (safe-seconds->ms (cdr param) 'sgp))
+           (check-finsts vis-mod)
+           (cdr param))   
+          (:visual-movement-tolerance
+           (setf (move-allowance vis-mod) (cdr param)))
+          (:visual-num-finsts
+           (setf (num-finst vis-mod) (cdr param))
+           (check-finsts vis-mod)
+           (cdr param))
+          (:visual-onset-span
+           (setf (new-span vis-mod) (safe-seconds->ms (cdr param) 'sgp))
+           (cdr param))
+          (:auto-attend
+           (setf (auto-attend vis-mod) (cdr param)))
+          (:delete-visicon-chunks
+           (setf (purge-visicon vis-mod) (cdr param)))
+          (:unstuff-visual-location
+           (setf (unstuff-loc vis-mod)
+             (if (numberp (cdr param))
+                 (safe-seconds->ms (cdr param) 'sgp)
+               (cdr param)))
+           (cdr param))
+          (:overstuff-visual-location
+           (setf (overstuff-loc vis-mod) (cdr param)))
+          (:tracking-clear
+           (setf (tracking-clear vis-mod) (cdr param)))
+          (:show-focus
+           (setf (show-focus-p vis-mod) (cdr param)))
+          (:default-target-width
+           (setf (default-width vis-mod) (cdr param))))
+      (case param
+        (:visual-encoding-hook
+         (encoding-hook vis-mod))
+        (:optimize-visual
+         (optimize-p vis-mod))  
+        (:scene-change-threshold
+         (change-threshold vis-mod))
+        (:visual-attention-latency
+         (ms->seconds (move-attn-latency vis-mod)))
+        (:visual-finst-span
+         (ms->seconds (finst-span vis-mod)))   
+        (:visual-movement-tolerance
+         (move-allowance vis-mod))
+        (:visual-num-finsts
+         (num-finst vis-mod))
+        (:visual-onset-span
+         (ms->seconds (new-span vis-mod)))
+        (:auto-attend
+         (auto-attend vis-mod))
+        (:delete-visicon-chunks
+         (purge-visicon vis-mod))
+        (:unstuff-visual-location
+         (if (numberp (unstuff-loc vis-mod))
+             (ms->seconds (unstuff-loc vis-mod))
+           (unstuff-loc vis-mod)))
+        (:overstuff-visual-location (overstuff-loc vis-mod))
+        (:tracking-clear (tracking-clear vis-mod))
+        (:show-focus (show-focus-p vis-mod))))))
+
+
+(define-module-fct :vision 
+    (list (define-buffer-fct 'visual-location 
+              :request-params (list :attended :nearest :center) 
+            :queries '(attended)
+            :status-fn (lambda ()
+                         (format nil "  attended new          : ~S~%  attended nil          : ~S~%  attended t            : ~S"
+                           (query-buffer 'visual-location '(attended  new))
+                           (query-buffer 'visual-location '(attended  nil))
+                           (query-buffer 'visual-location '(attended  t)))))
+          (define-buffer-fct 'visual 
+              :queries '(scene-change-value scene-change modality preparation execution processor last-command)
+            :status-fn (lambda () 
+                         (let ((v (get-module :vision)))
+                           (concatenate 'string (print-module-status v)
+                             (format nil "~%  scene-change          : ~S~%" (query-buffer 'visual '(scene-change t)))
+                             (format nil "  scene-change-value    : ~S" (car (scene-change v))))))))
+  (list 
+   (define-parameter :scene-change-threshold
+       :valid-test (lambda (x) (and (numberp x) (<= 0.0 x 1.0))) 
+     :default-value 0.25
+     :warning "a number in the range [0.0,1.0]"
+     :documentation "Proportion of visicon which must change to signal a scene change")
+   (define-parameter :optimize-visual
+       :valid-test 'tornil 
+     :default-value T
+     :warning "T or NIL"
+     :documentation "If set to nil the default devices process text into sub-letter features")
+   (define-parameter :visual-attention-latency
+       :valid-test 'nonneg 
+     :default-value 0.085
+     :warning "a non-negative number"
+     :documentation "Time for a shift of visual attention")
+   (define-parameter :visual-finst-span
+       :valid-test 'nonneg 
+     :default-value 3.0
+     :warning "a non-negative number"
+     :documentation "Lifespan of a visual finst")
+   (define-parameter :visual-movement-tolerance
+       :valid-test 'nonneg 
+     :default-value 0.5
+     :warning "a non-negative number"
+     :documentation 
+     "How far something can move while still being seen as the same object.")
+   (define-parameter :visual-num-finsts
+       :valid-test 'posnum 
+     :default-value 4
+     :warning "a positive number"
+     :documentation "Number of visual finsts.")
+   (define-parameter :visual-onset-span
+       :valid-test 'nonneg 
+     :default-value 0.5
+     :warning "a non-negative number"
+     :documentation "Lifespan of new visual objects being marked as NEW")
+   (define-parameter :auto-attend
+       :valid-test 'tornil 
+     :default-value nil
+     :warning "T or NIL"
+     :documentation "Whether visual-location requests automatically generate an attention shift")
+   
+   (define-parameter :visual-encoding-hook
+       :valid-test 'local-or-remote-function-or-nil 
+     :default-value nil
+     :warning "Local or remote function or NIL"
+     :documentation "User hook for overriding the encoding time of an attention shift")
+   
+   (define-parameter :delete-visicon-chunks
+       :valid-test 'tornil 
+     :default-value T
+     :warning "T or NIL"
+     :documentation "Whether proc-display should delete and unintern the name of old chunks that were in the visicon")
+   (define-parameter :unstuff-visual-location
+       :valid-test (lambda (x) (or (tornil x) (numberp x)))
+     :default-value t
+     :warning "T, NIL, or a number"
+     :documentation "Whether chunks stuffed into the visual-location buffer should be automatically cleared by the module if unused")
+   (define-parameter :overstuff-visual-location
+       :valid-test 'tornil
+     :default-value nil
+     :warning "T or NIL"
+     :documentation "Whether a chunk previously stuffed into the visual-location buffer can be overwritten by a new chunk to be stuffed")
+   (define-parameter :tracking-clear
+       :valid-test 'tornil
+     :default-value t
+     :warning "T or NIL"
+     :documentation "Whether a tracking failure clears the currently attended location")
+   (define-parameter :show-focus
+     :valid-test (lambda (x) (or (tornil x) (symbolp x) (stringp x)))
+     :default-value nil
+     :warning "T, NIL, a symbol, or string"
+     :documentation "Show the focus ring on the GUI?  T, a string, or symbol will enable, and some devices will use the value to indicate a color.")
+   (define-parameter :viewing-distance :owner nil)
+   (define-parameter :pixels-per-inch :owner nil)
+   (define-parameter :default-target-width :owner nil))
+  
+  :version (version-string (make-instance 'vision-module))
+  :documentation "A module to provide a model with a visual attention system"
+  :creation 'create-vision-module
+  :reset 'reset-vision-module
+  :query 'query-vision-module
+  :request 'pm-module-request
+  :params 'params-vision-module
+  :warning 'warn-vision)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; BUILD-STRING-FEATS      [Method]
+;;; Date        : 2014.01.24
+;;; Description : In order to build all the features for a string, there is a
+;;;             : great deal of stuff that is needed from the interface beyond
+;;;             : just the string itself.  Need to know the y coordinate, the
+;;;             : starting x coordinate, the text height, the line height, the 
+;;;             : associated screen object, and some way of determining the width 
+;;;             : (in pixels) of a string.  May also provide a function for 
+;;;             : computing a different starting x coordinate for each line.
+;;;             : 
+;;;             : There are two ways to do it, with and without optimizing. 
+;;;             : With optimizing it's easy, just accumulate words.  When
+;;;             : optimzing is off, though, have to walk the string
+;;;             : character-by-character and build features for each one.
+
+
+
+(defun build-string-feats (&key text start-x y-pos width-fct height obj (line-height 0) x-fct (x-off 0) (y-off 0))
+  (declare (fixnum start-x y-pos)  (string text) (number height) (number line-height))
+  (when (not (and text start-x y-pos width-fct height line-height))
+    (error "NIL passed to BUILD-STRING-FEATS."))
+  (unless (equal text "")
+    (let* ((vis-mod (get-module :vision))
+           (f-accum nil)
+           (spc-wdth (dispatch-apply width-fct " "))
+           (coord-slots (bt:with-lock-held ((vis-loc-lock vis-mod)) (vis-loc-slots vis-mod)))
+           (x-slot (first coord-slots))
+           (y-slot (second coord-slots)))
+      (dolist (line (string-to-lines text) (nreverse f-accum))
+        (let ((curr-x (if (or (functionp x-fct) (and (symbolp x-fct) (fboundp x-fct)))
+                          (let ((x (funcall x-fct line start-x obj)))
+                            (if (numberp x) x start-x))
+                        start-x))
+              (curr-width nil))
+          (if (bt:with-recursive-lock-held ((param-lock vis-mod)) (optimize-p vis-mod))
+              
+              ;; if optimizing is on, then carve the string into words (strings)
+              ;; and space runs (numbers)
+              (dolist (word (chop-string vis-mod line))
+                (when (stringp word)
+                  (setf curr-width (dispatch-apply width-fct word))
+                  (let ((vl `(isa (visual-location text)
+                              ,y-slot ,(+ y-pos y-off) height ,height
+                              value (text ,word)
+                              width ,curr-width
+                              ,x-slot ,(+ curr-x x-off (round curr-width 2)))))
+                    (push vl f-accum)
+                    ))
+                (incf curr-x (if (stringp word) curr-width (* word spc-wdth))))
+            
+            ;; if not optimizing, then blast it character-by-character
+            (let ((char nil))
+              (print-warning "Non-optimized text features not currently available.")
+              char
+                             
+              #| non-optimized needs to be corrected for new interface
+                (dotimes (idx (length line))
+                (setf char (char line idx))
+                (setf curr-width (dispatch-apply width-fct (subseq line idx (1+ idx))))
+                (cond ((alphanumericp char)
+                       (push (char-to-features vis-mod (char-upcase char) curr-x
+                                               (- (+ curr-x curr-width) 1) y-pos
+                                               height obj) 
+                             f-accum))
+                      ((and (graphic-char-p char)
+                            (not (char-equal char #\space)))
+                       
+                       (let ((vl (car (define-chunks-fct `((isa visual-location
+                                                                ,y-slot ,y-pos height ,height value text
+                                                                kind text width ,curr-width ,x-slot ,(+ curr-x (round curr-width 2))))))))
+                         (push vl f-accum)
+                         (setf (chunk-visual-obj-spec vl) (mkstr char))))
+                      (t nil))
+                (incf curr-x curr-width))
+              |#
+              ))
+          (incf y-pos line-height))))))
+
+(defun chop-string (vis-mod str)
+  (declare (string str))
+  (unless (string= str "")
+    (bt:with-lock-held ((text-parse-lock vis-mod))
+      (let* ((oldstate (char->state vis-mod (char str 0)))
+             (state nil)
+             (chr nil)
+             (wrd "")
+             (cnt 0)
+             (accum nil))
+        (dotimes (i (length str))
+          (setf chr (char str i))
+          (setf state (char->state vis-mod chr))
+          (cond
+           ;; if we're accumulating chars and the new char matches our state,
+           ;; just concat the char
+           ((or (and (eq state :WORD) (eq oldstate :WORD))
+                (and (eq state :MISC) (eq oldstate :MISC)))
+            (setf wrd (mkstr wrd chr))
+            (setf cnt 0))
+           ;; If we get a state change that finishes a word, then grab the
+           ;; word.
+           ((and (or (eq oldstate :WORD) (eq oldstate :MISC))
+                 (not (eq oldstate state)))
+            (push wrd accum)
+            (if (not (eq state :SPACE))
+                (setf wrd (mkstr chr))
+              (setf wrd "")))
+           ;; when switching from spaces to words, push the counter and start
+           ;; the word
+           ((and (eq oldstate :SPACE) (not (eq state oldstate)))
+            (push (1+ cnt) accum)
+            (setf wrd (mkstr wrd chr)))
+           ;; from whitespace to whitespace, inc the counter
+           (t (incf cnt)))
+          (setf oldstate state))
+        (when (not (string= wrd ""))
+          (push wrd accum))
+        (setf accum (nreverse accum))
+        (when (numberp (first accum))
+          (decf (first accum)))
+        accum))))
+  
+(defun add-word-characters (&rest chars)
+  (let ((vis-mod (get-module :vision)))
+    (if vis-mod
+        (bt:with-lock-held ((text-parse-lock vis-mod))
+          (dolist (x chars (other-word-chars vis-mod))
+            (cond ((characterp x)
+                   (pushnew x (other-word-chars vis-mod)))
+                  ((and (stringp x) (= (length x) 1))
+                   (pushnew (char x 0) (other-word-chars vis-mod)))
+                  ((and (symbolp x) (= (length (symbol-name x)) 1))
+                   (pushnew (char (symbol-name x) 0) (other-word-chars vis-mod))))))
+      (print-warning "No vision module available could not add new word characters."))))
+
+(add-act-r-command "add-word-characters" 'add-word-characters "Indicate non-alphanumeric characters which the AGI text items will consider part of a 'word'. Params: char*")
+
+(defun char->state (vis-mod char)
+  "Given a character, return :WORD, :SPACE, or :MISC"
+  (declare (character char))
+  (cond ((or (alphanumericp char) (find char (other-word-chars vis-mod))) :WORD) ;; only called from chop-string which protects it
+        ((whitespace-p char) :SPACE)
+        (t :MISC)))
+
+(defun whitespace-p (char)
+  "Returns T if <char> is a whitespace character (non-printing or space)"
+  (declare (character char))
+  (or (not (graphic-char-p char))
+      (eq char #\Space)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+(defun compute-vis-loc-size (vis-loc vis-m)
+  (set-chunk-slot-value-fct vis-loc 'size
+                            (aif (simple-size vis-loc vis-m)
+                                 it
+                                 1.0)))
+(defun simple-size (vis-loc vis-m)
+  (let ((w (chunk-slot-value-fct vis-loc 'width))
+        (h (chunk-slot-value-fct vis-loc 'height))
+        (d (chunk-slot-value-fct vis-loc (third (visual-location-slots vis-loc vis-m)))))
+    (when (and (numberp w) (numberp h) (numberp d))
+      (* 0.01 (round
+               (* (pm-pixels-to-angle w d)
+                  (pm-pixels-to-angle h d))
+               0.01)))))
+
+
+;;; APPROACH-WIDTH      [Method]
+;;; Date        : 99.03.30
+;;; Description : Remember in high school when someone asked in trig why we
+;;;             : needed to know this crap?  Well, this is why.  I'm pretty
+;;;             : sure this is all the right trig, but there could be some
+;;;             : missed math in here.
+
+
+(defun approach-width (vis-loc theta x y)
+  (flet ((default ()
+             (let ((v (get-module :vision)))
+               (bt:with-recursive-lock-held ((param-lock v))
+                 (default-width v)))))
+    (handler-case 
+        (let ((custom (awhen (chunk-visual-approach-width-fn vis-loc) (dispatch-apply it (chunk-visicon-entry vis-loc) theta x y))))
+          (or (and (numberp custom) custom)
+              (let* ((loc-slots (visual-location-slots vis-loc (get-module :vision)))
+                     (x (chunk-slot-value-fct vis-loc 'width))
+                     (y (chunk-slot-value-fct vis-loc 'height))
+                     (z (chunk-slot-value-fct vis-loc (third loc-slots))))
+                (if (and (numberp x) (numberp y))
+                    (let ((critical-theta (atan y x))
+                          (theta (abs theta))
+                          (ret-width nil))
+                      (when (> theta (/ pi 2))
+                        (setf theta (- pi theta)))
+                      (setf ret-width
+                        (cond ((= theta 0) x)
+                              ((= theta (/ pi 2)) y)
+                              ;((= theta critical-theta) (sqrt (+ (* y y) (* x x))))
+                              ((<= theta critical-theta) (/ x (cos theta)))
+                              (t (/ y (cos (- (/ pi 2) theta))))))
+                      (pm-pixels-to-angle ret-width (when (numberp z) z)))
+                (default)))))
+      ((or error condition) (x)
+       (print-warning "Computing width for visicon feature ~s from chunk ~s produced error ~/print-error-message/ and default width being used." (chunk-visicon-entry vis-loc) vis-loc x)
+       (default)))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun add-visicon-features (&rest feats)
+  (let ((results nil)
+        (vis-mod (get-module :vision)))
+    (when vis-mod
+      (let ((vis-loc-slots (bt:with-lock-held ((vis-loc-lock vis-mod)) (vis-loc-slots vis-mod)))
+            (view-dist (bt:with-recursive-lock-held ((param-lock vis-mod)) (view-dist vis-mod))))
+        
+        (flet ((invalid-feature (bad)
+                                (model-warning "Visicon feature ~s did not contain a valid feature and was not created." bad)
+                                (push-last nil results)))
+          (dolist (f feats)
+            (if (and f (listp f) (evenp (length f)))
+                (handler-case 
+                    (let* ((d f)
+                           (specs (do ((l d (cddr l))
+                                       (r nil (push-last (cons (first l) (if (listp (second l)) (second l) (list (second l)))) r)))
+                                      ((null l) r)))
+                           (chunk-specs (remove-if 'keywordp specs :key 'first))
+                           (param-specs (remove-if-not 'keywordp specs :key 'first))
+                           (loc-slots (copy-list vis-loc-slots))
+                           (width-fct nil))
+                      
+                      (if (or (notevery (lambda (x) (or (and (eq (first x) :x-slot) (valid-slot-name (second x)))
+                                                        (and (eq (first x) :y-slot) (valid-slot-name (second x)))
+                                                        (and (eq (first x) :z-slot) (valid-slot-name (second x)))
+                                                        (and (eq (first x) :width-fn) (local-or-remote-function-or-nil (second x)))))
+                                        param-specs)
+                              (notevery (lambda (x) (and (listp x) (<= 1 (length x) 3))) chunk-specs))
+                          (invalid-feature f)
+                        
+                        (progn
+                          
+                          ;; get parameter settings
+                                                    
+                          (dolist (x param-specs)
+                            (case (first x)
+                              (:x-slot
+                               (setf (first loc-slots) (second x)))
+                              (:y-slot
+                               (setf (second loc-slots) (second x)))
+                              (:z-slot
+                               (setf (third loc-slots) (second x)))
+                              (:width-fn
+                               (setf width-fct (second x)))))
+                          
+                          (if (<= (count 'isa chunk-specs :key 'first) 1)
+                              (let ((isa (find 'isa chunk-specs :key 'first)))
+                                (if (notevery 'chunk-type-p-fct (cdr isa))
+                                    (invalid-feature f)
+                                  (progn
+                                    
+                                    (when isa
+                                      (setf chunk-specs (remove isa chunk-specs))
+                                      (push isa chunk-specs)
+                                      
+                                      (when (and t ; for now always add it... (add-kind-slot vis-mod)
+                                                 (= 3 (length isa))
+                                                 (not (find 'kind chunk-specs :key 'first)))
+                                        (push-last (list 'kind (third isa) nil) chunk-specs))
+                                      (let ((loc-defaults (when (second isa)
+                                                            (mapcar 'cdr 
+                                                              (chunk-spec-slot-spec (define-chunk-spec-fct (list 'isa (second isa)))))))
+                                            (obj-defaults (when (third isa)
+                                                            (mapcar 'cdr 
+                                                              (chunk-spec-slot-spec (define-chunk-spec-fct (list 'isa (third isa))))))))
+                                        
+                                        (dolist (ld loc-defaults)
+                                          (unless (find (first ld) chunk-specs :key 'first)
+                                            (push-last (list (first ld) (second ld)) chunk-specs)))
+                                        (dolist (od obj-defaults)
+                                          (let ((exists (find (first od) chunk-specs :key 'first)))
+                                            (if exists
+                                                (when (= (length exists) 2)
+                                                  (let ((e (remove exists chunk-specs)))
+                                                    (setf chunk-specs (push-last (list (first exists) (second exists) (second od))
+                                                                                 e))))
+                                              (push-last (list (first od) nil (second od)) chunk-specs))))))
+                                    
+                                    (let* ((loc-spec (mapcan (lambda (x) 
+                                                               (when (second x) (list (first x) (second x)))) 
+                                                       chunk-specs))
+                                           (obj-spec (mapcan (lambda (x) 
+                                                               (unless (find (first x) loc-slots)
+                                                                 (if (and (third x) (= 3 (length x))) 
+                                                                     (list (first x) (third x))
+                                                                   (when (and (= (length x) 2) (second x))
+                                                                     (list (first x) (second x))))))
+                                                       chunk-specs))
+                                           (visicon-spec (mapcan (lambda (x) 
+                                                                   (unless (eq (first x) 'isa)
+                                                                     (list (first x) (or (third x) (second x))))) chunk-specs))
+                                           (loc-chunk (car (define-chunks-fct (list loc-spec))))
+                                           (visicon-chunk (car (define-chunks-fct (list (push (new-name "visicon-id") visicon-spec))))))
+                                      
+                                      
+                                      (if (and (valid-vis-loc-chunk visicon-chunk vis-mod loc-slots)
+                                               (valid-vis-loc-chunk loc-chunk vis-mod loc-slots))
+                                          
+                                          (progn
+                                            (setf (chunk-vis-loc-slots loc-chunk) loc-slots)
+                                            (setf (chunk-vis-loc-slots visicon-chunk) loc-slots)
+                                            
+                                            ;; set default distance and size if not provided as numbers
+                                            
+                                            (unless (numberp (fast-chunk-slot-value-fct loc-chunk (third loc-slots)))
+                                              (set-chunk-slot-value-fct loc-chunk (third loc-slots) view-dist))
+                                            (unless (numberp (fast-chunk-slot-value-fct visicon-chunk (third loc-slots)))
+                                              (set-chunk-slot-value-fct visicon-chunk (third loc-slots) view-dist))
+                                            
+                                            (unless (numberp (fast-chunk-slot-value-fct loc-chunk 'size))
+                                              (compute-vis-loc-size loc-chunk vis-mod))
+                                            (unless (numberp (fast-chunk-slot-value-fct visicon-chunk 'size))
+                                              (compute-vis-loc-size visicon-chunk vis-mod))
+                                            
+                                            
+                                            (setf (chunk-visual-loc visicon-chunk) loc-chunk)
+                                            (if (null obj-spec)
+                                                (setf (chunk-visual-obj-spec visicon-chunk) '(isa visual-object))
+                                              (setf (chunk-visual-obj-spec visicon-chunk) obj-spec))
+                                            
+                                            (setf (chunk-visicon-entry loc-chunk) visicon-chunk)
+                                            (setf (chunk-visicon-entry visicon-chunk) visicon-chunk)
+                                                                                        
+                                            (setf (chunk-visual-approach-width-fn loc-chunk) width-fct)
+                                            (setf (chunk-visual-approach-width-fn visicon-chunk) width-fct)
+                                            
+                                            (push-last visicon-chunk results))
+                                        (progn
+                                          (when (chunk-p-fct loc-chunk)
+                                            (delete-chunk-fct loc-chunk))
+                                          (when (chunk-p-fct visicon-chunk)
+                                            (delete-chunk-fct visicon-chunk))
+                                          (invalid-feature f)))))))
+                            (invalid-feature f)))))
+                  ((or error condition) (x)
+                   (push-last nil results)
+                   (model-warning "Visicon feature ~s produced error ~/print-error-message/ and was not created." f x)))
+              (invalid-feature f)))
+          
+          (bt:with-recursive-lock-held ((visicon-lock vis-mod))
+            (dolist (x results)
+              (when x
+                (push-last (cons :add x) (visicon-updates vis-mod)))))
+          
+          (schedule-proc-display vis-mod))))
+    results))
+
+(defun external-add-visicon-features (&rest feats)
+  (apply 'add-visicon-features (decode-string-names feats)))
+
+(add-act-r-command "add-visicon-features" 'external-add-visicon-features "Add visual features to the current model's visicon. Params: 'feature-spec'*.")
+
+
+(defun delete-visicon-features (&rest feats)
+  (let ((results nil)
+        (mod (get-module :vision)))
+    (when mod
+      (flet ((invalid-feature (bad)
+                              (model-warning "Feature ~s is not a valid feature name and cannot be removed." bad)
+                              (push-last nil results)))
+        (handler-case 
+              (bt:with-recursive-lock-held ((visicon-lock mod))
+                
+                (dolist (x feats)
+                  ;; actually determine if it's a valid feature because it
+                  ;; can't delay that if the feature goes away because of 
+                  ;; the window closing on reset -- can't guarantee the order
+                  ;; of reset and the chunks are already gone by that point
+                  ;; so it would always fail with the simple chunk-p test...
+                  
+                  (cond ((or (find x (visicon mod))
+                             (find-if (lambda (y) (and (eq (car y) :add) (eq (cdr y) x))) (visicon-updates mod)))
+                         (push-last x results))
+                        
+                        ;; why did I allow this? (and (chunk-p-fct x) (chunk-visicon-entry x) (find (chunk-visicon-entry x) (visicon mod)))
+                        ;; and should it come back?
+                        
+                        (t (invalid-feature x))))
+                
+                (dolist (x results)
+                  (when x
+                    (push-last (cons :delete x) (visicon-updates mod))))
+              
+              (schedule-proc-display mod))
+          
+          ((or error condition) (x)
+           (model-warning "Cannot delete visicon features because trying to build feature names from ~s produced error ~/print-error-message/." feats x)))))
+    results))
+
+(defun external-delete-visicon-features (&rest feats)
+  (apply 'delete-visicon-features (string->name-recursive feats)))
+
+(add-act-r-command "delete-visicon-features" 'external-delete-visicon-features "Remove visual features from the current model's visicon. Params: feature-name*.")
+
+
+(defun delete-all-visicon-features ()
+  (let ((mod (get-module :vision)))
+    (when mod
+      (bt:with-recursive-lock-held ((visicon-lock mod))
+        (push-last (cons :delete-all nil) (visicon-updates mod)))
+      (schedule-proc-display mod)
+      t)))
+
+
+(add-act-r-command "delete-all-visicon-features" 'delete-all-visicon-features "Remove all visual features from the current model's visicon. No params.")
+
+
+
+(defun modify-visicon-features (&rest feats)
+  (let ((results nil)
+        (updates nil)
+        (mod (get-module :vision)))
+    (when mod
+      (flet ((invalid-feature (bad)
+                              (model-warning "Provided update ~s does not contain a valid visual feature modification." bad)
+                              (push-last nil results)))
+        (dolist (f feats)
+          (if (and f (listp f) (oddp (length f)) (> (length f) 1))
+              (handler-case 
+                  (let* ((d f)
+                         (slots (mapcan (let ((c 0)) (lambda (x) (prog1 (when (evenp c) (list x)) (incf c)))) (rest d))))
+                    (if (or (find 'isa slots)
+                            (find 'kind slots)
+                            (some 'keywordp slots)
+                            (not (chunk-p-fct (first d))) 
+                            (not (or (find (first d) (visicon-chunks mod))
+                                     (find (cons :add (first d)) (bt:with-recursive-lock-held ((visicon-lock mod)) (visicon-updates mod)) :test 'equalp)))
+                            (not (= (length slots) (length (remove-duplicates slots)))))
+                        (invalid-feature f)
+                      (let* ((visicon-chunk (first d))
+                             (specs (rest d))
+                             (locs (visual-location-slots visicon-chunk mod))
+                             (p1 (and (find (first locs) slots)
+                                      (do* ((l specs (cddr l))
+                                            (count 0 (incf count 2)))
+                                           ((eq (first l) (first locs)) count))))
+                             (p2 (and (find (second locs) slots)
+                                      (do* ((l specs (cddr l))
+                                            (count 0 (incf count 2)))
+                                           ((eq (first l) (second locs)) count)))))
+                        
+                        (if (or (and p1 (let ((val (nth (1+ p1) specs))) (or (and (atom val) (not (numberp val)))
+                                                                             (and (listp val) (not (numberp (first val)))))))
+                                (and p2 (let ((val (nth (1+ p2) specs))) (or (and (atom val) (not (numberp val)))
+                                                                             (and (listp val) (not (numberp (first val))))))))
+                            (invalid-feature f)
+                          (progn
+                            (push-last visicon-chunk results)
+                            (push-last d updates))))))
+                ((or error condition) (x)
+                 (push-last nil results)
+                 (model-warning "Visicon modification ~s produced error ~/print-error-message/ and was not applied." f x)))
+            (invalid-feature f)))
+        
+        (bt:with-recursive-lock-held ((visicon-lock mod))
+          (dolist (x updates)
+            (push-last (cons :update x) (visicon-updates mod))))
+        
+        (schedule-proc-display mod)))
+    results))
+
+
+(defun external-modify-visicon-features (&rest feats)
+  (apply 'modify-visicon-features (decode-string-names feats)))
+
+(add-act-r-command "modify-visicon-features" 'external-modify-visicon-features "Change a visual feature in the current model's visicon. Params: 'visicon-mod-spec'*.")
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+(defmethod set-visloc-default-request ((vm vision-module) spec)
+  "Assumes all the checking has been done already for validity"
+  (setf (default-spec vm) 
+    (define-chunk-spec-fct (flatten (remove 'set-visloc-default (chunk-spec-slot-spec spec) :key 'spec-slot-name))))
+  (update-new vm)
+  (check-finsts vm)
+  (stuff-visloc-buffer vm))
+
+(defmacro set-visloc-default (&rest params)
+  "Macro to set the default specification for visual location buffer stuffing."
+  `(set-visloc-default-fct ',params))
+
+(defun set-visloc-default-fct (params)
+  "Function to set the default specification for visual location buffer stuffing."
+   (verify-current-model 
+    "No current model.  Cannot set visloc defaults."
+    (if (get-module :vision)
+        (let ((chunk-spec (funcall 'define-chunk-spec-fct params)))
+          (if chunk-spec
+              (cond ((> (length (chunk-spec-slot-spec chunk-spec :attended)) 1)
+                     (print-warning ":attended specification only allowed once in set-visloc-default.")
+                     (print-warning "Visloc defaults not changed."))
+                    ((> (length (chunk-spec-slot-spec chunk-spec :nearest)) 1)
+                     (print-warning ":nearest specification only allowed once in set-visloc-default.")
+                     (print-warning "Visloc defaults not changed."))
+                    (t
+                     (progn (setf (default-spec (get-module :vision)) chunk-spec) t)))
+            (print-warning "Invalid chunk specification.  Default not changed.")))
+      (print-warning "No vision module found.  Cannot set visloc defaults."))))
+
+(defun external-set-visloc-default (&rest params)
+  (set-visloc-default-fct (decode-string-names params)))
+
+(add-act-r-command "set-visloc-default" 'external-set-visloc-default "Set the specification of how to pick the chunk to stuff into the visual-location buffer. Params: '{{modifier} slot value}'*")
+
+(defun print-visicon ()
+  "Print the Vision Module's visicon. For debugging."
+  (command-output "~a" (printed-visicon))
+  nil)
+
+(add-act-r-command "print-visicon" 'print-visicon "Print all the attributes of the features in the model's visicon. No params.")
+
+#| ccl 1.12-dev doesn't like the ~{~v,a~} in the format string
+   and I need to use 1.12-dev to run things on 10.14...
+   so have an "unrolled" version below.
+
+
+(defun printed-visicon ()
+  "Return the Vision Module's visicon output in a string."
+  (aif (get-module :vision)  ;; Test that there is a vision module
+       (let ((s (make-string-output-stream)))
+         (update-new it)
+         (check-finsts it) 
+         
+         (bt:with-recursive-lock-held ((visicon-lock it))
+           (let ((attributes nil)
+                 (name 4)
+                 (loc (list 0 0 0)))
+             (dolist (x (visicon it))
+               (let* ((name-len (length (symbol-name (chunk-visual-loc x))))
+                     (vis-loc-slots (visual-location-slots x it)))
+                 
+                 (when (> name-len name)
+                   (setf name name-len))
+                 
+                 (dolist (y (chunk-filled-slots-list-fct x))
+                   (let ((w (length (format nil "~s" (fast-chunk-slot-value-fct x y)))))
+                     (aif (position y vis-loc-slots)
+                          (when (> w (nth it loc))
+                            (setf (nth it loc) w))
+                          (aif (find y attributes :key 'second)
+                               (progn
+                                 (when (> w (first it))
+                                   (setf (first it) w))
+                                 (incf (third it)))
+                               (push (list (max w (length (symbol-name y))) y 1) attributes)))))))
+             
+             (setf attributes (mapcar 'butlast (stable-sort attributes #'> :key 'third)))
+                          
+               
+             (format s "~v,a  Att  ~v,a  ~:(~{~{~v,a~}~^  ~}~)~%"
+               name "Name" (+ (reduce '+ loc) 4) "Loc" attributes)
+             
+             (format s "~v,,,'-a  ---  ~v,,,'-a  ~{~{~v,,,'-a~}~^  ~}~%" name "" (+ (reduce '+ loc) 4) ""
+               (mapcar (lambda (x) (list (first x) "")) attributes))
+             
+             
+             (let ((*print-pretty* nil))
+               (dolist (x (visicon it))
+                 (let ((vis-loc-slots (visual-location-slots x it)))
+                   (format s "~v,a  ~3,a  (~v,@a ~v,@a ~v,@a)  ~{~{~:[~v,a~;~v,s~]~}~^  ~}~%"
+                     name (chunk-visual-loc x) (feat-attended x it) 
+                     (first loc) (fast-chunk-slot-value-fct x (first vis-loc-slots))
+                     (second loc) (fast-chunk-slot-value-fct x (second vis-loc-slots))
+                     (third loc) (fast-chunk-slot-value-fct x (third vis-loc-slots))
+                     (mapcar (lambda (y)
+                               (let ((v (chunk-slot-value-fct x (second y))))
+                                 (list v (first y) (if v v ""))))
+                       attributes)))))))
+         (get-output-stream-string s))
+       "#|Warning: No vision module found. |#"))
+|#
+
+(defun printed-visicon ()
+  "Return the Vision Module's visicon output in a string."
+  (aif (get-module :vision)  ;; Test that there is a vision module
+       (let ((s (make-string-output-stream)))
+         (update-new it)
+         (check-finsts it) 
+         
+         (bt:with-recursive-lock-held ((visicon-lock it))
+           (let ((attributes nil)
+                 (name 4)
+                 (loc (list 0 0 0)))
+             (dolist (x (visicon it))
+               (let* ((name-len (length (symbol-name (chunk-visual-loc x))))
+                     (vis-loc-slots (visual-location-slots x it)))
+                 
+                 (when (> name-len name)
+                   (setf name name-len))
+                 
+                 (dolist (y (chunk-filled-slots-list-fct x))
+                   (let ((w (length (format nil "~s" (fast-chunk-slot-value-fct x y)))))
+                     (aif (position y vis-loc-slots)
+                          (when (> w (nth it loc))
+                            (setf (nth it loc) w))
+                          (aif (find y attributes :key 'second)
+                               (progn
+                                 (when (> w (first it))
+                                   (setf (first it) w))
+                                 (incf (third it)))
+                               (push (list (max w (length (symbol-name y))) y 1) attributes)))))))
+             
+             (setf attributes (mapcar 'butlast (stable-sort attributes #'> :key 'third)))
+                          
+               
+             (format s "~v,a  Att  ~v,a  "
+               name "Name" (+ (reduce '+ loc) 4) "Loc" )
+             
+             (dolist (z attributes)
+               (format  s "~v,a  " (first z) (second z)))
+             (format s "~%")
+             
+
+             
+             
+             (format s "~v,,,'-a  ---  ~v,,,'-a  ~{~{~v,,,'-a~}~^  ~}~%" name "" (+ (reduce '+ loc) 4) ""
+               (mapcar (lambda (x) (list (first x) "")) attributes))
+             
+             
+             (let ((*print-pretty* nil))
+               (dolist (x (visicon it))
+                 (let ((vis-loc-slots (visual-location-slots x it)))
+                   (format s "~v,a  ~3,a  (~v,@a ~v,@a ~v,@a)  "
+                     name (chunk-visual-loc x) (feat-attended x it) 
+                     (first loc) (fast-chunk-slot-value-fct x (first vis-loc-slots))
+                     (second loc) (fast-chunk-slot-value-fct x (second vis-loc-slots))
+                     (third loc) (fast-chunk-slot-value-fct x (third vis-loc-slots))
+                     )
+                   
+                   (dolist (z (mapcar (lambda (y)
+                                        (let ((v (chunk-slot-value-fct x (second y))))
+                                          (list v (first y) (if v v ""))))
+                                attributes))
+                     (if (first z) 
+                         (format  s "~v,s  " (second z) (third z))
+                         (format  s "~v,a  " (second z) (third z))))
+                   (format s "~%"))))))
+         (get-output-stream-string s))
+       "#|Warning: No vision module found. |#"))
+
+(add-act-r-command "printed-visicon" 'printed-visicon "Return a string with the printed output of all of the attributes of the features in the model's visicon. No params.")
+
+(defun attend-visual-coordinates (x y &optional distance)
+  "Tells the Vision Module to start with attention at a certain location."
+  (aif (get-module :vision)
+       (let ((vis-loc-slots (bt:with-lock-held ((vis-loc-lock it)) (vis-loc-slots it))))
+         (bt:with-lock-held ((marker-lock it))
+           (set-current-marker it 
+                               (car (define-chunks-fct `((isa visual-location
+                                                              ,(first vis-loc-slots) ,x
+                                                              ,(second vis-loc-slots) ,y
+                                                              ,(third vis-loc-slots) ,(if (numberp distance) distance (bt:with-recursive-lock-held ((param-lock it)) (view-dist it))))))))))
+       (print-warning "No vision module found.  Cannot set visual coordinates.")))
+
+(defun remove-visual-finsts (&optional set-new restuff)
+  (let ((vis-m (get-module :vision)))
+    (if vis-m
+        (bt:with-recursive-lock-held ((visicon-lock vis-m))
+          
+          (setf (finst-lst vis-m) nil)
+          (if set-new
+              (mapc (lambda (x)
+                      (setf (chunk-visual-tstamp x) (mp-time-ms))
+                      (setf (chunk-visual-new-p x) 'new))
+                (visicon vis-m))
+            (mapc (lambda (x)
+                    (setf (chunk-visual-new-p x) 
+                      (if (<= (tstamp-elapsed x) (bt:with-recursive-lock-held ((param-lock vis-m)) (new-span vis-m)))
+                          'new 
+                        nil)))
+              (visicon vis-m)))
+          (when restuff           
+            (stuff-visloc-buffer vis-m))
+          nil)
+      (print-warning "No vision module found.  Cannot remove the visual finsts."))))
+
+(add-act-r-command "remove-visual-finsts" 'remove-visual-finsts "Remove the finsts from all visicon features and possibly mark everything as new. Params: {set-new {restuff-location?}}")
+
+#| Stuff that isn't being used and probably not updated appropriately but kept around for now...
+
+
+
+(extend-chunks visual-feature-name :copy-function identity :merge-function :second-if)
+
+
+
+
+(defun hash-visual-chunk-contents (chunk)
+  (let (res)
+    (dolist (slot (chunk-filled-slots-list-fct chunk t) res)
+      (push (cons slot 
+                  (aif (and (eq slot 'value) (chunk-visual-obj-spec chunk))
+                       it
+                       (true-chunk-name-fct (fast-chunk-slot-value-fct chunk slot))))
+            res))))
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+(defun set-char-feature-set (setname)
+  "Sets the feature set used to represent characters when optimizing is off. <setname> should be a keyword."
+  (verify-current-mp
+   "No current meta-process.  Cannot set a char feature set."
+   (verify-current-model 
+    "No current model.  Cannot set a char feature set."
+    (aif (get-module :vision)
+         (if (set-cfs-mth it setname) t nil)
+         (print-warning "No vision module found.  Cannot set a char feature set.")))))
+
+
+(defgeneric set-cfs-mth (vis-mod kwrd)
+  (:documentation "Set the current character feature set."))
+
+(defmethod set-cfs-mth ((vis-mod vision-module) kwrd)
+  (aif (get-cfs-mth vis-mod kwrd)
+       (setf (active-cfs vis-mod) (first it))
+       (model-warning "Feature set ~S is unknown" kwrd)))
+
+(defgeneric get-cfs-mth (vis-mod kwrd)
+  (:documentation "Given a keyword, find a character feature set."))
+
+(defmethod get-cfs-mth ((vis-mod vision-module) kwrd)
+  (member kwrd (feature-sets vis-mod) :key 'name))
+
+
+
+
+
+
+;;; CHAR-TO-FEATURES      [Method]
+;;; Date        : 99.03.30
+;;; Description : For each character, there will usually be many of those
+;;;             : CHAR-PRIMITIVE features.  Grab the list of features 
+;;;             : associated with a character, and build 'em.
+
+(defgeneric char-to-features (vis-mod char left right y height obj)
+  (:documentation  "Returns a list of basic visual-location chunks for a characer"))
+
+(defmethod char-to-features ((vis-mod vision-module) (char character) 
+                             (left number) (right number) (y number) 
+                             (height number) obj)
+  (declare (ignore obj))
+  (let* ((xpos (+ left (round (- right left) 2)))
+         (width (1+ (- right left)))
+         (features (pairlis
+                    (getfeats (active-cfs vis-mod) char)
+                    (get-icon-feats (active-cfs vis-mod) char)))
+         (accum nil)
+         (coord-slots (bt:with-lock-held ((vis-loc-lock vis-mod)) (vis-loc-slots vis-mod)))
+         (x-slot (first coord-slots))
+         (y-slot (second coord-slots)))
+    (dolist (feats features accum)
+      (when (and (symbolp (car feats)) (not (chunk-p-fct (car feats))))
+        (define-chunks-fct `((,(car feats)))))
+      (when (and (symbolp (cdr feats)) (not (chunk-p-fct (cdr feats))))
+        (define-chunks-fct `((,(cdr feats)))))
+      (let ((vl (car (define-chunks-fct `((isa char-primitive
+                                               ,y-slot ,y height ,height value ,(cdr feats)
+                                               width ,width ,x-slot ,xpos left ,left right ,right))))))
+        (push vl accum)
+        (setf (chunk-visual-obj-spec vl) (car feats))))))
+
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;; Synthesizing
+;;;; Synthesizing 
 
 
 ;;; GET-WORD-AT-NOOPT      [Method]
 ;;; Date        : 99.04.02
 ;;; Description : Getting a word when optimizing is off involves calling
-;;;             : SYNTHESIZE-WORD method, but we need to collect the
+;;;             : SYNTHESIZE-WORD method, but we need to collect the 
 ;;;             : locations first, and also check the return if what was
 ;;;             : sent in was a DMO.
 
@@ -1742,10 +4175,10 @@
   (:documentation  "Synthesize a word at the given location and synch it with the location."))
 
 (defmethod get-word-at-noopt ((vis-mod vision-module) (loc symbol))
-  (let ((xy-loc (xy-loc loc)))
-    (multiple-value-bind (locs xmin xmax) (adjoining-led-locs vis-mod xy-loc)
+  (let ((xyz-loc (xyz-loc loc vis-mod)))
+    (multiple-value-bind (locs xmin xmax) (adjoining-led-locs vis-mod xyz-loc)
       (when locs
-        (let ((rtn-chunk (synthesize-word vis-mod locs (- xmax xmin) xy-loc)))
+        (let ((rtn-chunk (synthesize-word vis-mod locs (- xmax xmin) xyz-loc)))
           (when rtn-chunk
             (set-chunk-slot-value-fct rtn-chunk 'screen-pos loc)
             (values rtn-chunk xmin xmax)))))))
@@ -1764,19 +4197,19 @@
 ;;; Date        : 99.04.02
 ;;; Description : OK, when optimizing is off and a phrase needs to be built,
 ;;;             : the tricky bit is figuring out which locations you need
-;;;             : to grab words from, since if you hit every x location,
+;;;             : to grab words from, since if you hit every x location, 
 ;;;             : you'll generate multiple copies of each word.
 
-(defgeneric get-word-dmos-noopt (vis-mod x-lst y)
+(defgeneric get-word-dmos-noopt (vis-mod x-lst y z)
   (:documentation  "Return a list of DMOs representing words at the given xlocs, with optimizing off."))
 
-(defmethod get-word-dmos-noopt ((vis-mod vision-module) (x-ls list) y)
+(defmethod get-word-dmos-noopt ((vis-mod vision-module) (x-ls list) y z)
   (let ((rtn-dmos nil)
         (curr-x -1))
     (dolist (x x-ls (remove nil (nreverse rtn-dmos)))
       (when (> x curr-x)
         (multiple-value-bind (word min max)
-                             (get-word-at-noopt vis-mod (vector x y))
+            (get-word-at-noopt vis-mod (vector x y z))
           (declare (ignore min))
           (push word rtn-dmos)
           (setf curr-x max))))))
@@ -1788,14 +4221,15 @@
 ;;;             : and accumulate words.
 ;;;             : Might be vestigial as of beta 6.
 
-(defgeneric get-word-dmos-opt (vis-mod x-lst y)
+(defgeneric get-word-dmos-opt (vis-mod x-lst y z)
   (:documentation  "Return a list of DMOs representing words at the given xlocs, with optimizing on."))
 
-(defmethod get-word-dmos-opt ((vis-mod vision-module) (x-ls list) y)
+(defmethod get-word-dmos-opt ((vis-mod vision-module) (x-ls list) y z)
   (let (accum)
     (dolist (x x-ls (nreverse accum))
-      (dolist (feat (text-feats (feat-match-xy (visicon-chunks vis-mod) (vector x y))))
-        (setf accum (append (featlis-to-chunks vis-mod (vector x y) (list feat)) accum))))))
+      (dolist (feat (text-feats (feat-match-xyz (visicon-chunks vis-mod) (vector x y z) vis-mod)))
+        (setf accum (append (featlis-to-object-chunks vis-mod (list feat)) accum))))))
+
 
 
 
@@ -1814,14 +4248,11 @@
          (letter (prob-best-character (active-cfs vis-mod) (mapcar (lambda (x) (chunk-slot-value-fct x 'value)) feats)))
          (return-chunk nil)
          (colors (mapcar (lambda (x) (chunk-slot-value-fct x 'color)) feats))
-         (color (caar (sort (mapcar (lambda (x) (cons x (count x colors))) (remove-duplicates colors)) #'> :key 'cdr))))
-
+         (color (caar (sort (mapcar (lambda (x) (cons x (count x colors))) (remove-duplicates colors)) '> :key 'cdr))))
+    
     (setf return-chunk
-      (car (define-chunks-fct (list (list 'isa 'visual-object
-                                     'value letter
-                                     'color color)))))
-
-
+      (car (define-chunks-fct (list (list 'isa 'text 'value letter 'color color)))))
+    
     (setf (chunk-visual-feature-name return-chunk) base-feat)
     (setf (chunk-visicon-entry return-chunk) (chunk-visicon-entry base-feat))
     (setf (chunk-synth-feat return-chunk) (mapcan (lambda (x) (list (chunk-visicon-entry x))) feats))
@@ -1830,42 +4261,41 @@
 
 ;;; SYNTHESIZE-WORD      [Method]
 ;;; Date        : 98.07.27
-;;; Description : Given the list of contiguous locations, get the letter
+;;; Description : Given the list of contiguous locations, get the letter 
 ;;;             : at each location, and then build the word from the list
 ;;;             : of letters.
 
 (defgeneric synthesize-word (vis-mod loc-lis width center)
   (:documentation  "Build a DMO representing a word from a location."))
 
-(defmethod synthesize-word ((vis-mod vision-module) (loc-lis list)
-                               (width number) (center vector))
+(defmethod synthesize-word ((vis-mod vision-module) (loc-lis list) (width number) (center vector))
   (let ((return-chunk nil)
         (letter-chunks nil)
         (used-feats nil))
-
+    
     (dolist (xloc loc-lis)
-      (let* ((feats (feat-match-xy (visicon-chunks vis-mod) xloc))
+      (let* ((feats (feat-match-xyz (visicon-chunks vis-mod) xloc vis-mod))
              (letter-chunk (synthesize-letter vis-mod feats)))
-
+        
         (when (stringp (chunk-slot-value-fct letter-chunk 'value))
           (push letter-chunk letter-chunks)
           (setf used-feats (append feats used-feats)))))
-
+    
     (when letter-chunks
       (let* ((colors (mapcar (lambda (x) (chunk-slot-value-fct x 'color)) letter-chunks))
-             (color (caar (sort (mapcar (lambda (x) (cons x (count x colors))) (remove-duplicates colors)) #'> :key 'cdr))))
-
+             (color (caar (sort (mapcar (lambda (x) (cons x (count x colors))) (remove-duplicates colors)) '> :key 'cdr))))
+        
         (setf letter-chunks (nreverse letter-chunks))
         (setf return-chunk
-          (car (define-chunks-fct `((isa text color ,color value ,(word-accum
-                                                                   (mapcar #'(lambda (x) (chunk-slot-value-fct x 'value))
+          (car (define-chunks-fct `((isa text color ,color value ,(word-accum 
+                                                                   (mapcar (lambda (x) (chunk-slot-value-fct x 'value))
                                                                      letter-chunks)))))))
-
-
+        
+        
         (setf (chunk-visicon-entry return-chunk) (chunk-visicon-entry (car used-feats)))
         (setf (chunk-visual-feature-name return-chunk) (car used-feats))
         (setf (chunk-synth-feat return-chunk) (mapcan (lambda (x) (list (chunk-visicon-entry x))) used-feats))
-
+        
         return-chunk))))
 
 
@@ -1882,64 +4312,62 @@
 
 
 (defmethod get-phrase-at ((vis-mod vision-module) (loc symbol))
-  (awhen (find-matching-chunks (define-chunk-spec-fct `(isa visual-location screen-y ,(py (xy-loc loc))))
+  (awhen (find-matching-chunks (define-chunk-spec-fct `(isa visual-location ,(second (visual-location-slots loc vis-mod)) ,(py (xy-loc loc vis-mod))))
                                :chunks (visicon-chunks vis-mod))
-
+         
          (synthesize-phrase vis-mod it loc)))
 
 
 (defgeneric synthesize-phrase (vis-mod feature-locs loc)
   (:documentation  "Build a DMO representing a phrase."))
 
+#|  Need to update this with appropriate visual-location-slots change, but need to figure it out first!
+
 (defmethod synthesize-phrase ((vis-mod vision-module) (feature-locs list) (loc symbol))
-  (let ((xy-loc (xy-loc loc))
-        (x-locs (mapcar (lambda (x) (chunk-slot-value-fct x 'screen-x)) feature-locs))
-        (word-chunks nil)
-        (words nil)
-        (colors nil)
-        (return-chunk nil))
-    (setf x-locs (sort (remove-duplicates x-locs) #'<))
-
-
-    (if (optimize-p vis-mod)
-      (setf word-chunks (get-word-dmos-opt vis-mod x-locs (py xy-loc)))
-      (setf word-chunks (get-word-dmos-noopt vis-mod x-locs (py xy-loc))))
-
+  (let* ((xyz-loc (xyz-loc loc vis-mod))
+         (x-slot (first (visual-location-slots loc vis-mod)))
+         (x-locs (mapcar (lambda (x) (chunk-slot-value-fct x x-slot)) feature-locs))
+         (word-chunks nil) 
+         (words nil)
+         (colors nil)
+         (return-chunk nil))
+    (setf x-locs (sort (remove-duplicates x-locs) '<))
+    
+    (if (bt:with-recursive-lock-held ((param-lock vis-mod)) (optimize-p vis-mod))
+        (setf word-chunks (get-word-dmos-opt vis-mod x-locs (py xyz-loc) (pz xyz-loc)))
+      (setf word-chunks (get-word-dmos-noopt vis-mod x-locs (py xyz-loc) (pz xyz-loc))))
+    
     (when word-chunks
-      (setf words (mapcar #'(lambda (x)
-                              (chunk-slot-value-fct x 'value))
+      (setf words (mapcar (lambda (x)
+                            (chunk-slot-value-fct x 'value)) 
                     word-chunks))
-
+      
       (dolist (w word-chunks)
         (let ((c (chunk-slot-value-fct w 'color)))
-
-          (aif (assoc c colors)
+          
+          (aif (assoc c colors) 
                (incf (cdr it))
                (push-last (cons c 1) colors))))
-
+      
       (setf return-chunk
-        (car (define-chunks-fct
+        (car (define-chunks-fct 
                  `((isa phrase! value ,(phrase-accum words)
-                        objects ,word-chunks
-                        colors ,(mapcar #'(lambda (x) (chunk-slot-value-fct x 'color)) word-chunks)
+                        objects ,word-chunks 
+                        colors ,(mapcar (lambda (x) (chunk-slot-value-fct x 'color)) word-chunks)
                         words ,words
-                        color ,(car (rassoc (apply #'max (mapcar #'cdr colors)) colors))
+                        color ,(car (rassoc (apply 'max (mapcar 'cdr colors)) colors))
                         screen-pos ,loc)))))
-
-
+      
       (setf (chunk-visicon-entry return-chunk) (chunk-visicon-entry loc))
-      (setf (chunk-visual-feature-name return-chunk) loc)
-
-
-
-      (setf (chunk-synth-feat return-chunk)
-        (if (optimize-p vis-mod)
+      (setf (chunk-visual-feature-name return-chunk) loc) 
+      
+      (setf (chunk-synth-feat return-chunk) 
+        (if (bt:with-recursive-lock-held ((param-lock vis-mod)) (optimize-p vis-mod))
             (mapcan (lambda (x) (list (chunk-visicon-entry x))) word-chunks)
           (mapcan (lambda (x) (chunk-synth-feat x)) word-chunks)))
-
-
-
+      
       return-chunk)))
+|#
 
 (defun phrase-accum (lis)
   "Accumulate a list of words into a phrase."
@@ -1947,8 +4375,10 @@
     (dolist (item (rest lis) accum)
       (setf accum (mkstr accum " " item)))))
 
-;;;;;;;;;;
 
+
+
+;;;;;;;;;;
 ;;;; ---------------------------------------------------------------------- ;;;;
 ;;;;  Those wacky LED features for letters.
 ;;;; ---------------------------------------------------------------------- ;;;;
@@ -1957,7 +4387,7 @@
 ;;; ADJOINING-LED-LOCS      [Method]
 ;;; Date        : 99.04.02
 ;;; Description : To synthesize a word, we need to know which locations have
-;;;             : LED-LINE features at adjoining locations.  However,
+;;;             : LED-LINE features at adjoining locations.  However, 
 ;;;             : because letter width is variable, the icon has to be
 ;;;             : searched for LED-LINE locations that have features that
 ;;;             : are near the boundaries.  Also, because we need to know the
@@ -1966,40 +4396,43 @@
 (defgeneric adjoining-led-locs (vis-mod loc)
   (:documentation  "Return a list of locations adjoining <loc>, as well as the max and min x locs."))
 
+#| Needs to be reworked with appropriate vis-loc-slots call, but for what?  should it default to screen-y only?
+
 (defmethod adjoining-led-locs ((vis-mod vision-module) (loc vector))
-  (let ((feat-ls (feat-match-xy (visicon-chunks vis-mod) loc))
-        (feat nil))
+  (let ((feat-ls (feat-match-xyz (visicon-chunks vis-mod) loc vis-mod))
+        (feat nil)
+        (y-slot (second (visual-location-slots ??? vis-mod)))))
     (while (and (null feat) feat-ls)
       (setf feat (pop feat-ls))
-      (unless (chunk-type-subtype-p-fct (chunk-chunk-type-fct feat) 'char-primitive)
+      (unless (eq (chunk-slot-value-fct feat 'kind) 'char-primitive)
         (setf feat nil)))
     (when feat
-      (setf feat-ls (find-matching-chunks (define-chunk-spec-fct `(isa visual-location screen-y ,(chunk-slot-value-fct feat 'screen-y)))
+      (setf feat-ls (find-matching-chunks (define-chunk-spec-fct `(isa visual-location ,y-slot ,(chunk-slot-value-fct feat y-slot)))
                                           :chunks (visicon-chunks vis-mod)))
-      (multiple-value-bind
-        (lowlocs xmin) (left-adjoining-led-locs feat-ls (chunk-slot-value-fct feat 'left) nil)
+      (multiple-value-bind 
+            (lowlocs xmin) (left-adjoining-led-locs feat-ls vis-mod (chunk-slot-value-fct feat 'left) nil)
         (multiple-value-bind
-          (hilocs xmax) (right-adjoining-led-locs feat-ls (chunk-slot-value-fct feat 'right) nil)
+              (hilocs xmax) (right-adjoining-led-locs feat-ls vis-mod (chunk-slot-value-fct feat 'right) nil)
           (values
            (append lowlocs (list loc) hilocs)
            xmin xmax))))))
-
+|#
 
 ;;; RIGHT-ADJOINING-LED-LOCS      [Method]
 ;;; Date        : 99.04.02
 ;;; Description : Recursively go right and accumulate locations that share
 ;;;             : the boundary.
 
-(defgeneric right-adjoining-led-locs (feat-ls x accum)
+(defgeneric right-adjoining-led-locs (feat-ls vis-mod x accum)
   (:documentation  "Return a list of all the right-adjoining locs with led features and the min x."))
 
-(defmethod right-adjoining-led-locs ((feat-ls list) x accum)
+(defmethod right-adjoining-led-locs ((feat-ls list) (vis-mod vision-module) x accum)
   (dolist (feat feat-ls)
-    (when (chunk-type-subtype-p-fct (chunk-chunk-type-fct feat) 'char-primitive)
+    (when (eq (chunk-slot-value-fct feat 'kind) 'char-primitive)
       (when (> 1.5 (abs (- (chunk-slot-value-fct feat 'left) x)))
         (return-from right-adjoining-led-locs
-          (right-adjoining-led-locs feat-ls (chunk-slot-value-fct feat 'right)
-                                    (append accum (list (xy-loc feat))))))))
+          (right-adjoining-led-locs feat-ls vis-mod (chunk-slot-value-fct feat 'right)
+                                    (append accum (list (xyz-loc feat vis-mod))))))))
   (values accum x))
 
 
@@ -2008,1714 +4441,44 @@
 ;;; Description : Recursively go left and accumulate locations that share
 ;;;             : the boundary.
 
-(defgeneric left-adjoining-led-locs (feat-ls x accum)
+(defgeneric left-adjoining-led-locs (feat-ls vis-mod x accum)
   (:documentation  "Return a list of all the left-adjoining locs with led features and the max x."))
 
-(defmethod left-adjoining-led-locs ((feat-ls list) x accum)
+(defmethod left-adjoining-led-locs ((feat-ls list) (vis-mod vision-module) x accum)
   (dolist (feat feat-ls)
-    (when (chunk-type-subtype-p-fct (chunk-chunk-type-fct feat) 'char-primitive)
+    (when (eq (chunk-slot-value-fct feat 'kind) 'char-primitive)
       (when (> 1.5 (abs (- (chunk-slot-value-fct feat 'right) x)))
         (return-from left-adjoining-led-locs
-          (left-adjoining-led-locs feat-ls (chunk-slot-value-fct feat 'left)
-                                   (append (list (xy-loc feat)) accum))))))
+          (left-adjoining-led-locs feat-ls vis-mod (chunk-slot-value-fct feat 'left)
+                                   (append (list (xyz-loc feat vis-mod)) accum))))))
   (values accum x))
 
 
 
 
-;;; FIND-BEST-FEATURE      [Method]
-;;; Date        : 99.03.29
-;;; Description : The "best" feature is the one with the same ID as the spec.
-;;;             : The next best feature is one that matches the spec and is
-;;;             : nearest to that location.  Failing any matches to the spec,
-;;;             : then return the nearest feature.
+;;   Not used now, but keeping around since EMMA used it and will need it
+;;   for reference when updating that.
 
-(defgeneric find-best-feature (vis-mod feat-lst fs)
-  (:documentation  "Given a list of features and a visicon entry or visual-loc, return the 'best' feature."))
+;;; OBJECT-PRESENT-P      [Method]
+;;; Description : A visual object is present if its ID is still in the icon
+;;;             : or if all the features from which it was synthesized are
+;;;             : still in the icon.
 
-(defmethod find-best-feature (vis-mod (feat-lis list) entry)
-  (awhen (member entry feat-lis)
-    (return-from find-best-feature (first it)))
-  (let ((matches (awhen (gethash entry (found-locs vis-mod))
-                        (find-matching-chunks it :chunks feat-lis :variable-char #\&))))
-    (if matches
-      (random-item (nearest-feat vis-mod matches (xy-loc entry)))
-      (random-item (nearest-feat vis-mod feat-lis (xy-loc entry))))))
+(defgeneric object-present-p (vis-mod obj-id)
+  (:documentation  "Returns NIL if the object ID passed to it is no longer in the icon."))
 
-
-(defun nearest-feat (vis-mod feat-list xy-loc)
-  "Returns list of features nearest to a given location"
-  (unless (vectorp xy-loc)
-    (setf xy-loc (xy-loc xy-loc)))
-  (when feat-list
-    (let* ((feat-chunks (mapcan (lambda (x) (aif (gethash (chunk-visicon-entry x) (visicon vis-mod)) (list it) nil)) feat-list))
-           (best (if feat-chunks (dist (xy-loc (first feat-chunks)) xy-loc) 999))
-           (outlis (list (first feat-chunks)))
-           (the-dist nil))
-      (dolist (feat (rest feat-chunks) outlis)
-        (setf the-dist (dist (xy-loc feat) xy-loc))
-        (cond ((= the-dist best) (push feat outlis))
-              ((< the-dist best) (setf best the-dist)
-               (setf outlis (list feat))))))))
+(defmethod object-present-p ((vis-mod vision-module) obj-id)
+  (bt:with-recursive-lock-held ((visicon-lock vis-mod))
+    (aif (chunk-synth-feat obj-id)
+         ;; For an object synthesized from features check all the features
+         ;; broken now since visicon not a hash table
+         (every (lambda (x) (gethash (chunk-visicon-entry x) (visicon vis-mod))) it)
+         (gethash (chunk-visicon-entry obj-id) (visicon vis-mod)))))
 
 
-
-
-;;; UPDATE-TRACKING-MTH      [Method]
-;;; Date        : 97.05.15
-;;; Description : Updating is kind of a pain.  First, if the tracked object
-;;;             : hasn't moved, then do nothing.  If it has moved, however,
-;;;             : there's a lot of bookkeeping to be done:
-;;;             : [1] The old location need to have its object stripped and
-;;;             : removed as an activation source.
-;;;             : [2] The new location needs to be created, added to the
-;;;             : attention focus, and have its OBJECTS slot set.
-;;;             : [3] The object chunk needs to have its location changed.
-
-
-#|
-
-Proposed new ACT-R 6 mechanism to properly deal with buffer issues:
-
-Then, whenever there's a change to the display the buffers
-will be updated as follows:
-
-   First, if the build-features-for returns nil then assume
-   that the tracked object is out of sight now.  As with an
-   encoding failure, clear visual and set the error state also
-   stop the tracking.
-
-
-   If both buffers are empty:
-
-   A new location is created and the object is modified
-   to have that as its screen-pos.  Both chunks (the
-   new loc. and the object) are stuffed into the buffers.
-
-  If vis-loc empty, visual holds the tracked item:
-
-   Create a new location chunk and stuff it into
-   the visual-location buffer.  Modify the chunk in the
-   visual buffer to have that screen-pos.
-
-  vis-loc holds tracked item's loc. and visual is empty:
-
-   Modify the chunk in the visual-location buffer with
-   the new info and put the object back into the visual
-   buffer (it shouldn't have to be modified at all since
-   its loc. is in the vis-loc buffer.
-
-  both buffers hold the appropriate chunks:
-
-   Modify the chunk in the visual-location buffer,
-   no other changes necessary.
-
-  If either buffer holds a chunk that isn't related
-  to the tracked item:
-
-   Make the appropriate updates to the underlying chunks
-   as needed (modify the chunk in the buffer if it's
-   the tracked one or create/modify the internal one)
-   but don't overwrite a non-tracked chunk in the
-   buffer.
 |#
 
-;;; START-TRACKING      [Method]
-;;; Date        : 97.05.15
-;;; Description : Starting tracking is pretty easy, actually.  The target
-;;;             : object needs to be found and installed in the relevant
-;;;             : slots, and the ACT hook functions need to be set.
 
-(defgeneric start-tracking (vis-mod)
-  (:documentation  "Begin tracking currently attended object"))
-
-(defmethod start-tracking ((vis-mod vision-module))
-   (if (null (currently-attended vis-mod))
-      (print-warning "Request to track object but nothing is currently being attended.")
-    (progn
-      (change-state vis-mod :exec 'BUSY)
-      (setf (tracked-obj vis-mod) (chunk-visual-object (gethash (currently-attended vis-mod) (visicon vis-mod))))
-      (setf (tracked-obj-lastloc vis-mod) nil)  ;; don't assume anything about vis-loc buffer at this point
-      (let ((vis-obj (buffer-read 'visual))) ;; should always be empty since the request clears it but
-                                             ;; if not record it for later checking
-
-        (if (and vis-obj (eq (chunk-copied-from-fct vis-obj) (last-obj vis-mod)))
-
-            (setf (tracked-obj-last-obj vis-mod) vis-obj)
-          (setf (tracked-obj-last-obj vis-mod) nil)))
-      (setf (tracked-obj-last-feat vis-mod) (currently-attended vis-mod))
-      (update-tracking-mth vis-mod)
-
-      (tracked-obj vis-mod)))
-  )
-
-
-;;; When tracking it may be necessary to get the name of
-;;; the chunk from the vis-loc buffer to set the internal
-;;; information correctly.  This method does that, but
-;;; it must be scheduled approproately to ensure the right
-;;; chunk gets recorded.
-;;; It could be possible for something else to intrude and
-;;; mess this up, but the default mechanisms shouldn't
-;;; result in problems.
-
-(defmethod update-tracking-loc-chunk ((vis-mod vision-module) &optional (modify nil))
-
-  (let* ((vis-loc (buffer-read 'visual-location)))
-
-    (setf (tracked-obj-lastloc vis-mod) vis-loc)
-    (setf (current-marker vis-mod) vis-loc)
-
-    (when modify
-      (mod-buffer-chunk 'visual (list 'screen-pos vis-loc)))))
-
-;;; Record the visual object chunk placed into the buffer
-;;; for later comparisons when needed
-
-(defmethod update-tracking-obj-chunk ((vis-mod vision-module))
-
-  (let* ((vis-obj (buffer-read 'visual)))
-
-    (setf (tracked-obj-last-obj vis-mod) vis-obj)))
-
-
-(defgeneric update-tracking-mth (vis-mod &optional from-proc-display)
-  (:documentation  "Update the state of a tracked object"))
-
-(defmethod update-tracking-mth ((vis-mod vision-module) &optional from-proc-display)
-
-  (let ((devin (current-device-interface)))
-
-    ;; Don't change anything now if there's a lock on the
-    ;; device.
-
-    (unless (zerop (locks devin))
-      (push :tracking (pending-procs devin))
-      (return-from update-tracking-mth nil))
-
-    (let* ((new-feat ;; the feature's visicon entry -- chunk name or feature list
-            (if from-proc-display
-
-                ;; The visicon contains the updated info
-                ;; just get the appropriate one out
-
-                (if (tracked-obj vis-mod)
-                    ;; find the one with the same object
-                    (let ((f (find (tracked-obj vis-mod) (visicon-chunks vis-mod) :key 'chunk-visual-object)))
-                      (when f
-                        (chunk-visicon-entry f)))
-                  ;; If it's not object based it must have the same visual-location
-                  ;; chunk of the feature originally tracked so make sure that's still
-                  ;; a feature in the visicon
-                  (when (gethash (tracked-obj-last-feat vis-mod) (visicon vis-mod))
-                    (tracked-obj-last-feat vis-mod)))
-
-              ;; proc-display wasn't called which only happens when the
-              ;; tracking starts now so just use the feature that was
-              ;; valid at that point.
-
-              (tracked-obj-last-feat vis-mod)))
-           (new-loc (when new-feat (gethash new-feat (visicon vis-mod)))) ;; name of the chunk
-           (old-loc (tracked-obj-lastloc vis-mod))
-           (old-obj (tracked-obj-last-obj vis-mod))
-           (vis-loc-chunk (buffer-read 'visual-location))
-           (vis-obj-chunk (buffer-read 'visual)))
-
-      (unless new-loc
-        (schedule-clear-buffer 'visual 0 :module :vision :output 'high :priority 13)
-
-        (change-state vis-mod :exec 'free :proc 'free)
-        (clear-attended vis-mod)
-        (setf (current-marker vis-mod) nil)
-        (setf (attend-failure vis-mod) t)
-        (setf (tracked-obj vis-mod) nil)
-        (setf (tracked-obj-last-feat vis-mod) nil)
-        (setf (last-obj vis-mod) nil)
-        (return-from update-tracking-mth nil))
-
-      (setf (tracked-obj-last-feat vis-mod) new-feat)
-      (setf (current-marker vis-mod) new-loc)
-
-
-      (let ((new-obj (vis-loc-to-obj (aif (chunk-visual-object new-loc)
-                                          it
-                                          (current-device))
-                                     (chunk-visual-feature-name new-loc))))
-
-        (unless new-obj ;; for some reason we have a location but no object
-
-          (schedule-clear-buffer 'visual 0 :module :vision :output 'high :priority 13)
-
-          (change-state vis-mod :exec 'free :proc 'free)
-          (clear-attended vis-mod)
-          (setf (current-marker vis-mod) nil)
-          (setf (attend-failure vis-mod) t)
-          (setf (tracked-obj vis-mod) nil)
-          (setf (tracked-obj-last-feat vis-mod) nil)
-          (setf (last-obj vis-mod) nil)
-          (return-from update-tracking-mth nil))
-
-
-        (setf (currently-attended vis-mod) new-feat)
-        (setf (last-obj vis-mod) new-obj)
-
-
-        ;; always one layer of separation between the
-        ;; user's feature chunk and what gets into
-        ;; the buffer for saftey reasons.
-        ;;
-        ;; Not actually necessary now since new-loc is safe, but it's easier
-        ;; to leave the let than to search and replace...
-
-        (let ((new-buffer-loc new-loc))
-
-          ;; Don't set this here now.  Only set it for the cases where there
-          ;; isn't an update to the visual-location later which will overwrite
-          ;; it.  That avoids an issue with deleting new-buffer-loc later
-          ;; anyway for most cases.
-          ;; The remaining question is is it better to have a reference to
-          ;; a chunk which will go away or no chunk at all in the "bad" cases?
-
-         ; (unless (chunk-slot-value-fct new-obj 'screen-pos)
-         ;   (set-chunk-slot-value-fct new-obj 'screen-pos new-buffer-loc))
-
-
-          ;;; Make sure there's still a finst on the tracked item
-
-
-          (aif (member new-feat (finst-lst vis-mod) :key #'id :test 'equal)
-               (setf (tstamp (first it)) (mp-time-ms))
-               (add-finst vis-mod new-loc))
-
-
-          ;(format t "New-loc: ~S~%New-buffer-loc: ~S~%New-obj: ~S~%Old-loc: ~S~%Old-obj: ~S~%vis-loc-chunk: ~S~%vis-obj-chunk: ~S~%"
-          ;  new-loc new-buffer-loc new-obj old-loc old-obj vis-loc-chunk vis-obj-chunk)
-
-
-          (cond ((and (null vis-loc-chunk)
-                      (null vis-obj-chunk))
-
-                 ;(pprint 'case-1)
-
-                 #|
-                 Stuff both buffers and then update the obj with the
-                 buffer-chunk's name
-                 |#
-
-                 (schedule-set-buffer-chunk 'visual-location new-buffer-loc 0
-                                            :module :vision :output 'high :requested nil
-                                            :priority 15)
-
-                 ;; need to make sure the chunk
-                 ;; being set in the buffer isn't deleted before
-                 ;; it gets there
-
-                 (when from-proc-display
-                   (lock-device (current-device-interface))
-                   (schedule-event-relative 0 'unlock-device
-                                            :module :vision
-                                            :destination :device
-                                            :priority 14
-                                            :output nil
-                                            :maintenance t))
-
-                 (schedule-set-buffer-chunk 'visual new-obj 0
-                                            :module :vision :output 'high :requested nil
-                                            :priority 14)
-                 (schedule-event-relative 0 #'update-tracking-loc-chunk
-                                          :module :vision
-                                          :destination :vision
-                                          :params (list t)
-                                          :priority 13
-                                          :output nil)
-                 (schedule-event-relative 0 #'update-tracking-obj-chunk
-                                          :module :vision
-                                          :destination :vision
-                                          :params nil
-                                          :priority 12
-                                          :output nil)
-                 )
-
-                ((and (null vis-loc-chunk)
-                      (eq vis-obj-chunk old-obj))
-
-                ;(pprint 'case-2)
-
-                 #|
-                 stuff a new location chunk  into
-                 the visual-location buffer.  Modify the chunk in the
-                 visual buffer with all the new info. and make sure
-                 to sync. with the loc in the buffer.
-
-                 Note - need to set priority of the buffer stuffing
-                 so that if there's a find-location scheduled
-                 but not completed this happens first, so that
-                 the find-loc overwrites.  SO, the priority of this
-                 needs to be set to > 10.
-                 |#
-
-
-                 (schedule-set-buffer-chunk 'visual-location new-buffer-loc 0
-                                            :module :vision :output 'high :requested nil
-                                            :priority 15)
-                 (when from-proc-display
-                   (lock-device (current-device-interface))
-                   (schedule-event-relative 0 'unlock-device
-                                            :module :vision
-                                            :destination :device
-                                            :priority 14
-                                            :output nil
-                                            :maintenance t))
-
-                 (schedule-mod-buffer-chunk 'visual
-                                            ;; This is an ugly way to do things, but
-                                            ;; it works for now...
-                                            (cddr (chunk-spec-to-chunk-def
-                                                   (chunk-name-to-chunk-spec new-obj)))
-                                            0
-                                            :module :vision
-                                            :output 'high
-                                            :priority 14)
-
-                 (schedule-event-relative 0 #'update-tracking-loc-chunk
-                                          :module :vision
-                                          :destination :vision
-                                          :params (list t)
-                                          :priority 13
-                                          :output nil)
-
-                 )
-
-                ((null vis-loc-chunk) ;; The visual chunk is unknown
-
-                 ;(pprint 'case-3)
-
-                 #|
-                 stuff a new location chunk  into
-                 the visual-location buffer.
-                 Don't touch the chunk in the visual buffer
-                 |#
-
-
-                 (schedule-set-buffer-chunk 'visual-location new-buffer-loc 0
-                                            :module :vision :output 'high :requested nil
-                                            :priority 15)
-
-                 (when from-proc-display
-                   (lock-device (current-device-interface))
-                   (schedule-event-relative 0 'unlock-device
-                                            :module :vision
-                                            :destination :device
-                                            :priority 14
-                                            :output nil
-                                            :maintenance t))
-
-                 (schedule-event-relative 0 #'update-tracking-loc-chunk
-                                          :module :vision
-                                          :destination :vision
-                                          :params nil
-                                          :priority 13
-                                          :output nil)
-
-                 )
-
-                ((and (eq vis-loc-chunk old-loc)
-                      (null vis-obj-chunk))
-
-                ;(pprint 'case-4)
-
-                #|
-                Modify the chunk in the visual-location buffer
-
-                put new obj into visual buffer
-                update it with current location
-                |#
-
-
-                 (schedule-mod-buffer-chunk 'visual-location
-                                            ;; This is an ugly way to do things, but
-                                            ;; it works for now...
-                                            (cddr (chunk-spec-to-chunk-def
-                                                   (chunk-name-to-chunk-spec new-buffer-loc)))
-                                            0
-                                            :module :vision
-                                            :output 'high
-                                            :priority 15)
-
-                 (schedule-set-buffer-chunk 'visual new-obj 0
-                                            :module :vision :output 'high :requested nil
-                                            :priority 14)
-                 (schedule-event-relative 0 #'update-tracking-loc-chunk
-                                          :module :vision
-                                          :destination :vision
-                                          :params (list t)
-                                          :priority 13
-                                          :output nil)
-                 (schedule-event-relative 0 #'update-tracking-obj-chunk
-                                          :module :vision
-                                          :destination :vision
-                                          :params nil
-                                          :priority 12
-                                          :output nil)
-                 )
-
-
-                ((and (eq vis-loc-chunk old-loc)
-                      (eq vis-obj-chunk old-obj))
-
-                 ;(pprint 'case-5)
-
-
-                 #|
-
-                 Modify both chunks and make sure the obj points to the
-                 right loc just to be safe.
-                |#
-
-                 (schedule-mod-buffer-chunk 'visual-location
-                                            ;; This is an ugly way to do things, but
-                                            ;; it works for now...
-                                            (cddr (chunk-spec-to-chunk-def
-                                                   (chunk-name-to-chunk-spec new-buffer-loc)))
-                                            0
-                                            :module :vision
-                                            :output 'high
-                                            :priority 15)
-
-                 (schedule-mod-buffer-chunk 'visual
-                                            ;; This is an ugly way to do things, but
-                                            ;; it works for now...
-                                            (cddr (chunk-spec-to-chunk-def
-                                                   (chunk-name-to-chunk-spec new-obj)))
-                                            0
-                                            :module :vision
-                                            :output 'high
-                                            :priority 14)
-                 (schedule-event-relative 0 #'update-tracking-loc-chunk
-                                          :module :vision
-                                          :destination :vision
-                                          :params (list t)
-                                          :priority 13
-                                          :output nil)
-
-                 )
-
-                ((eq vis-loc-chunk old-loc)
-                 ;; Don't know about the visual buffer
-
-                 ;(pprint 'case-6)
-
-
-                 #|
-
-                 Modify the loc
-
-                |#
-
-                 (schedule-mod-buffer-chunk 'visual-location
-                                            ;; This is an ugly way to do things, but
-                                            ;; it works for now...
-                                            (cddr (chunk-spec-to-chunk-def
-                                                   (chunk-name-to-chunk-spec new-buffer-loc)))
-                                            0
-                                            :module :vision
-                                            :output 'high
-                                            :priority 15)
-                )
-
-
-                ((null vis-obj-chunk) ;; Don't know about the vis-loc buffer
-                 ;(pprint 'case-7)
-
-
-                 #|
-                  Just put the new object in place
-                 |#
-
-                 (unless (chunk-slot-value-fct new-obj 'screen-pos)
-                   (set-chunk-slot-value-fct new-obj 'screen-pos new-buffer-loc))
-
-                 (schedule-set-buffer-chunk 'visual new-obj 0
-                                            :module :vision :output 'high :requested nil
-                                            :priority 14)
-
-                 (schedule-event-relative 0 #'update-tracking-obj-chunk
-                                          :module :vision
-                                          :destination :vision
-                                          :params nil
-                                          :priority 12
-                                          :output nil)
-                 )
-
-                ((eq vis-obj-chunk old-obj) ;; Don't know about vis-loc buffer
-
-                 ;(pprint 'case-8)
-
-
-                 #|
-                  Just modify the object chunk
-                 |#
-
-                 (unless (chunk-slot-value-fct new-obj 'screen-pos)
-                   (set-chunk-slot-value-fct new-obj 'screen-pos new-buffer-loc))
-
-                 (schedule-mod-buffer-chunk 'visual
-                                            ;; This is an ugly way to do things, but
-                                            ;; it works for now...
-                                            (cddr (chunk-spec-to-chunk-def
-                                                   (chunk-name-to-chunk-spec new-obj)))
-                                            0
-                                            :module :vision
-                                            :output 'high
-                                            :priority 14)
-
-                 )
-
-                (t ;; Don't do anything
-                 ;(pprint 'case-9)
-
-
-                 ))))))
-
-  nil)
-
-
-;;; REMOVE-TRACKING      [Method]
-;;; Date        : 97.05.15
-;;; Description : When tracking stops, the slots for tracked objects need to
-;;;             : to be cleared, and the ACT hook functions need to be cleared.
-
-(defgeneric remove-tracking (vis-mod)
-  (:documentation  "Clears out all the tracking stuff"))
-
-(defmethod remove-tracking ((vis-mod vision-module))
-  (setf (tracked-obj-last-feat vis-mod) nil)
-  (setf (tracked-obj-lastloc vis-mod) nil)
-  (setf (tracked-obj-last-obj vis-mod) nil)
-  (setf (tracked-obj vis-mod) nil)
-  (change-state vis-mod :exec 'FREE)
-)
-
-
-;;; UPDATE-TRACKING      [Function]
-;;; Date        : 97.05.15
-;;; Description : To be called by the user to indicate movement.
-
-(defun update-tracking ()
-  "Call the Vision Module's tracking update method."
-  ;(update-tracking-mth (get-module :vision))
-  (print-warning "Update-tracking has been depricated.  All updates must be done through proc-display or the add/delete/update actions."))
-
-
-;;; This is not a user command -- forcing an explicit  update can
-;;; lead to invalid finsts and it won't pick up any new info until
-;;; that change has occured through proc-display or update-visicon-item.
-
-(defun unlock-tracking ()
-  (update-tracking-mth (get-module :vision)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-
-(defgeneric set-cfs-mth (vis-mod kwrd)
-  (:documentation "Set the current character feature set."))
-
-(defmethod set-cfs-mth ((vis-mod vision-module) kwrd)
-  (setf (active-cfs vis-mod) (get-cfs-mth vis-mod kwrd)))
-
-
-(defgeneric get-cfs-mth (vis-mod kwrd)
-  (:documentation "Given a keyword, find a character feature set."))
-
-(defmethod get-cfs-mth ((vis-mod vision-module) kwrd)
-  (aif (member kwrd (feature-sets vis-mod) :key #'name)
-    (first it)
-    (model-warning "Feature set ~S is unknown" kwrd)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-
-(defmethod clear :after ((vis-mod vision-module))
-  (remove-tracking vis-mod)
-
-  ;; make sure to clear this too
-
-  (setf (last-obj vis-mod) nil)
-
-  ;;; Dan this seems to make sense
-  (setf (loc-failure vis-mod) nil)
-  (setf (attend-failure vis-mod) nil)
-  (setf (scene-change vis-mod) nil)
-  )
-
-
-
-;;; FIND-LOCATION      [Method]
-;;; Date        : 98.08.11R (rewrite), delta 99.06.24
-;;; Description : To find a location, we need to search the icon.  To do this,
-;;;             : construct a feature spec based on the parameters passed,
-;;;             : and filter the list to those that match the spec.  This
-;;;             : should be faster for large icons because it makes only
-;;;             : one pass over the icon.  Regardless, some
-;;;             : post-processing of that list might be necessary if LOWEST
-;;;             : or HIGHEST was passed as a coordinate or if NEAREST is
-;;;             : true.
-;;;             : Once we have a list, randomly pick one (that may change in
-;;;             : the future) feature and build a location out of it.
-
-(defgeneric find-location (vis-mod chunk-spec)
-  (:documentation  "Given a set of constraints, build a DMO for that screen location if one matches."))
-
-(defmethod find-location ((vis-mod vision-module) chunk-spec)
-
-  (update-new vis-mod)
-  (check-finsts vis-mod)
-
-  (let ((loc (awhen (find-current-locs-with-spec vis-mod chunk-spec)
-                    (construct-location vis-mod (random-item (objs-max-val it 'chunk-visual-tstamp)) chunk-spec))))
-    (if loc
-       (progn
-         (setf (loc-failure vis-mod) nil)
-         (schedule-set-buffer-chunk 'visual-location loc 0 :module :vision :priority 10)
-         (lock-device (current-device-interface))
-         (schedule-event-relative 0 'unlock-device
-                                  :module :vision
-                                  :destination :device
-                                  :priority 9
-                                  :output nil
-                                  :maintenance t))
-      (progn
-         (setf (loc-failure vis-mod) t)
-        (schedule-event-relative 0 'find-loc-failure :module :vision :output 'low)))
-    (when (and loc (auto-attend vis-mod))
-      (schedule-event-relative 0 'visual-auto-attend :destination :vision :output t
-                               :module :vision :details (concatenate 'string "automatically attending " (symbol-name loc))))
-    loc))
-
-
-(defmethod visual-auto-attend ((vis-mod vision-module))
-  (aif (buffer-read 'visual-location)
-       (progn
-         ;; mark the module as busy between now and the attention shift
-
-         (change-state vis-mod :exec 'BUSY :proc 'BUSY)
-
-         ;; schedule the attention shift to be 50ms from now - should probably use the default action time
-         ;; instead but not going to do that at this point...
-
-         (schedule-event-relative .05 'move-attention :params (list :location it) :destination :vision :output 'medium
-                                  :module :vision :details (concatenate 'string "Move-attention " (symbol-name it)) :priority 0)
-
-         ;; Hack to clear the module state just before the attention shift so as not to
-         ;; jam things.
-
-         (schedule-event-relative .05 'change-state :params (list :exec 'free :proc 'free) :destination :vision :output nil
-                                  :module :vision :priority 1))
-
-       (model-warning "Auto-attend failed because visual-location buffer was empty.")))
-
-
-(defun find-loc-failure ()
-  "Dummy event function to signal a find-location failure in the trace"
-  nil)
-
-
-
-(defgeneric construct-location (vis-mod feat spec)
-  (:documentation  "Find or build a DMO based on a feature and the spec used to generate that feature."))
-
-
-(defmethod construct-location ((vis-mod vision-module) loc spec)
-
-  ;; record that this loc was found with this spec
-  (setf (gethash (chunk-visicon-entry loc) (found-locs vis-mod)) spec)
-
-  loc)
-
-;;; MOVE-ATTENTION      [Method]
-;;; Date        : 97.02.09
-;;; Description : This is a toplevel command for the Vision Module, causing
-;;;             : attention to move.  Latencey is 185 ms, so nothing actually
-;;;             : happens right away other than setting state variables.
-;;;             : A method is dispatched based on the scale that's passed.
-
-(defgeneric move-attention (vis-mod &key location scale)
-  (:documentation "Shift attention to a particular location at a particular scale."))
-
-(defmethod move-attention ((vis-mod vision-module) &key location scale)
-  (if (and (eq (exec-s vis-mod) 'BUSY) (not (tracked-obj-last-feat vis-mod)))
-    (model-warning "Attention shift requested at ~S while one was already in progress." (mp-time))
-    (progn
-      (when (tracked-obj-last-feat vis-mod) (remove-tracking vis-mod))
-
-      (setf (moving-attention vis-mod) t)
-      (clear-attended vis-mod)
-      (setf (last-scale vis-mod) scale)
-
-      (setf (attend-failure vis-mod) nil)
-
-      (schedule-event-relative
-         (randomize-time (move-attn-latency vis-mod))
-         'encoding-complete
-         :destination :vision
-         :module :vision
-         :params (list location scale)
-         :details (concatenate 'string "Encoding-complete " (symbol-name location)
-                    " " (symbol-name scale))
-       :output 'medium)
-
-      (setf (current-marker vis-mod) location)
-      ;; not being used right now (set-clof vis-mod (dmo-to-xy location))
-      (change-state vis-mod :exec 'BUSY :proc 'BUSY))))
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-
-
-(defun create-vision-module (model-name)
-  (declare (ignore model-name))
-  (make-instance 'vision-module))
-
-(defun reset-vision-module (vis-mod)
-
-  (reset-pm-module vis-mod)
-
-  ;; This stuff was moved from an after method on reset-pm-module...
-
-  (clrhash (visicon vis-mod))
-  ;(clrhash (feat-table vis-mod))
-
-  (clrhash (found-locs vis-mod))
-  (setf (current-cursor vis-mod) nil)
-
-  (remove-tracking vis-mod)
-  (setf (last-scale vis-mod) nil)
-  (set-cfs-mth vis-mod :RM-ORIG)
-  (setf (synthd-objs vis-mod) (clrhash (synthd-objs vis-mod)))
-  (setf (finst-lst vis-mod) nil)
-
-  (setf (scene-change vis-mod) nil)
-
-  (setf (last-obj vis-mod) nil)
-
-  ;;(setf (attn-trace vis-mod) nil)
-
-  ;; Not needed at this point (set-clof vis-mod #(0 0))
-
-  (setf (loc-failure vis-mod) nil)
-  (setf (attend-failure vis-mod) nil)
-
-  (setf (other-word-chars vis-mod) nil)
-  (setf (center-point vis-mod) (vector 0 0))
-
-  (setf (process-display-called vis-mod) nil)
-
-  (chunk-type visual-object screen-pos value status color height width)
-  (chunk-type abstract-object value line-pos bin-pos)
-  ;(chunk-type (abstract-letter (:include abstract-object)))
-  ;(chunk-type (abstract-number (:include abstract-object)))
-
-  (chunk-type (text (:include visual-object)) (text t))
-  (chunk-type (empty-space (:include visual-object)) (empty-space t))
-  (chunk-type (oval (:include visual-object)) (oval t))
-  (chunk-type (cursor (:include visual-object)) (cursor t))
-
-  (chunk-type (line (:include visual-object)) end1-x end1-y end2-x end2-y)
-  (chunk-type (phrase! (:include visual-object)) objects words colors)
-
-  (chunk-type visual-location screen-x screen-y distance kind color
-              value height width size)
-
-  (chunk-type set-visloc-default type screen-x screen-y distance kind color
-              value height width size)
-
-  (chunk-type (char-primitive (:include visual-location)) left right)
-
-  (chunk-type vision-command)
-
-  (unless (chunk-type-p pm-constant)
-    (chunk-type pm-constant))
-  (chunk-type color)
-
-  (chunk-type move-attention screen-pos scale)
-
-  (chunk-type start-tracking)
-
-  (chunk-type assign-finst object location)
-
-  (chunk-type clear-scene-change)
-
-
-  (unless (chunk-type-p clear)
-    (chunk-type clear))
-
-  (define-chunks
-    (lowest isa pm-constant)
-    (highest isa pm-constant)
-    (current isa pm-constant)
-    (current-x isa pm-constant)
-    (current-y isa pm-constant)
-    (clockwise isa pm-constant)
-    (counterclockwise isa pm-constant)
-    (external isa pm-constant)
-    (internal isa pm-constant)
-    (find-location isa vision-command)
-    (move-attention isa vision-command)
-    (assign-finst isa vision-command)
-    (start-tracking isa vision-command)
-
-    (black isa color)
-    (red isa color)
-    (blue isa color)
-    (green isa color)
-    (white isa color)
-    (magenta isa color)
-    (yellow isa color)
-    (cyan isa color)
-    (dark-green isa color)
-    (dark-red isa color)
-    (dark-cyan isa color)
-    (dark-blue isa color)
-    (dark-magenta isa color)
-    (dark-yellow isa color)
-    (light-gray isa color)
-    (dark-gray isa color)
-    (gray isa color)
-
-    (text isa chunk)
-    (box isa chunk)
-    (line isa chunk)
-    (oval isa chunk)
-
-    (new isa chunk)
-    (clear isa chunk))
-
-
-  (setf (default-spec vis-mod)
-        (define-chunk-spec isa visual-location screen-x lowest :attended new)))
-
-(defun clear-scene-change (vis-mod)
-  (setf (scene-change vis-mod) nil))
-
-
-(defun query-vision-module (vis-mod buffer slot value)
-  (case buffer
-    (visual
-     (cond ((and (eq slot 'state) (eq value 'error))
-            (attend-failure vis-mod))
-           ((eq slot 'scene-change)
-            (let ((change-detect (and (numberp (car (scene-change vis-mod)))
-                                      (>= (car (scene-change vis-mod)) (change-threshold vis-mod))
-                                      (<= (mp-time-ms) (+ (cdr (scene-change vis-mod)) (new-span vis-mod))))))
-              (or (and change-detect value)
-                  (null (or change-detect value)))))
-           ((eq slot 'scene-change-value)
-            (and (numberp value)
-                 (numberp (car (scene-change vis-mod)))
-                 (>= (car (scene-change vis-mod)) value)))
-           (t (generic-state-query vis-mod buffer slot value))))
-    (visual-location
-     (case slot
-       (state
-        (case value
-          (busy nil) ;; visual-location requests are always free
-          (free t)
-          (error (loc-failure vis-mod))
-          (t (print-warning
-              "Invalid query made of the ~S buffer with slot ~S and value ~S"
-              buffer slot value))))
-       (attended
-        (let ((vis-loc-chunk (buffer-read 'visual-location)))
-          (when (and vis-loc-chunk (chunk-type-subtype-p-fct (chunk-chunk-type-fct vis-loc-chunk) 'visual-location))
-            (let* ((old-loc  (chunk-visicon-entry vis-loc-chunk))
-                   (loc (if (chunk-p-fct old-loc) old-loc vis-loc-chunk)))
-
-              (update-new vis-mod)
-              (check-finsts vis-mod)
-
-              (test-attended (list '= :attended value) loc)))))))))
-
-
-(defmethod warn-vision ((vis-mod vision-module) buffer-name chunk-type)
-  (declare (ignore chunk-type))
-  (when (and (eq buffer-name 'visual)
-             (null (visual-lock vis-mod)))
-    (lock-device (current-device-interface))
-    (setf (visual-lock vis-mod) t)))
-
-(defmethod pm-module-request ((vis-mod vision-module) buffer-name chunk-spec)
-  (case buffer-name
-    (visual
-     (when (visual-lock vis-mod)
-       (setf (visual-lock vis-mod) nil)
-       (schedule-event-relative 0 'unlock-device
-                                :module :vision
-                                :destination :device
-                                :priority :min
-                                :output nil
-                                :maintenance t))
-
-     (case (chunk-spec-chunk-type chunk-spec)
-       (clear ;; replaces the implicit clear from -visual
-        (schedule-event-relative 0 'clear :module :vision :destination :vision :output 'low))
-       (clear-scene-change
-        (schedule-event-relative 0 'clear-scene-change :module :vision :destination :vision :output 'low))
-       (start-tracking
-        (schedule-event-relative 0 'start-tracking
-                                 :destination :vision
-                                 :module :vision
-                                 :output 'medium))
-       (assign-finst
-        (let ((object (if (slot-in-chunk-spec-p chunk-spec 'object)
-                         (verify-single-explicit-value
-                          (chunk-spec-slot-spec chunk-spec 'object)
-                          :vision 'assign-finst 'object)
-                         nil))
-              (location (if (slot-in-chunk-spec-p chunk-spec 'location)
-                            (verify-single-explicit-value
-                             (chunk-spec-slot-spec chunk-spec 'location)
-                             :vision 'assign-finst 'location)
-                            nil)))
-
-          (if (or object location)
-            (schedule-event-relative 0 'assign-finst
-                                     :params (list vis-mod :object object
-                                                   :location location)
-                                     :module :vision
-                                     :output 'medium)
-            (print-warning "An object or location is required for an assign-finst request"))))
-
-
-       (visual-object
-        (print-warning "Move attention requests are now done with an isa move-attention"))
-
-
-       (move-attention
-        (let ((sp (if (slot-in-chunk-spec-p chunk-spec 'screen-pos)
-                     (verify-single-explicit-value
-                      (chunk-spec-slot-spec chunk-spec 'screen-pos)
-                      :vision 'visual-object 'screen-pos)
-                     nil))
-              (scale (if (slot-in-chunk-spec-p chunk-spec 'scale)
-                        (verify-single-explicit-value
-                         (chunk-spec-slot-spec chunk-spec 'scale)
-                         :vision 'visual-object 'scale)
-                        nil)))
-         ; (when scale
-         ;     (print-warning "Scale values are not yet handled by the new vision module - ignoring it."))
-          (if sp
-            (if (chunk-p-fct sp)
-                (if (chunk-type-subtype-p-fct (chunk-chunk-type-fct sp) 'visual-location)
-                    (schedule-event-relative 0 'move-attention
-                                     :params (list vis-mod :scale scale :location sp)
-                                     :details
-                                     (concatenate 'string "Move-attention " (symbol-name sp)
-                                                  " " (symbol-name scale))
-                                             :module :vision)
-                  (print-warning "screen-pos value ~s in a move-attention request was not a visual-location chunk" sp))
-              (print-warning "screen-pos value ~s in a move-attention request was not a chunk" sp))
-              (print-warning "Move-attention request to the visual buffer requires a screen-pos value"))))
-       (t
-        (print-warning "Invalid command ~a sent to the visual buffer"
-                       (chunk-spec-chunk-type chunk-spec)))))
-
-    (visual-location
-     (cond ((chunk-type-subtype-p-fct (chunk-spec-chunk-type chunk-spec) 'visual-location)
-            (let ((nearest (if (slot-in-chunk-spec-p chunk-spec :nearest)
-                               (verify-single-explicit-value
-                                (chunk-spec-slot-spec chunk-spec :nearest)
-                                :vision 'visual-location :nearest)
-                             :none))
-                  (attended (if (slot-in-chunk-spec-p chunk-spec :attended)
-                                (multiple-value-bind (val valid)
-                                    (verify-single-explicit-value
-                                     (chunk-spec-slot-spec chunk-spec :attended)
-                                     :vision 'visual-location :attended)
-                                  (declare (ignore val))
-                                  valid)
-                              :none))
-                  (center (if (slot-in-chunk-spec-p chunk-spec :center)
-                               (verify-single-explicit-value
-                                (chunk-spec-slot-spec chunk-spec :center)
-                                :vision 'visual-location :achor)
-                             :none))
-                  )
-
-              (if (or (null nearest) (null attended) (null center))
-                  (print-warning "Invalid value in a request to the visual-location buffer")
-
-                (schedule-event-relative 0 'find-location :module :vision
-                                         :destination :vision
-                                         :details "Find-location"
-                                         :output 'medium
-                                         :params (list chunk-spec)))))
-           ((chunk-type-subtype-p-fct (chunk-spec-chunk-type chunk-spec) 'set-visloc-default)
-            (let ((nearest (if (slot-in-chunk-spec-p chunk-spec :nearest)
-                               (verify-single-explicit-value
-                                (chunk-spec-slot-spec chunk-spec :nearest)
-                                :vision 'set-visloc-default :nearest)
-                             :none))
-                  (attended (if (slot-in-chunk-spec-p chunk-spec :attended)
-                                (multiple-value-bind (val valid)
-                                    (verify-single-explicit-value
-                                     (chunk-spec-slot-spec chunk-spec :attended)
-                                     :vision 'set-visloc-default :attended)
-                                  (declare (ignore val))
-                                  valid)
-                              :none))
-                  (type (if (slot-in-chunk-spec-p chunk-spec 'type)
-                                (multiple-value-bind (val valid)
-                                    (verify-single-explicit-value
-                                     (chunk-spec-slot-spec chunk-spec 'type)
-                                     :vision 'set-visloc-default 'type)
-                                  (declare (ignore valid))
-                                  val)
-                          :none))
-                  (center (if (slot-in-chunk-spec-p chunk-spec :center)
-                               (verify-single-explicit-value
-                                (chunk-spec-slot-spec chunk-spec :center)
-                                :vision 'visual-location :achor)
-                             :none)))
-
-              (if (or (null nearest) (null attended) (null center))
-                  (print-warning "Invalid value in a request to the visual-location buffer")
-                (if (and type (not (eq type :none)) (not (chunk-type-p-fct type)))
-                    (print-warning "Invalid type specified in set-visloc-default request.")
-                  (schedule-event-relative 0 'set-visloc-default-request :module :vision
-                                           :destination :vision
-                                           :details "Set-visloc-default"
-                                           :output 'medium
-                                           :priority 9 ; just below the buffer clearing by the production
-                                           :params (list chunk-spec))))))
-           (t (print-warning "Invalid command ~a sent to the visual-location buffer"
-                             (chunk-spec-chunk-type chunk-spec)))))))
-
-
-
-(defun params-vision-module (vis-mod param)
-  (if (consp param)
-    (case (car param)
-
-      (:optimize-visual
-       (setf (optimize-p vis-mod) (cdr param)))
-      (:viewing-distance (setf (viewing-distance vis-mod) (cdr param))
-                         (when (and (numberp (viewing-distance vis-mod)) (numberp (ppi vis-mod)))
-                           (setf (view-dist vis-mod) (round (* (viewing-distance vis-mod) (ppi vis-mod))))))
-      (:pixels-per-inch (setf (ppi vis-mod) (cdr param))
-                         (when (and (numberp (viewing-distance vis-mod)) (numberp (ppi vis-mod)))
-                           (setf (view-dist vis-mod) (round (* (viewing-distance vis-mod) (ppi vis-mod))))))
-      (:visual-attention-latency
-       (setf (move-attn-latency vis-mod) (cdr param)))
-      (:scene-change-threshold
-       (setf (change-threshold vis-mod) (cdr param)))
-      (:visual-finst-span
-       (setf (finst-span vis-mod) (seconds->ms (cdr param)))
-       (check-finsts vis-mod)
-       (cdr param))
-      (:visual-movement-tolerance
-       (setf (move-allowance vis-mod) (cdr param)))
-      (:visual-num-finsts
-       (setf (num-finst vis-mod) (cdr param))
-       (check-finsts vis-mod)
-       (cdr param))
-      (:visual-onset-span
-       (setf (new-span vis-mod) (seconds->ms (cdr param)))
-       (cdr param))
-      (:auto-attend
-       (setf (auto-attend vis-mod) (cdr param)))
-      (:test-feats
-       (setf (test-feats vis-mod) (cdr param)))
-      (:delete-visicon-chunks
-       (setf (purge-visicon vis-mod) (cdr param))))
-
-    (case param
-
-      (:optimize-visual
-       (optimize-p vis-mod))
-      (:scene-change-threshold
-       (change-threshold vis-mod))
-      (:visual-attention-latency
-       (move-attn-latency vis-mod))
-      (:visual-finst-span
-       (ms->seconds (finst-span vis-mod)))
-      (:visual-movement-tolerance
-       (move-allowance vis-mod))
-      (:visual-num-finsts
-       (num-finst vis-mod))
-      (:visual-onset-span
-       (ms->seconds (new-span vis-mod)))
-      (:auto-attend
-       (auto-attend vis-mod))
-      (:test-feats
-       (test-feats vis-mod))
-      (:delete-visicon-chunks
-       (purge-visicon vis-mod)))))
-
-
-(define-module-fct :vision
-    (list (list 'visual-location nil '(:attended :nearest :center) '(attended)
-                            #'(lambda ()
-                               (command-output "  attended new          : ~S"
-                                               (query-buffer 'visual-location
-                                                             '((attended . new))))
-                               (command-output "  attended nil          : ~S"
-                                               (query-buffer 'visual-location
-                                                             '((attended . nil))))
-                               (command-output "  attended t            : ~S"
-                                               (query-buffer 'visual-location
-                                                             '((attended . t))))))
-        (list 'visual nil nil '(scene-change-value scene-change modality preparation execution processor last-command)
-                 #'(lambda ()
-                     (let ((v (get-module :vision)))
-                       (print-module-status v)
-                       (command-output "  scene-change          : ~S"
-                                       (query-buffer 'visual
-                                                     '((scene-change . t))))
-                       (command-output "  scene-change-value    : ~S"
-                                       (car (scene-change v)))))))
-  (list
-
-   (define-parameter :scene-change-threshold
-     :valid-test (lambda (x) (and (numberp x) (<= 0.0 x 1.0)))
-     :default-value 0.25
-     :warning "a number in the range [0.0,1.0]"
-     :documentation "Proportion of visicon which must change to signal a scene change")
-   (define-parameter :optimize-visual
-     :valid-test #'tornil
-     :default-value T
-     :warning "T or NIL"
-     :documentation "If set to nil the default devices process text into sub-letter features")
-    (define-parameter :visual-attention-latency
-     :valid-test #'nonneg
-     :default-value 0.085
-     :warning "a non-negative number"
-     :documentation "Time for a shift of visual attention")
-   (define-parameter :visual-finst-span
-     :valid-test #'nonneg
-     :default-value 3.0
-     :warning "a non-negative number"
-     :documentation "Lifespan of a visual finst")
-   (define-parameter :visual-movement-tolerance
-     :valid-test #'nonneg
-     :default-value 0.5
-     :warning "a non-negative number"
-     :documentation
-     "How far something can move while still being seen as the same object.")
-   (define-parameter :visual-num-finsts
-     :valid-test #'posnum
-     :default-value 4
-     :warning "a positive number"
-     :documentation "Number of visual finsts.")
-   (define-parameter :visual-onset-span
-     :valid-test #'nonneg
-     :default-value 0.5
-     :warning "a non-negative number"
-     :documentation "Lifespan of new visual objects being marked as NEW")
-   (define-parameter :auto-attend
-     :valid-test #'tornil
-     :default-value nil
-     :warning "T or NIL"
-     :documentation "Whether visual-location requests automatically generate an attention shift")
-
-   (define-parameter :test-feats
-     :valid-test #'tornil
-     :default-value T
-     :warning "T or NIL"
-     :documentation "Whether proc-display should use the features to compare items instead of just the chunk names")
-   (define-parameter :delete-visicon-chunks
-     :valid-test #'tornil
-     :default-value T
-     :warning "T or NIL"
-     :documentation "Whether proc-display should delete and unintern the name of old chunks that were in the visicon")
-   (define-parameter :viewing-distance :owner nil)
-   (define-parameter :pixels-per-inch :owner nil))
-
-  :version "3.2"
-  :documentation "A module to provide a model with a visual attention system (which now uses chunks internally)"
-  :creation 'create-vision-module
-  :reset 'reset-vision-module
-  :query 'query-vision-module
-  :request 'pm-module-request
-  :params 'params-vision-module
-  :warning 'warn-vision)
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-;;; BUILD-STRING-FEATS      [Method]
-;;; Date        : 2014.01.24
-;;; Description : In order to build all the features for a string, there is a
-;;;             : great deal of stuff that is needed from the interface beyond
-;;;             : just the string itself.  Need to know the y coordinate, the
-;;;             : starting x coordinate, the text height, the line height, the
-;;;             : associated screen object, and some way of determining the width
-;;;             : (in pixels) of a string.  May also provide a function for
-;;;             : computing a different starting x coordinate for each line.
-;;;             :
-;;;             : There are two ways to do it, with and without optimizing.
-;;;             : With optimizing it's easy, just accumulate words.  When
-;;;             : optimzing is off, though, have to walk the string
-;;;             : character-by-character and build features for each one.
-
-(defgeneric build-string-feats (vis-mod &key text start-x y-pos width-fct height obj line-height x-fct)
-  (:documentation  "Build a list of visual-locations representing a string with the given geometry."))
-
-(defun merge-real-visual-values (first second)
-  (declare (ignore first))
-  (chunk-real-visual-value second))
-
-(extend-chunks real-visual-value :copy-function identity :merge-function merge-real-visual-values)
-
-(defmethod build-string-feats ((vis-mod vision-module) &key text start-x y-pos width-fct height obj (line-height 0) x-fct)
-  (declare (fixnum start-x y-pos)  (function width-fct) (string text) (number height) (number line-height))
-  (when (not (and text start-x y-pos width-fct height line-height))
-    (error "NIL passed to BUILD-STRING-FEATS."))
-  (unless (equal text "")
-    (let ((f-accum nil)
-          (spc-wdth (funcall width-fct " "))
-          )
-      (dolist (line (string-to-lines text) (nreverse (flatten f-accum)))
-        (let ((curr-x (if (or (functionp x-fct) (and (symbolp x-fct) (fboundp x-fct)))
-                          (let ((x (funcall x-fct line start-x obj)))
-                            (if (numberp x) x start-x))
-                            start-x))
-              (curr-width nil))
-          (if (optimize-p vis-mod)
-
-              ;; if optimizing is on, then carve the string into words (strings)
-              ;; and space runs (numbers)
-              (dolist (word (chop-string vis-mod line))
-                (when (stringp word)
-                  (setf curr-width (funcall width-fct word))
-                  (let ((vl (car (define-chunks-fct (list (list 'isa 'visual-location
-                                                                'screen-y y-pos 'height height 'value 'text 'kind 'text
-                                                                'width curr-width 'screen-x (+ curr-x (round curr-width 2))))))))
-                    (push vl f-accum)
-                    (setf (chunk-real-visual-value vl) (string-downcase word))))
-                (incf curr-x (if (stringp word) curr-width (* word spc-wdth))))
-
-            ;; if not optimizing, then blast it character-by-character
-            (let ((char nil))
-              (dotimes (idx (length line))
-                (setf char (char line idx))
-                (setf curr-width (funcall width-fct (subseq line idx (1+ idx))))
-                (cond ((alphanumericp char)
-                       (push (char-to-features vis-mod (char-upcase char)
-                                               curr-x
-                                               (- (+ curr-x curr-width) 1)
-                                               y-pos
-                                               height obj) f-accum))
-                      ((and (graphic-char-p char)
-                            (not (char-equal char #\space)))
-
-                       (let ((vl (car (define-chunks-fct (list (list 'isa 'visual-location
-                                                                     'screen-y y-pos 'height height 'value 'text 'kind 'text
-                                                                     'width curr-width 'screen-x (+ curr-x (round curr-width 2))))))))
-                         (push vl f-accum)
-                         (setf (chunk-real-visual-value vl) (mkstr char)))
-
-                       )
-                      (t nil))
-                (incf curr-x curr-width))))
-          (incf y-pos line-height))))))
-
-;;; CHAR-TO-FEATURES      [Method]
-;;; Date        : 99.03.30
-;;; Description : For each character, there will usually be many of those
-;;;             : CHAR-PRIMITIVE features.  Grab the list of features
-;;;             : associated with a character, and build 'em.
-
-(defgeneric char-to-features (vis-mod char left right y height obj)
-  (:documentation  "Returns a list of basic visual-location chunks for a characer"))
-
-(defmethod char-to-features ((vis-mod vision-module) (char character)
-                                (left number) (right number) (y number)
-                             (height number) obj)
-  (declare (ignore obj))
-  (let ((xpos (+ left (round (- right left) 2)))
-        (width (1+ (- right left)))
-        (features (pairlis
-                     (getfeats (active-cfs vis-mod) char)
-                     (get-icon-feats (active-cfs vis-mod) char)))
-        (accum nil))
-    (dolist (feats features accum)
-      (let ((vl (car (define-chunks-fct (list (list 'isa 'char-primitive
-                                                    'screen-y y 'height height 'value (rest feats)
-                                              'width width 'screen-x xpos 'left left
-                                              'right right))))))
-        (push vl accum)
-        (setf (chunk-real-visual-value vl) (first feats))))))
-
-
-
-(defun chop-string (vis-mod str)
-  (declare (string str))
-  (unless (string= str "")
-    (let* ((oldstate (char->state vis-mod (char str 0)))
-           (state nil)
-           (chr nil)
-           (wrd "")
-           (cnt 0)
-           (accum nil))
-      (dotimes (i (length str))
-        (setf chr (char str i))
-        (setf state (char->state vis-mod chr))
-        (cond
-         ;; if we're accumulating chars and the new char matches our state,
-         ;; just concat the char
-         ((or (and (eq state :WORD) (eq oldstate :WORD))
-              (and (eq state :MISC) (eq oldstate :MISC)))
-          (setf wrd (mkstr wrd chr))
-          (setf cnt 0))
-         ;; If we get a state change that finishes a word, then grab the
-         ;; word.
-         ((and (or (eq oldstate :WORD) (eq oldstate :MISC))
-               (not (eq oldstate state)))
-          (push wrd accum)
-          (if (not (eq state :SPACE))
-              (setf wrd (mkstr chr))
-            (setf wrd "")))
-         ;; when switching from spaces to words, push the counter and start
-         ;; the word
-         ((and (eq oldstate :SPACE) (not (eq state oldstate)))
-          (push (1+ cnt) accum)
-          (setf wrd (mkstr wrd chr)))
-         ;; from whitespace to whitespace, inc the counter
-         (t (incf cnt)))
-        (setf oldstate state))
-      (when (not (string= wrd ""))
-        (push wrd accum))
-      (setf accum (nreverse accum))
-      (when (numberp (first accum))
-        (decf (first accum)))
-      accum)))
-
-(defun add-word-characters (&rest chars)
-  (let ((vis-mod (get-module :vision)))
-    (if vis-mod
-        (dolist (x chars (other-word-chars vis-mod))
-          (when (characterp x)
-            (pushnew x (other-word-chars vis-mod))))
-      (print-warning "No vision module available could not add new word characters."))))
-
-(defun char->state (vis-mod char)
-  "Given a character, return :WORD, :SPACE, or :MISC"
-  (declare (character char))
-  (cond ((or (alphanumericp char) (find char (other-word-chars vis-mod))) :WORD)
-        ((whitespace-p char) :SPACE)
-        (t :MISC)))
-
-(defun whitespace-p (char)
-  "Returns T if <char> is a whitespace character (non-printing or space)"
-  (declare (character char))
-  (or (not (graphic-char-p char))
-      (eq char #\Space)))
-
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defun fill-default-vis-obj-slots (vis-obj vis-loc)
-  (if (and (chunk-p-fct vis-obj)
-           (chunk-p-fct vis-loc)
-           (chunk-type-subtype-p-fct (chunk-chunk-type-fct vis-obj) 'visual-object)
-           (chunk-type-subtype-p-fct (chunk-chunk-type-fct vis-loc) 'visual-location))
-      (mod-chunk-fct vis-obj `(height ,(chunk-slot-value-fct vis-loc 'height)
-                               width ,(chunk-slot-value-fct vis-loc 'width)
-                               color ,(chunk-slot-value-fct vis-loc 'color)
-                               value ,(if (chunk-real-visual-value vis-loc)
-                                         (chunk-real-visual-value vis-loc)
-                                         (chunk-slot-value-fct vis-loc 'value))))
-    (print-warning "Invalid chunk passed to fill-default-vis-obj-slots ~S not updated using ~s." vis-obj vis-loc)))
-
-
-(defun compute-vis-loc-size (vis-loc)
-  (set-chunk-slot-value-fct vis-loc 'size
-                            (aif (simple-size vis-loc)
-                                 it
-                                 1.0)))
-
-
-(defun simple-size (vis-loc)
-  (let ((w (chunk-slot-value-fct vis-loc 'width))
-        (h (chunk-slot-value-fct vis-loc 'height)))
-    (when (and (numberp w) (numberp h))
-      (* 0.01 (round
-               (* (pm-pixels-to-angle w)
-                  (pm-pixels-to-angle h))
-               0.01)))))
-
-
-
-(extend-chunks visual-approach-width-fn :copy-function identity)
-
-;;; APPROACH-WIDTH      [Method]
-;;; Date        : 99.03.30
-;;; Description : Remember in high school when someone asked in trig why we
-;;;             : needed to know this crap?  Well, this is why.  I'm pretty
-;;;             : sure this is all the right trig, but there could be some
-;;;             : missed math in here.
-
-(defun approach-width (vis-loc theta)
-  (aif (chunk-visual-approach-width-fn vis-loc)
-      (funcall it vis-loc theta)
-       (let* ((x (chunk-slot-value-fct vis-loc 'width))
-              (y (chunk-slot-value-fct vis-loc 'height)))
-         (if (or (not (numberp x)) (not (numberp y)))
-             (aif (get-module :motor)
-                  (default-target-width it)
-                  1.0)
-           (let ((critical-theta (atan y x))
-                 (theta (abs theta))
-                 (ret-width nil))
-             (when (> theta (/ pi 2))
-               (setf theta (- pi theta)))
-             (setf ret-width
-               (cond ((= theta 0) x)
-                     ((= theta (/ pi 2)) y)
-                     ((= theta critical-theta) (sqrt (+ (* y y) (* x x))))
-                     ((< theta critical-theta) (/ x (cos theta)))
-                     (t (/ y (cos (- (/ pi 2) theta))))))
-             (pm-pixels-to-angle ret-width))))))
-
-
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(extend-chunks special-visual-object :copy-function identity)
-
-(unsuppress-extension-warnings)
-
-(defun add-visicon-item (obj &optional (update t))
-  (add-screen-object obj (get-module :vision) update))
-
-(defun delete-visicon-item (obj &optional (update t))
-  (delete-screen-object obj (get-module :vision) update))
-
-
-(defun update-visicon-item (obj &optional (update t) &key same-chunks chunks)
-  (let ((module (get-module :vision)))
-    (cond ((not (or same-chunks chunks))
-           ;; simple case just delete and add the item
-           (delete-screen-object obj module nil)
-           (add-screen-object obj module update))
-
-          (t ;; just update the chunks for the item
-
-           (cond ((null chunks) ;; if none given get them from build-vis-locs-for
-                  (setf chunks (flatten (build-vis-locs-for obj module))))
-                 ((atom chunks) ;; if it's an atom assume that's a chunk name
-                  (setf chunks (list chunks))))
-
-
-           (dolist (x chunks)
-             (if (eq (chunk-special-visual-object x) obj) ;; make sure it matches the object
-
-                 (let ((old (gethash (chunk-visicon-entry x) (visicon module))))
-                   (if old
-                       (progn
-
-                         ;; set the visicon entry with the new features
-
-                         (setf (chunk-visicon-entry x)
-                           (if (test-feats module)
-                               (hash-visual-chunk-contents x)
-                             x))
-
-                         (let ((entry (copy-chunk-fct x)))
-
-                           ;; put the new one in place and set the relevant info for it.
-
-                           (setf (gethash (chunk-visicon-entry x) (visicon module)) entry)
-
-                           (setf (chunk-visual-tstamp entry) (chunk-visual-tstamp old))
-                           (setf (chunk-visual-new-p entry) (chunk-visual-new-p old))
-
-
-                         #| assuming that nobody is going to use "synthed" features
-                            in their own add/update/delete code, but if needed something like
-                            this old code from enter-into-visicon will need to be made to work
-                            right for the update.
-
-                         (dolist (x (finst-lst module))
-                           (when (and (synthed-from x) (find (chunk-visicon-entry existing) (synthed-from x)))
-                             (setf (synthed-from x) (substitute vis-loc (chunk-visicon-entry existing) (synthed-from x)))))
-                         |#
-
-                           ;; get rid of the old chunk if allowed
-
-                           (when (purge-visicon module)
-                             ;; might need to test this to make sure it's not
-                             ;; currently attened and stuff...
-
-                             (purge-chunk-fct old))))
-                     (print-warning "Chunk ~s is not currently in the visicon.  No update made." x)))
-               (print-warning "Chunk ~s is not a feature of the object ~s.  No update made." x obj)))
-
-           (when update
-             (visicon-update module nil))))))
-
-
-(defmethod add-screen-object (obj (vm vision-module) &optional (update t))
-  (let ((vfeats (flatten (build-vis-locs-for obj vm))))
-    (dolist (x vfeats)
-      (if (and (chunk-p-fct x)
-               (chunk-type-subtype-p-fct (chunk-chunk-type-fct x) 'visual-location))
-
-          (progn
-            (unless (numberp (chunk-slot-value-fct x 'size))
-              (compute-vis-loc-size x))
-
-            (unless (numberp (chunk-slot-value-fct x 'distance))
-              (set-chunk-slot-value-fct x 'distance (no-output (car (sgp :VIEWING-DISTANCE))))))
-
-        (progn
-          (print-warning "Invalid visicon item ~s found when processing the display.  Must be a chunk which is a subtype of visual-location." x)
-          (setf vfeats (remove x vfeats)))))
-
-    (mapcar #'(lambda (vl)
-                (setf (chunk-visicon-entry vl)
-                    (if (test-feats vm)
-                        (hash-visual-chunk-contents vl)
-                      vl))
-                (setf (chunk-visual-feature-name vl) vl))
-      vfeats)
-
-    (mapcar #'(lambda (vl)
-                (setf (chunk-special-visual-object vl) obj)
-                (enter-into-visicon vl vm))
-      vfeats)
-
-    (when update
-      (visicon-update vm nil))))
-
-(defmethod delete-screen-object (obj (vm vision-module) &optional (update t))
-  (maphash (lambda (key val)
-             (when (eq obj (chunk-special-visual-object val))
-               (remhash key (visicon vm))
-               (when (and (purge-visicon vm) (chunk-p-fct val))
-                 (purge-chunk-fct val))))
-           (visicon vm))
-  (when update
-    (visicon-update vm nil)))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defun set-char-feature-set (setname)
-  "Sets the feature set used to represent characters when optimizing is off. <setname> should be a keyword."
-  (set-cfs-mth (get-module :vision) setname))
-
-
-(defmethod set-visloc-default-request ((vm vision-module) spec)
-  "Assumes all the checking has been done already for validity"
-  (let ((slot-specs (remove 'type (chunk-spec-slot-spec spec) :key #'second))
-        (type (if (SLOT-IN-CHUNK-SPEC-P spec 'type) (third (first (chunk-spec-slot-spec spec 'type))) nil)))
-    (setf (default-spec vm)
-      (define-chunk-spec-fct  (slot-specs-to-chunk-spec-list (if type type 'visual-location)
-                                                                 slot-specs))))
-  (update-new vm)
-  (check-finsts vm)
-  (stuff-visloc-buffer vm))
-
-(defmacro set-visloc-default (&rest params)
-  "Macro to set the default specification for visual location buffer stuffing."
-  `(set-visloc-default-fct ',params))
-
-(defun set-visloc-default-fct (params)
-  "Function to set the default specification for visual location buffer stuffing."
-  (verify-current-mp
-   "No current meta-process.  Cannot set visloc defaults."
-   (verify-current-model
-    "No current model.  Cannot set visloc defaults."
-    (if (get-module :vision)
-        (let* ((spec (funcall #'define-chunk-spec-fct params))
-               (attended (when (slot-in-chunk-spec-p spec :attended)
-                           (chunk-spec-slot-spec spec :attended)))
-               (nearest (when (slot-in-chunk-spec-p spec :nearest)
-                          (chunk-spec-slot-spec spec :nearest))))
-          (if (or (> (length attended) 1)
-                  (> (length nearest) 1))
-              (progn
-                (print-warning "The :attended and :nearest specification for set-visloc-default can only be specified at most once.")
-                (print-warning "Visloc defaults not changed."))
-            (if spec
-                (progn (setf (default-spec (get-module :vision)) spec) t)
-              (print-warning "Invalid chunk specification.  Default not changed."))))
-
-      (print-warning "No vision module found.  Cannot set visloc defaults.")))))
-
-(defun print-visicon ()
-  "Print the Vision Module's visicon. For debugging."
-  (awhen (get-module :vision)  ;; Test that there is a vision module
-         (update-new it)
-         (check-finsts it)
-         (command-output "Loc        Att   Kind           Value             Color           ID")
-         (command-output "---------  ---   -------------  ----------------  --------------  -------------")
-
-         (mapcar 'print-icon-feature (visicon-chunks it t))
-         nil))
-
-
-(defun print-icon-feature (chunk)
-  (command-output "(~3D ~3D)~11T~A~17T~A~32T~S~50T~A~66T~A"
-                  (chunk-slot-value-fct  chunk 'screen-x)
-                  (chunk-slot-value-fct  chunk 'screen-y)
-                  (feat-attended chunk (get-module :vision))
-                  (chunk-slot-value-fct  chunk 'kind)
-                  (if (null (chunk-real-visual-value chunk))
-                      (chunk-slot-value-fct  chunk 'value)
-                    (chunk-real-visual-value chunk))
-                  (chunk-slot-value-fct  chunk 'color)
-                  (chunk-visual-feature-name chunk)))
-
-
-
-(defun attend-visual-coordinates (x y)
-  "Tells the Vision Module to start with attention at a certain location."
-  (if (get-module :vision)
-      (setf (current-marker (get-module :vision))
-        (car (define-chunks-fct `((isa visual-location
-                                       screen-x ,x
-                                       screen-y ,y
-                                       distance ,(car (no-output (sgp :VIEWING-DISTANCE))))))))
-    (print-warning "No vision module found.  Cannot set visual coordinates.")))
-
-(defun remove-visual-finsts (&key (set-new nil) (restuff nil))
-  (let ((vis-m (get-module :vision)))
-    (if vis-m
-        (progn
-          (setf (finst-lst vis-m) nil)
-          (if set-new
-            (maphash (lambda (key value)
-                       (declare (ignore key))
-                       (setf (chunk-visual-tstamp value) (mp-time-ms))
-                       (setf (chunk-visual-new-p value) 'new))
-                     (visicon vis-m))
-            (maphash (lambda (key value)
-                       (declare (ignore key))
-
-                       (setf (chunk-visual-new-p value)
-                         (if (<= (- (mp-time-ms) (chunk-visual-tstamp value) (new-span vis-m)))
-                             'new
-                           nil)))
-                     (visicon vis-m)))
-
-          (when restuff
-            (stuff-visloc-buffer vis-m))
-          nil)
-
-        (print-warning "No vision module found.  Cannot remove the visual finsts."))))
 
 #|
 This library is free software; you can redistribute it and/or

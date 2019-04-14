@@ -13,7 +13,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; 
 ;;; Filename    : framework-loader.lisp
-;;; Version     : 1.0
+;;; Version     : 2.0
 ;;; 
 ;;; Description : Compiles (if necessary) and loads the files that implement
 ;;;               the framework core.
@@ -48,6 +48,15 @@
 ;;;             : * Take generic-interface.lisp out since it's always 
 ;;;             :   overridden by the virtual interface and possibly a Lisp
 ;;;             :   specific one too.
+;;; 2016.11.16 Dan [2.0]
+;;;             : * Added the dispatcher for the command interface.
+;;; 2017.03.30 Dan 
+;;;             : * Added the system-locks file because there's a lock needed
+;;;             :   in the internal-macros code.
+;;; 2017.03.31 Dan
+;;;             : * The internal-macros file is no longer necessary.
+;;; 2017.09.19 Dan
+;;;             : * Added the history-recorder file.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -86,8 +95,10 @@
 
 (setf *file-list* '("version-string"
                     "internal-structures"
-                    "internal-macros"
+                    "system-locks"
+                   ; "internal-macros"
                     "misc-utils"
+                    "dispatcher"
                     "system-parameters"
                     "meta-process"
                     "chunk-types"
@@ -101,12 +112,11 @@
                     "chunk-spec"
                     "top-level"
                     "device-interface"
-                    ;"generic-interface"
                     "vision-categorization"
                     "random"
                     "printing"
                     "naming-module"
-                    ))
+                    "history-recorder"))
 
 
 #|

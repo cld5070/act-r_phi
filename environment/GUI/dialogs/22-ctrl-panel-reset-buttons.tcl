@@ -5,36 +5,102 @@ set during_reload 0
 
 frame [control_panel_name].r_frame -borderwidth 0
 
+set reset_warnings ""
+
+proc record_reset_warnings {model s} {
+  global reset_warnings
+
+  set reset_warnings "$reset_warnings$s"
+  return ""
+}
+
 button [control_panel_name].r_frame.reset -text "Reset" -font button_font -command {
-  send_environment_cmd \
-    "update [get_handler_name [control_panel_name].r_frame.reset] \
-        reset-model-env"
+
+  global reset_warnings
+
+  [control_panel_name].r_frame.reset configure -state disabled
+
+  set reset_warnings ""
+
+  set reset_monitor [new_variable_name "reset_monitor"]
+
+  while {[send_cmd "check" $reset_monitor] != "null"} {
+    set reset_monitor [new_variable_name "reset_monitor"]
+  }
+
+  add_cmd $reset_monitor "record_reset_warnings" "Environment command for capturing warnings during a call to reset."
+
+  send_cmd "monitor" [list "warning-trace" $reset_monitor]
+
+  set result [call_act_r_command_with_error_messages "reset"]
+
+  send_cmd "remove-monitor" [list "warning-trace" $reset_monitor]
+     
+  remove_cmd $reset_monitor
+
+ if {[lindex $result 0] == 0} {
+    tk_messageBox -icon warning -type ok -title "Reset Error" \
+                  -message [lindex $result 1]
+  } elseif {[lindex $result 1] == "null"} {
+    tk_messageBox -icon warning -type ok -title "Reset Error" \
+                  -message $reset_warnings
+  } else {
+    call_act_r_command "act-r-output" "nil" [list [format "#|## ACT-R has been Reset ##|#"]]
+  }
+
+  set reset_warnings ""
+
+  [control_panel_name].r_frame.reset configure -state normal
 } 
+
 
 button [control_panel_name].r_frame.reload -text "Reload" -font button_font -command {
   global options_array
-  global reload_return
   global during_reload
+  global reset_warnings
 
-  set reload_return ""
 
   set during_reload 1
 
-  global save_return
-  global current_open_model
+  [control_panel_name].r_frame.reload configure -state disabled
 
-  if {[info exists save_return] == 1 && [info exists current_open_model] == 1 && $options_array(save_before_reload) == 1 && $current_open_model != ""} {
-    save_model
+  set reset_warnings ""
+
+  global currently_open_files
+
+  if {$options_array(save_before_reload) == 1 && [array exists currently_open_files]} {
+    foreach win [array names currently_open_files] {
+      save_model $win
+    }
+  }
+  
+
+  set reload_monitor [new_variable_name "reload_monitor"]
+
+  while {[send_cmd "check" $reload_monitor] != "null"} {
+    set reload_monitor [new_variable_name "reload_monitor"]
   }
 
-  
-  send_environment_cmd \
-    "update [get_handler_name [control_panel_name].r_frame.reload] \
-        (lambda (x) \
-            (declare (ignore x)) \
-            (reload-model $options_array(use_smart_load)))"
+  add_cmd $reload_monitor "record_reset_warnings" "Environment command for capturing output during a call to reload."
 
-  wait_for_non_null reload_return
+
+  send_cmd "monitor" [list "model-trace" $reload_monitor]
+  send_cmd "monitor" [list "command-trace" $reload_monitor]
+  send_cmd "monitor" [list "warning-trace" $reload_monitor]
+  send_cmd "monitor" [list "general-trace" $reload_monitor]
+
+  if {$options_array(use_smart_load) == "t"} {
+    set result [call_act_r_command_with_error_messages "reload" nil [list $options_array(use_smart_load)]]
+  } else {
+    set result [call_act_r_command_with_error_messages "reload"]
+  }
+
+  send_cmd "remove-monitor" [list "model-trace" $reload_monitor]
+  send_cmd "remove-monitor" [list "command-trace" $reload_monitor]
+  send_cmd "remove-monitor" [list "warning-trace" $reload_monitor]
+  send_cmd "remove-monitor" [list "general-trace" $reload_monitor]
+     
+  remove_cmd $reload_monitor
 
   set win [toplevel [new_variable_name .reload_response]]
   
@@ -45,9 +111,9 @@ button [control_panel_name].r_frame.reload -text "Reload" -font button_font -com
   wm geometry $win [get_configuration .reload_response $win]
 
 
- set text_frame [frame $win.text_frame -borderwidth 0]  
+  set text_frame [frame $win.text_frame -borderwidth 0]  
  
- set text_box [text $text_frame.text -yscrollcommand \
+  set text_box [text $text_frame.text -yscrollcommand \
                      "$text_frame.text_scrl set" -state normal \
                      -font text_font]
   
@@ -66,15 +132,21 @@ button [control_panel_name].r_frame.reload -text "Reload" -font button_font -com
   pack $text_box -side left -expand 1 -fill both
 
 
-  if {[lindex $reload_return 0] == 0} {
+ if {[lindex $result 0] == 0} {
     wm title $win "ERROR Reloading"
-    $text_box insert 1.0 "Error Reloading:\n[lindex $reload_return 1]"
+    $text_box insert 1.0 "$reset_warnings\n[lindex $result 1]"
+  } elseif {[lindex $result 1] == "null"} {
+    wm title $win "ERROR Reloading"
+    $text_box insert 1.0 "$reset_warnings"
   } else {
     wm title $win "SUCCESSFUL Reload"
-    $text_box insert 1.0 "Successful Reload:\n[lindex $reload_return 1]"
+    $text_box insert 1.0 "$reset_warnings"
+    call_act_r_command "act-r-output" "nil" [list [format "#|## Reload Complete ##|#"]]
   }
 
   set during_reload 0
+
+  [control_panel_name].r_frame.reload configure -state normal
 
   wm deiconify $win
   focus $win
@@ -85,18 +157,3 @@ pack [control_panel_name].r_frame.reload -side right
 
 pack [control_panel_name].r_frame
 
-send_environment_cmd \
-  "create simple-handler [control_panel_name].r_frame.reset ignore_returns \
-     (lambda (x) (declare (ignore x))) ()"
-
-send_environment_cmd \
-  "create list-handler [control_panel_name].r_frame.reload reload_return \
-    (lambda (x) (declare (ignore x))) ()"
-
-bind [control_panel_name].r_frame.reset <Destroy> {
-  remove_handler %W
-}
-
-bind [control_panel_name].r_frame.reload <Destroy> {
-  remove_handler %W
-}

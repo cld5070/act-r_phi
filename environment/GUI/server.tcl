@@ -10,7 +10,7 @@
 
 global standalone_mode
 
-# Use 0 for not standalne
+# Use 0 for not standalone
 # Use 1 for Windows standalone
 # Use 2 for Mac standalone
 # Use 3 for Android app
@@ -22,7 +22,6 @@ set standalone_mode 0
 # These get entered by the register command coming from Lisp.
 
 global handler_names
-
 
 # valid_handler_name
 # Given a tcl window (w) return true if there is 
@@ -65,9 +64,6 @@ proc set_handler_name {w h} {
 global variable_count_array
 
 
-global time_to_exit 
-set time_to_exit 1
-
 # new_variable_name
 # Given any variable name prefix (prefix) return that 
 # prefix with the next number appended to it.  Doesn't 
@@ -94,19 +90,16 @@ if {$standalone_mode != 3} {cd ..}
 
 if {$standalone_mode == 0} {cd ..}
 
+if {$standalone_mode == 2} {cd ..}
+
 set top_dir [pwd]
+
+if {$standalone_mode == 2} {cd applications}
 
 if {$standalone_mode == 0} {cd "environment"}
 
 if {$standalone_mode != 3} {cd "GUI"}
 
-
-# To make sure everything is the "same size" on all systems
-# I need to set a consistent scaling - most important for the
-# Environment display of virtual windows otherwise the fixation
-# cursor isn't in the 'right' place ...
-
-tk scaling 1.0
 
 
 # Define some general file handling procedures.
@@ -159,18 +152,17 @@ wm withdraw .
 
 #cd [file join $tcl_env_dir init]
 
-global init_error
 global init_error_msg
 
 set init_error 0
 
-foreach f [lsort [glob -nocomplain -directory [file join $tcl_env_dir init] *.tcl]] {if { [catch {source $f} init_error_msg] } {
+foreach f [lsort [glob -nocomplain -directory [file join $tcl_env_dir init] *.tcl]] {
+  if {[catch {source $f} init_error_msg] } {
     append_data "Error during init of $f: $init_error_msg\n" [file join $tcl_env_dir "error.log"]
     set init_error 1
-}}
+  }
+}
 
-
-#cd $tcl_env_dir
 
 # Create the Control Panel here...
 
@@ -200,7 +192,7 @@ pack .control_panel.status
 
 frame .control_panel.frame
  
-canvas .control_panel.frame.c  -height 100 -width 50 -yscrollcommand ".control_panel.frame.ybar set"
+canvas .control_panel.frame.c -height 100 -width 50 -yscrollcommand ".control_panel.frame.ybar set"
 scrollbar .control_panel.frame.ybar -orient vertical -command ".control_panel.frame.c yview"
  
 # Create the frame that will actually
@@ -216,7 +208,7 @@ frame .control_panel.frame.c.contents
 # of the frame in the upper-left hand
 # corner of the canvas
  
-.control_panel.frame.c create window 0 0 -anchor nw -window .control_panel.frame.c.contents
+set .control_panel.window.tag [.control_panel.frame.c create window 0 0 -anchor nw -window .control_panel.frame.c.contents -tag win]
  
 # Use grid to display the canvas and its
 # scrollbars. Handle resizing properly.
@@ -232,8 +224,24 @@ grid rowconfigure .control_panel.frame 0 -weight 1
 # case, recompute the visible bounds of
 # the canvas and update its -scrollregion
 # attribute.
-   
-bind .control_panel.frame.c.contents <Configure> {.control_panel.frame.c configure -scrollregion [.control_panel.frame.c bbox all]}
+ 
+# Not sure why I need to handle both, but need the first one
+# to adjust it when the control panel window resizes and the
+# second is needed so that the initial display is drawn correctly.
+#
+
+bind .control_panel.frame <Configure> {
+
+  .control_panel.frame.c configure -scrollregion [.control_panel.frame.c bbox all]
+  .control_panel.frame.c itemconfigure win -width [winfo width .control_panel.frame.c]
+}
+
+  
+bind .control_panel.frame.c.contents <Configure> {
+
+  .control_panel.frame.c configure -scrollregion [.control_panel.frame.c bbox all]
+  .control_panel.frame.c itemconfigure win -width [winfo width .control_panel.frame.c]
+}
 
 pack .control_panel.frame -expand yes -fill both
 
@@ -246,20 +254,6 @@ pack .control_panel.frame -expand yes -fill both
 proc control_panel_name {} {return ".control_panel.frame.c.contents"}
 
 
-# report_status
-# Display the provided string (s) on the status label of the control Panel.
-
-#proc report_status {s} {
-##  global global_status
-#  set global_status "$global_status $s"
-#}
-
-
-# To avoid overwriting on big reports, instead
-# dump it to an error log
-
-#file delete [file join $tcl_env_dir "error.log"]
-
 proc report_status {s} {
   global global_status
   global tcl_env_dir
@@ -269,114 +263,55 @@ proc report_status {s} {
 
 
 
-
-# Will need to expand this later, but for now make sure
-# that the socket gets closed when the program ends 
-
-bind .control_panel <Destroy> {
-  global time_to_exit
-  global standalone_mode
-
-  if {$standalone_mode != 3} {save_window_positions}
-
-  catch {
-    global environment_socket
-    global connection_socket
-    if {$environment_socket != ""} {
-      close $environment_socket
-    }
-  }
-  catch {
-    if {$connection_socket != ""} {
-      close $connection_socket
-    }
-  }
-  
-  set_return_result $time_to_exit
-}
-
 # For debugging I need access to the console window, so 
 # here's how to get it ->  shift-control-L
 
 bind .control_panel <Shift-Control-Key-L> {console show}
 
-wm protocol .control_panel WM_DELETE_WINDOW {
-  shut_it_down 0
+proc clean_exit {} {
+    save_window_positions
+#    foreach w [winfo children .] { 
+#      if {$w != ".control_panel"} { 
+#        catch {destroy $w}
+#      }
+#    }
+    destroy .
+    set_return_result 1
 }
 
-proc shut_it_down {now} {
+wm protocol .control_panel WM_DELETE_WINDOW {
+ 
   global current_open_model 
-  global local_connection
   global standalone_mode
+  global environment_socket
 
   set destroy 1
-         
-  # there are other ways to test for a closed socket, but trying to
-  # send a command seems easy and robust enough...
+   
+  if {$standalone_mode == 1} { # Windows version needs to kill the Lisp explicitly
+    set answer [tk_messageBox -icon warning -title "Exit the Environment?" \
+                 -message "Closing this window stops ACT-R. Do you want to quit now?" \
+                 -type yesno]
 
-  if {$now == 0 && $local_connection == 1 && \
-      [check_connection] == 0} {
-    if $standalone_mode {
-      if {$standalone_mode == 2} { # Macs exit this way...
-        tk_messageBox -icon warning -title "Open connection" \
-                      -message "To quit the environment close the Listener window." -type ok
-      } else { # Windows version needs to kill the Lisp explicitly
+    switch -- $answer {
+      no {
+        set destroy 0
+      }
+      yes {
+        if {$current_open_model != ""} {
+          set answer [tk_messageBox -icon warning -title "Model still open" \
+                      -message "There is a model open.  Should the environment \
+                       close the model before quitting (all unsaved\
+                       changes will be lost if it is not closed)?" \
+                      -type yesno]
 
-        set answer [tk_messageBox -icon warning -title "Exit the Environment?" \
-                   -message "Closing this window exits the environment. Do you want to quit now?" \
-                   -type yesno]
-
-        switch -- $answer {
-          yes {
-            if {$current_open_model != ""} {
-              set answer [tk_messageBox -icon warning -title "Model still open" \
-                  -message "There is a model open.  Should the environment \
-                            close the model before quitting (all unsaved\
-                            changes will be lost if it is not closed)?" \
-                  -type yesno]
-
-              switch -- $answer {
-                yes {
-                  close_model
-                }
-              }
+          switch -- $answer {
+            yes {
+              close_model
             }
-
-            # Just force it to go away...
-
-           send_environment_cmd "create simple-handler .control_panel copyrightlab30var (lambda (x) (quit)) nil"
-
-            catch {
-              global environment_socket
-              global connection_socket
-
-              if {$environment_socket != ""} {
-                close $environment_socket
-              }
-            }
-            catch {
-              if {$connection_socket != ""} {
-                close $connection_socket
-              }
-            }
-    
-            exit
           }
         }
       }
-    } else {
-      tk_messageBox -icon warning -title "Open connection" \
-                    -message "You must close the connection from the Lisp side first." -type ok
     }
-
-    set destroy 0
-  } elseif {$now == 0} { # I know there should be a better order here, but
-                         # but this simple setup isn't too bad for now
-    #tk_messageBox -icon warning -title "Closing Environment" \
-    #              -message "ACT-R Environment exiting" -type ok
-    send_environment_cmd "goodbye"
-    after 1000 exit
-    
   } elseif {$current_open_model != ""} {
     set answer [tk_messageBox -icon warning -title "Model still open" \
                   -message "There is a model open.  Should the environment \
@@ -391,396 +326,71 @@ proc shut_it_down {now} {
     }
   }
 
-  if $destroy {destroy .control_panel}
+  if $destroy {
+    clean_exit
+  }
 }
 
-proc check_connection {} {
-  global environment_socket
-  return [catch {puts $environment_socket "(k-a)<end>"}] 
+
+
+# start the lisp side running if necessary
+
+if {$standalone_mode == 1} {
+  
+   set cur_dir [pwd]
+
+   global top_dir
+
+   cd [file join $top_dir apps]
+
+   if [catch {exec "actr-s-64.exe" -V}] {
+     if [catch {exec "actr-s-32.exe" -V}] {
+       tk_messageBox -icon warning -title "No ACT-R available" \
+                     -message "Cannot run the ACT-R application. Contact Dan for help." -type ok
+       clean_exit
+     } else {
+      exec "./run-32.bat" &
+     }
+   } else {
+      exec "./run-64.bat" &
+   }
+   cd $cur_dir
 }
 
-# These are the procedures for handling the communications.
-# There is no handshaking on the commands, because it uses TCP
-# sockets which are supposed to do that stuff for you...
 
-# accept_socket_commands
-# This procdure gets called everytime there is something to read
-# on the socket connected to ACT-R.  The parameter passed is the
-# socket.
-# It reads lines from the socket until a whole command has been read
-# (there is an explicit <end> marker now sent to handle new-lines 
-# properly).  Then it passes that command to handle_socket_command.
+# Source the new-server file which actually impements the
+# client code for connecting to the ACT-R DES server.
 
-# Just ignoring the case where there "isn't" something for now...
+source "new-server.tcl"
 
-set last_command ""
 
-proc accept_socket_commands {sock} {
-  global last_command
-  global time_to_exit
-  global standalone_mode
- global up_and_running
 
-  if {[eof $sock]} {
+# Connect to the Lisp server
 
-    close $sock
+set not_connected 1
 
-    switch -- $standalone_mode {
-      0 { #Not standalone mode so ask if wait or quit
-        if {$up_and_running == 1} {
-         
-         switch [tk_messageBox -title "ACT-R connection lost" -message "The environment has lost contact with ACT-R.  Press retry to return to waiting for a new connection or cancel to quit." \
-                            -icon warning -type retrycancel] {
-          retry { 
-              set time_to_exit 0
-              shut_it_down 1
-          }
-          cancel { 
-              shut_it_down 0
-          }
-        }
-       } else {
-         tk_messageBox -title "ACT-R connection error" -message "There was a problem starting the environment and it must exit." -icon warning -type ok
-         exit}
-     
+set connect_addr ""
+
+while {$not_connected} {
+  if {[catch {start_connection $connect_addr} init_error_msg] } {
+    set try_again [tk_messageBox -icon warning -title "Connection Problem" -type yesnocancel -message "Error occurred trying to connect to ACT-R\n$actr_address : $actr_port \nError: $init_error_msg \nYes to try again using the ACT-R address file.\nNo to try again using localhost.\nCancel to quit."]
+    
+    if {$try_again == "cancel"} {
+      set not_connected 0
+      tk_messageBox -icon warning -title "Environment terminated" -type ok -message "ACT-R Environment GUI components not started."
+      clean_exit
+    } else {
+      if {$try_again == "no"} {
+        set connect_addr [ip:address_local]
+      } else {
+        set connect_addr "" 
       }
-      1 { #windows standalone should ask if restart or quit
-        
-         if {$up_and_running == 1} {
-          switch [tk_messageBox -title "ACT-R connection lost" -message "The environment has lost contact with ACT-R.  Press retry to start a new listener or cancel to quit." \
-                            -icon warning -type retrycancel] {
-          retry { 
-              set time_to_exit 0
-              shut_it_down 1
-              after 2000 { #wait a little for things to restart
-                global top_dir
-                
-                set cur_dir [pwd]
-                cd [file join $top_dir apps]
-
-                if [catch {exec "actr6s-64.exe" -V}] {
-                  if [catch {exec "actr6s-32.exe" -V}] {
-                    tk_messageBox -icon warning -title "No ACT-R available" \
-                      -message "Cannot run the ACT-R application. Contact Dan for help." -type ok
-                    exit
-                  } else {
-                    exec "./run-32.bat" &
-                  }
-                } else {
-                  exec "./run-64.bat" &
-                }
-                
-                cd $cur_dir
-              }
-              
-          }
-          cancel { 
-              shut_it_down 0
-          }
-        }
-        } else {
-           tk_messageBox -title "ACT-R connection error" -message "There was a problem starting the environment and it must exit." -icon warning -type ok
-           exit}
-      }  
-      2 { #mac standalone should just quit
-       tk_messageBox -icon warning -title "ACT-R connection lost" -message "The environment has lost contact with ACT-R and will close now." -type ok
-       shut_it_down 0
-      }
-      default {}
-    }
-  } elseif {-1 != [gets $sock line]} {
-    if [regexp {(.*)<end>$} $line dummy cmd] {
-      handle_socket_command "$last_command$cmd"
-      set last_command ""
-    } else { 
-      set last_command "$last_command$line\n"
-    }
+    } 
+  } else {
+    set not_connected 0
   } 
 }
 
-
-# handle_socket_command
-# This procedure takes one parameter which is a string that represents
-# a command sent from Lisp.
-# The commands that can be accepted must be of the form:
-# {command} {arg1} {rest}
-# command must be either update or register 
-# arg1 and rest depend on the command, but must be non-empty.
-# "bad" commands get reported in the status of the control panel.
-    
-proc handle_socket_command {data} {
-  global time_to_exit
-
-  if [regexp -nocase {^([a-z]+)([ ]+)([^ ]+)([ ]+)(.+)$} \
-             $data dummy cmd blank arg1 blank rest] {
-    switch $cmd {
-      update {
-        if [regexp -nocase \
-                   {^([^ ]+)[ ]([ ]*)(.+)$} $rest dummy target blank value] {
-          switch $arg1 {
-            simple {
-              global $target
-              if {$value == "EMPTY_ENV_STRING"} {
-                set $target ""
-              } else {
-                set $target $value
-              }
-            }
-            special {
-              global $target
-                set $target $value
-            }
-            simple_funcall {
-             
-              set eval_cmd ""
-              if {$value == "EMPTY_ENV_STRING"} {
-                eval [append eval_cmd $target " " "\"\""]
-              } else {
-                eval [append eval_cmd $target " " $value]
-              }
-            }
-            text {
-              catch {
-                if [valid_handler_name $target] {
-                  $target configure -state normal
-                  $target delete 1.0 end
-                  if {$value != "EMPTY_ENV_STRING"} {
-                    $target insert 1.0 $blank
-                    $target insert end $value
-                    $target configure -state disabled
-                  }
-                }
-              }
-            }
-            simpletext {
-              catch {
-                if [valid_handler_name $target] {
-                  # $target configure -state normal
-                  if {$value != "EMPTY_ENV_STRING"} {
-                    $target insert end $blank
-                   $target insert end $value
-                   $target yview -pickplace end
-                  }
-                  # $target configure -state disabled
-                }
-              }
-            }      
-            list_box {
-              catch {
-                if [valid_handler_name $target] {
-                  set selection [$target curselection]
-                  global $target.var
-                  if {$value == "EMPTY_ENV_STRING"} {
-                    set $target.var ""
-                    $target selection set 0
-                    event generate $target <<ListboxSelect>>
-                  } elseif {$selection != ""} {
-                    set selected [$target get $selection]
-                    set $target.var $value
-                    set newpos [lsearch -exact $value $selected]
-                    if {$newpos == -1} {
-                      $target selection clear 0 end
-                      event generate $target <<ListboxSelect>>
-                    } else {
-                      $target selection clear 0 end
-                      $target selection set $newpos
-                    }
-                  } else {
-                    set $target.var $value
-                  }
-                }
-              }    
-            }
-            select_first_list_box {
-              catch {
-                if [valid_handler_name $target] {
-                  global $target.var
-                  if {$value == "EMPTY_ENV_STRING"} {
-                    set $target.var ""
-                    $target selection set 0
-                    event generate $target <<ListboxSelect>>
-                  } else {
-                    set $target.var $value
-                    $target selection clear 0 end
-                    $target selection set 0
-                    event generate $target <<ListboxSelect>>
-                  }
-                }
-              }    
-            }
-            env_window {
-              catch {
-                process_env_window $target $value
-              }
-            }
-            default {
-              report_status "unhandled update $data"
-            }
-          }
-        } else {
-          report_status "invalid update: $data"
-        }
-      }
-      register {
-        set_handler_name $arg1 $rest
-      } 
-      close {
-        set time_to_exit 0
-        shut_it_down 1
-      }
-      ka {
-      }
-      sync {
-        send_environment_cmd "sync"
-      }
-      default {
-        report_status "Invalid command : $data"
-      }
-    }
-  } else {
-       report_status "Malformed command: $data"
-  }
-}  
-
-# send_environment_cmd
-# This procedure sends the command (cmd) passed in to the Lisp
-# server.  There is no error checking on the command sent.
-
-proc send_environment_cmd {cmd} {
-  # don't know how to test if the socket is still active
-  # before trying this, perhaps just wrapping it in a catch
-  # is good enough, but it doesn't seem to help if the socket goes
-  # down.
-
-  global environment_socket
-         
-  catch {
-    puts $environment_socket "($cmd)<end>"
-  }
-}
-
-# accept_connection
-# This function gets called when a socket connects to the listening
-# socket. 
-# The parameters are the socket for communicating (sock), and the
-# address (addr) and port (port) of the remote connection.  Since 
-# there is no handshaking the address and port of the remote aren't
-# used, but perhaps for a secure server such checks may be necessary.
-# The listening socket is closed, because the environment only needs
-# one connection.  Then the real communication socket is configured
-# so that it doesn't block or buffer and that the accept_socket_commands
-# function gets called everytime there is data to read from that socket.
-
-proc accept_connection {sock addr port} {
-  global connection_socket
-  global environment_socket
-  fconfigure $sock -blocking no
-  fconfigure $sock -buffering none
-  fileevent $sock readable "accept_socket_commands $sock"
-  close $connection_socket
-  set connection_socket ""
-  set environment_socket $sock
-}
-
-# environment_socket is the global variable that holds the socket
-# connected to Lisp.
-
-set environment_socket ""
-
-# This is where the listening server gets started.
-# Just create a server that calls accept_connection when
-# a connection is made on the port specified in the net-config file.
-# That's all there is to it!
-
-set connection_socket [socket -server accept_connection $tcl_port]
-
-
-# These procedures are ones that I needed for the declarative viewer
-# and it seemed like they'd be generally useful for other dialogs 
-# as well so I've included them here.
-
-# updater
-# Given a tcl window (w) if that window has a Lisp handler
-# associated with it then send a command to that handler to 
-# update this window.
-
-proc updater {w} {
-  if [valid_handler_name $w] {
-    send_environment_cmd "update [get_handler_name $w]"
-  }
-}
-
-
-# remove_handler
-# Given a tcl window (w) if that window has a Lisp handler
-# send the command to remove that handler and remove the 
-# entry for this window from the global handler table.
-# You can also pass the optional removal function (f)
-# which will be sent as part of the remove command.
-
-proc remove_handler {w {f ""}} {
-  global handler_names
-   
-  if [valid_handler_name $w] {
-    send_environment_cmd "remove [get_handler_name $w] $f"
-    array unset handler_names $w
-  }
-}
-
-# setchoice
-# This function takes 2 parameters, which are a drop_down listbox (win)
-# and a flag to indicate whether or not this choice is a real one (valid)
-# If valid is true then the global variable associated with this listbox
-# is set to the index of the currently selected item and if valid is false
-# the global is set to -1.  The global variable is the target of a tkwait, 
-# which is why it needs to be set even for a "nonchoice"
-
-proc setchoice {win valid} {
-  global $win.choice
-     
-  if $valid {
-    if {[$win curselection] == ""} {
-      set $win.choice -1
-    } else {
-      set $win.choice [$win curselection]
-    }
-  } else {
-    set $win.choice -1
-  }
-}
-
-
-# The following is a hack that gets around a race condition
-# in an idiom that I was using and don't have a better solution for.
-# the race condition was this:
-# if {$var == ""} {tkwait variable var}
-# where var was going to get set by the socket handlers
-# it became a real problem on a 100MHz Pentium rig running Linux
-# and maybe it's causing some of my Mac troubles, who knows.
-# the hack is to replace that with a polling loop that blocks for
-# 100 ms at a crack so as to not grind the processor checking
-
-global hack_ticker
-
-proc set_hack_ticker {} {
-  global hack_ticker
-  set hack_ticker 1
-  after 100 {set_hack_ticker}
-}
-
-after 100 {set_hack_ticker}
-
-proc wait_for_non_null {var} {
-  global hack_ticker  
-  
- # report_status "waiting for $var"
-
-  upvar $var check
-  while {$check == ""} {
-    tkwait var hack_ticker
-  }
-  # report_status "-done  "
-}
 
 set up_and_running 0
 
@@ -789,35 +399,14 @@ set up_and_running 0
 # beginning of the name helps enforce an order on them.
 
 
-#cd dialogs
-
-foreach f [lsort [glob -nocomplain -directory [file join $tcl_env_dir dialogs] *.tcl]] {if { [catch {source $f} init_error_msg] } {
+foreach f [lsort [glob -nocomplain -directory [file join $tcl_env_dir dialogs] *.tcl]] {
+  if { [catch {source $f} init_error_msg] } {
     append_data "Error during dialog loading of $f: $init_error_msg\n" [file join $tcl_env_dir "error.log"]
     set global_status "dialog error"
-}}
-
-
-#cd ..
+  }
+}
 
 set up_and_running 1
-
-# there's got to be a connection at this point since the init dialog requires 
-# it, so now we just need to send the keep alive periodically to make sure
-# that the socket doesn't timeout (seems to only be a problem in MCL because
-# the active sockets don't allow a timeout parameter so they die if inactive
-# for more than 30 seconds, but it can't really hurt to do it every where - 
-# one small message every 20 seconds seems pretty insignificant)
-
-
-proc keep_alive {} { 
-  send_environment_cmd "k-a"
-  after 20000 keep_alive 
-}         
-
-# Get things rolling with the keep_alives...
-
-after 20000 {keep_alive}
-
 
 # Below is a modified version of the tk_dilog command which I've
 # named my_tk_dialog.  It uses my text and button fonts to build

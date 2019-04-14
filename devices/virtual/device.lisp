@@ -1,27 +1,27 @@
 ;;;  -*- mode: LISP; Syntax: COMMON-LISP;  Base: 10 -*-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
+;;; 
 ;;; Author      : Mike Byrne & Dan Bothell
 ;;; Address     : Rice University, MS-25
 ;;;             : Psychology Department
 ;;;             : Houston,TX 77251-1892
 ;;;             : byrne@acm.org
-;;;
+;;; 
 ;;; Copyright   : (c)2000-2004 Mike Byrne
 ;;; Availability: Covered by the GNU LGPL, see LGPL.txt
-;;;
+;;; 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
+;;; 
 ;;; Filename    : virtual-view.lisp
 ;;; Version     : 1.0
-;;;
+;;; 
 ;;; Description : Instantiates "virtual views" so that RPM can act on things
 ;;;             : other than MCL windows.
-;;;
-;;; Bugs        :
-;;;
-;;; Todo        :
-;;;
+;;; 
+;;; Bugs        : 
+;;; 
+;;; Todo        : 
+;;; 
 ;;; ----- History -----
 ;;; 00.06.08 Mike Byrne
 ;;;             :  Date for new header.
@@ -35,7 +35,7 @@
 ;;; 02.01.15 Dan
 ;;;             : Changed the declaration of ignore to
 ;;;             : ignore-if-unused for the subviews method
-;;;             : to eliminate an ugly warning in ACL.
+;;;             : to eliminate an ugly warning in ACL.  
 ;;; 02.02.28 Dan
 ;;;             : changed vv-click-event-handler because
 ;;;             : functionp doesn't gurantee that the function is
@@ -49,7 +49,7 @@
 ;;;             : Moved the populate-loc-to-key-array from generic-interface
 ;;;             : to here.
 ;;;             : Took the UWI code out of here.
-;;; 02.12.19 Dan
+;;; 02.12.19 Dan 
 ;;;             : Added an around method for text items to handle color.
 ;;; 04.04.13 Dan [2.2]  (the previous update is "new" as of 2.2 as well)
 ;;;             : Changed the copyright notice and added the LGPL stuff.
@@ -69,7 +69,7 @@
 ;;;             : * Discovered that the hash-table implementation of the
 ;;;             :   virtual-view subviews can lead to non-repeatable performance
 ;;;             :   of tutorial models (both between different Lisps or even
-;;;             :   within a single Lisp!).  So, for now at least, the
+;;;             :   within a single Lisp!).  So, for now at least, the 
 ;;;             :   build-features-for method for a virtual-window will sort
 ;;;             :   the features based on xy coordinates.  That way the tutorial
 ;;;             :   model results will remain consistent for all systems that
@@ -84,19 +84,19 @@
 ;;;             : * No need to sort the features being returned because the
 ;;;             :   hash-table inside vision will mess it up anyway...
 ;;; 2007.08.23 Dan
-;;;             : * Fixed build-vis-locs-for of buttons so that the text
+;;;             : * Fixed build-vis-locs-for of buttons so that the text 
 ;;;             :   is located at the same point as the oval (bug carried
 ;;;             :   over from the old stuff).
 ;;; 2008.01.08 Dan
-;;;             : * Put the sorting code back in build-vis-locs-for because
-;;;             :   without it there's no consistency in the names of the
+;;;             : * Put the sorting code back in build-vis-locs-for because 
+;;;             :   without it there's no consistency in the names of the 
 ;;;             :   visual-location chunks for testing and verification purposes.
 ;;; 2008.01.09 Dan
 ;;;             : * Adding a little more to the sorting method so that co-located
 ;;;             :   items of different types also get a specific ordering.
 ;;; 2008.04.11 Dan [1.0]
 ;;;             : * Using the new parameter :stable-loc-names in the build-vis-
-;;;             :   locs-for method on virtual-windows to check whether the
+;;;             :   locs-for method on virtual-windows to check whether the 
 ;;;             :   subview items should be sorted.
 ;;;             : * Also took the package setting out of the mode line at the
 ;;;             :   top since there isn't a specific package for any of the
@@ -109,7 +109,7 @@
 ;;;             :   contain multiple "words" i.e. only compatible when each text
 ;;;             :   item produces only one feature.
 ;;; 2008.04.15 Dan
-;;;             : * Fixed a bug with the line views.  Without a specific
+;;;             : * Fixed a bug with the line views.  Without a specific 
 ;;;             :   point-in-vv-p the default misinterprets their size values
 ;;;             :   and could consider clicks which didn't overlap the line
 ;;;             :   to be over the line and not be passed on to the "real" item
@@ -118,7 +118,7 @@
 ;;;             : * Took all the "the fixnum" declarations out of point-in-vv-p
 ;;;             :   because nothing forces the mouse position to be a fixnum and
 ;;;             :   when visual items have an odd dimension the mouse position
-;;;             :   can get set to a rational.  In LispWorks point-in-vv-p does
+;;;             :   can get set to a rational.  In LispWorks point-in-vv-p does 
 ;;;             :   not work if the values are rationals declared as fixnums.
 ;;; 2008.07.01 Dan
 ;;;             : * Added code to the build-vis-locs-for methods to purge any
@@ -142,16 +142,83 @@
 ;;;             : * Updated the build-vis-locs-for methods for text and button
 ;;;             :   items so that they use the updated build-string-feats to
 ;;;             :   deal with newlines in the text.
-;;;             : * The spacing for lines in virtual items is the max of
+;;;             : * The spacing for lines in virtual items is the max of 
 ;;;             :   (* (text-height item) 1.25) (1+ (text-height item)).
 ;;; 2014.02.07 Dan
 ;;;             : * Why have virtual static text items always assumed a centered
 ;;;             :   y justification when all the other devices assume top?  It
-;;;             :   now assumes top justification like everything else for
+;;;             :   now assumes top justification like everything else for 
 ;;;             :   consistency which will probably break lots of models...
 ;;; 2014.02.11 Dan
 ;;;             : * Removed the lines variable from the text build-vis-locs-for
 ;;;             :   to avoid a warning since it's not needed.
+;;; 2014.05.19 Dan
+;;;             : * Fixed the use of chunk-type-slot-names by using chunk-filled-
+;;;             :   slots-list instead.
+;;; 2014.08.29 Dan
+;;;             : * Changed vv-click-event-handler for buttons so that the action 
+;;;             :   can be either a function or a symbol naming a function.
+;;; 2015.05.20 Dan
+;;;             : * The approach-width call in the buttons build-vis-locs-for
+;;;             :   method needs to pass the vision module in too.
+;;; 2015.12.17 Dan
+;;;             : * Changed the name of the key at 19,2 from esc to clear to
+;;;             :   actually match the reference image since the model now has
+;;;             :   keypad actions.
+;;; 2016.06.16 Dan
+;;;             : * When a button or line changes the size of the location now
+;;;             :   gets updated along with the other features.
+;;; 2016.11.17 Dan
+;;;             : * The code for storing and removing the loc chunks was using
+;;;             :   the meta-process name, but that's not needed (or available)
+;;;             :   anymore.
+;;; 2017.01.05 Dan
+;;;             : * Removed the loc-chunks slot altogether and removed some of
+;;;             :   the old device methods.
+;;;             : * Also removed methods that weren't used anywhere else like
+;;;             :   set-view-size and set-view-position.
+;;; 2017.01.06 Dan
+;;;             : * Stripped some other unnecessary code like close and select.
+;;;             : * The build-vis-locs-for methods now just return the feature
+;;;             :   lists as needed for the add-visicon-features command and it's
+;;;             :   up to the agi to handle the actual adding and recording of
+;;;             :   the chunk returned by vision.
+;;;             : * Add-subviews now warns if an item already has a container
+;;;             :   and doesn't put it into the new window.
+;;; 2017.01.30 Dan
+;;;             : * Add-act-r-command call parameters reordered.
+;;; 2017.02.09 Dan
+;;;             : * Updated the build-vis-locs-for for lines to specify isa 
+;;;             :   line-location since it needs the end* slots, and added that
+;;;             :   chunk-type to vision module.
+;;; 2017.03.02 Dan
+;;;             : * Changed device-handle-click to vv-handle-click to avoid
+;;;             :   issues since it now gets passed the click point.
+;;;             : * Fixed a bug in the vv-click-event-handler.
+;;; 2017.03.03 Dan
+;;;             : * Changed the way the button's action function is specified.
+;;;             :   Now it can be:
+;;;             :     - a function or dispatch command string
+;;;             :        That function or command will be called with no parameters
+;;;             :     - a list where the first is as above
+;;;             :        That function or command will be called with the rest
+;;;             :        of the list as its parameters
+;;;             :   Also, the validity of that item is only tested when the
+;;;             :   button is created and not before each execution, but if an error
+;;;             :   is reported by the dispatch call it will report that.
+;;; 2017.03.08 Dan
+;;;             : * Adding back the device-move-cursor-to method because I need
+;;;             :   something to call to send the updates to the environment and
+;;;             :   that's where it was before.
+;;; 2017.05.31 Dan
+;;;             : * Use new-symbol instead of new-name so there doesn't need
+;;;             :   to be a current model to create GUI elements.
+;;; 2017.06.19 Dan
+;;;             : * Remove the unused optional parameter from subviews.
+;;;             : * Removed the build-vis-locs-for methods.
+;;; 2018.03.14 Dan
+;;;             : * Just set :handles-click-p to nil for lines instead of having
+;;;             :   a dummy point-in-vv-p method for them.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 #+:packaged-actr (in-package :act-r)
@@ -168,60 +235,23 @@
    (y-pos :accessor y-pos :initform nil :initarg :y-pos)
    (width :accessor width :initform nil :initarg :width)
    (height :accessor height :initform nil :initarg :height)
-   (id :accessor id :initarg :id :initform (new-name-fct "VV"))
-   (handles-click-p :accessor handles-click-p :initform t
+   (id :accessor id :initarg :id :initform (new-symbol-fct "VV"))
+   (handles-click-p :accessor handles-click-p :initform t 
                     :initarg :handles-click-p)
    (view-container :accessor view-container :initform nil)
    (color :accessor color :initarg :color :initform 'black)
-   (loc-chunks :accessor loc-chunks :initform (make-hash-table :test 'equal))))
+   (visual-features :accessor visual-features :initform nil)))
 
 #+(or (not :mcl) :openmcl)
-(defgeneric subviews (view &optional subview-type)
+(defgeneric subviews (view)
   (:documentation "Returns a list of subviews of <view>."))
 
-(defmethod subviews ((vv virtual-view) &optional subview-type)
-  (declare (ignore subview-type))
+(defmethod subviews ((vv virtual-view))
   (let (accum)
-    (maphash #'(lambda (x y) (declare (ignore x))
-                (push y accum))
+    (maphash #'(lambda (x y) (declare (ignore x)) 
+                 (push y accum)) 
              (view-subviews vv))
     accum))
-
-#+(or (not :mcl) :openmcl)
-(defgeneric set-view-position (view x &optional y)
-  (:documentation  "Sets the position of <view> to the supplied location."))
-
-(defmethod set-view-position ((vv virtual-view) x &optional y)
-  (setf (x-pos vv) x)
-  (when y
-    (setf (y-pos vv) y)))
-
-
-#+(or (not :mcl) :openmcl)
-(defgeneric set-view-size (view x &optional y)
-  (:documentation  "Set the size of <view> to the provided dimensions."))
-
-(defmethod set-view-size ((vv virtual-view) x &optional y)
-  (setf (width vv) x)
-  (when y
-    (setf (height vv) y)))
-
-
-#+(or (not :mcl) :openmcl)
-(defgeneric view-size (view)
-  (:documentation  "Return the size of <view> as #(x y)."))
-
-(defmethod view-size ((vv virtual-view))
-  (vector (width vv) (height vv)))
-
-
-#+(or (not :mcl) :openmcl)
-(defgeneric view-position (view)
-  (:documentation  "Return the top left position of <view> in its container as #(x y)."))
-
-(defmethod view-position ((vv virtual-view))
-  (vector (x-pos vv) (y-pos vv)))
-
 
 (defmethod view-loc ((vv virtual-view))
   (vector (+ (x-pos vv) (round (width vv) 2))
@@ -234,19 +264,11 @@
 
 (defmethod add-subviews ((vv virtual-view) &rest subviews)
   (dolist (sub subviews)
-    (setf (gethash (id sub) (view-subviews vv)) sub)
-    (setf (view-container sub) vv)))
-
-
-(defun purge-loc-chunks (table)
-  (maphash (lambda (key value)
-             (when (find (car key) (meta-process-names))
-               (with-meta-process-eval (car key)
-                 (when (find (cdr key) (mp-models))
-                   (with-model-eval (cdr key)
-                     (when value
-                       (mapcar 'purge-chunk-fct (remove-if-not 'chunk-p-fct value))))))))
-           table))
+    (if (view-container sub)
+        (print-warning "Item ~s is already in window ~s so it can't be added to window ~s" sub (view-container sub) vv)
+      (progn
+        (setf (gethash (id sub) (view-subviews vv)) sub)
+        (setf (view-container sub) vv)))))
 
 
 #+(or (not :mcl) :openmcl)
@@ -259,14 +281,9 @@
         (progn
           (remhash (id sub) (view-subviews vv))
           (setf (view-container sub) nil)
-
-          ;; purge the chunks associated with the items
-          ;; if they're valid chunks in the current model - windows
-          ;; may span model resets
-
-          (purge-loc-chunks (loc-chunks sub)))
+          
+          )
       (print-warning "Item ~s is not in window ~s so it can't be removed from it" sub vv))))
-
 
 (defgeneric point-in-vv-p (vview point)
   (:documentation  "Determine if the supplied point is inside the supplied view."))
@@ -294,20 +311,15 @@
 (defclass virtual-window (virtual-view)
   ((window-title :accessor window-title :initarg :window-title
                  :initform "Virtual Window")
-   (outstrm :accessor outstrm :initarg :outstrm :initform t)
-   (cursor-pos :accessor cursor-pos :initform #(0 0) :initarg :cursor-pos)
-   (cursor-shape :accessor cursor-shape :initform 'POINTER
-                 :initarg :cursor-shape)
    )
   (:default-initargs
     :x-pos 0
     :y-pos 0
-    :id (new-name-fct "VW")
+    :id (new-symbol-fct "VW")
     ))
 
-
-(defmethod get-mouse-coordinates ((vw virtual-window))
-  (cursor-pos vw))
+(defmethod device-move-cursor-to ((vw virtual-window) (loc vector))
+  )
 
 (defun subview-sort (i1 i2)
   (and (numberp (x-pos i1))
@@ -322,78 +334,13 @@
              (= (y-pos i1) (y-pos i2))
              (string< (symbol-name (type-of i1)) (symbol-name (type-of i2)))))))
 
-(defmethod build-vis-locs-for ((vw virtual-window) (vis-mod vision-module))
-  (flatten (mapcar #'(lambda (obj) (build-vis-locs-for obj vis-mod))
-             (if (stable-names (current-device-interface))
-                 (sort (subviews vw) #'subview-sort)
-               (subviews vw)))))
 
-
-(defmethod cursor-to-vis-loc ((vw virtual-window))
-  (when (point-in-vv-p vw (cursor-pos vw))
-    (let ((c (car (gethash (cons (current-mp) (current-model)) (loc-chunks vw)))))
-      (if (and c (chunk-p-fct c))
-          (mod-chunk-fct c `(screen-x ,(px (cursor-pos vw)) screen-y ,(py (cursor-pos vw)) value ,(cursor-shape vw)))
-        (car (setf (gethash (cons (current-mp) (current-model)) (loc-chunks vw))
-               (define-chunks-fct `((isa visual-location kind cursor
-                                         screen-x ,(px (cursor-pos vw))
-                                         screen-y ,(py (cursor-pos vw))
-                                         value ,(cursor-shape vw))))))))))
-
-(defmethod vis-loc-to-obj ((device virtual-window) loc)
-  (case (chunk-slot-value-fct loc 'kind)
-    (cursor
-       (fill-default-vis-obj-slots (car (define-chunks (isa cursor))) loc))))
-
-
-(defmethod device-move-cursor-to ((vw virtual-window) (xyloc list))
-  (device-move-cursor-to vw (coerce xyloc 'vector))
-  )
-
-
-(defmethod device-move-cursor-to ((vw virtual-window) (loc vector))
-  (setf (cursor-pos vw) loc)
-  (when (with-cursor-p (current-device-interface))
-      (proc-display)))
-
-
-(defmethod device-handle-keypress ((vw virtual-window) key)
-  ;(when (car (no-output (sgp :v)))
-   (vw-output vw "got key ~S at time ~S" key (mp-time))
-  )
-
-
-
-
-(defmethod device-speak-string ((vw virtual-window) string)
-  (vw-output vw "heard speech '~A' at time ~S" string (mp-time))
-  )
-
-
-(defmethod device-handle-click ((vw virtual-window))
+(defmethod vv-handle-click ((vw virtual-window) (pos vector))
   (dolist (sub (subviews vw))
     (when (and (handles-click-p sub)
-               (point-in-vv-p sub (cursor-pos vw)))
-      (vv-click-event-handler sub (cursor-pos vw))
-      (return-from device-handle-click t)))
-  ;(when (car (no-output (sgp :v)))
-    (vw-output vw "was clicked at time ~S" (mp-time)))
-
-
-
-(defgeneric vw-output (vwind base &rest args)
-  (:documentation  "Print some output to a virtual window."))
-
-(defmethod vw-output ((vw virtual-window) (base string) &rest args)
-  ;; DAN
-  ;; seems like this should be in the trace
-  ;;(format (outstrm vw)
-
-  (when (car (no-output (sgp :vwt)))
-    (model-output "~&~%<< Window ~S ~? >>~%"
-                  (window-title vw)
-                  base args)))
-
+               (point-in-vv-p sub pos))
+      (vv-click-event-handler sub pos)
+      (return-from vv-handle-click t))))
 
 
 #+(or (not :mcl) :openmcl)
@@ -403,60 +350,27 @@
 (defmethod view-window ((vw virtual-window))
   vw)
 
-
-#+(or (not :mcl) :openmcl)
-(defgeneric window-close (wind)
-  (:documentation  "Closes a window."))
-
-;;; there isn't really anything to close in a virtual window, so do nothing
-(defmethod window-close ((vw virtual-window))
-  nil)
-
-#+(or (not :mcl) :openmcl)
-(defgeneric window-select (wind)
-  (:documentation  "Brings <wind> to the front."))
-
-;;; there's no "front" in virtual windows, so do nothing.
-(defmethod window-select ((vw virtual-window))
-  nil)
-
-
-#+(or (not :mcl) :openmcl)
-(defgeneric set-window-title (wind new-title)
-  (:documentation  "Set the title of <wind> to <new-title>."))
-
-(defmethod set-window-title ((window virtual-window) (new-title string))
-  (setf (window-title window) new-title))
-
-
 ;;;; ---------------------------------------------------------------------- ;;;;
-;;;; View classes:  static-text-vv, button-vv,
+;;;; View classes:  static-text-vv, button-vv, 
 
 
 (defclass virtual-dialog-item (virtual-view)
-  ((text :accessor dialog-item-text :initform "Untitled"
+  ((text :accessor dialog-item-text :initform "Untitled" 
          :initarg :dialog-item-text)
    (action-function :accessor action-function :initarg :action :initform nil)
    (text-height :accessor text-height :initarg :text-height :initform 10)
    (str-width-fct :accessor str-width-fct :initarg :str-width-fct
                   :initform #'(lambda (str)
-                                (* 7 (length str)))))
+                                (* 7 (length str))))
+   (lock :initform nil :accessor dialog-item-lock :initarg :lock))
   (:default-initargs
        :height 18
        :width 60
        :subviews nil))
 
 
-#+(or (not :mcl) :openmcl)
-(defgeneric set-dialog-item-text (dialog-item text)
-  (:documentation  "Set the text associated with <dialog-item> to <text>."))
-
-(defmethod set-dialog-item-text ((vdi virtual-dialog-item) (text string))
-  (setf (dialog-item-text vdi) text))
-
-
-(defmethod subviews ((vdi virtual-dialog-item) &optional subview-type)
-  (declare (ignorable vdi subview-type))
+(defmethod subviews ((vdi virtual-dialog-item))
+  (declare (ignorable vdi))
   nil)
 
 
@@ -472,342 +386,61 @@
 (defclass static-text-vdi (virtual-dialog-item)
   ()
   (:default-initargs
-       :id (new-name-fct "TEXT-VDI")
+      :id (new-symbol-fct "TEXT-VDI")
       :handles-click-p nil))
 
 
-(defmethod build-vis-locs-for ((self static-text-vdi) (vis-mod vision-module))
 
-  (let* ((line-height (max (round (text-height self) .8) (+ (text-height self) 1)))
-         (feats (build-string-feats vis-mod :text (dialog-item-text self)
-                                    :start-x (1+ (x-pos self))
-                                    :y-pos (+ (y-pos self) (round line-height 2)) ;;(round (- (py (view-loc self)) (* 1/2 line-height (1- lines))))
-                                    :width-fct (str-width-fct self)
-                                    :height (text-height self)
-                                    :obj self
-                                    :line-height line-height))
-        (c (gethash (cons (current-mp) (current-model)) (loc-chunks self))))
-    (when feats
-      (cond ((> (length feats) 1)
-
-             ;; delete any old chunks
-             (mapcar (lambda (f) (when (chunk-p-fct f) (purge-chunk-fct f))) c)
-
-             ;; save the current list
-             (setf (gethash (cons (current-mp) (current-model)) (loc-chunks self)) feats)
-
-             (mapcar #'(lambda (f)
-                         (set-chunk-slot-value-fct f 'color (color self))
-                         (setf (chunk-visual-object f) self)
-                         f)
-               feats))
-            (c ;; there are current features
-             (cond ((and (= (length c) 1) (chunk-p-fct (car c))) ;; if only one and it's a chunk reuse it
-                    (setf c (car c))
-                    (mod-chunk-fct c (mapcan (lambda (x) (list x (chunk-slot-value-fct (car feats) x))) (chunk-type-slot-names visual-location)))
-                    (setf (chunk-real-visual-value c) (chunk-real-visual-value (car feats)))
-                    (set-chunk-slot-value-fct c 'color (color self))
-                    (setf (chunk-visual-object c) self)
-                    (purge-chunk-fct (car feats))
-                    c)
-                   (t ;; otherwise purge any chunks on the current list and set it to the current feats
-                    (mapcar (lambda (f) (when (chunk-p-fct f) (purge-chunk-fct f))) c)
-                    (set-chunk-slot-value-fct (car feats) 'color (color self))
-                    (setf (chunk-visual-object (car feats)) self)
-                    (setf (gethash (cons (current-mp) (current-model)) (loc-chunks self)) feats))))
-
-            (t
-             (set-chunk-slot-value-fct (car feats) 'color (color self))
-             (setf (chunk-visual-object (car feats)) self)
-             (setf (gethash (cons (current-mp) (current-model)) (loc-chunks self)) feats))))))
 
 (defclass button-vdi (virtual-dialog-item)
   ()
   (:default-initargs
-       :id (new-name-fct "BUTTON-VDI")
-       :action #'default-button-action
-       ))
+       :id (new-symbol-fct "BUTTON-VDI")
+       :action "default-button-action"))
 
 
 (defmethod vv-click-event-handler ((btn button-vdi) where)
   (declare (ignore where))
-  (when (functionp (action-function btn))
-    (funcall (action-function btn) btn)))
+  (if (listp (action-function btn))
+      (cond ((stringp (first (action-function btn)))
+             (multiple-value-bind (success result)
+                 (apply 'evaluate-act-r-command (first (action-function btn)) (rest (action-function btn)))
+               (unless success
+                 (print-warning "Button click action ~s reported error ~s." (action-function btn) result))))
+            ((or (functionp (first (action-function btn)))
+                 (and (symbolp (first (action-function btn))) 
+                      (fboundp (first (action-function btn)))
+                      (not (macro-function (first (action-function btn))))))
+             (apply (first (action-function btn)) (rest (action-function btn))))
+            (t
+             (default-button-action)))
+    (cond ((stringp (action-function btn))
+           (multiple-value-bind (success result)
+                 (evaluate-act-r-command (action-function btn))
+               (unless success
+                 (print-warning "Button click action ~s reported error ~s." (action-function btn) result))))
+          ((or (functionp (action-function btn))
+               (and (symbolp (action-function btn)) 
+                    (fboundp (action-function btn))
+                    (not (macro-function (action-function btn)))))
+           (funcall (action-function btn)))
+          (t
+           (default-button-action)))))
 
 
-(defmethod default-button-action ((btn button-vdi))
-  (format t "~%Button '~S' clicked at time ~S."
-          (dialog-item-text btn) (mp-time)))
 
-(defmethod build-vis-locs-for ((self button-vdi) (vis-mod vision-module))
+(defun default-button-action ()
+  (print-warning "Button with no valid action clicked at time ~S." (mp-time)))
 
-  (let* ((line-height (max (round (text-height self) .8) (+ (text-height self) 1)))
-         (lines (1+ (count #\newline (dialog-item-text self))))
-         (text-feats (build-string-feats vis-mod :text (dialog-item-text self)
-                                         :start-x (px (view-loc self))
-                                         :x-fct (lambda (string startx obj)
-                                                  (- startx
-                                                       (round (funcall (str-width-fct obj) string) 2)))
-                                         :y-pos (round (- (py (view-loc self)) (* 1/2 line-height (1- lines))))
-                                         :width-fct (str-width-fct self)
-                                         :height (text-height self)
-                                         :obj self
-                                         :line-height line-height))
-        (feats nil)
-        (c (gethash (cons (current-mp) (current-model)) (loc-chunks self))))
-
-    (cond ((> (length text-feats) 1) ;; just use the new chunks
-           (setf feats (append (define-chunks-fct `((isa visual-location
-                                                         screen-x ,(px (view-loc self))
-                                                         screen-y ,(py (view-loc self))
-                                                         width ,(width self)
-                                                         height ,(height self)
-                                                         kind oval
-                                                         value oval
-                                                         color ,(color self))))
-                               text-feats))
-
-           ;; delete any old chunks
-           (mapcar (lambda (f) (when (chunk-p-fct f) (purge-chunk-fct f))) c)
-
-           ;; save the new ones
-           (setf (gethash (cons (current-mp) (current-model)) (loc-chunks self)) feats))
-          ((= (length text-feats) 1) ;; check if there are already chunks and store the updates
-           (cond ((= (length c) 2)
-                  (mod-chunk-fct (car c) `(screen-x ,(px (view-loc self))
-                                                    screen-y ,(py (view-loc self))
-                                                    width ,(width self)
-                                                    height ,(height self)
-                                                    color ,(color self)))
-                  (mod-chunk-fct (second c)
-                                 (mapcan (lambda (x)
-                                           (list x (chunk-slot-value-fct (car text-feats) x)))
-                                   (chunk-type-slot-names visual-location)))
-
-                  (setf (chunk-real-visual-value (second c)) (chunk-real-visual-value (car text-feats)))
-                  (setf feats c)
-                  (purge-chunk-fct (car text-feats)))
-                 (t
-                  ;; remove any old ones that might be there
-                  (mapcar (lambda (f) (when (chunk-p-fct f) (purge-chunk-fct f))) c)
-
-                  (setf feats (setf (gethash (cons (current-mp) (current-model)) (loc-chunks self))
-                                (append (define-chunks-fct `((isa visual-location
-                                                                  screen-x ,(px (view-loc self))
-                                                                  screen-y ,(py (view-loc self))
-                                                                  width ,(width self)
-                                                                  height ,(height self)
-                                                                  kind oval
-                                                                  value oval
-                                                                  color ,(color self))))
-                                        text-feats))))))
-          (t ;; there are no text feats
-           (cond (c ;; there are existing feats so reuse the oval
-                  (mod-chunk-fct (car c) `(screen-x ,(px (view-loc self))
-                                                    screen-y ,(py (view-loc self))
-                                                    width ,(width self)
-                                                    height ,(height self)
-                                                    color ,(color self)))
-                  ;; delete any old text chunks
-                  (mapcar (lambda (f) (when (chunk-p-fct f) (purge-chunk-fct f))) (cdr c))
-
-                  (setf feats (setf (gethash (cons (current-mp) (current-model)) (loc-chunks self)) (subseq c 0 1))))
-                 (t ;no existing feats so just creat an oval chunk
-                  (setf feats (setf (gethash (cons (current-mp) (current-model)) (loc-chunks self))
-                                (define-chunks-fct `((isa visual-location
-                                                          screen-x ,(px (view-loc self))
-                                                          screen-y ,(py (view-loc self))
-                                                          width ,(width self)
-                                                          height ,(height self)
-                                                          kind oval
-                                                          value oval
-                                                          color ,(color self))))))))))
+(add-act-r-command "default-button-action" 'default-button-action "Function called for a button with no action. Do not call directly." nil)
 
 
-    (let ((fun (lambda (x y) (declare (ignore x)) (approach-width (car feats) y))))
-      (mapcar #'(lambda (f)
-                  (setf (chunk-visual-approach-width-fn f) fun)
-                  (set-chunk-slot-value-fct f 'color 'black))
-        (cdr feats)))
+;;; The base class for the view based lines. 
 
-    (mapcar #'(lambda (f)
-                (setf (chunk-visual-object f) self)
-                f)
-      feats)))
-
-
-;;; The base class for the view based lines.
-
-(defclass v-liner (virtual-view)
-  ())
-
-
-(defmethod point-in-vv-p ((self v-liner) where)
-  "Method needed by R/PM so that if the mouse is clicked on the view it
-   doesn't get handled by this view, and is passed on to the next"
-  (declare (ignore where))
-  nil)
-
-
-(defmethod build-vis-locs-for ((lnr v-liner) (vis-mod vision-module))
-  "Convert the view to a feature to be placed into the visual icon"
-  (let* ((c (gethash (cons (current-mp) (current-model)) (loc-chunks lnr)))
-         (f (cond ((and c (chunk-p-fct (car c)))
-                   (mod-chunk-fct (car c) `(color ,(color lnr)
-                                                  screen-x ,(floor (/ (+ (x-pos lnr) (width lnr)) 2))
-                                                  screen-y ,(floor (/ (+ (y-pos lnr) (height lnr)) 2))
-                                                  width ,(abs (- (x-pos lnr) (width lnr)))
-                                                  height ,(abs (- (y-pos lnr) (height lnr)))))
-                   (car c))
-                  (t
-                   (car (setf (gethash (cons (current-mp) (current-model)) (loc-chunks lnr))
-                          (define-chunks-fct `((isa visual-location
-                                                    color ,(color lnr)
-                                                    value line
-                                                    kind line
-                                                    screen-x ,(floor (/ (+ (x-pos lnr) (width lnr)) 2))
-                                                    screen-y ,(floor (/ (+ (y-pos lnr) (height lnr)) 2))
-                                                    width ,(abs (- (x-pos lnr) (width lnr)))
-                                                    height ,(abs (- (y-pos lnr) (height lnr))))))))))))
-    (setf (chunk-visual-object f) lnr)
-    f))
-
-(defmethod vis-loc-to-obj ((lnr v-liner) loc)
-  (car (define-chunks-fct `((isa line
-                                 value ,(chunk-slot-value-fct loc 'value)
-                                 color ,(chunk-slot-value-fct loc 'color)
-                                 height ,(chunk-slot-value-fct loc 'height)
-                                 width ,(chunk-slot-value-fct loc 'width)
-                                 end1-x ,(x-pos lnr)
-                                 end1-y ,(y-pos lnr)
-                                 end2-x ,(width lnr)
-                                 end2-y ,(height lnr))))))
-
-
-(defmethod populate-loc-to-key-array ((ar array))
-  "Sets all the keys in the array that need to be set"
-  ;; function key row
-  (setf (aref ar 0 0) 'ESC)
-  (setf (aref ar 2 0) 'f1)
-  (setf (aref ar 3 0) 'f2)
-  (setf (aref ar 4 0) 'f3)
-  (setf (aref ar 5 0) 'f4)
-  (setf (aref ar 7 0) 'f5)
-  (setf (aref ar 8 0) 'f6)
-  (setf (aref ar 9 0) 'f7)
-  (setf (aref ar 10 0) 'f8)
-  (setf (aref ar 12 0) 'f9)
-  (setf (aref ar 13 0) 'f10)
-  (setf (aref ar 14 0) 'f11)
-  (setf (aref ar 15 0) 'f12)
-  (setf (aref ar 17 0) 'print-screen)
-  (setf (aref ar 18 0) 'scroll-lock)
-  (setf (aref ar 19 0) 'pause)
-  ;; numeric key row
-  (setf (aref ar 0 2) #\tab)
-  (setf (aref ar 1 2) #\1)
-  (setf (aref ar 2 2) #\2)
-  (setf (aref ar 3 2) #\3)
-  (setf (aref ar 4 2) #\4)
-  (setf (aref ar 5 2) #\5)
-  (setf (aref ar 6 2) #\6)
-  (setf (aref ar 7 2) #\7)
-  (setf (aref ar 8 2) #\8)
-  (setf (aref ar 9 2) #\9)
-  (setf (aref ar 10 2) #\0)
-  (setf (aref ar 11 2) #\-)
-  (setf (aref ar 12 2) #\=)
-  (setf (aref ar 13 2) 'Delete)
-  (setf (aref ar 15 2) 'help)
-  (setf (aref ar 16 2) 'home)
-  (setf (aref ar 17 2) 'pageup)
-  (setf (aref ar 19 2) 'ESC)
-  (setf (aref ar 20 2) #\=)
-  (setf (aref ar 21 2) #\/)
-  (setf (aref ar 22 2) #\*)
-  ;; qwerty row
-  (setf (aref ar 0 3) #\Tab)
-  (setf (aref ar 1 3) #\q)
-  (setf (aref ar 2 3) #\w)
-  (setf (aref ar 3 3) #\e)
-  (setf (aref ar 4 3) #\r)
-  (setf (aref ar 5 3) #\t)
-  (setf (aref ar 6 3) #\y)
-  (setf (aref ar 7 3) #\u)
-  (setf (aref ar 8 3) #\i)
-  (setf (aref ar 9 3) #\o)
-  (setf (aref ar 10 3) #\p)
-  (setf (aref ar 11 3) #\[)
-  (setf (aref ar 12 3) #\])
-  (setf (aref ar 13 3) #\\)
-  (setf (aref ar 15 3) 'DEL)
-  (setf (aref ar 16 3) 'End)
-  (setf (aref ar 17 3) 'Page)
-  (setf (aref ar 19 3) #\7)
-  (setf (aref ar 20 3) #\8)
-  (setf (aref ar 21 3) #\9)
-  (setf (aref ar 22 3) #\-)
-  ;; ASDF row
-  (setf (aref ar 0 4) 'caps-lock)
-  (setf (aref ar 1 4) #\a)
-  (setf (aref ar 2 4) #\s)
-  (setf (aref ar 3 4) #\d)
-  (setf (aref ar 4 4) #\f)
-  (setf (aref ar 5 4) #\g)
-  (setf (aref ar 6 4) #\h)
-  (setf (aref ar 7 4) #\j)
-  (setf (aref ar 8 4) #\k)
-  (setf (aref ar 9 4) #\l)
-  (setf (aref ar 10 4) #\;)
-  (setf (aref ar 11 4) #\')
-  (setf (aref ar 12 4) #\Newline)
-  (setf (aref ar 13 4) #\Newline)
-  (setf (aref ar 19 4) #\4)
-  (setf (aref ar 20 4) #\5)
-  (setf (aref ar 21 4) #\6)
-  (setf (aref ar 22 4) #\+)
-  ;; Z row
-  (setf (aref ar 0 5) 'shift)
-  (setf (aref ar 1 5) #\z)
-  (setf (aref ar 2 5) #\x)
-  (setf (aref ar 3 5) #\c)
-  (setf (aref ar 4 5) #\v)
-  (setf (aref ar 5 5) #\b)
-  (setf (aref ar 6 5) #\n)
-  (setf (aref ar 7 5) #\m)
-  (setf (aref ar 8 5) #\,)
-  (setf (aref ar 9 5) #\.)
-  (setf (aref ar 10 5) #\/)
-  (setf (aref ar 11 5) 'shift)
-  (setf (aref ar 12 5) 'shift)
-  (setf (aref ar 16 5) 'UpArrow)
-  (setf (aref ar 19 5) #\1)
-  (setf (aref ar 20 5) #\2)
-  (setf (aref ar 21 5) #\3)
-  (setf (aref ar 22 5) 'enter)
-  ;; space bar row
-  (setf (aref ar 0 6) 'control)
-  (setf (aref ar 1 6) 'option)
-  (setf (aref ar 2 6) 'command)
-  (setf (aref ar 3 6) #\Space)
-  (setf (aref ar 4 6) #\Space)
-  (setf (aref ar 5 6) #\Space)
-  (setf (aref ar 6 6) #\Space)
-  (setf (aref ar 7 6) #\Space)
-  (setf (aref ar 8 6) #\Space)
-  (setf (aref ar 9 6) #\Space)
-  (setf (aref ar 10 6) #\Space)
-  (setf (aref ar 11 6) 'command)
-  (setf (aref ar 12 6) 'option)
-  (setf (aref ar 13 6) 'control)
-  (setf (aref ar 15 6) 'BackArrow)
-  (setf (aref ar 16 6) 'DownArrow)
-  (setf (aref ar 17 6) 'ForwardArrow)
-  (setf (aref ar 19 6) #\0)
-  (setf (aref ar 20 6) #\0)
-  (setf (aref ar 21 6) #\.)
-  (setf (aref ar 22 6) 'enter)
-  ar)
+(defclass v-liner (virtual-dialog-item)
+  ()
+  (:default-initargs
+      :handles-click-p nil))
 
 
 #|

@@ -1,23 +1,23 @@
 proc select_visicon {} {
 
-  if {[currently_selected_model] == "nil"} {
+  set model [currently_selected_model]
+
+  if {$model == "nil"} {
 
     tk_messageBox -icon info -type ok -title "Visicon" -message "Inspector tools require a current model."
   } else {
 
-    set win ".visicon_[currently_selected_model]"
+    set win ".visicon_$model"
 
     if {[winfo exists $win] == 1} {
       wm deiconify $win
       raise $win
     } else {
-      # make it now
 
       toplevel $win
-
       wm withdraw $win
 
-      record_new_window $win "Visicon"
+      record_new_window $win "Visicon" $model
 
       wm geometry $win [get_configuration .visicon $win]
 
@@ -27,28 +27,22 @@ proc select_visicon {} {
           
       set s [scrollbar $f.scrl -command "$t yview"]
 
-      send_environment_cmd \
-        "create text-output-handler $t $t \
-            (lambda (x) (declare (ignore x)) (print-visicon)) (post) [send_model_name]"
-
-      bind $t <Destroy> {
-        remove_handler %W
-      }
-
-      # Make the window useable for copy operations on Windows
-   
-      bind $t <1> {focus %W}
-  
       pack $s -side right -fill y 
       pack $t -side left -expand 1 -fill both
   
       place $f -x 0 -y 0 -relwidth 1.0 -relheight 1.0 
 
-      # now show the window 
+      set_update_script $win "update_visicon_view $t $model"
 
       wm deiconify $win
+      focus $win
     }
   }
+}
+
+
+proc update_visicon_view {text model} {
+  update_text_pane $text [lindex [call_act_r_command "printed-visicon" $model] 0]
 }
 
 button [control_panel_name].visicon_button \

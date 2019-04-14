@@ -29,6 +29,19 @@
 ;;;             : * Added the cannot-define-model macro here.
 ;;; 2013.01.07 Dan
 ;;;             : * Changed cannot-define-model to use a count instead of t/nil.
+;;; 2016.09.27 Dan
+;;;             : * Moved current-mp here since it's just a simple closure now.
+;;; 2016.09.28 Dan
+;;;             : * Moved verify-current-mp here but it's just a dummy to avoid
+;;;             :   having to fix that everywhere else for now.
+;;; 2017.03.29 Dan
+;;;             : * Replaced the current-model slot in the meta-process and just
+;;;             :   using a global since there's only one meta-process and this
+;;;             :   lets me rebind it in a let on a per-thread basis.
+;;; 2017.03.30 Dan
+;;;             : * Moved current-mp and current-mp-fct to the structures file
+;;;             :   because they're needed for the locks code.
+;;;             : * Also moved the model related code.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -59,14 +72,7 @@
 #+(and :clean-actr (not :packaged-actr) :ALLEGRO-IDE) (in-package :cg-user)
 #-(or (not :clean-actr) :packaged-actr :ALLEGRO-IDE) (in-package :cl-user)
 
-(defmacro current-model-struct ()
-  `(when (current-mp)
-     (meta-p-current-model (current-mp))))
 
-(defmacro verify-current-model (warning &body body)
-  `(if (null (meta-p-current-model (current-mp)))
-       (print-warning ,warning)
-     (progn ,@body)))
 
 (defmacro cannot-define-model (&body body)
   `(progn

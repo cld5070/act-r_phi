@@ -75,6 +75,47 @@
 ;;;             :   too small to represent 1 - 4294967295/4294967296.0.  Of 
 ;;;             :   course if the largest float size is too small to represent
 ;;;             :   that then errors are also still possible for integers too.
+;;; 2015.08.13 Dan
+;;;             : * Basically eliminate rand-time and have it just print a warning
+;;;             :   and return the time it was passed for now.
+;;; 2015.08.17 Dan
+;;;             : * Added the randomize-time-ms function for randomizing times
+;;;             :   that are in ms because they need to return integer results.
+;;;             :   It's not quite the same as converting to seconds, randomizing 
+;;;             :   that, and then rounding back to milliseconds because that 
+;;;             :   is inefficient, but it's pretty close (the probability of
+;;;             :   the extreme values in the range are uniform with this whereas
+;;;             :   with the other method they aren't since they would be rounded
+;;;             :   to milliseconds after the fact).
+;;; 2017.01.11 Dan
+;;;             : * Adding dispatcher functions for act-r-random and permute-list.
+;;; 2017.01.18 Dan
+;;;             : * Removed the echo-act-r-output from commands.  The assumption
+;;;             :   now is that echoing is handled by the user.
+;;;             : * Use handle-evaluate-results.
+;;; 2017.01.30 Dan
+;;;             : * Add-act-r-command call parameters reordered.
+;;; 2017.02.08 Dan
+;;;             : * Reworked the local versions of the remote commands to not
+;;;             :   go out through the dispatcher.
+;;; 2017.06.01 Dan
+;;;             : * Changed how act-r-random checks for a current model and gets
+;;;             :   the module to avoid the warnings when it has to default to 
+;;;             :   the default state.
+;;; 2017.06.28 Dan
+;;;             : * Adding a lock on the module, make the global actually a
+;;;             :   module and not just a mersenne-twister, and then add a
+;;;             :   new global to serve as the default state.
+;;; 2017.12.14 Dan
+;;;             : * Fix a typo in the doc string for permute-list.
+;;; 2018.02.28 Dan
+;;;             : * Add remote commands for act-r-noise, randomize-time, and
+;;;             :   randomize-time-ms.
+;;; 2018.06.15 Dan
+;;;             : * Updated doc strings for consistency.
+;;; 2018.08.27 Dan
+;;;             : * The incf in the constructor really should be protected by
+;;;             :   a lock for safety so adding that.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -121,6 +162,7 @@
 ;;; Start off with code for the pseudorandom number generator
 
 (defvar *random-module-counter* -1)
+(defvar *random-lock* (bt:make-lock "random-lock-count"))
 
 (defstruct (mersenne-twister (:conc-name mt-))
   (n 624 :type fixnum)
@@ -128,7 +170,7 @@
   (mti 625 :type fixnum)
   (mt (make-array 624 :element-type 'bignum) :type vector)
   (count 0 :type integer)
-  (start (incf *random-module-counter*) :type integer)
+  (start (bt:with-lock-held (*random-lock*) (incf *random-module-counter*)) :type integer)
   (initial-seed 5489 :type integer))
 
 ;; Some constants from the algorithm
@@ -142,12 +184,12 @@
 (defconstant *byte-32-0* (byte 32 0))
 ;(defconstant *b1* (byte 1 31))
 
-(defvar *default-random-module* (make-mersenne-twister))
+(defvar *default-random-state* (make-mersenne-twister))
 
 ;;; functions translated from the C code of mt19937ar.c and 
 ;;; modified as necessary to take a state parameter.
 
-(defun init_genrand (s &optional (state *default-random-module*))
+(defun init_genrand (s &optional (state *default-random-state*))
   (setf (svref (mt-mt state) 0) (ldb *byte-32-0* s))
   
   (setf (mt-mti state) 1)
@@ -163,7 +205,7 @@
     (incf (mt-mti state))))
 
 
-(defun init_by_array (init_key &optional (state *default-random-module*))
+(defun init_by_array (init_key &optional (state *default-random-state*))
   (init_genrand 19650218 state)
   (let ((key_length (length init_key))
         (i 1 )
@@ -210,7 +252,7 @@
 ;; Some different versions of the computation are included here
 ;; because I want to test them in different lisps/oss
 
-(defun genrand_int32(&optional (state *default-random-module*))
+(defun genrand_int32(&optional (state *default-random-state*))
   (let ((y 0))
     (declare (type integer y))
     
@@ -293,10 +335,10 @@
     
     y))
 
-(defun genrand_real2_L (&optional (state *default-random-module*))
+(defun genrand_real2_L (&optional (state *default-random-state*))
     (/  (genrand_int32 state) 4294967296.0L0))
 
-(defun genrand_real2 (&optional (state *default-random-module*))
+(defun genrand_real2 (&optional (state *default-random-state*))
     (/  (genrand_int32 state) 4294967296.0))
 
 #|
@@ -319,7 +361,7 @@ in the test output file provided with mt19937ar.c -> mt19937ar.out.txt
 ;; Here's the actual module definition code
 
 (defstruct act-r-random-module 
-  state randomize-time)
+  state randomize-time (lock (bt:make-lock "random-lock")))
 
 
 (defun create-random-module (ignore)
@@ -344,6 +386,7 @@ in the test output file provided with mt19937ar.c -> mt19937ar.out.txt
     
     (make-act-r-random-module :state state)))
 
+
 (defun init-random-state-from-seed (state seed)
   
   (if (<= (ceiling (log seed 2)) 32)
@@ -354,31 +397,35 @@ in the test output file provided with mt19937ar.c -> mt19937ar.out.txt
                           (ldb (byte 32 32) seed)))
                    state)))
 
+(defvar *default-random-module* (create-random-module nil))
+
+
+
 (defun random-module-params (module param)
- 
-  (cond ((consp param)
-         
-         (case (car param)
-           (:seed (unless (symbolp (cdr param))
-                    ;; ignore the case when it sends the "default"
-                    (let ((seed (first (cdr param)))
-                          (count (second (cdr param)))
-                          (state (act-r-random-module-state module)))
-                      
-                      (init-random-state-from-seed state seed)
-                      (setf (mt-count state) 0)
-                      (setf (mt-initial-seed state) seed)
-                      (dotimes (i count)
-                        (genrand_int32 state))
-                      (list seed count))))
+  (bt:with-lock-held ((act-r-random-module-lock module))
+    (cond ((consp param)
            
-           (:randomize-time (setf (act-r-random-module-randomize-time module)
-                              (cdr param)))))
-        (t 
-         (case param
-           (:seed (list (mt-initial-seed (act-r-random-module-state module))
-                        (mt-count (act-r-random-module-state module))))
-           (:randomize-time (act-r-random-module-randomize-time module))))))
+           (case (car param)
+             (:seed (unless (symbolp (cdr param))
+                      ;; ignore the case when it sends the "default"
+                      (let ((seed (first (cdr param)))
+                            (count (second (cdr param)))
+                            (state (act-r-random-module-state module)))
+                        
+                        (init-random-state-from-seed state seed)
+                        (setf (mt-count state) 0)
+                        (setf (mt-initial-seed state) seed)
+                        (dotimes (i count)
+                          (genrand_int32 state))
+                        (list seed count))))
+             
+             (:randomize-time (setf (act-r-random-module-randomize-time module)
+                                (cdr param)))))
+          (t 
+           (case param
+             (:seed (list (mt-initial-seed (act-r-random-module-state module))
+                          (mt-count (act-r-random-module-state module))))
+             (:randomize-time (act-r-random-module-randomize-time module)))))))
 
 
 (define-module-fct 'random-module nil 
@@ -416,22 +463,23 @@ in the test output file provided with mt19937ar.c -> mt19937ar.out.txt
 
 (defun act-r-random (limit)
   (if (and (numberp limit) (plusp limit))
-      (let* ((module (get-module random-module))
-             (state (if module
-                        (act-r-random-module-state module)
+      (let ((module (if (current-model-struct)
+                        (get-module random-module)
                       *default-random-module*)))
-        (cond ((integerp limit)
-               (if (< limit #xffffffff)
-                   (values (floor (* limit (genrand_real2_L state))))
-                 (let ((accum 0)
-                       (nums (ceiling (/ (1+ (log limit 2)) 32))))
-                   (dotimes (i nums)
-                     (setf accum (+ (ash accum 32) (genrand_int32 state))))
-                   (mod accum limit)
-                   )))
-            (t
-             (* limit (genrand_real2 state)))))
+        (bt:with-lock-held ((act-r-random-module-lock module))
+          (cond ((integerp limit)
+                 (if (< limit #xffffffff)
+                     (values (floor (* limit (genrand_real2_L (act-r-random-module-state module)))))
+                   (let ((accum 0)
+                         (nums (ceiling (/ (1+ (log limit 2)) 32))))
+                     (dotimes (i nums)
+                       (setf accum (+ (ash accum 32) (genrand_int32 (act-r-random-module-state module)))))
+                     (mod accum limit))))
+                (t
+                 (* limit (genrand_real2 (act-r-random-module-state module)))))))
     (print-warning "Act-r-random called with an invalid value ~s" limit)))
+
+(add-act-r-command "act-r-random" 'act-r-random "Return a random number up to limit using the current model's random stream. Params: limit." nil)
 
 
 (defun act-r-noise (s)
@@ -443,6 +491,7 @@ in the test output file provided with mt19937ar.c -> mt19937ar.out.txt
         (* s (log-coerced (/ (- 1.0 p) p))))
     (print-warning "Act-r-noise called with an invalid s ~S" s)))
   
+(add-act-r-command "act-r-noise" 'act-r-noise "Return a random sample from a logistic distribution with mean 0 and s value provided using the current model's random stream. Params: s-value." nil)
 
 ;;; Do it this way so that later it is easier
 ;;; to just disable rand-time and let the scheduler
@@ -453,7 +502,7 @@ in the test output file provided with mt19937ar.c -> mt19937ar.out.txt
   (if (numberp time)
       (let ((rand-module (get-module random-module)))
         (if rand-module
-            (let ((rand (act-r-random-module-randomize-time rand-module)))
+            (let ((rand (bt:with-lock-held ((act-r-random-module-lock rand-module)) (act-r-random-module-randomize-time rand-module))))
               (if (or (not rand) (zerop time))
                   time
                 (let* ((tscale (if (numberp rand) rand 3)))  ;; default when t is 3
@@ -469,21 +518,24 @@ in the test output file provided with mt19937ar.c -> mt19937ar.out.txt
       (print-warning "Invalid value passed to randomize-time: ~S" time)
       time)))
 
-;;; RAND-TIME      [Function]
-;;;             : Last modified 2005.01.07
-;;; Description : Return a random number from a uniform distribution based on
-;;;             : the input, depending on if time randomization is on.  If it
-;;;             : is and no value is specified, go with a random number from
-;;;             : 2/3 of the input and 4/3 of the input.  This is EPIC's
-;;;             : randomization method.  If an integer is provided, then use
-;;;             : that in place of 3.  [That is, a value of 2 will produce an 
-;;;             : output from 1/2 to 3/2 of the input; a value of 4 will 
-;;;             : produce an output from 3/4 to 5/4.]
+(add-act-r-command "randomize-time" 'randomize-time "If :randomize-time is enabled return a random result from the uniform distribution from time - time/n to time + time/n where n is the :randomize-time value. Params: time." nil)
 
-(defun rand-time (time)
-  "If time randomizing is on, do the EPIC time randomizing thing."
-  (randomize-time time))
+(defun randomize-time-ms (time)
+  (if (integerp time)
+      (let ((rand-module (get-module random-module)))
+        (if rand-module
+            (let ((rand (bt:with-lock-held ((act-r-random-module-lock rand-module)) (act-r-random-module-randomize-time rand-module))))
+              (if (or (not rand) (zerop time))
+                  time
+                (let* ((tscale (if (numberp rand) rand 3))  ;; default w
+                       (step (round time tscale)))
+                  (+ time (- step) (act-r-random (+ 1 step step))))))
+          time))
+    (progn
+      (print-warning "Invalid value passed to randomize-time-ms: ~S. Value must be an integer." time)
+      time)))
 
+(add-act-r-command "randomize-time-ms" 'randomize-time-ms "If :randomize-time is enabled return a random integer result from the uniform distribution from time - time/n to time + time/n where n is the :randomize-time value. Params: time." nil)
 
 ;;; PERMUTE-LIST  [Function]
 ;;; Description : This function returns a randomly ordered copy of the passed
@@ -497,7 +549,10 @@ in the test output file provided with mt19937ar.c -> mt19937ar.out.txt
         (result (list item) (cons item result)))
            ((null temp) result))
     nil))
-    
+
+(add-act-r-command "permute-list" 'permute-list "Return a randomly ordered copy of the list provided using the current model's random stream. Params: list." nil)
+
+
 #|
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public

@@ -1,0 +1,11 @@
+{
+  "name": "relay-AGI",
+  "version": "0.0.1",
+  "description": "View the ACT-R visible virtual windows in a browser window at localhost:3000.",
+  "main": "relay-virtual-view.js",
+  "bin": "relay-virtual-view.js",
+  "author": "Dan Bothell",
+  "pkg": {
+    "assets": "*.html"
+  }
+}

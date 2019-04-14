@@ -13,7 +13,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; 
 ;;; Filename    : top-level.lisp
-;;; Version     : 1.0.a1
+;;; Version     : 3.0
 ;;; 
 ;;; Description : The framework's top level user commands that aren't
 ;;;               part of another section.
@@ -25,6 +25,7 @@
 ;;;             :   it knows to check the .lisp if the current file is a
 ;;;             :   compiled one.
 ;;;             : [X] Why doesn't clear-all use the reset-mp command?
+;;;             : [ ] Deal with clear-all not checking the top-level-lock.
 ;;; 
 ;;; ----- History -----
 ;;;
@@ -56,6 +57,63 @@
 ;;;             : * Change reset so that it uses meta-p-model-order so that 
 ;;;             :   things work the same at reset and reload times and between
 ;;;             :   Lisps.
+;;; 2016.09.28 Dan
+;;;             : * Removed code relating to multiple meta-processes.
+;;;             : * Reset now returns t instead of a meta-process name.
+;;; 2016.11.16 Dan [2.0]
+;;;             : * Making the commands available through the central dispatcher
+;;;             :   and having the user commands execute them that way.  Only
+;;;             :   doing reset and reload through the dispatcher right now 
+;;;             :   because I'm not sure about top-level model file commands
+;;;             :   at this point.
+;;; 2016.11.17 Dan
+;;;             : * Changed execute-act-r-command to evaluate-act-r-command.
+;;; 2016.12.07 Dan
+;;;             : * Updated the reload internal function so that it captures
+;;;             :   the non-ACT-R output during the load the same way load does.
+;;; 2017.01.18 Dan
+;;;             : * Removed the echo-act-r-output from commands.  The assumption
+;;;             :   now is that echoing is handled by the user.
+;;;             : * Only return the actual result of evaluating reset and reload
+;;;             :   printing errors using handle-evaluate-results.
+;;; 2017.01.30 Dan
+;;;             : * Add-act-r-command call parameters reordered.
+;;; 2017.03.30 Dan
+;;;             : * Don't need meta-p-current-model in clear-all.
+;;; 2017.05.30 Dan
+;;;             : * Adding the call to component functions into clear-all.
+;;; 2017.06.22 Dan
+;;;             : * Protect meta-p-model-order and meta-p-models with lock.
+;;; 2017.06.30 Dan
+;;;             : * Protect the meta-p event-hook related slots.
+;;; 2017.07.14 Dan
+;;;             : * Reset and reload check the top-level-lock.  Clear-all DOES NOT.
+;;;             :   That's because it can't be a recursive lock and clear-all
+;;;             :   gets called during reload, but since clear-all isn't remotely
+;;;             :   available that isn't a serious issue at this point.
+;;;             : * Protect access to meta-p-component-list.
+;;; 2017.08.25 Dan
+;;;             : * If reload is provided the optional compile flag and the 
+;;;             :   last loaded file was compiled now it will recompile the source
+;;;             :   file if it exists and should be.
+;;;             : * Reset and reload return t upon success.
+;;; 2017.08.28 Dan
+;;;             : * Adding a signal for clear-all (clear-all-start). 
+;;;             : * Added a reset-start signal with the last update but didn't
+;;;             :   note that above.
+;;; 2017.12.14 Dan [3.0]
+;;;             : * Eliminated the special case of not resetting a single empty
+;;;             :   model because that usage should be discouraged and this seems
+;;;             :   like a good time to eliminate a 5.0 backwards compatibility
+;;;             :   feature!
+;;;             : * Why does reload generate errors?  Just print the warnings
+;;;             :   now instead.  Should probably do the same for clear-all,
+;;;             :   but holding off on that for now.
+;;; 2017.12.18 Dan
+;;;             : * Fixed a bug with changing the errors to print-warnings in
+;;;             :   reload.
+;;; 2019.02.05 Dan
+;;;             : * Adjustments because meta-p-models is now an alist.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -84,104 +142,148 @@
 
 (defvar *recorded-load-file* nil)
 
-
 (defun clear-all ()
+  (when (mp-running?)
+    (error "Clear-all cannot be used while ACT-R is running.~%If you are loading a model file you must stop the current run first.~%If the Stepper is open you must close it or hit the stop button.~%"))
   
-  (maphash #'(lambda (name meta-process)
-               (declare (ignore meta-process))
-               (with-meta-process-eval name
-                 (when (mp-running?)
-                   (error "Clear-all cannot be used while ACT-R is running.~%If you are loading a model file you must stop the current run first.~%If the Stepper is open you must close it or hit the stop button.~%"))))
-           (mps-table *meta-processes*))
-  
-  (maphash #'(lambda (name meta-process)
-               (declare (ignore meta-process))
-               (unless (eq name 'default)
-                 (delete-meta-process-fct name)))
-           (mps-table *meta-processes*))
-  
-  ;;; Only 1 meta-process left at this point - the default
-  ;;; It needs to be explicitly reset to initial state
-  
-  
+  ;; There is only one mp in this system
   
   (let ((mp (current-mp)))
     
+    (dispatch-apply "clear-all-start")
     
-    (maphash #'(lambda (name model)
-                 (declare (ignore model))
-                 (delete-model-fct name))
-             (meta-p-models mp))
+    (mapcar (lambda (x)
+              (delete-model-fct (car x)))
+             (bt:with-lock-held ((meta-p-models-lock mp)) (meta-p-models mp)))
+    
+    ;; update the componenets
+    
+    (dolist (c (bt:with-lock-held ((meta-p-component-lock mp)) (meta-p-component-list mp)))
+      (when (act-r-component-clear-all (cdr c))
+        (funcall (act-r-component-clear-all (cdr c)) (act-r-component-instance (cdr c)))))
     
     
     ;; This resets the scheduler and real-time management
     
     (reset-mp mp)
     
+    (bt:with-lock-held ((meta-p-event-hook-lock mp))
+      (setf (meta-p-pre-events mp) nil)
+      (setf (meta-p-post-events mp) nil)
+      (setf (meta-p-next-hook-id mp) 0)
       
-    (setf (meta-p-current-model mp) nil)
-    (setf (meta-p-model-count mp) 0)
-    (setf (meta-p-model-name-len mp) 0)
-    (setf (meta-p-pre-events mp) nil)
-    (setf (meta-p-post-events mp) nil)
-    (setf (meta-p-next-hook-id mp) 0)
-
-    (clrhash (meta-p-hook-table mp))
-      
+      (clrhash (meta-p-hook-table mp)))
     
-    (clrhash (meta-p-models mp))
-    (setf (meta-p-model-order mp) nil))
+    
+    (bt:with-lock-held ((meta-p-models-lock mp))
+      (setf (meta-p-models mp) nil)
+      (setf (meta-p-model-order mp) nil)
+      (setf (meta-p-model-count mp) 0)
+      (setf (meta-p-model-name-len mp) 0))
+    )
   
-  
+    
   (setf *recorded-load-file* *load-truename*)
   nil) 
 
+(add-act-r-command "clear-all-start" nil "Signal that a clear-all has begun for monitoring. No params." nil)
+(add-act-r-command "reset-start" nil "Signal that a reset has begun for monitoring. No params." nil)
+
+(defun internal-reset ()
+  (with-top-level-lock "Reset cannot be used."
+    (let ((mp (current-mp)))
+      (dispatch-apply "reset-start")
+      
+      (reset-mp mp)
+      
+      (dolist (c (bt:with-lock-held ((meta-p-component-lock mp)) (meta-p-component-list mp)))
+        (awhen (act-r-component-before-reset (cdr c))
+               (funcall it (act-r-component-instance (cdr c)))))
+      
+      (dolist (model-name (bt:with-lock-held ((meta-p-models-lock mp)) (meta-p-model-order mp)))
+        (awhen (bt:with-lock-held ((meta-p-models-lock mp)) (cdr (assoc model-name (meta-p-models mp))))
+               (reset-model mp it)))
+      
+      (dolist (c (bt:with-lock-held ((meta-p-component-lock mp)) (meta-p-component-list mp)))
+        (awhen (act-r-component-after-reset (cdr c))
+               (funcall it (act-r-component-instance (cdr c)))))
+      t)))
+
+
+(add-act-r-command "reset" 'internal-reset "Reset the ACT-R scheduler and all models. No params." "Reset already in progress")
 
 (defun reset ()
-  (verify-current-mp  
-   "reset called with no current meta-process."
-   (let ((mp (current-mp)))
-     
-     ;;; special case this for nicer backward compatibility
-     
-     (cond ((and (= (mps-count *meta-processes*) 1)
-                 (= (length (hash-table-keys (meta-p-models mp))) 1)
-                 (null (act-r-model-code (current-model-struct ))))
-            
-            (if *recorded-load-file*
-                (progn
-                  (model-warning "Resetting an empty model results in a reload")
-                  (reload))
-              (progn
-                (print-warning "CANNOT RESET an empty model that wasn't loaded.")
-                (print-warning "RESET had no effect!"))))
-           
-           (t 
-            (reset-mp mp)
-            
-            (dolist (model-name (meta-p-model-order mp))
-              (awhen (gethash model-name (meta-p-models mp))
-                     (reset-model mp it)))))
-     
-     (meta-p-name mp))))
+  (handle-evaluate-results (evaluate-act-r-command "reset")))
 
 
-(defun reload (&optional (compile nil))
+(defun internal-reload (&optional (compile nil))
   (if *recorded-load-file*
-      (if compile
-          (if (string= (pathname-type *recorded-load-file*)
-                       (pathname-type *.lisp-pathname*))
-              (compile-and-load *recorded-load-file*)
-            (progn 
-              (print-warning 
-               "To use the compile option the pathname must have type ~a."
-               (pathname-type *.lisp-pathname*))
-              (load *recorded-load-file*)))
-        (load *recorded-load-file*))
-    (progn 
-      (print-warning "No load file recorded")
+     (if (probe-file *recorded-load-file*)
+         (with-top-level-lock "Reload cannot be used."
+           (let ((no-errors t))
+             (cond ((and compile 
+                         (string= (pathname-type *recorded-load-file*)
+                                  (pathname-type *.lisp-pathname*)))
+                    
+                    (let* ((save-stream (make-string-output-stream))
+                           (display-stream (make-broadcast-stream *standard-output* save-stream))
+                           (error-stream (make-broadcast-stream *error-output* save-stream))
+                           (*standard-output* display-stream)
+                           (*error-output* error-stream))              
+                      (handler-case
+                          (compile-and-load *recorded-load-file*)
+                        (error (x)
+                          (print-warning "Error ~/print-error-message/ while trying to reload file ~s" x *recorded-load-file*)
+                          (setf no-errors nil)))
+                      (let ((s (get-output-stream-string save-stream)))
+                        (unless (zerop (length s))
+                          (print-warning "Non-ACT-R messages during load of ~s:~%~a~%" *recorded-load-file* s)))))
+                   ((and compile 
+                         (string= (pathname-type *recorded-load-file*)
+                                  (pathname-type *.fasl-pathname*))
+                         (probe-file (merge-pathnames *.lisp-pathname* *recorded-load-file*)))
+                    
+                    (print-warning "Since the last loaded file was compiled and the source file exists, recompiling the source file if necessary.")
+                    
+                    (let* ((save-stream (make-string-output-stream))
+                           (display-stream (make-broadcast-stream *standard-output* save-stream))
+                           (error-stream (make-broadcast-stream *error-output* save-stream))
+                           (*standard-output* display-stream)
+                           (*error-output* error-stream))              
+                      (handler-case
+                          (compile-and-load (merge-pathnames *.lisp-pathname* *recorded-load-file*))
+                        (error (x)
+                          (print-warning "Error ~/print-error-message/ while trying to reload file ~s" x *recorded-load-file*)
+                          (setf no-errors nil)))
+                      (let ((s (get-output-stream-string save-stream)))
+                        (unless (zerop (length s))
+                          (print-warning "Non-ACT-R messages during load of ~s:~%~a~%" *recorded-load-file* s)))))
+                   (t
+                    (let* ((save-stream (make-string-output-stream))
+                           (display-stream (make-broadcast-stream *standard-output* save-stream))
+                           (error-stream (make-broadcast-stream *error-output* save-stream))
+                           (*standard-output* display-stream)
+                           (*error-output* error-stream))              
+                      (handler-case
+                          (load *recorded-load-file*)
+                        (error (x)
+                          (print-warning "Error ~/print-error-message/ while trying to reload file ~s" x *recorded-load-file*)
+                          (setf no-errors nil)))
+                      (let ((s (get-output-stream-string save-stream)))
+                        (unless (zerop (length s))
+                          (print-warning "Non-ACT-R messages during load of ~s:~%~a~%" *recorded-load-file* s))))))
+             no-errors))
+       (print-warning "File ~s does not exist." *recorded-load-file*))
+    (progn
+      (print-warning "No model file recorded to reload.")
       :none)))
 
+
+
+(add-act-r-command "reload" 'internal-reload "Reload the last ACT-R model file which was loaded. Params: {compile}." "Reload already in progress")
+
+(defun reload (&optional (compile nil))
+  (handle-evaluate-results (evaluate-act-r-command "reload" compile)))
 
 
 #|

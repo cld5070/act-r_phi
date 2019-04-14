@@ -1,518 +1,473 @@
  
 proc select_graphic_trace {} {
 
-  if {[currently_selected_model] == "nil"} {
-    tk_messageBox -icon info -type ok -title "Horizontal Graphic Trace" -message "Tracing tools require a current model."
+  set model [currently_selected_model]
+
+  if {$model == "nil"} {
+    tk_messageBox -icon info -type ok -title "Graphic Trace" -message "Graphic trace viewer requires a current model."
   } else {
 
     set win [toplevel [new_variable_name .graphic_trace]]
 
     global $win.scale
 
-    global $win.dm_viewer
-    set $win.dm_viewer 0
-    global $win.p_viewer
-    set $win.p_viewer 0
-
     wm withdraw $win
-    
-    record_new_window $win $win
 
     wm geometry $win [get_configuration .graphic_trace $win]
 
-     
+    record_new_window $win $win $model
+
+    call_act_r_command "record-history" $model [list "buffer-trace"]
+
     frame $win.frame -borderwidth 0  
     
     canvas $win.frame.canvas  \
-         -xscrollcommand "$win.frame.scrl set" \
-         -width 2000 -height 400 -scrollregion {-4 0 2000 400} -bg white
+           -xscrollcommand "$win.frame.scrl set" \
+           -width 2000 -height 400 -scrollregion {-4 0 2000 400} -bg white
           
     scrollbar $win.frame.scrl \
               -command "$win.frame.canvas xview" -orient horizontal
 
     set $win.scale 1.0
 
-    canvas $win.canvas1  -width 150 -height 400 -bg white
+    bind $win.frame.canvas <Destroy> "
+      call_act_r_command stop-recording-history $model [list buffer-trace]
+      global $win.scale
+      unset $win.scale
+    "
 
 
-    label $win.text -font text_font  -textvariable $win.textvar
+    canvas $win.canvas1 -width 150 -height 400 -bg white
+
+    label $win.details -font label_font 
+
+    label $win.time_label -font label_font -text "Time:"
+    label $win.time -font text_font    
+
+    label $win.duration_label -font label_font -text "Duration:"
+    label $win.duration -font text_font    
+
+    label $win.notes_label -font label_font -text "Notes:"
+    label $win.notes -font text_font -anchor nw
   
-    set $win.textvar ""
+    label $win.request_label -font label_font -text "Request:"
+    label $win.request -font text_font -anchor nw
   
-    label $win.note -font text_font  -text "Notes:"
+    label $win.chunk_label -font label_font -text "Chunk:"
+    label $win.chunk -font text_font -anchor nw
   
-    label $win.notes -font text_font  -textvariable $win.notesvar -anchor w
-  
-    set $win.notesvar ""
-  
-    ## Create a dummy handler to set the :save-buffer-trace parameter to t
-    # whenever a buffer-trace window is open.
+    frame $win.buttons -borderwidth 0
 
-    send_environment_cmd \
-      "create simple-handler $win.note $win.dummy \
-         (lambda (x) (declare (ignore x)) (no-output (sgp :save-buffer-trace t)) nil) (reset) [send_model_name]"
+    button $win.buttons.zoom_in -command "horiz_zoom_in $win" -text "+" -font button_font
+    button $win.buttons.zoom_out -command  "horiz_zoom_out $win" -text "-" -font button_font
 
 
-    bind $win.note <Destroy> "remove_handler $win.note"
+    checkbutton $win.buttons.ht \
+                -text "Hide text" \
+                -font checkbox_font \
+                -variable $win.ht \
+                -command "configure_h_trace_text $win" \
+                -onvalue 1 -offvalue 0
 
-    button $win.stop_gt -command "draw_horiz_items $win [send_model_name]" -text "Get trace" -font button_font
+    checkbutton $win.buttons.hg \
+                -text "Hide grid" \
+                -font checkbox_font \
+                -variable $win.hg \
+                -command "draw_h_grid $win" \
+                -onvalue 1 -offvalue 0
 
-    send_environment_cmd \
-      "create list-handler $win.stop_gt $win.return (lambda (x) (declare (ignore x))) () [send_model_name]"
+    button $win.buttons.save1 -command "save_horiz_graphic_trace $win" -text "Save .eps" -font button_font
+    button $win.buttons.save2 -command "save_horiz_graphic_trace_multi $win" -text "Save .ps" -font button_font
 
-    bind $win.stop_gt <Destroy> "remove_handler $win.stop_gt"
 
-    button $win.redisplay -command "display_horiz_data $win 1 [send_model_name]" -text "Redisplay" -font button_font
+    button $win.get -text "Get History" -font button_font -command "get_h_graph_data $win $model"
+    button $win.save -text "Save History" -font button_font -command "save_h_graph_history_data $model"
+    button $win.load -text "Load History" -font button_font -command "load_h_graph_history_data $win $model"
 
-    button $win.zoom_in -command "horiz_zoom_in $win" -text "+" -font button_font
-
-    button $win.zoom_out -command  "horiz_zoom_out $win" -text "-" -font button_font
-
-    button $win.hide_text -command "$win.frame.canvas delete trace_text"  -text "Remove Text" -font button_font
- 
-    button $win.save -command "save_horiz_graphic_trace $win" -text "Save 1P" -font button_font
-    button $win.save2 -command "save_horiz_graphic_trace_multi $win" -text "Save Multi." -font button_font
-
-    button $win.save_data -command "save_h_graphic_trace_data $win" -text "Save data" -font button_font
-    button $win.read_data -command "read_h_graphic_trace_data $win" -text "Read data" -font button_font
-    
-    label $win.range -font text_font -text "Range:"
-    label $win.to -font text_font -text "to"
- 
-    entry $win.min -textvariable $win.min_extent -text "" -font text_font
-    entry $win.max -textvariable $win.max_extent -text "" -font text_font
 
     pack $win.frame.scrl -side bottom -fill x
     pack $win.frame.canvas -side top -fill both 
 
-    place $win.frame -x 150 -y 0 -relwidth 1.0 -width -150 -relheight 1.0 -height -80
-    place $win.canvas1  -x 0 -y 0 -width 150 -relheight 1.0 -height -60
+    place $win.canvas1  -x 0 -y 0 -width 150 -relheight 1.0 -height -175
+    place $win.frame -x 150 -y 0 -relwidth 1.0 -width -150 -relheight 1.0 -height -175
+  
+    place $win.details -x 0 -rely 1.0 -y -175 -height 24 -relwidth 1.0
     
-    
-    place $win.note -x 0 -rely 1.0 -y -79 -width 60 -height 28
-    place $win.notes -x 60 -rely 1.0 -y -79 -relwidth 1.0 -height 28
+    place $win.request_label -x 0 -rely 1.0 -y -150 -width 70 -height 24
+    place $win.request -x 71 -rely 1.0 -y -150 -relwidth 1.0 -width -70 -height 24
 
-    place $win.text -x 0 -rely 1.0 -y -50 -relwidth .3 -height 49
+    place $win.chunk_label -x 0 -rely 1.0 -y -125 -width 70 -height 24
+    place $win.chunk -x 71 -rely 1.0 -y -125 -relwidth 1.0 -width -70 -height 24
 
-    place $win.stop_gt -relx .3 -rely 1.0 -y -50 -relwidth .1 -height 24
-    place $win.redisplay -relx .4 -rely 1.0 -y -50 -relwidth .1 -height 24
-    place $win.hide_text -relx .5 -rely 1.0 -y -50 -relwidth .1 -height 24
-    place $win.save -relx .6 -rely 1.0 -y -50 -relwidth .1 -height 24
-    place $win.save2 -relx .7 -rely 1.0 -y -50 -relwidth .1 -height 24
+    place $win.notes_label -x 0 -rely 1.0 -y -100 -width 70 -height 24
+    place $win.notes -x 71 -rely 1.0 -y -100 -relwidth 1.0 -width -70 -height 24
 
-    place $win.save_data -relx .8 -rely 1.0 -y -50 -relwidth .1 -height 24
-    place $win.read_data -relx .9 -rely 1.0 -y -50 -relwidth .1 -height 24
+    place $win.time_label -x 0 -rely 1.0 -y -75 -width 70 -height 24
+    place $win.time -x 71 -rely 1.0 -y -75 -relwidth 0.5 -width -70 -height 24
 
-    place $win.zoom_in -relx .3 -rely 1.0 -y -25 -relwidth .1 -height 24
-    place $win.zoom_out -relx .4 -rely 1.0 -y -25 -relwidth .1 -height 24
-    place $win.range -relx .5 -rely 1.0 -y -25 -relwidth .07 -height 24
-    place $win.min -relx .57 -rely 1.0 -y -25 -relwidth .2 -height 24
-    place $win.to -relx .77 -rely 1.0 -y -25 -relwidth .03 -height 24
-    place $win.max -relx .8 -rely 1.0 -y -25 -relwidth .2 -height 24
+    place $win.duration_label -relx 0.5 -rely 1.0 -y -75 -width 70 -height 24
+    place $win.duration -relx 0.5 -x 71 -rely 1.0 -y -75 -relwidth 0.5 -width -70 -height 24
+
+    place $win.buttons.zoom_in -x 0 -y 0 -width 59 -height 24
+    place $win.buttons.zoom_out -x 60 -y 0 -width 59 -height 24
+
+    place $win.buttons.ht -x 320 -y 0 -width 99 -height 24
+    place $win.buttons.hg -x 420 -y 0 -width 99 -height 24
+
+    place $win.buttons.save1 -x 140 -y 0 -width 79 -height 24
+    place $win.buttons.save2 -x 220 -y 0 -width 79 -height 24
+
+    place $win.buttons -x 0 -rely 1.0 -y -50 -width 525 -height 25
+
+    place $win.get -relx .05 -rely 1.0 -y -25 -height 25 -relwidth .3
+    place $win.save -relx .35 -rely 1.0 -y -25 -height 25 -relwidth .3
+    place $win.load -relx .65 -rely 1.0 -y -25 -height 25 -relwidth .3
 
     # now show the window 
 
+    $win.frame.canvas xview moveto 0
+
     wm deiconify $win
+
+    pick_buffers
+
+    return $win
   }
 } 
 
-
-button [control_panel_name].graphic_trace_button \
-       -command {select_graphic_trace} -text "Horiz. Buffer Trace" -font button_font
-
-pack [control_panel_name].graphic_trace_button
-
 proc horiz_zoom_out {win} {
 
-   global $win.scale
-   upvar $win.scale scale
+  upvar #0 $win.scale scale
 
-   set scale [expr .5 * $scale]
+  set scale [expr .5 * $scale]
  
-   $win.frame.canvas scale trace_items 0 0 0.5 1.0
-   $win.frame.canvas configure -scrollregion "-4 0 [expr .5 * [lindex [$win.frame.canvas cget -scrollregion] 2]] 400"
-   $win.frame.canvas configure -width [expr .5 * [$win.frame.canvas cget -width]]
+  $win.frame.canvas scale trace_items 0 0 0.5 1.0
+  $win.frame.canvas configure -scrollregion "-4 0 [expr .5 * [lindex [$win.frame.canvas cget -scrollregion] 2]] 400"
+  $win.frame.canvas configure -width [expr .5 * [$win.frame.canvas cget -width]]
 
-   foreach x [$win.frame.canvas find withtag trace_text] {
-      $win.frame.canvas itemconfigure $x -width [expr .5 * [$win.frame.canvas itemcget $x -width]]
-   }
+  foreach x [$win.frame.canvas find withtag trace_text] {
+    $win.frame.canvas itemconfigure $x -width [expr .5 * [$win.frame.canvas itemcget $x -width]]
+  }
 }
 
 proc horiz_zoom_in {win} {
 
-   global $win.scale
-   upvar $win.scale scale
+  upvar #0 $win.scale scale
 
-   if {$scale < 16} {
-      set scale [expr 2 * $scale]
+  if {$scale < 16} {
+    set scale [expr 2 * $scale]
 
-      $win.frame.canvas scale trace_items 0 0 2.0 1.0
-      $win.frame.canvas configure -scrollregion "-4 0 [expr 2 * [lindex [$win.frame.canvas cget -scrollregion] 2]] 400"
-      $win.frame.canvas configure -width [expr 2 * [$win.frame.canvas cget -width]]
+    $win.frame.canvas scale trace_items 0 0 2.0 1.0
+    $win.frame.canvas configure -scrollregion "-4 0 [expr 2 * [lindex [$win.frame.canvas cget -scrollregion] 2]] 400"
+    $win.frame.canvas configure -width [expr 2 * [$win.frame.canvas cget -width]]
       
-      foreach x [$win.frame.canvas find withtag trace_text] {
-         $win.frame.canvas itemconfigure $x -width [expr 2 * [$win.frame.canvas itemcget $x -width]]
+    foreach x [$win.frame.canvas find withtag trace_text] {
+      $win.frame.canvas itemconfigure $x -width [expr 2 * [$win.frame.canvas itemcget $x -width]]
+    }
+  }
+}
+
+
+
+proc get_h_graph_data {win model} {
+
+  draw_horiz_items $win $model ""
+}
+
+proc load_h_graph_history_data {win model} {
+
+  global top_dir
+
+  set fname [tk_getOpenFile -title "Load Production History" -initialdir $top_dir] 
+
+  if {$fname != ""} {
+    draw_horiz_items $win $model $fname
+  }
+}
+
+
+
+set h_graph_history_warnings ""
+
+proc h_graph_record_warnings {model s} {
+  global h_graph_history_warnings
+
+  set h_graph_history_warnings "$h_graph_history_warnings$s"
+  return ""
+}
+
+
+proc save_h_graph_history_data {model} {
+
+  global top_dir
+
+  set fname [tk_getSaveFile -title "Save Graphic Trace Data" -initialdir $top_dir] 
+
+  if {$fname != ""} {
+
+    set any [call_act_r_command "history-data-available" $model [list "buffer-trace"]]
+
+    if {$any == "nil" || $any == ""} {
+      tk_messageBox -icon warning -type ok -title "Save Graphic Trace warning" \
+                    -message "No data available to save with current settings."
+    } else {
+ 
+      global h_graph_history_warnings
+
+      set h_graph_history_warnings ""
+            
+      set warning_monitor [new_variable_name "warning_monitor"]
+
+      while {[send_cmd "check" $warning_monitor] != "null"} {
+        set warning_monitor [new_variable_name "warning_monitor"]
       }
-   }
+
+      add_cmd $warning_monitor "h_graph_record_warnings" "Environment command for capturing warnings during Save Horizontal Graphic trace."
+
+      send_cmd "monitor" [list "warning-trace" $warning_monitor]
+
+      set result [call_act_r_command_with_error_messages "save-history-data" $model [list "buffer-trace" $fname "Data saved from Graphic Trace window for model $model"]]
+
+      send_cmd "remove-monitor" [list "warning-trace" $warning_monitor]
+     
+      remove_cmd $warning_monitor
+     
+      if {[lindex $result 0] == 0} {
+        tk_messageBox -icon warning -type ok -title "Save Graphic Trace error" \
+                      -message "Save-history-data resulted in error.\n[lindex $result 1]."
+      } elseif {[lindex $result 1] == "null"} {
+        tk_messageBox -icon warning -type ok -title "Save Graphic Trace problem" \
+                      -message "Save-history-data returned failure result.\n$h_graph_history_warnings."
+      }
+    }
+  }
 }
 
-proc draw_horiz_items {win model} { 
+proc draw_h_grid {win} {
+  upvar #0 $win.hg hide
+  upvar #0 $win.scale scale
 
-  global $win.return
+  if {$hide == 0} {
+    set max [$win.frame.canvas cget -width]
 
-  $win.frame.canvas delete trace_items
-  $win.canvas1 delete label_tag
+    set x 0
 
-  upvar $win.textvar display
-                
-  set display "Busy"
-   
-  $win.zoom_in configure -state disabled
-  $win.zoom_out configure -state disabled
-  $win.hide_text configure -state disabled
-  $win.stop_gt configure -state disabled
+    while {$x <= $max} {
+      set x_pos [expr $x * $scale]
+      $win.frame.canvas create line $x_pos 0 $x_pos 400 -width 1 -f gray -tag [list grid trace_items]
+      $win.frame.canvas create text $x_pos 400 -text [format "%.3f" [expr 0.001 * $x]] -anchor sw -font graphic_trace_font -tag [list grid trace_items]
+      incr x 50
+    }
+    $win.frame.canvas lower grid boxes
+
+  } else {
+    $win.frame.canvas delete grid
+  }
+} 
+
+
+proc configure_h_trace_text {win} {
+  upvar #0 $win.ht hide
+
+  if {[$win.frame.canvas find withtag trace_text] != ""} {
+    if {$hide == 0} {
+
+      $win.frame.canvas itemconfigure trace_text -fill black
+      $win.frame.canvas raise trace_text boxes
+    } else {
+      $win.frame.canvas itemconfigure trace_text -fill white
+      $win.frame.canvas lower trace_text all
+    }
+  } 
+}
+
+
+set h_graphic_trace_color_list [list #ff0000 #8080ff #008000 #ff8000 #7f7f7f #ff00ff #ffff00 #c08000 #f0f0f0 #c000c0 #00c050 #f0c0ff #c05850 #50ff25]
+
+proc draw_horiz_items {win model fname} { 
+
+  $win.buttons.zoom_in configure -state disabled
+  $win.buttons.zoom_out configure -state disabled
+  $win.buttons.ht configure -state disabled
+  $win.buttons.hg configure -state disabled
+  $win.buttons.save1 configure -state disabled
+  $win.buttons.save2 configure -state disabled
+  $win.get configure -state disabled
   $win.save configure -state disabled
-  $win.save2 configure -state disabled
-  $win.redisplay configure -state disabled
-  $win.save_data configure -state disabled
-  $win.read_data configure -state disabled
-              
-  set $win.return ""
-                  
-  send_environment_cmd "update [get_handler_name $win.stop_gt] hor-graphic-trace-return"
+  $win.load configure -state disabled
 
-  wait_for_non_null $win.return
+  $win.frame.canvas delete all 
+  $win.canvas1 delete all
 
-  display_horiz_data $win 1 $model
+  $win.details configure -text ""
+  $win.request configure -text ""
+  $win.chunk configure -text ""
+  $win.notes configure -text ""
+  $win.time configure -text ""
+  $win.duration configure -text ""
+
+  if {$fname == ""} {
+    set any [call_act_r_command "history-data-available" $model [list "buffer-trace"]]
+
+    if {$any == "nil" || $any == ""} {
+      $win.details configure -text "No Data available"
+      set data [list "nothing"]
+    } else {
+      $win.details configure -text "Collecting Data ..."
+      set id [call_act_r_command "start-incremental-history-data" $model [list "horizontal-graphic-trace" 16000]]
+ 
+      if {$id != ""} {
+        set data [get_incremental_history $id]
+      } else {
+        tk_messageBox -icon warning -type ok -title "Get Graphic trace History warning" \
+                      -message "Unknown problem occurred trying to get data."
+        $win.details configure -text "Data Error occurred"
+        $win.buttons.zoom_in configure -state normal
+        $win.buttons.zoom_out configure -state normal
+        $win.buttons.ht configure -state normal
+        $win.buttons.hg configure -state normal
+        $win.buttons.save1 configure -state normal
+        $win.buttons.save2 configure -state normal
+        $win.get configure -state normal
+        $win.save configure -state normal
+        $win.load configure -state normal
+
+        return "" 
+      }
+
+      $win.details configure -text "Graphic Trace data for model $model"
+    }
+  } else {
+    global h_graph_history_warnings
+    set h_graph_history_warnings ""
+            
+    set warning_monitor [new_variable_name "warning_monitor"]
+
+    while {[send_cmd "check" $warning_monitor] != "null"} {
+      set warning_monitor [new_variable_name "warning_monitor"]
+    }
+
+    add_cmd $warning_monitor "h_graph_record_warnings" "Environment command for capturing warnings during Load Horizontal Graphic Trace."
+
+    send_cmd "monitor" [list "warning-trace" $warning_monitor]
+
+    $win.details configure -text "Loading Data from file $fname"
+
+    set id [call_act_r_command "start-incremental-history-data" $model [list "horizontal-graphic-trace" 16000 $fname]]
+
+    send_cmd "remove-monitor" [list "warning-trace" $warning_monitor]
+     
+    remove_cmd $warning_monitor
+     
+    if {$id == "" || $id == "null"} {
+      tk_messageBox -icon warning -type ok -title "Load Graph Trace problem" \
+                    -message "Get-history-data returned failure result.\n$h_graph_history_warnings."
   
-  $win.zoom_in configure -state normal
-  $win.zoom_out configure -state normal
-  $win.hide_text configure -state normal
-  $win.stop_gt configure -state normal
-  $win.save configure -state normal
-  $win.save2 configure -state normal
-  $win.redisplay configure -state normal
-  $win.save_data configure -state normal
-  $win.read_data configure -state normal
+      $win.details configure -text "Failure to load data"
 
-  set display "Done"
-}
+      $win.buttons.zoom_in configure -state normal
+      $win.buttons.zoom_out configure -state normal
+      $win.buttons.ht configure -state normal
+      $win.buttons.hg configure -state normal
+      $win.buttons.save1 configure -state normal
+      $win.buttons.save2 configure -state normal
+      $win.get configure -state normal
+      $win.save configure -state normal
+      $win.load configure -state normal
 
+      return ""
+    } else {
 
-proc display_horiz_data {win level model} {
+      set comment [call_act_r_command "get-incremental-history-data" nil [list $id]]
 
-  $win.frame.canvas delete trace_items
+      set comment "[json::json2dict [lindex $comment 0]] loaded from file $fname"
+      set data [get_incremental_history $id]
+    }
+  }
 
-  global $win.scale
-  upvar $win.scale scale
+  set size [lindex $data 0]
+
+  upvar #0 $win.scale scale
 
   set scale 1.0
 
-  set min_x 0
-  set max_x 0
+  if {[lindex $size 0] == "size"} {
 
-  set min_res [scan [$win.min get] "%f" min_x]
-  set max_res [scan [$win.max get] "%f" max_x]
+    set max [lindex $size 1]
+    $win.frame.canvas configure -width [expr $max + 5]
+    $win.frame.canvas configure -scrollregion "-4 0 [expr 1 + $max] 400"
+ 
+    draw_h_grid $win
 
-  upvar $level $win.return result
+  } else {
+    # should have more error checking...  
+  }
 
-  if {$min_res < 1 || $max_res < 1 || $min_x >= $max_x} {
-  foreach x $result {
+
+  global h_graphic_trace_color_list
+
+  foreach x [lrange $data 1 end] {
     switch [lindex $x 0] {
       label { 
-        $win.frame.canvas create text -145 [lindex $x 2] -anchor w -font text_font -justify right -text [lindex $x 1] -width 140 -fill [lindex $x 3]
-        $win.canvas1 create text 5 [lindex $x 2] -anchor w -font text_font -justify right -text [lindex $x 1] -width 140 -tag label_tag -fill [lindex $x 3]
-        if {[lindex $x 1] == "production"} {
-          set pop_up 1
-        } elseif {[lindex $x 1] == "retrieval"} {
-          set pop_up 2
-        } else {
-          set pop_up 0
-        }
-      }
-
-      size { 
-        $win.frame.canvas configure -width [expr [lindex $x 2] + 5]
-        $win.frame.canvas configure -scrollregion "-4 0 [expr 1 + [lindex $x 2]] 400"
-        set size [lindex $x 2]
-
-        set x 0
-
-        while {$x <= $size} {
-          $win.frame.canvas create line $x 0 $x 400 -width 1 -f gray -tag trace_items
-          $win.frame.canvas create text $x 400 -text [format "%.3f" [expr 0.001 * $x]] -anchor sw -font graphic_trace_font -tag trace_items
-          incr x 50
-        }
+        $win.frame.canvas create text -145 [lindex $x 2] -anchor w -font text_font -justify right -text [lindex $x 1] -width 140 -fill [lindex $h_graphic_trace_color_list [lindex $x 3]]
+        $win.canvas1 create text 5 [lindex $x 2] -anchor w -font text_font -justify right -text [lindex $x 1] -width 140 -tag label_tag -fill [lindex $h_graphic_trace_color_list [lindex $x 3]]
       }
 
       rectangle {
         set box_name [new_variable_name box]
  
-        $win.frame.canvas create rectangle [lindex $x 1] [lindex $x 2] [lindex $x 3] [lindex $x 4] -width 1 -fill [lindex $x 5] -outline black -tag [list trace_items $box_name]
+        $win.frame.canvas create rectangle [lindex $x 1] [lindex $x 2] [lindex $x 3] [lindex $x 4] -width 1 -fill [lindex $h_graphic_trace_color_list [lindex $x 5]] -outline black -tag [list boxes trace_items $box_name]
 
-          if {[lindex $x 8] != "nil"} { 
-            $win.frame.canvas bind $box_name <Enter> "set $win.textvar \"[format "%.3f" [expr 0.001 * ([lindex $x 3] - [lindex $x 1])]]: [format "%.3f" [expr 0.001 * [lindex $x 1]]] - [format "%.3f" [expr 0.001 * [lindex $x 3]]]\" 
-                                                      set $win.notesvar {[lindex $x 8]}"
-            $win.frame.canvas bind $box_name <Leave> "set $win.textvar \"\" 
-                                                      set $win.notesvar \"\""
-          } elseif {[lindex $x 7] != "nil"} {
-            $win.frame.canvas bind $box_name <Enter> "set $win.textvar \"[format "%.3f" [expr 0.001 * ([lindex $x 3] - [lindex $x 1])]]: [format "%.3f" [expr 0.001 * [lindex $x 1]]] - [format "%.3f" [expr 0.001 * [lindex $x 3]]]\" 
-                                                      set $win.notesvar \"[lindex $x 7]\""
-            $win.frame.canvas bind $box_name <Leave> "set $win.textvar \"\" 
-                                                      set $win.notesvar \"\""
-          } elseif {[lindex $x 6] != "nil"} {
-            $win.frame.canvas bind $box_name <Enter> "set $win.textvar \"[format "%.3f" [expr 0.001 * ([lindex $x 3] - [lindex $x 1])]]: [format "%.3f" [expr 0.001 * [lindex $x 1]]] - [format "%.3f" [expr 0.001 * [lindex $x 3]]]\" 
-                                                      set $win.notesvar \"[lindex $x 6]\""
-            $win.frame.canvas bind $box_name <Leave> "set $win.textvar \"\" 
-                                                      set $win.notesvar \"\""
-          } else {
-            $win.frame.canvas bind $box_name <Enter> "set $win.textvar \"[format "%.3f" [expr 0.001 * ([lindex $x 3] - [lindex $x 1])]]: [format "%.3f" [expr 0.001 * [lindex $x 1]]] - [format "%.3f" [expr 0.001 * [lindex $x 3]]]\""
-            $win.frame.canvas bind $box_name <Leave> "set $win.textvar \"\""
-          }
+        set duration [format "%.3f" [expr 0.001 * ([lindex $x 3] - [lindex $x 1])]]
+        set time [format "%.3f - %.3f" [expr 0.001 * [lindex $x 1]] [expr 0.001 * [lindex $x 3]]] 
+ 
+        $win.frame.canvas bind $box_name <Enter> "$win.request configure -text {[lindex $x 6]}
+                                                  $win.chunk configure -text {[lindex $x 7]}
+                                                  $win.notes configure -text {[lindex $x 8]}
+                                                  $win.time configure -text {$time}
+                                                  $win.duration configure -text $duration
+                                                 "
 
-        if {$pop_up == 1} {
-          $win.frame.canvas bind $box_name <ButtonPress> "h_trace_p_view $win [lindex $x 6] $model"
-        } elseif {$pop_up == 2 && [lindex $x 7] != "nil"} {
-          $win.frame.canvas bind $box_name <ButtonPress> "h_trace_dm_view $win [lindex $x 7] $model"
-        }
+        $win.frame.canvas bind $box_name <Leave> "$win.request configure -text \"\"
+                                                  $win.chunk configure -text \"\"
+                                                  $win.notes configure -text \"\"
+                                                  $win.time configure -text \"\"
+                                                  $win.duration configure -text \"\"
+                                                 "
 
-        if {[lindex $x 6] != "nil"} {
-          $win.frame.canvas create text [expr 2 + [lindex $x 1]] [expr [lindex $x 2] + (([lindex $x 4] - [lindex $x 2]) / 2)] -text [lindex $x 6] -anchor sw -font graphic_trace_font -tag [list trace_items trace_text $box_name] -width [expr [lindex $x 3] - [lindex $x 1]]
-        }
-        if {[lindex $x 7] != "nil"} {
-          $win.frame.canvas create text [expr 2 + [lindex $x 1]] [expr [lindex $x 2] + (([lindex $x 4] - [lindex $x 2]) / 2)] -text [lindex $x 7] -anchor nw -font graphic_trace_font -tag [list trace_items trace_text $box_name] -width [expr [lindex $x 3] - [lindex $x 1]]
+# For now don't allow clicking to open other dialogs because of potential problems  $win.frame.canvas bind $box_name <ButtonPress> [list history_custom_buffer_view $win $key $current [lindex $x 10] [lindex $x 1] [lindex $x 3]]
+
+        if {[lindex $x 9] != ""} {
+          $win.frame.canvas create text [expr 2 + [lindex $x 1]] [lindex $x 2] -text [lindex $x 9] -anchor nw -font graphic_trace_font -fill black -tag [list trace_items trace_text $box_name] -width [expr [lindex $x 3] - [lindex $x 1]]
         }
       }
     }
   }
-  } else {
 
-# user restricted range
-
-   # adjust for input in seconds...
-    set min_x [expr int( floor ($min_x * 1000))]
-    set max_x [expr int( floor ($max_x * 1000))]
-
-
-  $win.frame.canvas configure -width [expr $max_x - $min_x + 5]
-  $win.frame.canvas configure -scrollregion "-4 0 [expr 1 + $max_x - $min_x] 400"
-
-  set x $min_x
+  configure_h_trace_text $win
   
-  while {$x <= $max_x} {
-    $win.frame.canvas create line [expr $x - $min_x] 0 [expr $x - $min_x] 400 -width 1 -f gray -tag trace_items
-    $win.frame.canvas create text [expr $x - $min_x] 400 -text [format "%.3f" [expr 0.001 * $x]] -anchor sw -font graphic_trace_font -tag trace_items
-    incr x 50
+  $win.buttons.zoom_in configure -state normal
+  $win.buttons.zoom_out configure -state normal
+  $win.buttons.ht configure -state normal
+  $win.buttons.hg configure -state normal
+  $win.buttons.save1 configure -state normal
+  $win.buttons.save2 configure -state normal
+  $win.get configure -state normal
+  $win.save configure -state normal
+  $win.load configure -state normal
+
+# looks better at 2 pixels per ms, but easier to draw at 1
+
+  horiz_zoom_in $win
+
+  if {$fname == "" && $data != "nothing"} {
+    $win.details configure -text "Graphic Trace data for model $model"
+  } elseif {$fname != ""} {
+    $win.details configure -text $comment
   }
 
-
-  foreach x $result {
-    switch [lindex $x 0] {
-      label { 
-        $win.frame.canvas create text -145 [lindex $x 2] -anchor w -font text_font -justify right -text [lindex $x 1] -width 140 -fill [lindex $x 3]
-        $win.canvas1 create text 5 [lindex $x 2] -anchor w -font text_font -justify right -text [lindex $x 1] -width 140 -tag label_tag -fill [lindex $x 3]
-        if {[lindex $x 1] == "production"} {
-          set pop_up 1
-        } elseif {[lindex $x 1] == "retrieval"} {
-          set pop_up 2
-        } else {
-          set pop_up 0
-        }
-      }
-
-      rectangle {
-
-        set x1 [lindex $x 1]
-        set x2 [lindex $x 3]
-
-        
-        if {$x1 < $max_x && $x2 > $min_x} {
-
-            if {$x1 < $min_x} {
-              set x1 0
-            } else {
-              set x1 [expr $x1 - $min_x]
-            }
-
-            if {$x2 > $max_x} {
-              set x2 [expr $max_x - $min_x]
-            } else {
-              set x2 [expr $x2 - $min_x]
-            }
-
-
-
-
-        set box_name [new_variable_name box]
-
- 
-        $win.frame.canvas create rectangle $x1 [lindex $x 2] $x2 [lindex $x 4] -width 1 -fill [lindex $x 5] -outline black -tag [list trace_items $box_name]
-
-        if {[lindex $x 8] != "nil"} {
-            $win.frame.canvas bind $box_name <Enter> "set $win.textvar \"[format "%.3f" [expr 0.001 * ([lindex $x 3] - [lindex $x 1])]]: [format "%.3f" [expr 0.001 * [lindex $x 1]]] - [format "%.3f" [expr 0.001 * [lindex $x 3]]]\" 
-                                                      set $win.notesvar \"[lindex $x 8]\""
-            $win.frame.canvas bind $box_name <Leave> "set $win.textvar \"\" 
-                                                      set $win.notesvar \"\""
-          } elseif {[lindex $x 7] != "nil"} {
-            $win.frame.canvas bind $box_name <Enter> "set $win.textvar \"[format "%.3f" [expr 0.001 * ([lindex $x 3] - [lindex $x 1])]]: [format "%.3f" [expr 0.001 * [lindex $x 1]]] - [format "%.3f" [expr 0.001 * [lindex $x 3]]]\" 
-                                                      set $win.notesvar \"[lindex $x 7]\""
-            $win.frame.canvas bind $box_name <Leave> "set $win.textvar \"\" 
-                                                      set $win.notesvar \"\""
-          } elseif {[lindex $x 6] != "nil"} {
-            $win.frame.canvas bind $box_name <Enter> "set $win.textvar \"[format "%.3f" [expr 0.001 * ([lindex $x 3] - [lindex $x 1])]]: [format "%.3f" [expr 0.001 * [lindex $x 1]]] - [format "%.3f" [expr 0.001 * [lindex $x 3]]]\" 
-                                                      set $win.notesvar \"[lindex $x 6]\""
-            $win.frame.canvas bind $box_name <Leave> "set $win.textvar \"\" 
-                                                      set $win.notesvar \"\""
-          } else {
-            $win.frame.canvas bind $box_name <Enter> "set $win.textvar \"[format "%.3f" [expr 0.001 * ([lindex $x 3] - [lindex $x 1])]]: [format "%.3f" [expr 0.001 * [lindex $x 1]]] - [format "%.3f" [expr 0.001 * [lindex $x 3]]]\""
-            $win.frame.canvas bind $box_name <Leave> "set $win.textvar \"\""
-          }
-
-        if {$pop_up == 1} {
-          $win.frame.canvas bind $box_name <ButtonPress> "h_trace_p_view $win [lindex $x 6] $model"
-        } elseif {$pop_up == 2 && [lindex $x 7] != "nil"} {
-          $win.frame.canvas bind $box_name <ButtonPress> "h_trace_dm_view $win [lindex $x 7] $model"
-        }
-
-        if {[lindex $x 6] != "nil"} {
-          $win.frame.canvas create text [expr 2 + $x1] [expr [lindex $x 2] + (([lindex $x 4] - [lindex $x 2]) / 2)] -text [lindex $x 6] -anchor sw -font graphic_trace_font -tag [list trace_items trace_text $box_name] -width [expr $x2 - $x1]
-        }
-        if {[lindex $x 7] != "nil"} {
-          $win.frame.canvas create text [expr 2 + $x1] [expr [lindex $x 2] + (([lindex $x 4] - [lindex $x 2]) / 2)] -text [lindex $x 7] -anchor nw -font graphic_trace_font -tag [list trace_items trace_text $box_name] -width [expr $x2 - $x1]
-        }
-      }
-      }
-
-    }
-  }
-
-
-  }
 }
 
-
-proc h_trace_dm_view {win chunk model} {
- 
-  global $win.dm_viewer
-
-  upvar $win.dm_viewer viewer
-
-  if {$viewer == 0 || [winfo exists $viewer] != 1} {
-
-    if {$model == "nil" || [set_currently_selected_model $model] != 0} {
-      set win [make_declarative_viewer]
-
-      set box "$win.list_frame.list_box"
-
-      global  $win.list_frame.list_box.var
-      wait_for_non_null $win.list_frame.list_box.var
-
-      set index [lsearch -exact [$box get 0 end] $chunk] 
-
-      $box selection set $index
-
-      event generate $box <<ListboxSelect>>
-
-      set viewer $win
-    } else {
-      tk_messageBox -icon warning -title "No Model" \
-                    -message "Model $model is not currently defined so declarative viewer unavailable" -type ok
-    }
-  } else {
-    
-    wm deiconify $viewer
-    raise $viewer
-
-    set box "$viewer.list_frame.list_box"
-
-    set index [lsearch -exact [$box get 0 end] $chunk] 
-
-    $box selection clear 0 end
-
-    event generate $box <<ListboxSelect>>
-
-    $box selection set $index
-
-    event generate $box <<ListboxSelect>>
-  }
-}
-
-proc h_trace_p_view {win prod model} {
- 
-  global $win.p_viewer
-
-  upvar $win.p_viewer viewer
-
-  if {$viewer == 0 || [winfo exists $viewer] != 1} {
-
-    if {$model == "nil" || [set_currently_selected_model $model] != 0} {
-      set win [make_procedural_viewer]
-
-      set box "$win.list_frame.list_box"
-
-      global  $win.list_frame.list_box.var
-      wait_for_non_null $win.list_frame.list_box.var
-
-      set index [lsearch -exact [$box get 0 end] $prod] 
-
-      $box selection set $index
-
-      event generate $box <<ListboxSelect>>
-
-      set viewer $win
-    } else {
-      tk_messageBox -icon warning -title "No Model" \
-                    -message "Model $model is not currently defined so procedural viewer unavailable" -type ok
-    }
-
-  } else {
-    
-    wm deiconify $viewer
-    raise $viewer
-
-    set box "$viewer.list_frame.list_box"
-
-    set index [lsearch -exact [$box get 0 end] $prod] 
-
-    $box selection clear 0 end
-
-    event generate $box <<ListboxSelect>>
-
-    $box selection set $index
-
-    event generate $box <<ListboxSelect>>
-  }
-}
-
-
-
-
-proc save_h_graphic_trace_data {win} {
-  set fname [tk_getSaveFile -title "Save graphic trace data" -filetypes {{"All files" "*.*"}}]
-
-  if {$fname != ""} {  
-    upvar $win.return return
-    write_data $return $fname
-  }
-}
-
-proc read_h_graphic_trace_data {win} {
-
-  set fname [tk_getOpenFile -title "Load graphic trace data" -filetypes {{"All files" "*.*"}}]
-
-  if {$fname != ""} {  
-
-    set fileid [open $fname "r"]
-    upvar $win.return r
-    set r [read $fileid]  
-    close $fileid
-    
-    $win.canvas1 delete label_tag
-    
-    display_horiz_data $win 2 "Loaded from File"
-
-  }
-}
 
 proc save_horiz_graphic_trace {win} {
   set fname [tk_getSaveFile -title "Save graphic trace as"\
@@ -607,3 +562,8 @@ proc horiz_StripPSComments {PSString} {
   return "$result"
 }
 
+button [control_panel_name].horiz_graph -command select_graphic_trace -text "H. Graphic Trace" -font button_font
+
+# put that button on the control panel
+
+pack [control_panel_name].horiz_graph

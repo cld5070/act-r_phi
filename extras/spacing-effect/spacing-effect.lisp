@@ -13,7 +13,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; 
 ;;; Filename    : spacing-effect.lisp
-;;; Version     : 1.0
+;;; Version     : 2.0
 ;;; 
 ;;; Description : A module to allow one to toggle the base-level learning
 ;;;             : equation from the default to the one proposed by 
@@ -38,6 +38,10 @@
 ;;;             : * Updated since DM uses millisecond times internally now.
 ;;; 2011.04.28 Dan
 ;;;             : * Suppress warnings about extending chunks at initial load.
+;;; 2016.03.14 Dan
+;;;             : * Added the provide so that it works well with require-extra.
+;;; 2018.08.21 Dan [2.0]
+;;;             : * Updated for 7.6+ with a lock to protect the internals.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -81,7 +85,7 @@
 ;;;
 ;;; Because this was never actually implemented in ACT-R before, I asked Phil 
 ;;; which activation to use for m in the general case. His thoughts were that 
-;;; it should only be baseed on the history of use of the chunk. That suggests 
+;;; it should only be based on the history of use of the chunk. That suggests 
 ;;; using only the base level computation plus any permanent noise present.  
 ;;; Thus, spreading activation, partial matching, and transient noise should 
 ;;; not be considered for this.
@@ -106,26 +110,28 @@
 (defstruct spacing-effect
   enabled
   scale
-  intercept)
+  intercept
+  (lock (bt:make-recursive-lock "spacing-effect")))
 
 (defun add-decay-value (chunk1 chunk2)
   "Add another d to the list based on the last m of the pre-existing chunk
    and put the initial value there if there wasn't one already."
   (declare (ignore chunk2))
-  (let* ((module (get-module spacing-effect))
-         (res (if (null (chunk-decays chunk1))
-                  (list (spacing-effect-intercept module))
-                (chunk-decays chunk1))))
-    
-    (aif (chunk-last-m chunk1)
-         (append (list (+ (* (spacing-effect-scale module) 
-                             (exp it))
-                          (spacing-effect-intercept module)))
-                 res)
-         
-         nil ; If it doesn't have a last-m then punt and
+  (let ((module (get-module spacing-effect)))
+    (bt:with-recursive-lock-held ((spacing-effect-lock module))
+      (let ((res (if (null (chunk-decays chunk1))
+                     (list (spacing-effect-intercept module))
+                   (chunk-decays chunk1))))
+        
+        (aif (chunk-last-m chunk1)
+             (append (list (+ (* (spacing-effect-scale module) 
+                                 (exp it))
+                              (spacing-effect-intercept module)))
+                     res)
+             
+             nil ; If it doesn't have a last-m then punt and
              ; rely on a complete recomputation next time it's needed
-         )))
+             )))))
 
 (suppress-extension-warnings)   
 
@@ -142,99 +148,98 @@
   (let ((module (get-module spacing-effect))
         (ct (mp-time-ms))
         (value 0.0))
-    
-    (if (= (length (chunk-reference-list chunk))
-           (length (chunk-decays chunk)))
-        (progn
-          (mapcar #'(lambda (reference decay)
+    (bt:with-recursive-lock-held ((spacing-effect-lock module))
+      (if (= (length (chunk-reference-list chunk))
+             (length (chunk-decays chunk)))
+          (progn
+            (mapcar (lambda (reference decay)
                       (incf value 
                             (expt-coerced (max .05 (ms->seconds (- ct reference)))
                                           (- decay))))
-            (chunk-reference-list chunk)
-            (chunk-decays chunk))
-          
-          (setf value (log-coerced value))
-          (setf (chunk-last-m chunk) (+ value (chunk-permanent-noise chunk)))
-          value)
-          
-      ;; Compute the decay list and try again
-      ;; painfully slow, but it shouldn't have to do this
-      ;; since the merging should maintain the list
-      ;; correctly - it's just here as a saftey net
-      ;; in the event someone sets references directly.
-      
-      (let* ((decays (list (spacing-effect-intercept module)))
-             (references (reverse (chunk-reference-list chunk)))
-             (new-references (list (pop references))))
-      
-        (dolist (reference references)
-          (let ((value 0.0)
-                (ct reference)
-                )
+              (chunk-reference-list chunk)
+              (chunk-decays chunk))
             
-            (mapcar #'(lambda (reference decay)
-                      (incf value 
-                            (expt-coerced (max .05 (ms->seconds (- ct reference)))
-                                          (- decay))))
-              new-references
-              decays)
-            (push (+ (* (spacing-effect-scale module) 
-                        (exp (+ (log-coerced value) (chunk-permanent-noise chunk))))
-                     (spacing-effect-intercept module))
-                  decays)
-            (push reference new-references)))
-      
-      (setf (chunk-decays chunk) decays)
-      
-      (compute-spacing-effect-activation chunk)))))
+            (setf value (log-coerced value))
+            (setf (chunk-last-m chunk) (+ value (chunk-permanent-noise chunk)))
+            value)
+        
+        ;; Compute the decay list and try again
+        ;; painfully slow, but it shouldn't have to do this
+        ;; since the merging should maintain the list
+        ;; correctly - it's just here as a saftey net
+        ;; in the event someone sets references directly.
+        
+        (let* ((decays (list (spacing-effect-intercept module)))
+               (references (reverse (chunk-reference-list chunk)))
+               (new-references (list (pop references))))
+          
+          (dolist (reference references)
+            (let ((value 0.0)
+                  (ct reference)
+                  )
+              
+              (mapcar (lambda (reference decay)
+                        (incf value 
+                              (expt-coerced (max .05 (ms->seconds (- ct reference)))
+                                            (- decay))))
+                new-references
+                decays)
+              (push (+ (* (spacing-effect-scale module) 
+                          (exp (+ (log-coerced value) (chunk-permanent-noise chunk))))
+                       (spacing-effect-intercept module))
+                    decays)
+              (push reference new-references)))
+          
+          (setf (chunk-decays chunk) decays)
+          
+          (compute-spacing-effect-activation chunk))))))
 
 
 (defun spacing-effect-params (module param)
-  (cond ((consp param)
-         
-         (case (car param)
-           (:ol
-            (when (and (cdr param)
-                       (spacing-effect-enabled module))
-              (model-warning "Cannot turn on :ol when :eblse enabled")
-              (no-output (sgp :ol nil))))
-           (:bll 
-            (when (spacing-effect-enabled module)
-              (cond ((and (numberp (cdr param)) (not (= (cdr param) 91923.12)))
-                     (model-warning "Changing :bll has no effect when :eblse is enabled")
-                     (no-output (sgp :bll 91923.12)))
-                    ((not (numberp (cdr param)))
-                     (model-warning "Cannot turn off :bll while :eblse is enabled")
-                     (no-output (sgp :bll 91923.12))))
-              ))
-           (:bl-hook 
-            (when (and (spacing-effect-enabled module)
-                       (not (equal (cdr param) 'compute-spacing-effect-activation)))
-              (model-warning "Cannot change the :bll-hook when :eblse enabled")
-              (no-output (sgp :bl-hook compute-spacing-effect-activation)))
-            )
-           (:eblse (setf (spacing-effect-enabled module) (cdr param))
-                    (no-output 
-                     (when (cdr param)
-                       (sgp :bll 91923.12)
-                       (sgp :ol nil)
-                       (sgp :bl-hook compute-spacing-effect-activation)))
-                   (cdr param))
-                     
-                     
-                     
-           (:se-intercept (setf (spacing-effect-intercept module) (cdr param)))
-           (:se-scale (setf (spacing-effect-scale module) (cdr param)))))
-        (t 
-         (case param
-           
-           (:eblse (spacing-effect-enabled module))
-           (:se-intercept (spacing-effect-intercept module))
-           (:se-scale (spacing-effect-scale module))))))
-
+  (bt:with-recursive-lock-held ((spacing-effect-lock module))
+    (cond ((consp param)
+           (case (car param)
+             (:ol
+              (when (and (cdr param)
+                         (spacing-effect-enabled module))
+                (model-warning "Cannot turn on :ol when :eblse enabled")
+                (no-output (sgp :ol nil))))
+             (:bll 
+              (when (spacing-effect-enabled module)
+                (cond ((and (numberp (cdr param)) (not (= (cdr param) 91923.12)))
+                       (model-warning "Changing :bll has no effect when :eblse is enabled")
+                       (no-output (sgp :bll 91923.12)))
+                      ((not (numberp (cdr param)))
+                       (model-warning "Cannot turn off :bll while :eblse is enabled")
+                       (no-output (sgp :bll 91923.12))))
+                ))
+             (:bl-hook 
+              (when (and (spacing-effect-enabled module)
+                         (not (equal (cdr param) 'compute-spacing-effect-activation)))
+                (model-warning "Cannot change the :bll-hook when :eblse enabled")
+                (no-output (sgp :bl-hook compute-spacing-effect-activation)))
+              )
+             (:eblse (setf (spacing-effect-enabled module) (cdr param))
+                     (no-output 
+                      (when (cdr param)
+                        (sgp :bll 91923.12)
+                        (sgp :ol nil)
+                        (sgp :bl-hook compute-spacing-effect-activation)))
+                     (cdr param))
+             
+             (:se-intercept (setf (spacing-effect-intercept module) (cdr param)))
+             (:se-scale (setf (spacing-effect-scale module) (cdr param)))))
+          (t 
+           (case param
+             
+             (:eblse (spacing-effect-enabled module))
+             (:se-intercept (spacing-effect-intercept module))
+             (:se-scale (spacing-effect-scale module)))))))
+  
 
 (defun reset-spacing-effect-module (module)
-  (setf (spacing-effect-enabled module) nil))
+  (bt:with-recursive-lock-held ((spacing-effect-lock module))
+    (setf (spacing-effect-enabled module) nil)))
 
 (define-module-fct 'spacing-effect 
     nil
@@ -254,7 +259,7 @@
   :creation (lambda (name) (declare (ignore name)) (make-spacing-effect))
   :reset #'reset-spacing-effect-module
   :params #'spacing-effect-params
-  :version "1.0" 
+  :version "2.0" 
   :documentation 
   "Module to add the option of the Pavlik & Anderson spacing effect equation for base level activation"
   )
@@ -406,6 +411,9 @@ Chunk G has an activation of: -2.649625
 
 (0.5 0.5 0.5 0.5)
 |#
+
+
+(provide "spacing-effect")
 
                          
 #|

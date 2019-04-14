@@ -10,18 +10,99 @@ tk_optionMenu [control_panel_name].current_model_name global_current_model_name 
 pack [control_panel_name].current_load
 pack [control_panel_name].current_model_name
 
-send_environment_cmd \
-  "create simple-funcall-handler [control_panel_name].current_model_name set_current_model_value \
-    (lambda (x) (case (environment-control-which-hook *environment-control*) \
-                   (create (format nil \"create ~(~a~)\" x)) \
-                   (delete (format nil \"delete ~(~a~)\" (current-model))) \
-                   (t      (format nil \"check \\\"~{ ~(~a~)~}\\\" \" (mp-models))))) \
-    (create delete)"
 
-bind [control_panel_name].current_model_name <Destroy> {
-  remove_handler %W
+proc create_current_model {ignore_model name} {
+  global global_current_model_name
+
+  set menu [[control_panel_name].current_model_name cget -menu]
+  set top [$menu entrycget 0 -value]
+
+  if {$top == "No Current Model"} {
+    $menu delete "No Current Model"
+  }
+
+  $menu add radiobutton -label $name -variable global_current_model_name
+  set global_current_model_name $name
 }
 
+proc delete_current_model {ignore_model name} {
+  global global_current_model_name
+  global during_reload
+  global options_array
+
+  set menu [[control_panel_name].current_model_name cget -menu]
+  set top [$menu entrycget 0 -value]
+  
+  $menu delete $name 
+      
+  if {[$menu entrycget 0 -value] == ""} {
+    $menu add radiobutton -label "No Current Model" -variable global_current_model_name
+  }      
+
+  if {$global_current_model_name == $name} {
+    set global_current_model_name [$menu entrycget 0 -value]
+  }
+
+  if {$during_reload == 0} {
+      
+    if {$options_array(kill_model_windows) == 1} {
+      kill_all_model_windows $name
+    } 
+  }
+}
+  
+set env_current_add_monitor [new_variable_name "env-current-model-add-monitor"]
+
+while {[send_cmd "check" $env_current_add_monitor] != "null"} {
+  set env_current_add_monitor [new_variable_name "env-current-model-add-monitor"]
+}
+
+add_cmd $env_current_add_monitor "create_current_model" "Environment command for setting the current model menu when models created."
+
+set env_current_delete_monitor [new_variable_name "env-current-model-delete-monitor"]
+
+while {[send_cmd "check" $env_current_delete_monitor] != "null"} {
+  set env_current_delete_monitor [new_variable_name "env-current-model-delete-monitor"]
+}
+
+add_cmd $env_current_delete_monitor "delete_current_model" "Environment command for setting the current model menu when models deleted."
+
+
+proc check_current_models {} {
+  global global_current_model_name
+
+  set menu [[control_panel_name].current_model_name cget -menu]
+  set top [$menu entrycget 0 -value]
+
+  set models [lindex [call_act_r_command "mp-models"] 0]
+
+  if {$top == "No Current Model" && [llength $models] != 0} {
+    $menu delete "No Current Model"
+  }
+
+  foreach model $models {
+   $menu add radiobutton -label $model -variable global_current_model_name
+   set global_current_model_name $model
+  }
+}     
+  
+check_current_models
+
+send_cmd "monitor" [list "creating-model" $env_current_add_monitor]
+send_cmd "monitor" [list "deleting-model" $env_current_delete_monitor]
+
+# Can be lazy about this because the dispatcher will clean up automatically
+# when the connection drops.
+
+#bind [control_panel_name].current_load <Destroy> {
+#  global env_current_add_monitor
+#  global env_current_delete_monitor
+
+#  send_cmd "remove-monitor" [list $env_current_add_monitor "creating-model"]
+#  send_cmd "remove-monitor" [list $env_current_delete_monitor "deleting-model"]
+#  send_cmd "remove" $env_current_add_monitor
+#  send_cmd "remove" $env_current_delete_monitor
+#}
 
 proc currently_selected_model {} {
   global global_current_model_name
@@ -33,13 +114,10 @@ proc currently_selected_model {} {
   }
 }
 
-
-
 proc model_in_current_list {model} {
 
   set menu [[control_panel_name].current_model_name cget -menu]
   set last [$menu index last]
-
   
   for {set i 0} {$i <= $last} {incr i} {
     if {$model == [$menu entrycget $i -value]} {
@@ -60,103 +138,10 @@ proc set_currently_selected_model {model} {
   }
 }
 
-proc set_current_model_value {action name} {
-  global global_current_model_name
-  global options_array
-  global during_reload
-  global tcl_env_dir
-
-  set menu [[control_panel_name].current_model_name cget -menu]
-  set top [$menu entrycget 0 -value]
-
-  switch $action {
-    create {
-      if {$top == "No Current Model"} {
-        $menu delete "No Current Model"
-      } elseif {$options_array(multiple_models) == 0} {
-        tk_messageBox -icon warning -message "You must enable multiple model support in the Options before the tools will work correctly when more than one model is defined." \
-                  -type ok -title "Multiple models not enabled"
-      }      
-
-      $menu add radiobutton -label $name -variable global_current_model_name
-      set global_current_model_name $name
-    }
-
-    delete {
-      $menu delete $name 
-      
-      if {[$menu entrycget 0 -value] == ""} {
-        $menu add radiobutton -label "No Current Model" -variable global_current_model_name
-      }      
-      
-      if {$global_current_model_name == $name} {
-        set global_current_model_name [$menu entrycget 0 -value]
-      }
-
-      if {$options_array(multiple_models) == 1 && $during_reload == 0} {
-      
-        if {$options_array(kill_model_windows) == 1} {
-          kill_all_model_windows $name
-        } 
-        #   don't show the dialog anymore because it isn't really modal and runs into 
-        #   problems if there are multiple models being deleted which will always be
-        #   the case for a clear-all with multiple models defined...
-        #   Instead moving it to the options settings.
-        #   
-        #   elseif {$options_array(kill_model_windows) == -1} {
-        #  switch [my_tk_dialog .multi_model_choice "Close deleted model windows?" "Should the Environment close inspector windows for a deleted model?" \
-        #                    warning 0 "Yes" "No" "Always" "Never"] {
-        #    0 { kill_all_model_windows $name}
-        #    1 { #nothing
-        #    }
-        #    2 { kill_all_model_windows $name
-        #        set options_array(kill_model_windows) 1
-        #        # write that out to the end of hte userconfig file
-        #        
-        #        set file [file join $tcl_env_dir init "99-userconfig.tcl"]
-        #
-        #        append_data "set options_array(kill_model_windows) 1\n" $file
-        #    }
-        #    3 { set options_array(kill_model_windows) 0
-        #        # write that out to the end of hte userconfig file
-        #        
-        #        set file [file join $tcl_env_dir init "99-userconfig.tcl"]
-        #
-        #        append_data "set options_array(kill_model_windows) 0\n" $file
-        #    }
-        #  }
-        #}
-      }
-    }
-    check {
-      if {$top == "No Current Model" && [llength $name] != 0} {
-        $menu delete "No Current Model"
-      }
-      if {$options_array(multiple_models) == 0 && [llength $name] > 1} {
-        tk_messageBox -icon warning -message "You must enable multiple model support under Options before the ACT-R Environment tools will work correctly when more than one model is defined." \
-                  -type ok -title "Multiple models not enabled"
-      }      
-
-      foreach model $name {
-       $menu add radiobutton -label $model -variable global_current_model_name
-       set global_current_model_name $model
-      }
-    }     
-  }
-}
     
 global window_to_model
 global model_to_windows
 
-proc send_model_name {} {
-  global options_array
-  
-  if {$options_array(multiple_models) == 1} {
-    return [currently_selected_model]
-  } else {
-    return nil
-  }
-}
 
 proc kill_all_model_windows {name} {
 
@@ -171,45 +156,67 @@ proc kill_all_model_windows {name} {
         destroy $x
       }
     }
-
     array unset model_to_windows $name
   }
 }
 
-bind model_window <Destroy> {
+proc remove_model_window {win} {
   global window_to_model
   global model_to_windows
 
-  set model $window_to_model(%W)
-  array unset window_to_model %W
+  if {[array names window_to_model -exact $win] != ""} {
 
-  set old $model_to_windows($model) 
-  set index [lsearch -exact $old $model]
-  if {$index != -1} {
-    set model_to_windows($model) [lreplace $old $index $index]
-  }
-}
+    set model $window_to_model($win)
+    array unset window_to_model $win
 
-proc record_new_window {win_name title} {
+    set old $model_to_windows($model) 
   
-  global window_to_model
-  global model_to_windows
-  global options_array
+    set index [lsearch -exact $old $model]
 
-  if {$options_array(multiple_models) == 1} {
-    set model [currently_selected_model]
-    set window_to_model($win_name) $model
-
-    wm title $win_name "$title ($model)"
-
-    if {[array names model_to_windows -exact $model] == ""} {
-      set model_to_windows($model) [list $win_name]
-    } else {
-      set model_to_windows($model) [concat $model_to_windows($model) $win_name]
+    if {$index != -1} {
+      set model_to_windows($model) [lreplace $old $index $index]
     }
-  } else {
-    wm title $win_name $title
   }
 }
 
+
+proc record_new_window {win_name title {model ""}} {
+ 
+  if {$model == ""} {
+    record_window_with_model $win_name [currently_selected_model] $title
+  } else {
+    record_window_with_model $win_name $model $title
+  }
+}
+
+proc record_window_with_model {win_name model {title ""}} {
   
+  global window_to_model
+  global model_to_windows
+
+  set window_to_model($win_name) $model
+
+  if {$title == ""} {
+    wm title $win_name "$win_name ($model)"
+  } else {
+    wm title $win_name "$title ($model)"
+  }
+
+  if {[array names model_to_windows -exact $model] == ""} {
+    set model_to_windows($model) [list $win_name]
+  } else {
+    set model_to_windows($model) [concat $model_to_windows($model) $win_name]
+  }
+
+  bind $win_name <Destroy> {remove_model_window %W}
+}
+
+proc model_for_window {win} {
+  global window_to_model
+
+  if {[array names window_to_model -exact $win] != ""} {
+    return $window_to_model($win)
+  } else {
+    return "nil"
+  }
+}

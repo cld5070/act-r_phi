@@ -4,69 +4,61 @@
 # is used.  For now the default is t - use smart-loader
  
 
-global load_return 
+set load_result ""
 
-button [control_panel_name].load -text "Load Model" -font button_font -command {
-  global load_return
+proc record_load_traces {model s} {
+  global load_result
+
+  set load_result "$load_result$s"
+
+  return ""
+}
+
+proc load_model_file {fname {wait ""}} {
+
+  global load_result
   global options_array
-  global local_connection
 
-  set fname ""
+  set load_result ""
+            
+  set load_monitor [new_variable_name "load_monitor"]
 
-  if {$local_connection == 0} {
-    tk_messageBox -icon warning -type ok -title "Load warning" \
-                  -message "You cannot use the Load Model button if the\
-                            environment is not running on the same machine\
-                            as ACT-R at this time, but if you want such a\
-                            feature let Dan know because there are a couple\
-                            of ways such a feature could be added."  
-  } else {
-    set fname [tk_getOpenFile -title "Model to load" \
-                              -filetypes {{"All Files" *}} -initialdir $top_dir]
-  
+  while {[send_cmd "check" $load_monitor] != "null"} {
+    set load_monitor [new_variable_name "load_monitor"]
+  }
 
-    if {$fname != ""} {
-      set load_return ""
+  add_cmd $load_monitor "record_load_traces" "Environment command for capturing output during Load ACT-R code."
 
-      send_environment_cmd \
-        "update [get_handler_name [control_panel_name].load] \
-           (lambda (x) \
-              (declare (ignore x)) \
-                (if (or (stepper-open-p) (environment-busy-p)) \
-                  (list 0 \"ACT-R currently running or the stepper is open.\") \
-                (unwind-protect \
-                  (progn \
-                   (set-environment-busy) \
-                   (let ((result (safe-load \"$fname\" $options_array(use_smart_load)))) \
-                       (set-environment-free) \
-                       (format t (if (= 1 (first result)) \
-                               \"~%#|## Model $fname loaded. ##|#~%\" \
-                               \"~%#|## Failed loading model $fname. ##|#~%\")) \     
-                       result)) \
-                  (set-environment-free))))"
-  
-      wait_for_non_null load_return
- 
-       set win [toplevel [new_variable_name .reload_response]]
+  send_cmd "monitor" [list "model-trace" $load_monitor]
+  send_cmd "monitor" [list "command-trace" $load_monitor]
+  send_cmd "monitor" [list "warning-trace" $load_monitor]
+  send_cmd "monitor" [list "general-trace" $load_monitor]
+
+  set result [call_act_r_command_with_error_messages "load-act-r-code" nil [list {$fname} $options_array(use_smart_load)]]
+
+  send_cmd "remove-monitor" [list "model-trace" $load_monitor]
+  send_cmd "remove-monitor" [list "command-trace" $load_monitor]
+  send_cmd "remove-monitor" [list "warning-trace" $load_monitor]
+  send_cmd "remove-monitor" [list "general-trace" $load_monitor]
+     
+  remove_cmd $load_monitor
+
+  set win [toplevel [new_variable_name .reload_response]]
   
   # hide the window for speed and aesthetic reasons
-  
+ 
   wm withdraw $win
 
   wm geometry $win [get_configuration .reload_response $win]
 
-
- set text_frame [frame $win.text_frame -borderwidth 0]  
+  set text_frame [frame $win.text_frame -borderwidth 0]  
  
- set text_box [text $text_frame.text -yscrollcommand \
-                     "$text_frame.text_scrl set" -state normal \
-                     -font text_font]
-  
-  
+  set text_box [text $text_frame.text -yscrollcommand \
+                "$text_frame.text_scrl set" -state normal \
+                -font text_font]
   
   set text_scroll_bar [scrollbar $text_frame.text_scrl \
-                                 -command "$text_box yview"]
-
+                       -command "$text_box yview"]
 
   set the_button [button $win.but -text "Ok" -font button_font -command "destroy $win"]
 
@@ -76,28 +68,45 @@ button [control_panel_name].load -text "Load Model" -font button_font -command {
   pack $text_scroll_bar -side right -fill y
   pack $text_box -side left -expand 1 -fill both
 
-
-      if {[lindex $load_return 0] == 0} {
-        wm title $win "ERROR Loading"
-    $text_box insert 1.0 "Error Loading:\n[lindex $load_return 1]"
+  if {[lindex $result 0] == 0} {
+    wm title $win "ERROR Loading"
+    $text_box insert 1.0 "$load_result\n[lindex $result 1]"
   } else {
-     wm title $win "SUCCESSFUL Load"
-    $text_box insert 1.0 "Successful Load:\n[lindex $load_return 1]"
-      }
+    wm title $win "SUCCESSFUL Load"
+    $text_box insert 1.0 $load_result
+  }
 
   wm deiconify $win
   focus $win
-      
+
+  if {$wait != ""} {tkwait window $win}
+}
+
+
+button [control_panel_name].load -text "Load ACT-R code" -font button_font -command {
+  global local_connection
+  global top_dir
+  global current_file_window
+  global currently_open_files
+
+  set fname ""
+
+  if {$local_connection == 0} {
+    tk_messageBox -icon warning -type ok -title "Load warning" \
+                  -message "You cannot use the Load ACT-R code button if the\
+                            environment is not running on the same machine\
+                            as ACT-R."  
+  } else {
+    if {$current_file_window == ""} {
+      set fname [tk_getOpenFile -title "File to load" -initialdir $top_dir]
+    } else {
+      set fname [tk_getOpenFile -title "File to load" -initialdir [file dirname $currently_open_files($current_file_window)] -initialfile [file tail $currently_open_files($current_file_window)]]
+    }
+
+    if {$fname != ""} {
+      load_model_file $fname
     }
   }              
 }
 
 pack [control_panel_name].load
-
-send_environment_cmd \
-  "create list-handler [control_panel_name].load load_return (lambda (x)) ()"
-
-bind [control_panel_name].load <Destroy> {
-  remove_handler %W
-}
-

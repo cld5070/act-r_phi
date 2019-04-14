@@ -10,6 +10,7 @@ term base-level activation component described in:
 The files in this directory are:
 
 readme.txt - this file
+base-level-inhibition.lisp - a simple load file for the require-extra command.
 bl-inhibition.lisp - the module definition
 free-recall.lisp - an example model that runs with or without inhibition enabled 
 Cogsci 2009 Lebiere Final.pdf - a pdf of Christian's slides from the Cogsci. presentation
@@ -17,9 +18,11 @@ Cogsci09-Lebiere-Best.pdf - a pdf of an updated version of the Cogsci. the paper
 
 ----------------------------------------------------------
 
-To use this extension put the bl-inhibition.lisp file into the modules directory 
-before loading the main ACT-R load file, or load it once after loading ACT-R and 
-before defining any models.
+The easiest way to use this extension is to call (require-extra "base-level-inhibition")
+and putting that into any model which uses the extension will guarantee that it gets
+loaded.  It can also be used by putting the bl-inhibition.lisp file into the modules 
+directory before loading the main ACT-R load file, or load it once after loading ACT-R 
+and before defining any models.
 
 That will then add the module for this mechanism to the system and add these
 three new parameters: :enable-inhibition, :inhibition-scale and :inhibition-decay.

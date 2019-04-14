@@ -1,4 +1,4 @@
-;;;  -*- mode: LISP; Package: CL-USER; Syntax: COMMON-LISP;  Base: 10 -*-
+;;;  -*- mode: LISP; Syntax: COMMON-LISP;  Base: 10 -*-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; 
 ;;; Author      : Dan Bothell 
@@ -91,6 +91,35 @@
 ;;;             :   Error:Unbound variable: \?
 ;;;             :   
 ;;;             :   and then hangs.
+;;; 2014.07.30 Dan
+;;;             : * Added the all-dm-slot-lists and filter-dm-chunks functions
+;;;             :   to use for the filter in the declarative viewer since 
+;;;             :   chunk-type won't work now.
+;;; 2015.05.18 Dan
+;;;             : * Filter-dm-chunks now verifies that all the items are valid
+;;;             :   slot names first because there are potential issues across
+;;;             :   reset and loading where a slot name from a previous run
+;;;             :   doesn't exist anymore.
+;;; 2017.08.25 Dan
+;;;             : * Remove the functions that aren't needed as I go.
+;;; 2017.09.01 Dan
+;;;             : * Updated the declarative cmds: dm-slot-filters and filter-
+;;;             :   dm-chunks.
+;;;             : * To get around an issue in how the cmds come over from
+;;;             :   Tcl with respect to the encoding of lists just make it
+;;;             :   work 'right' here when necessary using convert-tcl-list-to-list.
+;;; 2017.09.05 Dan
+;;;             : * Added dm-whynot-text to capture the whynot-dm output.
+;;;             : * Added production-details for capturing spp+pp output.
+;;; 2017.09.06 Dan
+;;;             : * Added the sorted-module-names, printed-parameter-details,
+;;;             :   and modules-parameters commands.
+;;; 2017.09.07 Dan
+;;;             : * Fixed printed-parameter-details so that it decodes the
+;;;             :   parameter from the string.
+;;;             : * Added modules-with-parameters for the parameters dialog.
+;;; 2018.06.12  Dan
+;;;             : * Changed some external doc strings for consistency.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 #+:packaged-actr (in-package :act-r)
@@ -98,135 +127,102 @@
 #-(or (not :clean-actr) :packaged-actr :ALLEGRO-IDE) (in-package :cl-user)
 
 
-(defun stepper-open-p ()
-  (environment-control-stepper-open *environment-control*))
+;; This is a hack to get around an issue in the encoding
+;; of things on the Tcl side when generating the commands.
+;; The right fix would be to have it better parse things 
+;; and create a list in JSON instead of sending the string
+;; directly, but that's more work than just dealing with the
+;; occasional issues in values sent.
 
-(defun environment-busy-p ()
-  (environment-control-busy-flag *environment-control*))
-
-(defun set-environment-busy ()
-  (setf (environment-control-busy-flag *environment-control*) t))
-
-(defun set-environment-free ()
-  (setf (environment-control-busy-flag *environment-control*) nil))
-
+(defun convert-tcl-list-to-list (string)
+  (handler-case (read-from-string (format nil "(~a)" string))
+    (error () nil)))
 
 
-;;; Reset-model-env
-;;; this is the function called when the reset button in the
-;;; environment is pressed.  Basically, all it does print a message
-;;; after it resets for reference.
+(defun dm-slot-filters ()
+  (cons '_none_ (all-dm-chunk-types (get-module declarative))))
 
-(defun reset-model-env (x)
-  (declare (ignore x))
-  (if (or (stepper-open-p) (environment-busy-p))
-      (print-warning "Cannot reset if ACT-R is running or if the stepper is open.")
-    (unwind-protect 
-        (progn
-          (set-environment-busy)
-          (reset)
-          (format t "~%#|## ACT-R has been reset. ##|#~%"))
-      (set-environment-free))))
+(add-act-r-command "dm-slot-filters" 'dm-slot-filters "Returns a list of the possible filters (lists of slot names) for chunks in DM for the Environment to use. No params.")
 
-;;; Reload-model
-;;; this is the function called when the reload button in the
-;;; environment is pressed.  It takes one parameter which specifies 
-;;; whether or not to use the smart-loader instead of the simple reload
-;;; function.
+(defun filter-dm-chunks (slot-list)
+  (let ((dm (get-module declarative)))
+    (if (string-equal slot-list "_none_")
+        (setf slot-list nil)
+      (setf slot-list (convert-tcl-list-to-list slot-list)))
+    (when (and dm (every 'valid-slot-name slot-list))
+      (let ((mask (reduce 'logior slot-list :key 'slot-name->mask)))
+        (mapcan (lambda (x) 
+                  (if (slots-vector-match-signature (car x) mask)
+                      (copy-list (cdr x))
+                    nil))
+          (bt:with-lock-held ((dm-chunk-lock dm))(dm-chunks dm)))))))
 
-(defun reload-model (smart-load?)
-  (let* ((save-stream (make-string-output-stream ))
-         (display-stream (make-broadcast-stream *standard-output* save-stream))
-         (error-stream (make-broadcast-stream *error-output* save-stream))
-         (*standard-output* display-stream)
-         (*error-output* error-stream)
-         (*one-stream-hack* t)
-         (internal-error nil))
-    
-    (if (or (stepper-open-p) (environment-busy-p))
-        (list 0 "Cannot reload if ACT-R is running or if the stepper is open.")
-      (unwind-protect
-          (progn
-            (set-environment-busy)   
-            (multiple-value-bind (s err) 
-                (ignore-errors 
-                 (let ((*debugger-hook* (lambda (c o) 
-                                          (declare (ignore o)) 
-                                          (print-warning "Error aborted automatically by environment.") 
-                                          (setf internal-error c)
-                                          (error c))))
-                   (if smart-load?
-                     (reload t)
-                   (reload))))
-      
-              (cond ((or internal-error
-                         (subtypep (type-of err) 'condition))
-                     (uni-report-error (if internal-error internal-error err) "Error during reload")
-                     (list 0 (get-output-stream-string save-stream)))
-                    ((eq s :none)
-                     (print-warning "Cannot use reload")
-                     (list 0 (get-output-stream-string save-stream)))
-                    (t
-                     (format t "~%#|##  Reload complete ##|#~%")
-                     (list 1 (get-output-stream-string save-stream))))))
-        (progn
-          (finish-output *standard-output*)
-          (finish-output *error-output*)
-          (close save-stream)
-          (set-environment-free))))))
+(add-act-r-command "filter-dm-chunks" 'filter-dm-chunks "Returns a list of chunks in DM which match the specified slot list filter. Params: list-of-slots.")
+
+(defun dm-chunk-details (name)
+  (let ((cname (string->name name)))
+    (if (chunk-p-fct cname)
+        (with-parameters (:ans nil)
+          (format nil "~a~%~a" (capture-command-output (sdp-fct (list cname)))
+            (printed-chunk cname)))
+      "")))
+
+(add-act-r-command "dm-chunk-details" 'dm-chunk-details "Returns the text of the declarative parameters and printed representaion of a chunk for the Environment. Params: chunk-name.")
 
 
-(defun safe-load (file compile-it)
-  
-  (setf file (create-valid-pathname file))
-  
-  (let* ((save-stream (make-string-output-stream ))
-         (display-stream (make-broadcast-stream *standard-output* save-stream))
-         (error-stream (make-broadcast-stream *error-output* save-stream))
-         (*standard-output* display-stream)
-         (*error-output* error-stream)
-         (*one-stream-hack* t)
-         (internal-error nil))
-    
-    (unwind-protect
-        (multiple-value-bind (s err) 
-            (ignore-errors 
-             (let ((*debugger-hook* (lambda (c o) 
-                                      (declare (ignore o)) 
-                                      (print-warning "Error aborted automatically by environment.") 
-                                      (setf internal-error c)
-                                      (error c))))
-               
-               (if compile-it
-                   (compile-and-load file)
-                 (load file))))
-          (declare (ignore s))
-          
-          (cond ((or internal-error
-                     (subtypep (type-of err) 'condition))
-                 (uni-report-error (if internal-error internal-error err) "Error during load model")
-                 (list 0 (get-output-stream-string save-stream)))
-                (t
-                 (format t "~%#|##  load model complete ##|#~%")
-                 (list 1 (get-output-stream-string save-stream)))))
-      (progn
-        (finish-output *standard-output*)
-        (finish-output *error-output*)
-        (close save-stream)))))
-  
-(defun smart-loader (file)
-  (safe-load file t))
+(defun dm-whynot-text (name)
+  (let ((cname (string->name name)))
+    (if (chunk-p-fct cname)
+        (capture-command-output (whynot-dm-fct (list cname)))
+      "")))
 
-(defun buffer-list (x)
-  (declare (ignore x))
-  (buffers))
+(add-act-r-command "dm-whynot-text" 'dm-whynot-text "Returns the text of the whynot-dm information for a chunk for use in the Environment. Params: chunk-name.")
+
+(defun production-details (name)
+  (let ((pname (string->name name)))
+    (if (find pname (all-productions))
+        (format nil "~a~%~a" (capture-command-output (spp-fct (list pname)))
+          (printed-production-text pname))
+      "")))
+
+(add-act-r-command "production-details" 'production-details "Returns the text of the procedural parameters and printed representaion of a production for the Environment. Params: production-name.")
+
+(defun whynot-text (name)
+  (let ((pname (string->name name)))
+    (if (find pname (all-productions))
+        (format nil "Time: ~/print-time-in-seconds/~%~a" (mp-time-ms)
+          (capture-command-output (whynot-fct (list pname))))
+      "")))
+
+(add-act-r-command "whynot-text" 'whynot-text "Returns the text of the whynot information for a production for use in the Environment. Params: production-name.")
 
 
-(defun buffer-contents (buffer)
-  (if (buffer-read buffer)
-      (buffer-chunk-fct (list buffer))        
-    (format *standard-output* "Buffer is Empty")))
+(defun sorted-module-names ()
+  (sort (all-module-names) #'string< :key 'symbol-name))
 
+(add-act-r-command "sorted-module-names" 'sorted-module-names "Returns a list of the names of all current modules sorted alphabetically. No params.")
+
+(defun modules-with-parameters ()
+  (remove-if-not 'modules-parameters (sorted-module-names)))
+
+(add-act-r-command "modules-with-parameters" 'modules-with-parameters "Returns a list of the names of all current modules which provided parameters sorted alphabetically. No params.")
+
+(defun printed-parameter-details (param)
+  (capture-command-output (sgp-fct (list (string->name param)))))
+
+(add-act-r-command "printed-parameter-details" 'printed-parameter-details "Returns a string of the parameter output for the given parameter's value and details. Params: parameter-name.")
+
+(defun modules-parameters (module-name)
+  (let (params
+        (name (string->name module-name)))
+    (bt:with-lock-held (*parameters-table-lock*)
+      (maphash (lambda (key value) 
+                 (when (eq (act-r-parameter-owner value) name)
+                   (push key params)))
+               *act-r-parameters-table*))
+    (sort params 'string< :key 'symbol-name)))
+
+(add-act-r-command "modules-parameters" 'modules-parameters "Returns a list of the names of all the parameters for the named module sorted alphabetically. Params: module-name.")
 
 #|
 This library is free software; you can redistribute it and/or

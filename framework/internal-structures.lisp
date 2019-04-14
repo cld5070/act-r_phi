@@ -13,7 +13,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; 
 ;;; Filename    : internal-structures.lisp
-;;; Version     : 1.2
+;;; Version     : 4.0
 ;;; 
 ;;; Description : All of the defstructs for the internal code.
 ;;; 
@@ -251,6 +251,182 @@
 ;;;             :    (chunk-type (bar (:include foo)) slot)
 ;;;             :    (define-chunks (a isa bar))
 ;;;             :    (set-chunk-slot-value a slot t)
+;;; 2014.02.24 Dan [2.0]
+;;;             : * Chunks no longer maintain a chunk-type, just a vector of filled
+;;;             :   slots and now an immutable tag since changing DM chunks 
+;;;             :   will really be a problem without types to organize things.
+;;;             : * Chunk-types don't have a static specifier since they aren't
+;;;             :   really used at run time and don't need to maintain a lot
+;;;             :   of info.
+;;;             : * Instead there's a structure for the model which holds the
+;;;             :   chunk-type info instead of just a table of types.
+;;;             : * Chunk-specs now have filled slot and empty slot vectors 
+;;;             :   instead of a type.
+;;; 2014.03.13 Dan
+;;;             : * Chunk-specs now hold more details directly: 
+;;;             :    - which slots have multiple specifications
+;;;             :    - which slots have inequality tests
+;;;             :    - which slots have equality tests
+;;;             :    - which slots have negation tests
+;;;             :    - any potential variable markers in slot tests (non alphanumericp
+;;;             :      initial characters)
+;;; 2014.03.14 Dan
+;;;             : * Request parameters get treated just like slots in a chunk-spec
+;;;             :   which means that they will need to be added as slots when 
+;;;             :   defined with modules.  Keep track of them in the spec for
+;;;             :   comparing a chunk-spec to a chunk-type signature.
+;;; 2014.05.14 Dan
+;;;             : * Maintain query info separately in the chunk-type-info struct.
+;;; 2014.06.24 Dan
+;;;             : * Chunk-types don't need to record subtypes info now.
+;;;             : * Do want to record the specific parent types given, if any.
+;;; 2014.06.25 Dan
+;;;             : * Record the chunk-type names as they're created in the chunk-
+;;;             :   type-info struct so that printing them out is consistent
+;;;             :   among Lisps and so they don't need to be ordered by inheritance
+;;;             :   when saving a model.
+;;; 2014.08.14 Dan
+;;;             : * Printing module no longer needs the show-all-slots slot.
+;;; 2014.09.26 Dan
+;;;             : * Maintain a sorted list of module names so that things like
+;;;             :   resetting can always be applied in the same order unlike
+;;;             :   maphash which varies from Lisp to Lisp.
+;;; 2014.11.04 Dan
+;;;             : * Added a slot to indicate a request-param to the slot-spec
+;;;             :   structure.
+;;; 2015.03.19 Dan
+;;;             : * Added the flags slot to the buffer struct to handle the
+;;;             :   new failure option and provide a way for implementing other
+;;;             :   such markers in the future.
+;;; 2015.06.01 Dan
+;;;             : * Added the one-time-tags slot to the printing module struct
+;;;             :   to support the new one-time-model-warning command.
+;;; 2015.07.29 Dan [2.1]
+;;;             : * Changed the version number set in the meta-process to be
+;;;             :   the concatenation of the two version strings.
+;;;             : * Added a precondition slot to events which will be used to
+;;;             :   allow ignoring "unneeded" events.
+;;; 2015.08.03 Dan
+;;;             : * Going back to *actr-version-string* being the whole thing
+;;;             :   and changing that in the version-string file.
+;;; 2015.08.25 Dan
+;;;             : * Adding the real-time-scale slot to the meta-process to make
+;;;             :   it easier to control the scaling in real-time mode.
+;;; 2015.09.09 Dan [3.0]
+;;;             : * Slot added to buffers to indicate whether its module will
+;;;             :   report on completion of requests i.e. trackable.
+;;;             : * Slot added to model struct for tracking requests.
+;;; 2016.04.11 Dan
+;;;             : * Converted the printing module to a class because then
+;;;             :   supporting the :save-trace parameter and show-model-trace 
+;;;             :   command can be done with a class allocated slot to hold
+;;;             :   the event hook ids.  Keep the accessors for the slots the
+;;;             :   same as they were for the struct to avoid having to change
+;;;             :   lots of other code too.
+;;; 2016.09.27 Dan [4.0]
+;;;             : * Removed the meta-processes structure.
+;;; 2016.09.28 Dan
+;;;             : * The printing module's event-hook doesn't need to be a hash-table
+;;;             :   since there's only one meta-process.
+;;; 2017.02.27 Dan
+;;;             : * Added class allocated slots to the printing-module to allow
+;;;             :   warnings to be captured cleanly since *error-output* can't
+;;;             :   just be monitored now.
+;;; 2017.03.29 Dan
+;;;             : * Added slots for lock tables in the meta-process and model
+;;;             :   along with a lock in the buffer struct and a class lock in
+;;;             :   the printing-module.
+;;;             : * Removed the current-model and cannot-define-model slots.
+;;; 2017.03.30 Dan
+;;;             : * Moved the current-mp and current-mp-fct code here.
+;;;             : * Also moved the model code from internal-macros here.
+;;;             : * Added with-current-model which works like verify-current-model
+;;;             :   except that it binds current-model to the current model struct
+;;;             :   for use in the body.
+;;;             : * Moved print-warning here too.
+;;; 2017.04.27 Dan
+;;;             : * Added a lock to the buffer structure to protect access.
+;;; 2017.05.30 Dan
+;;;             : * Adding a new piece to the internal organization -- a "component".
+;;;             :   A component is installed at the meta-process level not the
+;;;             :   model level.  It is not directly affected by resets, only 
+;;;             :   clear-alls.  It has 5 interface functions:
+;;;             :    - creation (called once at define-component time)
+;;;             :    - destroy (called once at undefine-component time)
+;;;             :    - clear-all (called at every clear-all)
+;;;             :    - model-creation (called for every model that's defined)
+;;;             :    - model-destruction (called for every model that's undefined)
+;;;             :   Like a module its returned creation is the 'instance' and
+;;;             :   there will be a get-component command, but since there is 
+;;;             :   only 1 instance of a component it may not be necessary.
+;;; 2017.06.02 Dan
+;;;             : * Cleaned up some issues with the "current model" setting and
+;;;             :   use.  Now nothing ever setfs *current-act-r-model* and 
+;;;             :   current-model-struct is an or of that and the meta-p-default-
+;;;             :   model.
+;;; 2017.06.05 Dan
+;;;             : * Adding slots for reset functions to components.
+;;; 2017.06.15 Dan
+;;;             : * Make the 'current model' macros thread safe by locking the
+;;;             :   read of the meta-process default model slot.
+;;;             : * Added a lock to the model struct to protect the modules table.
+;;;             : * Added another lock to the printing module for checking/setting
+;;;             :   parameters within a model (the other lock is class allocated).
+;;;             : * Add the schedule-lock to the meta-process for locking all of
+;;;             :   the time and event queue access.
+;;;             : * Add a lock to the modules struct.
+;;; 2017.06.16 Dan
+;;;             : * Added another lock to printing module for the saved trace.
+;;;             : * Make the printing module param lock recursive.
+;;;             : * Added a component-lock to the meta-process.
+;;; 2017.06.20 Dan
+;;;             : * Added a lock to the act-r-chunk-type-info struct to protect
+;;;             :   all access.  Since chunk-types are only modifided in the 
+;;;             :   chunk-type functions the info lock is used to protect the 
+;;;             :   underlying structs too.
+;;; 2017.06.21 Dan
+;;;             : * Added a lock for the chunk 'updating' slots to the model.
+;;; 2017.06.23 Dan
+;;;             : * Added names for all the locks.
+;;; 2017.06.28 Dan
+;;;             : * Removed the in-slack slot of the meta-process because it
+;;;             :   isn't used anymore.
+;;; 2017.06.29 Dan
+;;;             : * Add a lock to the model struct for the buffers table.
+;;; 2017.05.30 Dan
+;;;             : * Add a lock for the meta-process event hook slots.
+;;; 2017.07.14 Dan
+;;;             : * Add a lock to the model for tracked-requests.
+;;; 2017.09.19 Dan
+;;;             : * Remove all the slots needed for the printing module to 
+;;;             :   support the :save-trace parameter.
+;;; 2017.12.07 Dan
+;;;             : * Added an external slot to modules sturcture.
+;;; 2018.02.05 Dan
+;;;             : * Removed the evt- :conc-name from the event structure and
+;;;             :   added a num slot for use as an id.
+;;;             : * Added event-id slot to meta-process for creating them.
+;;; 2018.02.07 Dan
+;;;             : * Remove the unnecessary real-time params from the meta-process
+;;;             :   and added the mode.
+;;; 2018.04.13 Dan
+;;;             : * The buffer-lock needs to be a recursive lock because buffer-
+;;;             :   chunk locks it but get-m-buffer-chunks also does for a multi-
+;;;             :   buffer.
+;;; 2018.04.17 Dan
+;;;             : * The modules lock also needs to be recursive.
+;;; 2018.06.08 Dan
+;;;             : * Add a tracked-requests id counter which is what the 'tracker'
+;;;             :   uses to check things.
+;;; 2019.01.30 Dan
+;;;             : * Updating the chunk-spec related structs to eliminate some 
+;;;             :   unused slots and add some others to help with how they're used.
+;;; 2019.02.05 Dan
+;;;             : * Adjust meta-p-models to be an alist instead of hashtable.
+;;; 2019.02.13 Dan
+;;;             : * Add a slot to the model to hold a bitvector of buffers with
+;;;             :   chunks in them and slots to the buffer to hold their index
+;;;             :   and a mask.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -281,57 +457,93 @@
 #+(and :clean-actr (not :packaged-actr) :ALLEGRO-IDE) (in-package :cg-user)
 #-(or (not :clean-actr) :packaged-actr :ALLEGRO-IDE) (in-package :cl-user)
 
+(declaim (ftype (function (t &rest t) t) evaluate-act-r-command))
+(declaim (ftype (function () t) current-model))
+(declaim (ftype (function () t) mp-models))
+
 (defstruct act-r-buffer 
   "The internal structure for a buffer"
   name
   chunk  ;; holds the chunk name not struct - copy issues and such...
+  flags
   module
   spread
   queries
   requests
+  (requests-mask 0)
   parameter-name
   requested
   status-printing
   multi
   searchable
   chunk-set
-  copy)
+  copy
+  trackable
+  (lock (bt:make-recursive-lock "buffer-lock"))
+  index
+  mask)
 
 (defstruct act-r-chunk-spec 
   "The internal structure of a chunk-spec"
-  type slots)
+  (filled-slots 0) 
+  (empty-slots 0) 
+  (request-param-slots 0)
+  (duplicate-slots 0)
+  (equal-slots 0)
+  (negated-slots 0)
+  (relative-slots 0)
+  variables
+  slot-vars
+  dependencies
+  slots
+  testable-slots)
 
 (defstruct act-r-slot-spec 
   "The internal structure of a chunk-spec's slot specification"
-  (modifier '=) name value)
+  (modifier '=) name value variable)
 
-(defstruct act-r-chunk-type ; (:print-function print-chunk-type))
+(defstruct act-r-chunk-type 
   "The internal structure of a chunk-type"
-  name documentation supertypes subtypes slots extended-slots indices possible-slots static subtree (user-defined t))
+  name documentation super-types parents
+  ;; don't need this any more: subtypes 
+  slots ;; your slots (direct and inherited) including possible default values
+  possible-slots ;; slot names only of all the slots of self and children
+  slot-vector ;; a mask of the possible-slots
+  (initial-spec (make-act-r-chunk-spec)))
 
-(defstruct act-r-chunk ; (:print-function print-chunk))
+(defstruct act-r-chunk-type-info 
+  "The structure to hold chunk-type information for a model"
+  (slot->index (make-hash-table)) 
+  (index->slot (make-array (list 0) :adjustable t :fill-pointer t)) 
+  (slot->mask (make-hash-table)) 
+  (size 0) 
+  (distinct-types (make-hash-table))
+  extended-slots
+  query-slots
+  (table (make-hash-table))
+  (types (list 'chunk))
+  (lock (bt:make-recursive-lock "chunk-type")))
+
+(defstruct act-r-chunk 
   "The internal structure of a chunk"
   name base-name
   documentation 
-  chunk-type 
-  creation-type
+  (filled-slots 0)
   slot-value-lists 
   copied-from
   merged-chunks
-  parameter-values)
+  parameter-values
+  immutable
+  (lock (bt:make-recursive-lock "chunk")))
 
 (defstruct act-r-chunk-parameter
   "The internal structure of a chunk parameter"
   name index default-value default-function merge copy copy-from-chunk accessor)
 
-(defstruct (act-r-event (:conc-name evt-)) 
+(defstruct act-r-event  
   "Internal ACT-R event"
   mstime priority action model mp module destination params details (output t)
-  wait-condition dynamic)
-
-(defun evt-time (event)
-  (when (numberp (evt-mstime event))
-    (* (evt-mstime event) .001)))
+  wait-condition dynamic precondition num)
 
 (defstruct (act-r-maintenance-event (:include act-r-event (output 'low)))
   "Events for system maintenance")
@@ -345,27 +557,18 @@
   "special event that repeatedly schedules a user's event"
   id)
 
-(defstruct (meta-processes (:conc-name mps-))
-  "The internal structure that holds meta-processes"
-  (table (make-hash-table))
-  (count 0)
-  current)
-
 (defstruct (meta-process (:conc-name meta-p-))
   "The internal representation of the meta-process"
-  name
   (time 0)
   start-time
   start-real-time
-  (models (make-hash-table :size 5))
-  current-model
+  (models nil)
+  
   (model-count 0)
   (model-name-len 0)
   events
   delayed
   dynamics
-  allow-dynamics
-  in-slack
   break
   pre-events
   post-events
@@ -373,37 +576,146 @@
   (time-function 'get-internal-real-time)
   (units-per-second internal-time-units-per-second)
   (slack-function 'real-time-slack)
-  
-  max-time-delta
-  max-time-maintenance
+  (time-mode 'interval)
   
   (next-hook-id 0)
   (hook-table (make-hash-table))
+  (event-hook-lock (bt:make-lock "mp-event-hooks"))
+  
   (version *actr-version-string*)
   (documentation "")
   (running nil)
-  time-overflow-warning
+  (run-lock (bt:make-lock "run-lock"))
   model-order
+  (models-lock (bt:make-lock "models-lock"))
+  default-model
   
-  (cannot-define-model 0))
+  (schedule-lock (bt:make-recursive-lock "schedule-lock"))
+  
+  (event-id 0)
+  temp-event
+  
+  
+  (lock-table (make-hash-table :test 'equal))
+  
+  (component-lock (bt:make-lock "component"))
+  component-list
+  (component-length 0)
+  )
+
+(let ((mp (make-meta-process)))
+  (defun current-mp ()
+    mp)
+  
+  (defun current-mp-fct ()
+    mp))
+
+(defstruct act-r-component
+  name
+  instance
+  destroy
+  clear-all
+  model-create
+  model-destroy
+  version
+  documentation
+  before-reset
+  after-reset)
+
+
+(defmacro verify-current-mp (warning &body body)
+  (declare (ignore warning))
+  `(progn ,@body))
+
+(defstruct act-r-output
+  "The internal structure of an output stream for the printing module"
+  stream file)
+
+(defclass printing-module ()
+  ((v :accessor printing-module-v :initform (make-act-r-output :stream t))
+   (c :accessor printing-module-c :initform (make-act-r-output :stream t))
+   (suppress-cmds :accessor printing-module-suppress-cmds :initform nil)
+   (filter :accessor printing-module-filter :initform nil)
+   (detail :accessor printing-module-detail :initform 'high)
+   (model-warnings :accessor printing-module-model-warnings :initform t)
+   (cbct :accessor printing-module-cbct :initform nil)
+   (one-time-tags :accessor printing-module-one-time-tags :initform nil)
+   (param-lock :accessor printing-module-param-lock :initform (bt:make-recursive-lock "printing-param"))
+   (capture-warnings :accessor printing-module-capture-warnings :initform nil :allocation :class)
+   (captured-warnings :accessor printing-module-captured-warnings :initform nil :allocation :class)
+   (printing-lock :accessor printing-module-lock :initform (bt:make-recursive-lock "printing-lock") :allocation :class)))
+
+
+;;; print-warning
+;;;
+;;; (defmacro print-warning (control-string &rest args))
+;;;
+;;; control-string is a control-string as would be passed to the format function
+;;; args are the arguments to use in that control string
+;;;
+;;; control-string and args are passed to format on the stream *error-output* 
+;;; with the text "#|Warning: " proceeding it and "|#" after it so that it would 
+;;; appear as a comment if the stream were to be read.
+;;;
+;;; nil is returned.  
+
+
+;;; variable for use in suppressing warnings
+;;;
+(defvar *act-r-warning-capture* (make-instance 'printing-module))
+
+
+(defmacro print-warning (message &rest arguments)
+  "Outputs a warning of message and arguments."
+  `(progn
+     (evaluate-act-r-command "print-warning" (format nil "~@?" ,message ,@arguments))
+     nil))
+
+
+
 
 (defstruct act-r-model
   "The internal structure of a model"
   (modules-table (make-hash-table)) 
+  (modules-lock (bt:make-lock "model-modules"))
+  (buffers-lock (bt:make-lock "model-buffers"))
   (buffers (make-hash-table))
+  (chunk-lock (bt:make-recursive-lock "model-chunk"))
   (chunks-table (make-hash-table))
   (chunk-ref-table (make-hash-table))
-  (chunk-types-table (make-hash-table))
-  (largest-chunk-type 0)
+  (chunk-types-info (make-act-r-chunk-type-info))
   name 
   code
+  
+  (chunk-updating-lock (bt:make-lock "model-chunk-updating"))
   (chunk-update t)
   (dynamic-update t)
   delete-chunks
   dynamic-update-hooks
   short-copy-names
-  ;device
-  )
+  
+  (tracked-requests-lock (bt:make-lock "tracked-requests"))
+  tracked-requests
+  (tracked-requests-id 0)
+  (lock-table (make-hash-table :test 'equal))
+  (buffer-state 0))
+
+(defvar *current-act-r-model* nil)
+
+(defmacro current-model-struct ()
+  `(or *current-act-r-model* (let ((mp (current-mp))) (bt:with-lock-held ((meta-p-models-lock mp)) (meta-p-default-model mp)))))
+
+(defmacro verify-current-model (warning &body body)
+  `(if (or *current-act-r-model* (let ((mp (current-mp))) (bt:with-lock-held ((meta-p-models-lock mp)) (meta-p-default-model mp))))
+       (progn ,@body)
+     (print-warning ,warning)))
+
+(defmacro with-current-model (warning &body body)
+  `(let ((current-model (or *current-act-r-model* (let ((mp (current-mp))) (bt:with-lock-held ((meta-p-models-lock mp)) (meta-p-default-model mp))))))
+     (if current-model
+         (progn ,@body)
+       (print-warning ,warning))))
+
 
 (defstruct act-r-modules
   "The internal structure that holds the modules"
@@ -413,13 +725,16 @@
   notify
   update
   run-notify
-  run-over-notify)
+  run-over-notify
+  sorted-names
+  (lock (bt:make-recursive-lock "modules")))
 
 (defstruct act-r-module 
   "The internal structure of a module"
   name buffers version documentation creation reset query
   request buffer-mod params delete notify-on-clear update
-  secondary-reset tertiary-reset warn search offset run-notify run-over-notify)
+  secondary-reset tertiary-reset warn search offset run-notify run-over-notify
+  external)
 
 (defstruct act-r-parameter 
   "The internal structure of a parameter"
@@ -431,20 +746,9 @@
   owner
   users)
 
-(defstruct printing-module
-  "The internal structure for an instance of the printing module"
-  (v (make-act-r-output :stream t))
-  (c (make-act-r-output :stream t))
-  (suppress-cmds nil)
-  (filter nil)
-  (detail 'high)
-  (model-warnings t)
-  (show-all-slots nil)
-  (cbct nil))
 
-(defstruct act-r-output
-  "The internal structure of an output stream for the printing module"
-  stream file)
+
+
 
 #|
 This library is free software; you can redistribute it and/or

@@ -13,7 +13,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; 
 ;;; Filename    : goal.lisp
-;;; Version     : 1.1
+;;; Version     : 2.1
 ;;; 
 ;;; Description : Implementation of the goal module.
 ;;; 
@@ -86,12 +86,51 @@
 ;;; 2008.09.19 Dan 
 ;;;             : * Moved the mod-request function to goal-style support
 ;;;             :   and changed the goal module's definition to use it.
+;;; 2013.03.20 Dan
+;;;             : * Minor edits while verifying that it'll work with the typeless
+;;;             :   chunk mechanism.
+;;; 2015.02.11 Dan [2.0]
+;;;             : * Change the default value for :ga from 1 to 0.  The imaginal
+;;;             :   buffer is now the only one which spreads activation by default.
+;;;             :   Should have made this change with the first version of 6.1.
+;;; 2015.06.04 Dan
+;;;             : * Use :time-in-ms t for all the scheduled events.
+;;; 2015.07.28 Dan
+;;;             : * Changed the logical to ACT-R-support in the require-compiled.
+;;; 2016.09.27 Dan [2.1]
+;;;             : * Mod-focus now does the modification in the scheduled event
+;;;             :   instead of directly which makes a goal-focus then mod-focus
+;;;             :   work which seems more natural for some simple situations.
+;;; 2016.11.23 Dan
+;;;             : * Modified goal-focus to work through the central dispatcher.
+;;; 2016.12.01 Dan
+;;;             : * Modified goal-focus-internal so that it will handle a string
+;;;             :   containing the name of a chunk as well as the symbol.
+;;; 2017.01.18 Dan
+;;;             : * Removed the echo-act-r-output from goal-focus.  The assumption
+;;;             :   now is that echoing is handled by the user.
+;;;             : * Use handle-evaluate-results.
+;;; 2017.01.30 Dan
+;;;             : * Add-act-r-command call parameters reordered.
+;;; 2017.02.08 Dan
+;;;             : * Reworked the local versions of the remote commands to not
+;;;             :   go out through the dispatcher.
+;;;             : * Added an external mod-focus command.
+;;; 2017.02.15 Dan
+;;;             : * For mod-focus, assume if the first item is a string then it
+;;;             :   needs to be decoded.
+;;; 2017.06.13 Dan
+;;;             : * Add a lock to protect goal-module-delayed.
+;;; 2017.12.13 Dan
+;;;             : * Why didn't goal-focus check whether there was a goal module?
+;;; 2018.06.12 Dan
+;;;             : * Only the external commands should convert strings to names.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
 ;;; 
 ;;; The goal module has one buffer called goal.
-;;; The source spread parameter of the goal is called :ga and defaults to 1.
+;;; The source spread parameter of the goal is called :ga and defaults to 0.
 ;;;
 ;;; The goal module responds to requests by creating a new chunk and placing it
 ;;; into the buffer.  The requests must be a unique specification of a chunk.
@@ -149,11 +188,11 @@
 
 ;;; Rely on the general functions in the goal-style-module 
 
-(require-compiled "GOAL-STYLE-MODULE" "ACT-R6:support;goal-style-module")
+(require-compiled "GOAL-STYLE-MODULE" "ACT-R-support:goal-style-module")
 
 ;;; Only need to record the chunk that will be stuffed into the buffer
 
-(defstruct goal-module delayed)
+(defstruct goal-module (lock (bt:make-lock "goal-module")) delayed)
 
 (defun create-goal-module (model-name)
   (declare (ignore model-name))
@@ -161,7 +200,8 @@
 
 
 (defun goal-reset (instance)
-  (setf (goal-module-delayed instance) nil)
+  (bt:with-lock-held ((goal-module-lock instance))
+    (setf (goal-module-delayed instance) nil))
   ; Do NOT strict harvest the goal buffer by default
   (sgp :do-not-harvest goal)
   )
@@ -184,9 +224,9 @@
 
 ;;; Actually define the module now
 
-(define-module-fct 'goal '((goal (:ga 1.0)))
+(define-module-fct 'goal '((goal (:ga 0.0)))
   nil
-  :version "1.1"
+  :version "2.1"
   :documentation "The goal module creates new goals for the goal buffer"
   :creation #'create-goal-module
   :query #'goal-query
@@ -208,56 +248,56 @@
 (defun goal-focus-fct (&optional (chunk-name nil))
   "Place a chunk into the goal buffer or return either the chunk that is there
    now or the one that will be placed there by a pending goal-focus"
-  (let ((g-module (get-module goal)))
-    (if chunk-name
-        (if (chunk-p-fct chunk-name)
-            (progn
-              
-              ;; Should it clear it immediately first?
-              
-              (schedule-set-buffer-chunk 'goal chunk-name 0 :module 'goal 
-                                         :priority :max :requested nil)
-              (schedule-event-after-module 'goal #'clear-delayed-goal :module 'goal 
-                                           :output nil  
-                                           :destination 'goal
-                                           :maintenance t)
-              
-              (setf (goal-module-delayed g-module) chunk-name)
-              chunk-name)
-          ;; This is a serious problem so don't use model-warning
-          (print-warning 
-           "~S is not the name of a chunk in the current model - goal-focus failed"
-           chunk-name))
-      
-      (let ((chunk (buffer-read 'goal))
-            (delayed (goal-module-delayed g-module)))
-        (cond ((and (null chunk) (null delayed))
-               (command-output "Goal buffer is empty")
-               nil)
-              ((null chunk)
-               (command-output "Will be a copy of ~a when the model runs" 
-                               delayed)
-               (pprint-chunks-fct (list delayed))
-               delayed)
-              ((null delayed)
-               (pprint-chunks-fct (list chunk))
-               chunk)
-              (t
-               (if (eq delayed (chunk-copied-from-fct chunk))
-                   ;; caught it before the delayed chunk was cleared
-                   (progn
-                     (pprint-chunks-fct (list chunk))
-                     chunk)
-                 (progn
-                   (command-output "Will be a copy of ~a when the model runs" 
-                                   delayed)
-                   (command-output "Currently holds:")
+    (let ((g-module (get-module goal)))
+      (when g-module
+        (if chunk-name
+              (if (chunk-p-fct chunk-name)
+                  (progn
+                    ;; Should it clear it immediately first?
+                    
+                    (schedule-set-buffer-chunk 'goal chunk-name 0 :time-in-ms t :module 'goal :priority :max :requested nil)
+                    (schedule-event-after-module 'goal 'clear-delayed-goal :module 'goal :output nil  
+                                                 :destination 'goal :maintenance t)
+                    
+                    (bt:with-lock-held ((goal-module-lock g-module))
+                      (setf (goal-module-delayed g-module) chunk-name))
+                    chunk-name)
+                ;; This is a serious problem so don't use model-warning
+                (print-warning "~S is not the name of a chunk in the current model - goal-focus failed" chunk-name))
+          
+          (let ((chunk (buffer-read 'goal))
+                (delayed   (bt:with-lock-held ((goal-module-lock g-module)) (goal-module-delayed g-module))))
+            (cond ((and (null chunk) (null delayed))
+                   (command-output "Goal buffer is empty")
+                   nil)
+                  ((null chunk)
+                   (command-output "Will be a copy of ~a when the model runs" delayed)
+                   (pprint-chunks-fct (list delayed))
+                   delayed)
+                  ((null delayed)
                    (pprint-chunks-fct (list chunk))
-                   delayed))))))))
+                   chunk)
+                  (t
+                   (if (eq delayed (chunk-copied-from-fct chunk))
+                       ;; caught it before the delayed chunk was cleared
+                       (progn
+                         (pprint-chunks-fct (list chunk))
+                         chunk)
+                     (progn
+                       (command-output "Will be a copy of ~a when the model runs" delayed)
+                       (command-output "Currently holds:")
+                       (pprint-chunks-fct (list chunk))
+                       delayed)))))))))
+
+(defun external-goal-focus (&optional (chunk-name nil))
+  (goal-focus-fct (string->name chunk-name)))
+
+(add-act-r-command "goal-focus" 'external-goal-focus "Schedule a chunk to enter the goal buffer at the current time or print the current goal buffer chunk. Params: {chunk-name}.")
 
 
 (defun clear-delayed-goal (instance)
-  (setf (goal-module-delayed instance) nil))
+  (bt:with-lock-held ((goal-module-lock instance))
+    (setf (goal-module-delayed instance) nil)))
 
 (defmacro mod-focus (&rest modifications)
   "Modify the chunk in the goal buffer as if by mod-chunk"
@@ -265,20 +305,42 @@
 
 (defun mod-focus-fct (modifications)
   "Modify the chunk in the goal buffer as if by mod-chunk-fct"
-  (let ((chunk (buffer-read 'goal)))
-    (if chunk
-        (progn
-          (schedule-event-relative 0 'goal-modification 
-                                   :module 'goal
-                                   :priority :max
-                                   :output 'medium)
-          (mod-chunk-fct chunk modifications))
-                                   
-      (print-warning "No chunk in the goal buffer to modify"))))
+  (let ((g-module (get-module goal)))
+    (when g-module
+      (let ((chunk (buffer-read 'goal))
+            (delayed (bt:with-lock-held ((goal-module-lock g-module)) (goal-module-delayed g-module))))
+        (if (or chunk delayed)
+            (progn
+              (if (oddp (length modifications))
+                  (print-warning "Odd length modifications list in call to mod-focus.")
+                (let ((slots nil))
+                  (do ((s modifications (cddr s)))
+                      ((null s))
+                    (if (find (car s) slots)
+                        (progn 
+                          (print-warning "Slot ~a used more than once in modifications list." (car s))
+                          (return-from mod-focus-fct))
+                      (push (car s) slots)))
+                  (cond ((not (every 'valid-slot-name slots))
+                         (print-warning "Invalid slot name ~s specified for mod-focus." 
+                                        (find-if (lambda (x) (not (valid-slot-name x))) slots)))
+                        (t
+                         (schedule-event-now 'goal-modification :module 'goal :params (list modifications) 
+                                             :priority :max :output 'medium :details (format nil "~a" 'goal-modification))
+                         (or delayed chunk))))))
+          
+          (print-warning "No chunk currently in the goal buffer and no pending goal-focus chunk to be modified."))))))
 
-(defun goal-modification ()
-  "Dummy function for mod-focus event"
-  nil)
+
+(defun mod-focus-external (&rest modifications)
+  (mod-focus-fct (decode-string-names modifications)))
+
+(add-act-r-command "mod-focus" 'mod-focus-external "Modify the chunk in the goal buffer using the slots and values provided. Params: '{<slot-name> <new-slot-value>}'*")
+
+
+
+(defun goal-modification (modifications)
+  (mod-buffer-chunk 'goal modifications))
 
 #|
 This library is free software; you can redistribute it and/or

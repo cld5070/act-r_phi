@@ -21,9 +21,14 @@
 ;;;             : code to open and manage an environment socket connection. 
 ;;; Bugs        : 
 ;;; 
-;;; Todo        : Reconstruct why all the error trapping ignores the
-;;;             : unbound-variable errors because that's a bad thing
-;;;             : for the stand-alone version...
+;;; Todo        : [ ] Currently stopping the environment doesn't cause the
+;;;             :     Tk side to cleanly destroy all windows and remove the
+;;;             :     handlers.  That could be an issue for something that
+;;;             :     needs to do some cleanup (like the history tools table).
+;;;             :     For now, special casing that table in the closing,
+;;;             :     but should look into having the close message be more
+;;;             :     thorough (some quick fix attempts ran into ugly issues
+;;;             :     with timing/waiting issues).
 ;;; 
 ;;; ----- History -----
 ;;;
@@ -223,489 +228,130 @@
 ;;;             : * Changed the flag on run-environment for LispWorks to
 ;;;             :   :lispworks6 instead of 6.0 so that 6.1 also works (and
 ;;;             :   presumably any other 6.x they create).
+;;; 2014.09.30 Dan
+;;;             : * Changed safe-evaluation from a defmethod to defun since
+;;;             :   it wasn't specifying types in the params list anyway.
+;;; 2015.02.20 Dan
+;;;             : * Connect-to-environment now passes the optional parameter
+;;;             :   for capturing the current stream as t to uni-run-process
+;;;             :   to avoid issues with the "AltConsole" in CCL.
+;;; 2015.07.28 Dan
+;;;             : * Changed the ACT-R6 logicals to ACT-R in the environment
+;;;             :   directory pathing.
+;;;             : * Changed ACT-R6;support to ACT-R-support in require compiled.
+;;; 2015.08.03 Dan
+;;;             : * Fix a bug with run-environment in CCL because with versions
+;;;             :   1.9 or newer it doesn't properly create the command line to
+;;;             :   evaluate when there are spaces in the path.
+;;; 2015.08.10 Dan
+;;;             : * Adjust the feature test for run-environment for Lispworks
+;;;             :   because v7 is available and assuming it works the same as
+;;;             :   the previous 2 so just removing the version check since
+;;;             :   I doubt that anyone is using v4 at this point.
+;;; 2016.01.14 Dan
+;;;             : * Added a run-environment for ACL+Linux.
+;;; 2016.04.14 Dan
+;;;             : * Added a dummy-env-handler function which does nothing so
+;;;             :   that I don't have to put the empty lambda in all the 
+;;;             :   environment tools...
+;;; 2016.06.02 Dan
+;;;             : * Added the Todo about fixing the close problem.
+;;;             : * Removed the old Todo because it seems like it's a non-
+;;;             :   issue now.
+;;;             : * The connection closing now clears the table of history
+;;;             :   data in *history-recorder-data-cache* when all connections
+;;;             :   are gone (fixing the close issue would eliminate the need
+;;;             :   for this).
+;;; 2016.06.09 Dan
+;;;             : * To avoid an undefined variable warning using a function
+;;;             :   to clear the history data cache which can be declaimed
+;;;             :   and defined in the history code.
+;;; 2017.08.08 Dan
+;;;             : * Uni-without-interrupts isn't needed since uni-send-string
+;;;             :   already has a lock around it...
+;;; 2017.08.28 Dan
+;;;             : * Removed everything except the run-environment functions
+;;;             :   since that's all that's needed.
+;;; 2017.10.13 Dan
+;;;             : * Updated the linux version in anticipation of a real
+;;;             :   application being there instead of assuming wish is 
+;;;             :   available.
+;;; 2018.03.30 Dan
+;;;             : * Run-environment for Mac and Linux CCL restores the 
+;;;             :   current directory -- why didn't it before?
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 #+:packaged-actr (in-package :act-r)
 #+(and :clean-actr (not :packaged-actr) :ALLEGRO-IDE) (in-package :cg-user)
 #-(or (not :clean-actr) :packaged-actr :ALLEGRO-IDE) (in-package :cl-user)
 
-(require-compiled "UNI-FILES" "ACT-R6:support;uni-files")
 
-(declaim (ftype (function (t t) t) delete-handler))
-(declaim (ftype (function (t) t) send-register))
-(declaim (ftype (function (t t) t) update-handler))
+;;; Adding a hack for a problem with how run-program creates the string that it
+;;; sends to Windows to execute because it doesn't properly escape spaces as of
+;;; CCL 1.9.
+;;; The fix was found here: http://comments.gmane.org/gmane.lisp.openmcl.devel/9030
 
-;;; The environment-control structure is created once and maintains all of the
-;;; top-level information about the state of all connected environments.
-
-(defstruct environment-control
-  address port connections handler-lock busy-flag stepper stepper-open windows pre-hook post-hook use-env-windows which-hook)
-
-(defstruct stepper-control
-  skip-type skip-val wait (handlers (make-hash-table)) current-event mode tutor-bindings tutor-responses)
-  
-(defvar *environment-control* (make-environment-control :address "127.0.0.1" :port 2621
-                                                        :connections nil :busy-flag nil
-                                                        :handler-lock (uni-make-lock "Environment Lock")
-                                                        :stepper (make-stepper-control)))
-
-
-;;; The environment-connection structure is created for each environment connection
-;;; and maintains all of the information necessary for handling that connection.
-
-(defstruct environment-connection
-  stream local process (handlers (make-hash-table)) (hooks (make-hash-table)) sync)
-
-
-(defun call-model-environment-hooks (hook &optional (value nil given))
-  (setf (environment-control-which-hook *environment-control*) hook)
-  
-  (dolist (connection (environment-control-connections *environment-control*))
-    (dolist (handler (gethash hook (environment-connection-hooks connection)))
-      (when (or (eq (handler-model handler) (current-model))
-                ;; Do I want to do it this way?  -- if there's no model set then just do it with current?
-                (null (handler-model handler)))
-        
-        (update-handler handler (if given value handler)))))
-  (setf (environment-control-which-hook *environment-control*) nil))
-
-
-(defun call-model-environment-hooks-with-return (hook &optional (value nil given))
-  (setf (environment-control-which-hook *environment-control*) hook)
-  (let ((val nil))
-    (dolist (connection (environment-control-connections *environment-control*))
-      (dolist (handler (gethash hook (environment-connection-hooks connection)))
-        (when (or (eq (handler-model handler) (current-model))
-                  ;; Do I want to do it this way?  -- if there's no model set then just do it with current?
-                  (null (handler-model handler)))
-          
-          (let ((r (update-handler handler (if given value handler))))
-            (when r
-              (setf val r))))))
-    (setf (environment-control-which-hook *environment-control*) nil)
-    val))
-
-(defun call-all-environment-hooks (hook &optional (value nil given))
-  
-  (setf (environment-control-which-hook *environment-control*) hook)
-  (dolist (connection (environment-control-connections *environment-control*))
-    (dolist (handler (gethash hook (environment-connection-hooks connection)))
-      (update-handler handler (if given value handler))))
-  (setf (environment-control-which-hook *environment-control*) nil)
-  )
-  
-(defun add-pre-hook-if-needed ()
-  (unless (environment-control-pre-hook *environment-control*)
-    (setf (environment-control-pre-hook *environment-control*)
-      (add-pre-event-hook #'(lambda (event)
-                              (call-all-environment-hooks 'pre event))))))
-
-(defun add-post-hook-if-needed ()
-  (unless (environment-control-post-hook *environment-control*)
-    (setf (environment-control-post-hook *environment-control*)
-      (add-post-event-hook #'(lambda (event)
-                               (call-all-environment-hooks 'post event))))))
-
-(defun delete-pre-hook-if-necessary ()
-  (when (and (environment-control-pre-hook *environment-control*)
-             (<= (length (mp-models)) 1))
-    (delete-event-hook (environment-control-pre-hook *environment-control*))
-    (setf (environment-control-pre-hook *environment-control*) nil)))
-
-(defun delete-post-hook-if-necessary ()
-  (when (and (environment-control-post-hook *environment-control*)
-             (<= (length (mp-models)) 1))
-    (delete-event-hook (environment-control-post-hook *environment-control*))
-    (setf (environment-control-post-hook *environment-control*) nil)))
-
-;;; These are the default address and port that will be used for connecting to 
-;;; the ACT-R Environment.
-;;; The port used on the Environment side is set in the 0-net-config.tcl file
-;;; and also defaults to 2621.
-
-(create-system-parameter :default-environment-port :valid-test 'posnum  :default-value 2621 
-                         :warning "positive number"
-                         :documentation "Default port for connecting to ACT-R Environment" 
-                         :handler (simple-system-param-handler (environment-control-port *environment-control*)))
-
-(create-system-parameter :default-environment-host :valid-test 'stringp :default-value "127.0.0.1"
-                         :warning "string of an ipaddress or full host name"
-                         :documentation "Default address for connecting to ACT-R Environment" 
-                         :handler (simple-system-param-handler (environment-control-address *environment-control*)))
-
-
-
-;;; close-connection
-;;; This function takes one parameter which should be an environment-connection,
-;;; a keywork parameter kill which defaults to t, and a keyword parameer send which
-;;; defaults to t.  If kill is t, then it kills the process that is associated with 
-;;; that connection.  The only time one wouldn't want to kill the process is if the 
-;;; close comes from within the process itself.  It always removes all the handlers 
-;;; in the table that are associated with that stream and then closes the stream.
-;;; If send is t then it sends the close notice to the Tcl/Tk side.  If the close
-;;; notice came from that side don't need to send one back.
-
-(defun close-connection (connection &key (kill t)(send t))
-  
-  (when (and kill (environment-connection-process connection))
-    (uni-process-kill (environment-connection-process connection)))
-  
-  (when send
-    (uni-without-interrupts
-     (ignore-errors 
-      (uni-send-string (environment-connection-stream connection) "close nil nil<end>"))))
-    
-    
-  (setf (environment-control-connections *environment-control*)
-    (remove connection (environment-control-connections *environment-control*)))
-  
-  (maphash #'(lambda (key value) 
-               (declare (ignore key))
-               (delete-handler value connection))
-           (environment-connection-handlers connection))
-  
-  (ignore-errors (close (environment-connection-stream connection))))
-
-;;; close-all-connections
-;;; This function takes no parameters. It kills all of the processes
-;;; that are handling environment connections, closes all of the 
-;;; sockets associated with them and removes all of the handlers from
-;;; the table.  It also clears the stepper open flag just in case the
-;;; environment was closed while a stepper was open.
-
-(defun close-all-connections ()
-  (dolist (connection (environment-control-connections *environment-control*))
-    (close-connection connection))
-  (setf (environment-control-stepper-open *environment-control*) nil))
-
-  
-;;; connect-to-environment 
-;;; It takes 4 keyword parameters. Clean specifies whether or not to close 
-;;; all open environment connections before making the new one, and it defaults 
-;;; to t.  The keywords host and port specify the address of the Tcl environment 
-;;; listening for a connection and default to the system-parameters 
-;;; :default-environment-port and :default-environment-host.
-;;; Background indicates whether the message-process function should
-;;; be run in a separate thread and defaults to t, if it is nil then
-;;; this command will not return until the environment connection is
-;;; broken which is only useful for use with building a standalone
-;;; environment.
-;;; This function opens a socket connection to that Tcl environment, starts
-;;; a process that will read and process the input on that socket, and returns
-;;; an environment-connection which handles that connection.
-
-(defun connect-to-environment (&key (clean t) (host nil) (port nil) (background t))
-  
-  (unless host
-    (setf host (car (ssp :default-environment-host))))
-  
-  (unless port
-    (setf port (car (ssp :default-environment-port))))
-  
-  (unless (numberp port)
-    (print-warning "Port must be a number.")
-    (return-from connect-to-environment nil))
-  
-  (unless (stringp host)
-    (print-warning "Host must be a string.")
-    (return-from connect-to-environment nil))
-  
-  (when clean
-    (close-all-connections))
-  
-  (multiple-value-bind (s err) 
-      (ignore-errors (uni-make-socket host port))
-    (if (and (subtypep (type-of err) 'condition)
-             (not (equal (type-of err) 'unbound-variable))) 
-        (uni-report-error err "Unable to Connect")
-      
-      (let ((connection (make-environment-connection 
-                         :stream s
-                         :local (if (string-equal host "127.0.0.1") 1 0))))
-        (if background
-            (progn 
-              (setf (environment-connection-process connection)
-                (uni-run-process "Environment-Connection" 
-                                 #'(lambda ()
-                                     (message-process connection))))
-              (push connection (environment-control-connections *environment-control*))
-              connection)
-          (progn 
-            (push connection (environment-control-connections *environment-control*))
-            (message-process connection)))))))
-
-;;; This variable can be tested in a handler to determine 
-;;; whether or not the current connection was a local one.
-
-(defvar *local-connection* nil)
-
-
-;;; message-process
-;;; This function takes one parameter which is the connection to
-;;; process messages for.
-;;; It reads the Tcl->Lisp commands from the socket (see
-;;; the messages.txt file for details) and creates a process to handle
-;;; each one as it arrives.  If there is a connection error or the socket
-;;; is closed then this function terminates.
-
-
-(defun message-process (connection)
-  (let ((old-string "") ;; be careful about new lines with Scott's read-line
-        (input-stream (environment-connection-stream connection)))
-    
-    (loop 
-      (unless (uni-wait-for-char input-stream)
-        (return))
-      
-      ;; read a line from the socket
-      (let ((current-string (multiple-value-bind (value condition)
-                                (ignore-errors (uni-socket-read-line input-stream))
-                              (if (subtypep (type-of condition) 'condition)
-                                  (progn
-                                    (uni-report-error condition "Read line failed")
-                                    (format *error-output* "Environment Connection ended.~%")
-                                    (close-connection connection :kill nil)
-                                    (return))
-                                value))))
-        
-          ;; check for the end marker because the line could have been split
-          (if (not (search "<end>" current-string :test #'string-equal))
-              (setf old-string (concatenate 'string old-string current-string))
-            
-            (progn
-              (setf current-string (concatenate 'string old-string current-string))
-              (setf old-string "")
-              
-              (multiple-value-bind (cmd-list condition)
-                  (ignore-errors (read-from-string current-string nil 'problem))
-                
-              
-                (cond ((subtypep (type-of condition) 'condition) ;; an error
-                       (uni-report-error condition (format nil "Error reading from message: ~s" current-string))
-                       ;; not closing connection anymore, maybe still should ?
-                       ;(format *error-output* "Closing connection to environment~%")
-                       ;(close-connection connection :kill nil)
-                       ;(return)
-                       )
-                      
-                      ((equal 'problem cmd-list) ;; not likely to occur now
-                       (format *error-output* "Invalid environment message ~s ~%" current-string)
-                       ;; don't close for this either, but again maybe it should
-                       ;(close-connection connection :kill nil)
-                       ;(return)
-                       )
-                      
-                      ((listp cmd-list) ;; any list is assumed to be a good cmd
-                       (let ((cmd-copy (copy-tree cmd-list)))
-                         (uni-run-process "Environment-Handler" 
-                                          #'(lambda () 
-                                                (unwind-protect 
-                                                    (progn
-                                                      (uni-lock (environment-control-handler-lock *environment-control*))
-                                                      (process-connection connection cmd-copy))
-                                                  (progn
-                                                    (uni-unlock (environment-control-handler-lock *environment-control*))))))))
-                      (t ;; anything else 
-                       (format *error-output* "Incorrect environment command recieved: ~S~%" current-string))))))))))
-
-
-;;; process-connection
-;;; This function takes 2 parameters connection which should be an environment-connection
-;;; and cmd-list which is the list containing the message.  This function gets 
-;;; called in a separate process for each message sent and does what the message requests:
-;;; create a new handler, remove a handler, update a handler, or just keep the connection
-;;; alive (an MCL issue).
-
-
-(defun process-connection (connection cmd-list) 
-  (let ((*local-connection* (environment-connection-local connection)))
-    
-    (case (car cmd-list) 
-      (create ;; make a new handler instance and send a register + update back
-       (if (or (= (length cmd-list) 6)(= (length cmd-list) 7))
-           (let ((new-handler (make-instance (second cmd-list) 
-                                :use-model (= (length cmd-list) 7)
-                                :model (if (= (length cmd-list) 7) (seventh cmd-list) nil)
-                                :socket (environment-connection-stream connection)
-                                :object-name (third cmd-list) 
-                                :target-name (fourth cmd-list)
-                                :update-form (functionify (fifth cmd-list)))))
-             (setf (gethash (name new-handler) (environment-connection-handlers connection)) new-handler)
-             (send-register new-handler)
-             (update-handler new-handler new-handler)
-             (dolist (x (sixth cmd-list))
-               (case x
-                 ((pre post conflict conflict-nil create delete reset run-start run-end)
-                  (push new-handler (gethash x (environment-connection-hooks connection))))
-                 (t (model-warning "Invalid hook ~s for handler ~S" x cmd-list)))))
-         (format *error-output* "Invalid create message: ~s" cmd-list)))
-      (update ;; change the update form if requested and send an update back
-       (cond ((= (length cmd-list) 2)
-              (let ((handler (gethash (second cmd-list) (environment-connection-handlers connection))))
-                (when handler
-                  (update-handler handler nil))
-                ;; the when used to be an if but now it'll just
-                ;; silently ignore removed handlers
-                ;(format *error-output* "Warning: update for removed handler ~S~%" (second cmd-list))
-                ))
-             ((= (length cmd-list) 3)
-              (let ((handler (gethash (second cmd-list) (environment-connection-handlers connection))))
-                (when handler
-                  (setf (update-form handler) (functionify (third cmd-list)))
-                  (update-handler handler nil))
-                ;; the when used to be an if but now it'll just
-                ;; silently ignore removed handlers
-                ;(format *error-output* "Warning: update for removed handler ~S~%" (second cmd-list))
-                ))
-             (t
-              (format *error-output* "Invalid update message: ~s" cmd-list))))
-      (remove ;; take the handler off the lists and free its name
-              ;; calling the optional end function if necessary
-       (cond ((or (= (length cmd-list) 2) (= (length cmd-list) 3))
-              (let ((handler (gethash (second cmd-list) (environment-connection-handlers connection))))
-                
-                ;; This should be unnecessary now since it locks out handling 
-                ;; and a create must finish before the remove could be processed
-                ;(while (null handler)
-                ;  (uni-process-system-events)
-                ;  (setf handler (gethash (second cmd-list) (environment-connection-handlers connection))))
-                
-                (when (= (length cmd-list) 3)
-                  (safe-evaluation (third cmd-list) handler))
-                
-                (delete-handler handler connection)))
-             (t (format *error-output* "Invalid remove message: ~s" cmd-list))))
-      (k-a ;; don't do anything - just to make sure the socket doesn't timeout
-       (ignore-errors (uni-send-string (environment-connection-stream connection) (format nil "ka nil nil<end>~%"))))
-      (sync
-       (setf (environment-connection-sync connection) t))
-      (goodbye ;; kill the connection
-       (format *error-output* "Environment Closed~%")
-       (finish-output *error-output*)
-       (close-connection connection :kill t :send nil))
-      (t 
-       (format *error-output* "Invalid command request: ~s~%" cmd-list)))))
-
-(defmethod safe-evaluation (form handler)
-    (let ((model (aif (handler-model handler) it (current-model))))
-    (if (and model (find model (mp-models)))
-        
-        (with-model-eval model
-          (multiple-value-bind (result err)
-              (ignore-errors (funcall (functionify form)))
-            (if (and (subtypep (type-of err) 'condition)
-                     (not (equal (type-of err) 'unbound-variable)))
-                (progn
-                  (format t "~S~%" (type-of err))
-                  (uni-report-error err (format nil "Error in remove message for: ~S~%Removing: ~S~%Message: ~S~%" 
-                                          (name handler) (obj-name handler) form))
-                  
-                  (values nil nil))
-              (values result t))))
-      (multiple-value-bind (result err)
-          (ignore-errors (funcall (functionify form)))
-        (if (and (subtypep (type-of err) 'condition)
-                 (not (equal (type-of err) 'unbound-variable)))
-            (progn
-              (format t "~S~%" (type-of err))
-              (uni-report-error err (format nil "Error in remove message for: ~S~%Removing: ~S~%Message: ~S~%" 
-                                      (name handler) (obj-name handler) form))
-              
-              (values nil nil))
-          (values result t))))))
-
-;;; Primary functions to connect/disconnect the environment.
-
-(defun start-environment ()
-  (if (environment-control-connections *environment-control*)
-      (format t "There is already a connection to the environment.~%You should either stop that first, or if you want to connect to a second or remote environment use the connect-to-environment command~%")
-    (if (and (fboundp 'uni-run-process) (fboundp 'uni-make-socket))
-        (connect-to-environment)
-      (progn
-        (print-warning "The ACT-R Environment cannot be used with the current Lisp.")
-        (print-warning "Please see the docs/QuickStart.txt file for a list of compatable Lisp versions.")))))
-
-(defun stop-environment ()
-  (if (> (length (environment-control-connections *environment-control*)) 1)
-      (format t "There is more than one environment currently connected.~%You must use either close-all-connections to stop them all or close-connection to stop a specific one.~%")
-    (close-all-connections)))
-
-
-(defun wait-for-environment (&optional (max-delay 10))
-  "Send sync pulse to all current env connections and wait for all to respond or max-delay seconds to pass"
-  (let ((start-time (get-internal-real-time)))
-    
-    (dolist (connection (environment-control-connections *environment-control*))
-      (setf (environment-connection-sync connection) nil)
-      (ignore-errors (uni-send-string (environment-connection-stream connection) (format nil "sync nil nil<end>~%"))))
-    
-    (uni-wait-for 
-     (lambda ()
-       (or (every 'environment-connection-sync (environment-control-connections *environment-control*))
-           (> (/ (- (get-internal-real-time) start-time) internal-time-units-per-second) max-delay))))))
+#+(and :ccl :windows :ccl-1.9)
+(let ((*WARN-IF-REDEFINE-KERNEL* nil))
+  (defun ccl::make-windows-command-line (strings)
+    (setf strings (mapcar 'prin1-to-string strings))
+    (reduce (lambda (s1 s2) (concatenate 'string s1 " " s2))
+            (cdr strings) :initial-value (car strings))))
 
 
 #+(and :ccl :windows)
-(defun run-environment (&optional (delay 5))
-  (run-program (namestring (translate-logical-pathname "ACT-R6:environment;start environment.exe")) nil :wait nil)
-  (sleep delay)
-  (while (null (start-environment)) (sleep delay)))
+(defun run-environment ()
+  (run-program (namestring (translate-logical-pathname "ACT-R:environment;start environment.exe")) nil :wait nil))
 
 #+(and :ccl :linux)
-(defun run-environment (&optional (delay 5))
+(defun run-environment ()
   (let ((c (ccl::cd "."))) 
-    (ccl::cd "ACT-R6:environment;GUI")
-    (run-program "wish" (list "starter.tcl") :wait nil)
-    (sleep delay)
-    (while (null (start-environment)) (sleep delay))
+    (ccl::cd "ACT-R:environment")
+    (run-program "./start environment Linux" nil :wait nil)
     (ccl::cd c)))
 
 #+(and :ccl :darwin)
-(defun run-environment (&optional (delay 5))
+(defun run-environment ()
   (let ((c (ccl::cd "."))) 
-    (ccl::cd "ACT-R6:environment")
-    (run-program (namestring (translate-logical-pathname "ACT-R6:environment;Start Environment OSX.app;Contents;MacOS;start-environment-osx")) nil :wait nil)
-    (sleep delay)
-    (while (null (start-environment)) (sleep delay))
+    (ccl::cd "ACT-R:environment")
+    (run-program (namestring (translate-logical-pathname "ACT-R:environment;Start Environment OSX.app;Contents;MacOS;start-environment-osx")) nil :wait nil)
     (ccl::cd c)))
 
-#+(and :lispworks (or :win32 :win64) (or :lispworks5 :lispworks6))
-(defun run-environment (&optional (delay 5))
-  (sys:call-system "\"Start Environment.exe\"" :current-directory (translate-logical-pathname "ACT-R6:environment") :wait nil)
-  (sleep delay)
-  (while (null (start-environment)) (sleep delay)))
+#+(and :lispworks (or :win32 :win64))
+(defun run-environment ()
+  (sys:call-system "\"Start Environment.exe\"" :current-directory (translate-logical-pathname "ACT-R:environment") :wait nil))
 
 #+(and :lispworks :macosx)
-(defun run-environment (&optional (delay 5))
+(defun run-environment ()
   (sys:call-system (format nil "'~a/Start Environment OSX.app/Contents/MacOS/start-environment-osx'"
-                     (namestring (translate-logical-pathname "ACT-R6:environment")))
-                   :wait nil)
-  (sleep delay)
-  (while (null (start-environment)) (sleep delay)))
+                     (namestring (translate-logical-pathname "ACT-R:environment")))
+                   :wait nil))
 
 
 #+(and :allegro :mswindows)
-(defun run-environment (&optional (delay 5))
+(defun run-environment ()
   (let ((c (current-directory)))
-    (chdir "ACT-R6:environment")
+    (chdir "ACT-R:environment")
     (run-shell-command "\"Start Environment.exe\"" :wait nil)
-    (chdir c))
-  (sleep delay)
-  (while (null (start-environment)) (sleep delay)))
+    (chdir c)))
 
 #+(and :allegro :macosx)
-(defun run-environment (&optional (delay 5))
+(defun run-environment ()
   (let ((c (current-directory)))
-    (chdir "ACT-R6:environment")
+    (chdir "ACT-R:environment")
     (run-shell-command "'Start Environment OSX.app/Contents/MacOS/start-environment-osx'" :wait nil)
-    (chdir c))
-  (sleep delay)
-  (while (null (start-environment)) (sleep delay)))
+    (chdir c)))
 
+
+#+(and :allegro :linux)
+(defun run-environment ()
+  (let ((c (current-directory)))
+    (chdir "ACT-R:environment;GUI")
+    (run-shell-command "./starter.tcl" :wait nil)
+    (chdir c)))
 
 (unless (fboundp 'run-environment)
-  (defun run-environment (&optional (delay 0))
-    (declare (ignore delay))
+  (defun run-environment ()
     (print-warning "The run-environment command is not available for your current Lisp & OS combination.")))
 
 #|

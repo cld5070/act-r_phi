@@ -1,4 +1,4 @@
-;;;  -*- mode: LISP; Package: CL-USER; Syntax: COMMON-LISP;  Base: 10 -*-
+;;;  -*- mode: LISP; Syntax: COMMON-LISP;  Base: 10 -*-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; 
 ;;; Author      : Dan Bothell 
@@ -7,16 +7,16 @@
 ;;;             : Pittsburgh,PA 15213-3890
 ;;;             : db30+@andrew.cmu.edu
 ;;; 
-;;; Copyright   : (c)2002-2005 Dan Bothell
+;;; Copyright   : (c)2002-2017 Dan Bothell
 ;;; Availability: Covered by the GNU LGPL, see LGPL.txt
 ;;; 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; 
-;;; Filename    : loader.lisp
-;;; Version     : 2.0
+;;; Filename    : environment-loader.lisp
+;;; Version     : 3.0
 ;;; 
-;;; Description : Mostly system dependent code.
-;;;             : Just use a simple load file to start things up.
+;;; Description : 
+;;;             : Just use a simple load file to get the environment files loaded.
 ;;; Bugs        : 
 ;;; 
 ;;; Todo        : 
@@ -54,6 +54,13 @@
 ;;;             : * Removed everything using the :ACTR-ENV-ALONE switches and
 ;;;             :   some other code that was commented out long ago.
 ;;;             : * Moved the allegro require :sock to uni-files.
+;;; 2015.07.28 Dan
+;;;             : * Updated the logical pathnames to use ACT-R and ACT-R-support.
+;;; 2017.09.06 Dan [3.0]
+;;;             : * Strip out the mcl version and get rid of the files that
+;;;             :   aren't needed any more.
+;;; 2017.09.13 Dan
+;;;             : * Take env-device out of the list.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -70,34 +77,17 @@
   (pushnew :actr-environment *features*))
 
 
-(require-compiled "UNI-FILES" "ACT-R6:support;uni-files")
-
-
-#+(and :mcl (not :openmcl))
-(defparameter *environment-file-list* '("handler-class.lisp"
-                                        "server.lisp"
-                                        "env-module.lisp" 
-                                        "mcl-fix.lisp"
-                                        "handlers.lisp"
+(defparameter *environment-file-list* '("server.lisp"
                                         "environment-cmds.lisp"
                                         "stepper-control.lisp"
-                                        "env-device.lisp"))
-
-#-(and :mcl (not :openmcl))
-(defparameter *environment-file-list* '("handler-class.lisp"
-                                        "server.lisp"
-                                        "env-module.lisp" 
-                                        "handlers.lisp"
-                                        "environment-cmds.lisp"
-                                        "stepper-control.lisp"
-                                        "env-device.lisp"))
+                                        ))
 
 #+:abcl (setf *environment-file-list* nil)
 
 ;;; Finally, just loop over the file list and load them
 
 (dolist (x *environment-file-list*)
-  (compile-and-load (translate-logical-pathname (format nil "ACT-R6:environment;~a" x))))
+  (compile-and-load (translate-logical-pathname (format nil "ACT-R:environment;~a" x))))
 
 #|
 This library is free software; you can redistribute it and/or

@@ -13,7 +13,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; 
 ;;; Filename    : procedural-cmds.lisp
-;;; Version     : 1.2
+;;; Version     : 2.0
 ;;; 
 ;;; Description : User functions for the procedural module.
 ;;; 
@@ -319,6 +319,71 @@
 ;;;             : * Changed declare-buffer-usage to also allow suppressing the
 ;;;             :   "modified without use" style warnings by adding the slots to
 ;;;             :   the procedural-cond-style-usage-table as well.
+;;; 2014.04.07 Dan
+;;;             : * Changed calls to failure-reason-string to not pass procedural.
+;;; 2014.05.11 Dan [2.0]
+;;;             : * Updates to be consistent with the no chunk-type mechanisms.
+;;; 2015.07.28 Dan
+;;;             : * Changed the logical to ACT-R-support in the require-compiled.
+;;; 2015.09.11 Dan
+;;;             : * Add the require for productions here eventhough the procedural
+;;;             :   module will have certainly loaded it already.
+;;; 2016.11.23 Dan
+;;;             : * Add a dispatch version of whynot.
+;;; 2016.12.02 Dan
+;;;             : * Allow whynot-internal to accept strings for the names of
+;;;             :   the productions as well as the symbols.
+;;; 2017.01.18 Dan
+;;;             : * Removed the echo-act-r-output from whynot.  The assumption
+;;;             :   now is that echoing is handled by the user.
+;;;             : * Use handle-evaluate-results.
+;;; 2017.01.30 Dan
+;;;             : * Add-act-r-command call parameters reordered.
+;;; 2017.02.03 Dan
+;;;             : * Make penable and pdisable available remotely and allow them
+;;;             :   to take strings with names.
+;;; 2017.02.08 Dan
+;;;             : * Reworked the local versions of the remote commands to not
+;;;             :   go out through the dispatcher.
+;;; 2017.08.11 Dan
+;;;             : * Lock access to procedural-productions.
+;;;             : * Allow pdisable to disable everything if nil provided.
+;;; 2017.08.16 Dan
+;;;             : * Fixed a bug with the return values from penable and pdisable.
+;;; 2017.09.05 Dan
+;;;             : * Make all-productions remotely available.
+;;; 2017.10.02 Dan
+;;;             : * Added the used-production-buffers command since that's useful
+;;;             :   for the Environment to initialize things.
+;;; 2017.11.16 Dan
+;;;             : * Added a remote version of pp.
+;;; 2017.12.20 Dan
+;;;             : * Fix a bug in pbreak and punbreak.
+;;; 2018.01.04 Dan
+;;;             : * Added remote versions of pbreak and punbreak.
+;;; 2018.04.18 Dan
+;;;             : * Added remote clear-productions.
+;;; 2018.06.12 Dan
+;;;             : * Reworked external commands so that only external does the
+;;;             :   string->name processing.
+;;; 2018.06.13 Dan
+;;;             : * Fixed a bug in whynot-fct from the previous update.
+;;; 2018.08.17 Dan
+;;;             : * Can assume last-cr-time is a number.
+;;; 2018.08.20 Dan
+;;;             : * Use the same code to initialize the buffer-lookup as is used
+;;;             :   in conflict-resolution (necessary if whynot used first).
+;;; 2018.09.04 Dan
+;;;             : * Undo the last two updates since that change to pattern 
+;;;             :   matching wasn't better in general.
+;;; 2019.01.15 Dan
+;;;             : * Only rebuild the lookup tables when needed -- just reset the
+;;;             :   values otherwise.
+;;; 2019.01.17 Dan
+;;;             : * Use an alist for the saved-search-chunk in production matching.
+;;; 2019.02.13 Dan
+;;;             : * Add the buffer-state test to pmatches-internal so that the
+;;;             :   whynot information matches the crt info.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -348,8 +413,8 @@
 (declaim (ftype (function () t) minimum-utility))
 (declaim (ftype (function (t) t) production-utility))
 
-
-(require-compiled "PRODUCTION-PARSING" "ACT-R6:support;production-parsing-support")
+(require-compiled "PRODUCTIONS" "ACT-R-support:productions")
+(require-compiled "PRODUCTION-PARSING" "ACT-R-support:production-parsing-support")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; The user functions mostly from ACT-R 5
@@ -357,7 +422,9 @@
 (defun all-productions ()
   (let ((prod (get-module procedural)))
     (when prod
-      (mapcar #'production-name (productions-list prod)))))
+      (mapcar 'production-name (productions-list prod)))))
+
+(add-act-r-command "all-productions" 'all-productions "Returns a list of all the production names in the current model. No params.")
 
 (defmacro pp (&rest productions)
   `(pp-fct ',productions))
@@ -367,7 +434,7 @@
     (if prod
         (let ((res nil)
               (p (if (null productions) 
-                     (mapcar #'production-name (productions-list prod))
+                     (mapcar 'production-name (productions-list prod))
                    productions)))
           (dolist (p-name p)
             (let ((production (get-production-internal p-name prod)))
@@ -378,6 +445,11 @@
                 (print-warning "No production named ~S is defined" p-name))))
           (reverse res))
       (print-warning "No procedural module found"))))
+
+(defun pp-external (&rest productions)
+  (pp-fct (string->name-recursive productions)))
+
+(add-act-r-command "pp" 'pp-external "Prints the internal representation of the productions with the given names or all if none provided. Params: p-name*.")
 
 (defun clear-productions ()
   (let ((prod (get-module procedural)))
@@ -395,6 +467,7 @@
             (remove-production p prod)))
       (print-warning "No procedural module was found."))))
 
+(add-act-r-command "clear-productions" 'clear-productions "Remove all productions from the current model. No params.")
 
 (defmacro pbreak (&rest productions)
   `(pbreak-fct ',productions))
@@ -403,14 +476,22 @@
   (if (current-model)
       (progn
         (dolist (production productions)
-          (aif (get-production production)
-               (setf (production-break it) t)
+            (aif (get-production production)
+               (bt:with-recursive-lock-held ((production-lock it))
+                 (setf (production-break it) t))
                (print-warning "~s is not the name of a production" production)))
         (let ((res nil))
           (dolist (production (all-productions) res)
-            (when (production-break (get-production production))
-              (push production res)))))
+            (let ((p (get-production production)))
+              (bt:with-recursive-lock-held ((production-lock p))
+              (when (production-break p)
+                (push production res)))))))
     (print-warning "There is no current model - pbreak cannot be used.")))
+
+(defun pbreak-external (&rest productions)
+  (pbreak-fct (string->name-recursive productions)))
+
+(add-act-r-command "pbreak" 'pbreak-external "Pbreak causes the scheduler to stop when the specified productions are selected. Params: production-name*.")
 
 
 (defmacro punbreak (&rest productions)
@@ -422,16 +503,22 @@
         (dolist (production (if (null productions)
                                 (all-productions)
                               productions))
-          (aif (get-production production)
-               (setf (production-break it) nil)
+            (aif (get-production production)
+               (bt:with-recursive-lock-held ((production-lock it))
+                 (setf (production-break it) nil))
                (print-warning "~s is not the name of a production" production)))
         (let ((res nil))
           (dolist (production (all-productions) res)
-            (when (production-break (get-production production))
-              (push production res)))))
+            (let ((p (get-production production)))
+              (bt:with-recursive-lock-held ((production-lock p))
+              (when (production-break p)
+                (push production res)))))))
     (print-warning "There is no current model - punbreak cannot be used.")))
-  
 
+(defun punbreak-external (&rest productions)
+  (punbreak-fct (string->name-recursive productions)))
+
+(add-act-r-command "punbreak" 'punbreak-external "Punbreak removes the break flag from the specified productions. Params: production-name*.")
 
 
 (defmacro pdisable (&rest productions)
@@ -439,34 +526,55 @@
 
 (defun pdisable-fct (productions)
   (if (current-model)
-      (progn
-        (dolist (production productions)
-          (aif (get-production production)
-               (setf (production-disabled it) t)
+      (let ((all-productions (all-productions)))
+        (dolist (production (if (null productions)
+                                all-productions
+                              productions))
+            (aif (get-production production)
+                 (bt:with-recursive-lock-held ((production-lock it))
+                   (setf (production-disabled it) t))
                (print-warning "~s is not the name of a production" production)))
         (let ((res nil))
-          (dolist (production (all-productions) res)
-            (when (production-disabled (get-production production))
-              (push production res)))))
+          (dolist (p-name all-productions res)
+            (let ((production (get-production p-name)))
+              (bt:with-recursive-lock-held ((production-lock production))
+                (when (production-disabled production)
+                  (push p-name res)))))))
     (print-warning "There is no current model - pdisable cannot be used.")))
+
+(defun pdisable-external (&rest productions)
+  (pdisable-fct (string->name-recursive productions)))
+
+(add-act-r-command "pdisable" 'pdisable-external "Prevent the specified productions from being selected. Params: production-name*.")
+
 
 (defmacro penable (&rest productions)
   `(penable-fct ',productions))
 
 (defun penable-fct (productions)
   (if (current-model)
-      (progn
+      (let ((all-productions (all-productions)))
         (dolist (production (if (null productions)
-                                (all-productions)
+                                all-productions
                               productions))
-          (aif (get-production production)
-               (setf (production-disabled it) nil)
+            (aif (get-production production)
+                 (bt:with-recursive-lock-held ((production-lock it))
+                   (setf (production-disabled it) nil))
                (print-warning "~s is not the name of a production" production)))
         (let ((res nil))
-          (dolist (production (all-productions) res)
-            (when (production-disabled (get-production production))
-              (push production res)))))
+          (dolist (p-name all-productions res)
+            (let ((production (get-production p-name)))
+              (bt:with-recursive-lock-held ((production-lock production))
+                (when (production-disabled production)
+                (push p-name res)))))))
     (print-warning "There is no current model - penable cannot be used.")))
+
+(defun penable-external (&rest productions)
+  (penable-fct (string->name-recursive productions)))
+
+(add-act-r-command "penable" 'penable-external "Restore the specified productions which were disabled. Params: production-name*.")
+
+
 
 (defmacro whynot (&rest productions)
   `(whynot-fct ',productions))
@@ -484,10 +592,11 @@
           (let ((production (get-production production-name)))
             (if (null production)
                 (command-output "~%~s does not name a production." production-name)
-              (if (production-disabled production)
+              (bt:with-recursive-lock-held ((production-lock production))
+                (if (production-disabled production)
                   (command-output "~%Production ~s is disabled." production-name)
                 (if (member production-name conflict-set)
-                    (if (and (procedural-ppm procedural) (production-partial-matched-slots production))
+                    (if (and (bt:with-lock-held ((procedural-param-lock procedural)) (procedural-ppm procedural)) (production-partial-matched-slots production))
                         (progn ;; It's only a partial match
                           (command-output "~%Production ~s partially matches the current state:" production-name)
                           (print-instantiation production)
@@ -503,7 +612,7 @@
                         (let ((ut (car (no-output (sgp :ut)))))
                           (when (and (numberp ut)
                                      (numberp (production-utility production-name))
-                                     (< (production-utility production-name) ut))
+                                     (< (production-utility production) ut))
                             (command-output "Utility was below the threshold the last time it was in the conflict set.")))))
                   (progn
                     (command-output "~%Production ~s does NOT match." production-name)
@@ -511,17 +620,23 @@
                     (print-production production)
                     
                     (command-output "It fails because: ")
-                    (command-output (failure-reason-string (production-failure-condition production) procedural production))))))))
+                    (command-output (failure-reason-string (production-failure-condition production) production)))))))))
         conflict-set)
     (print-warning "Whynot called with no current model.")))
 
+(defun whynot-external (&rest productions)
+  (whynot-fct (string->name-recursive productions)))
 
+
+(add-act-r-command "whynot" 'whynot-external "Print the production matching details for specified productions. Params: production-name*.")
+
+  
 (defun production-failure-reason (p-name)
-  (let ((procedural (get-module procedural))
-        (production (get-production p-name)))
-    (if (and production (production-failure-condition production))
-        (failure-reason-string (production-failure-condition production) procedural production)
-      "")))
+  (let ((production (get-production p-name)))
+    (bt:with-recursive-lock-held ((production-lock production))
+      (if (and production (production-failure-condition production))
+          (failure-reason-string (production-failure-condition production) production)
+        ""))))
 
 (defun pmatches ()
   (let ((procedural (get-module procedural)))
@@ -531,66 +646,81 @@
     
 (defun pmatches-internal (procedural)
   
-  (setf (procedural-buffer-lookup procedural) (make-array (list (procedural-buffer-lookup-size procedural)) :initial-element :untested))
-  (setf (procedural-slot-lookup procedural) (make-array (list (procedural-buffer-lookup-size procedural) (largest-chunk-type-size)) :initial-element :untested))
-  
-  (unless (and (numberp (procedural-last-cr-time procedural)) (= (procedural-last-cr-time procedural) (mp-time-ms)))
-    (clrhash (procedural-search-buffer-table procedural)))
-  
+  (bt:with-lock-held ((procedural-cr-lock procedural))
+    (if (null (procedural-buffer-lookup procedural))
+        (setf (procedural-buffer-lookup procedural) (make-array (list (procedural-buffer-lookup-size procedural)) :initial-element :untested))
+      (fill (procedural-buffer-lookup procedural) :untested :start 0 :end (procedural-buffer-lookup-size procedural)))
+                     
+    (if (or (null (procedural-slot-lookup procedural))
+            (not (= (largest-chunk-type-size) (procedural-largest-chunk-type procedural))))
+        (progn
+          (setf (procedural-largest-chunk-type procedural) (largest-chunk-type-size))
+          (setf (procedural-slot-lookup procedural) (make-array (list (procedural-buffer-lookup-size procedural) (largest-chunk-type-size)) :initial-element :untested)))
+      (dolist (x (procedural-slot-used procedural) (setf (procedural-slot-used procedural) nil))
+        (setf (aref (procedural-slot-lookup procedural) (car x) (cdr x)) :untested)))
+    
+    (unless (and (numberp (procedural-last-cr-time procedural)) (= (procedural-last-cr-time procedural) (mp-time-ms)))
+      (clrhash (procedural-search-buffer-table procedural)))
+    
+    (bt:with-lock-held ((procedural-param-lock procedural))
     (let ((conflict-set nil)
-         ;(hook-set nil)
-         ;(best nil)
-         ;(best-ut (minimum-utility))
-         ;(mu best-ut)
-         ;(offsets-table (make-hash-table))
-         
-         (saved-search-chunks (make-hash-table)))
-    
-    
-    (dolist (b (procedural-used-search-buffers procedural))
-      (aif (buffer-read b)
-           (setf (gethash b saved-search-chunks) it)
-           (setf (gethash b saved-search-chunks) :clear)))
-    
-    
-    (dolist (production (procedural-productions procedural))
+          (saved-search-chunks nil)
+          (buffer-state (let ((m (current-model-struct)))
+                          (bt:with-lock-held ((act-r-model-buffers-lock m))
+                            (act-r-model-buffer-state m)))))
       
-      (setf (production-bindings production) nil)
-      (setf (production-failure-condition production) nil)
+      (dolist (b (procedural-used-search-buffers procedural))
+        (aif (buffer-read b)
+             (push (cons b it) saved-search-chunks)
+             (push (cons b :clear) saved-search-chunks)))
       
-      (setf (procedural-current-p procedural) production)
-      (setf (production-partial-matched-slots production) nil)
       
-      (unless (production-disabled production)
-                
-        (when (and (conflict-tests procedural (production-constants production) production 'test-constant-condition :report nil)
-                   (conflict-tests procedural (production-binds production) production 'test-and-perform-bindings :report nil)
-                   (conflict-tests procedural (production-others production) production 'test-other-condition :report nil)
-                   (conflict-tests procedural (production-searches production) production 'test-search-buffers :report nil)
-                   (conflict-tests procedural (production-search-binds production) production 'test-and-perform-bindings :report nil)
-                   (conflict-tests procedural (production-search-others production) production 'test-other-condition :report nil)
-                   ) 
+      (dolist (production (productions-list procedural))
+        (bt:with-recursive-lock-held ((production-lock production))
+          (setf (production-bindings production) nil)
+          (setf (production-failure-condition production) nil)
           
-          (push-last production conflict-set))))
+          (setf (procedural-current-p procedural) production)
+          (setf (production-partial-matched-slots production) nil)
+          
+          (unless (production-disabled production)
+            
+            (when (and (test-buffer-states procedural production buffer-state :report nil)
+                       (conflict-tests procedural (production-constants production) production 'test-constant-condition :report nil)
+                       (conflict-tests procedural (production-binds production) production 'test-and-perform-bindings :report nil)
+                       (conflict-tests procedural (production-others production) production 'test-other-condition :report nil)
+                       (conflict-tests procedural (production-searches production) production 'test-search-buffers :report nil)
+                       (conflict-tests procedural (production-search-binds production) production 'test-and-perform-bindings :report nil)
+                       (conflict-tests procedural (production-search-others production) production 'test-other-condition :report nil)) 
+              
+              (push-last production conflict-set)))))
       
       
       (dolist (b (procedural-used-search-buffers procedural))
-        (let ((val (gethash b saved-search-chunks)))
+        (let ((val (assoc b saved-search-chunks)))
           (when val
-            (if (eq val :clear)
-                  (erase-buffer b)
-              (overwrite-buffer-chunk b val)))))
-             
+            (if (eq (cdr val) :clear)
+                (erase-buffer b)
+              (overwrite-buffer-chunk b (cdr val))))))
+      
       
       (dolist (production conflict-set)
         (print-instantiation production))
-    
-      (mapcar #'production-name conflict-set)))
+      
+      (mapcar 'production-name conflict-set)))))
   
   
+(defun used-production-buffers () 
+  (let ((prod (get-module procedural)))
+    (when prod
+      (let* ((productions (productions-list prod))
+             (used (when productions (list 'production))))
+        (bt:with-lock-held ((procedural-cr-lock prod))
+          (setf used (append used (mapcar 'car (procedural-buffer-indices prod)))))
+        used))))
 
-                                         
-                                         
+(add-act-r-command "used-production-buffers" 'used-production-buffers "Returns a list of all the buffers which are used in the productions of the current model. No params.")
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;This section is production parsing
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -609,7 +739,7 @@
 (defun p-fct (definition)
   (let ((prod (get-module procedural)))  
     (if (procedural-p prod)  
-        (create-production prod definition nil) 
+        (create-production prod definition) 
       (print-warning "No procedural modulue found cannot create production."))))
 
 
@@ -637,21 +767,19 @@
               ((not (or (eq slots :all)
                         (and (listp slots) (= (length slots) 1) (eq (car slots) :all))
                         (every (lambda (x)
-                                 (possible-chunk-type-slot type x))
+                                 (valid-chunk-type-slot type x))
                                slots)))
                (print-warning "Cannot declare usage for buffer ~s because the slots (~{~s~^ ~}) are not valid for chunk-type ~s." 
                               buffer (remove-if (lambda (x) 
-                                                  (possible-chunk-type-slot type x))
+                                                  (valid-chunk-type-slot type x))
                                                 slots)
                               type))
               (t
                (when (or (eq slots :all)
                          (and (listp slots) (= (length slots) 1) (eq (car slots) :all)))
                    (setf slots (chunk-type-possible-slot-names-fct type)))
-               (push type slots)
-               (push slots (gethash buffer (procedural-cond-style-usage-table procedural)))
-               (push buffer slots)
-               (push slots (procedural-init-chunk-types procedural))
+               (dolist (s slots) (push s (gethash buffer (procedural-cond-style-usage-table procedural))))
+               (dolist (s slots) (push s (gethash buffer (procedural-init-chunk-slots procedural))))
                t))
       (print-warning "No procedural module found.  Cannot declare buffer usage."))))
 

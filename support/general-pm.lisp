@@ -1,4 +1,4 @@
-;;;  -*- mode: LISP; Package: CL-USER; Syntax: COMMON-LISP;  Base: 10 -*-
+;;;  -*- mode: LISP; Syntax: COMMON-LISP;  Base: 10 -*-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; 
 ;;; Author      : Mike Byrne & Dan Bothell
@@ -13,13 +13,13 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; 
 ;;; Filename    : general-pm.lisp
-;;; Version     : 1.0
+;;; Version     : 5.1
 ;;; 
 ;;; Description : Base class for the perceptual-motor modules.
 ;;; 
 ;;; Bugs        : 
 ;;; 
-;;; Todo        : [] Strip out waiting-for-proc-p stuff?
+;;; Todo        : [X] Strip out waiting-for-proc-p stuff?
 ;;; 
 ;;; ----- History -----
 ;;; 01.07.27 mdb
@@ -126,84 +126,116 @@
 ;;;             : * Changed the preparation check and init-stamp to use mp-time-ms.
 ;;; 2011.05.17 Dan
 ;;;             : * Removed all usage of queue-command.
+;;; 2014.04.25 Dan
+;;;             : * Finally handling the todo that's been there since ACT-R/PM
+;;;             :   with ACT-R 4.0 - remove the waiting-for-proc-p stuff.
+;;;             : * Removed a lot of unused methods.
+;;;             : * Removed some old comments and other minor cleanup while I'm
+;;;             :   here.
+;;; 2014.05.16 Dan [3.0]
+;;;             : * Start of the conversion to deal with type-less chunks.
+;;;             : * Setting the "last-command" for a pm-module checks whether 
+;;;             :   it's "isa clear" or has a slot named cmd to get the value.
+;;;             :   If that fails then it calls the pm-module-last-cmd-name
+;;;             :   method for the module with the buffer and chunk-spec.
+;;;             : * Removed the spec class and corresponding methods since 
+;;;             :   audio was the only thing that used it and that's going to
+;;;             :   a chunk-based search now.
+;;; 2014.05.30 Dan
+;;;             : * Added the test-for-clear-request function which can be used
+;;;             :   by the modules to test for "isa clear" or "cmd clear" requests
+;;;             :   based on the default type clear.
+;;; 2014.11.07 Dan
+;;;             : * Added a safety check to test-for-clear-request, now verify that
+;;;             :   the modifier is always =, and cleaned up the logic in how it's
+;;;             :   tested a little bit.
+;;; 2015.03.16 Dan
+;;;             : * Fixed a bug with preparation-complete introduced with the
+;;;             :   2007.02.24 fix.  If a prepare was the first action the model
+;;;             :   performed then (thus a negative init-stamp) it would leave
+;;;             :   the processor busy until some other action cleared it.
+;;; 2015.04.21 Dan
+;;;             : * Attention modules have a new slot: unstuff-loc.  Which is
+;;;             :   to be used as a flag for clearing a stuffed buffer after
+;;;             :   some time has passed (value of the slot if not t which
+;;;             :   indicates some module specific default).
+;;;             : * And there's a method check-unstuff-buffer which can be 
+;;;             :   scheduled for an attention module that will check if the
+;;;             :   chunk in the buffer is an unmodified copy of the one which
+;;;             :   was stuffed, or if that chunk no longer exists, just an 
+;;;             :   unmodified stuffed chunk, and if that's true then it will
+;;;             :   clear the buffer.
+;;; 2015.06.05 Dan
+;;;             : * Explicitly convert times for scheduled events to ms.
+;;; 2015.07.28 Dan
+;;;             : * Removed the *act-r-6.0-compatibility* hack.
+;;; 2015.07.29 Dan
+;;;             : * Split check-unstuff-buffer into two methods: check-unstuff-buffer
+;;;             :   and unstuff-buffer.  The first is now used as a precondition
+;;;             :   in an event and the other schedules the erase action.
+;;;             : * Added the overstuff-loc slot to the attention module class.
+;;;             : * Added an unstuff-event slot to the attention module class.
+;;; 2015.08.13 Dan
+;;;             : * Changed rand-time calls to randomize-time.
+;;; 2015.09.16 Dan [4.0]
+;;;             : * The clear method now calls complete-all-module-requests for
+;;;             :   the module after it changes the state back.
+;;;             : * The clear method now actually uses the feat-prep-time of the
+;;;             :   specific module to schedule the change.
+;;; 2015.09.21 Dan
+;;;             : * Adding a prepare-spec slot to the pm-module class to use
+;;;             :   for storing the spec for later completion since the prepare
+;;;             :   method isn't passed the spec itself.
+;;;             : * Added the request-spec slot to the movement-style class.
+;;;             : * Prepare stores the request in the request-spec slot of the
+;;;             :   style from the prepare-spec slot of the module.
+;;;             : * Preparation-complete method completes the request if it is
+;;;             :   not set to execute now i.e. it was just a prepare.
+;;;             : * Finish-movement method now also requires the movement-style,
+;;;             :   and it calls complete-spec on the request-spec of that style.
+;;;             : * Defstyle automatically adds a request-spec keyword param as
+;;;             :   one of the method keys.
+;;;             : * Execute method now requires the request spec to be able to
+;;;             :   complete it.
+;;; 2015.09.23 Dan
+;;;             : * The defstyle method for movements now completes the request
+;;;             :   in the event that it is jammed.
+;;; 2017.01.05 Dan
+;;;             : * Removed the input-q slot since nothing uses that now.
+;;; 2017.08.09 Dan
+;;;             : * Have print-module-status return the string instead of directly
+;;;             :   outputting the data.
+;;;             : * Removed reset-pm-module and clear methods on the attn-module
+;;;             :   class because those slots need to be protected and don't want
+;;;             :   to have to deal with recursive locking issues.
+;;;             : * Also eliminating the set/clear-attended methods for same
+;;;             :   reason.
+;;; 2017.08.10 Dan
+;;;             : * Fixed a bug in how check-unstuff-buffer works because it
+;;;             :   should always require that the chunk was 'stuffed' to avoid
+;;;             :   clearing a chunk a requested chunk that matches the last
+;;;             :   one stuffed.
+;;; 2018.01.26 Dan
+;;;             : * Changed the print-module-status function to omit the extra newline.
+;;; 2018.06.01 Dan [5.0]
+;;;             : * Adding locks to protect the internal states and the
+;;;             :   the preparation-spec.
+;;;             : * Allow a clear request to happen regardless of the preparation
+;;;             :   state so that it can be used to cancel requests.
+;;;             : * Removed print-module-state since it's unused.
+;;;             : * Moved the param-lock here since some general commands need
+;;;             :   it for computing times.
+;;; 2018.06.08 Dan
+;;;             : * Added a remote test-for-clear-request and allow it to take
+;;;             :   a chunk-spec id in addition to a chunk-spec.
+;;; 2018.07.26 Dan [5.1]
+;;;             : * Don't worry about request tracking.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 #+:packaged-actr (in-package :act-r)
 #+(and :clean-actr (not :packaged-actr) :ALLEGRO-IDE) (in-package :cg-user)
 #-(or (not :clean-actr) :packaged-actr :ALLEGRO-IDE) (in-package :cl-user)
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;; DAN 
-;;; start with some general mapping macros to simplify some things
-;;;
-
-(defmacro pm-warning (&rest args)
-  `(model-warning ,@args))
-
-
-;;; This can just throw away the time references which are often 
-;;; calls like (mp-time *mp*) which just isn't going to work
-
-(defmacro pm-output (time &rest args)
-  (declare (ignore time))
-  `(model-output ,@args))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;; DAN
-;;;
-;;; moved the spec class and methods to this file
-
-(defclass spec ()
-  ((check-slots :accessor check-slots :initform nil :initarg :check-slots)))
-
-
-(defmethod initialize-instance :after ((self spec) &key)
-  (let (val)
-    (dovector (slotname (check-slots self))        ; was dolist
-      (setf val (slot-value self slotname))
-      (when (and val (listp val) (symbol-function (first val)))
-        (setf (slot-value self slotname) 
-              (apply (first val) (rest val)))))))
-
-
-(defgeneric match-spec-p (ts obj)
-  (:documentation "Returns T if <obj> matches <spec>."))
-
-(defmethod match-spec-p ((ts spec) (obj standard-object))
-  (dovector (slotname (check-slots ts) t)
-    (unless (slot-match-p ts obj slotname)
-      (return-from match-spec-p nil))))
-
-
-;;; SLOT-MATCH-P      [Function]
-;;; Date        : 99.06.18
-;;; Description : A slot matches the spec if the spec is :IGNORE, or if the
-;;;             : the spec is a value and it EQUALs the value.  If the spec
-;;;             : is a function, just return the result of the function
-;;;             : call.
-
-(defgeneric slot-match-p (spec object slotname)
-  (:documentation "Determines if an object matches a spec on a particular slot."))
-
-(defmethod slot-match-p ((ts spec) (obj standard-object)
-                           (slotname symbol))
-  (let ((condition (slot-value ts slotname))
-        (value (slot-value obj slotname)))
-    (cond ((eq condition :IGNORE) t)
-          ((functionp condition)
-           (funcall condition (slot-value obj slotname)))
-          (t (equal condition value)))))
-
-
-(defgeneric objs-match-spec (lst ts)
-  (:documentation "Returns a list of objects from <lst> that match the spec <ts>."))
-
-(defmethod objs-match-spec ((ls list) (ts spec))
-  (remove-if #'(lambda (obj)
-                 (not (match-spec-p ts obj))) ls))
 
 ;;;; ---------------------------------------------------------------------- ;;;;
 ;;;; Perceptual/motor Modules base class
@@ -215,30 +247,24 @@
 ;;;             : queue and basic state information.
 
 (defclass pm-module ()
-  ((input-queue :accessor input-q :initform nil)
-   (modality-state :accessor mode-s :initform 'FREE :initarg :modality)
+  ((modality-state :accessor mode-s :initform 'FREE :initarg :modality)
    (processor-state :accessor proc-s :initform 'FREE :initarg :processor)
    (preparation-state :accessor prep-s :initform 'FREE :initarg :preparation)
    (execution-state :accessor exec-s :initform 'FREE :initarg :execution)
-   (state-change-flag :accessor state-change :initarg :state-change
-                      :initform nil)
-   ;(state-dmo :accessor state-dmo :initarg :state-dmo :initform nil)
+   (state-change-flag :accessor state-change :initarg :state-change :initform nil)
    (module-name :accessor my-name :initarg :name :initform nil)
    (last-command :accessor last-cmd :initform nil :initarg :last-command)
    (last-prep :accessor last-prep :initarg :last-prep :initform nil)
    (exec-queue :accessor exec-queue :initarg :exec-queue :initform nil)
-   (feature-prep-time :accessor feat-prep-time  :initarg :feat-prep-time 
-                      :initform 0.050)
-   (movement-initiation-time :accessor init-time :initarg :init-time
-                             :initform 0.050)
+   (feature-prep-time :accessor feat-prep-time  :initarg :feat-prep-time :initform 0.050)
+   (movement-initiation-time :accessor init-time :initarg :init-time :initform 0.050)
    (init-stamp :accessor init-stamp :initarg :init-stamp :initform -0.1)
-   (burst-time :accessor burst-time :initarg :burst-time :initform 0.050
-               )
-   (waiting-for-proc-p :accessor waiting-for-proc-p
-                       :initarg :waiting-for-proc-p :initform nil)
-   (version-string :accessor version-string :initarg :version-string 
-                   :initform "")
-))
+   (burst-time :accessor burst-time :initarg :burst-time :initform 0.050)
+   (version-string :accessor version-string :initarg :version-string :initform "")
+   (prepare-spec :accessor prepare-spec :initform "")
+   (state-lock :accessor state-lock :initform (bt:make-recursive-lock "state-lock"))
+   (prep-spec-lock :accessor prep-spec-lock :initform (bt:make-lock "prep-spec"))
+   (param-lock :accessor param-lock :initform (bt:make-recursive-lock "pm-param-lock"))))
 
 
 
@@ -250,34 +276,18 @@
   (:documentation  "Change one or more of a module's state flags."))
 
 (defmethod change-state ((module pm-module) &key proc exec prep last)
-  (when proc (setf (proc-s module) proc))
-  (when exec (setf (exec-s module) exec))
-  (when prep (setf (prep-s module) prep))
-  (when last (setf (last-cmd module) last))
-  (if (or (eq (proc-s module) 'busy) (eq (exec-s module) 'busy)
-          (eq (prep-s module) 'busy))
-    (setf (mode-s module) 'busy)
-    (setf (mode-s module) 'free))
-  
-  ;;; DAN Don't need to maintain a state "chunk" for ACT-R anymore
-  ;(update-dm-state module)
-  
-  (setf (state-change module) t))
+  (bt:with-recursive-lock-held ((state-lock module))
+    (when proc (setf (proc-s module) proc))
+    (when exec (setf (exec-s module) exec))
+    (when prep (setf (prep-s module) prep))
+    (when last (setf (last-cmd module) last))
+    (if (or (eq (proc-s module) 'busy) (eq (exec-s module) 'busy)
+            (eq (prep-s module) 'busy))
+        (setf (mode-s module) 'busy)
+      (setf (mode-s module) 'free))
+ 
+    (setf (state-change module) t)))
 
-
-
-;;; TEST-MOD-MSG      [Method]
-;;; Date        : 97.01.24
-;;; Description : Runs a test to make sure the module is processing messages
-;;;             : Correctly.
-
-(defgeneric test-mod-msg (module &rest params)
-  (:documentation  "Prints out the PM module name, the parameters passed, and the time."))
-
-(defmethod test-mod-msg ((module pm-module) &rest params)
-  
-  (model-output "Module ~S ran test with params ~S" (my-name module) params))
-  
 
 ;;; CLEAR      [Method]
 ;;; Date        : 97.03.03
@@ -289,13 +299,17 @@
 |#
 
 (defmethod clear ((module pm-module))
-  (when (not (check-jam module))
-    (change-state module :prep 'busy)
-    (schedule-event-relative 0.050 'change-state  :destination (my-name module) :module (my-name module) :params '(:last none :prep free))
-    (setf (last-prep module) nil)
-    (setf (exec-queue module) nil)
-    (setf (init-stamp module) -0.1)
-    ))
+  (bt:with-recursive-lock-held ((state-lock module))
+    (bt:with-recursive-lock-held ((param-lock module))
+      ; Don't care about current state so that it can cancel
+      ; an ongoing action.
+      ; (when (not (check-jam module))
+      
+      (change-state module :prep 'busy)
+      (schedule-event-relative (feat-prep-time module) 'change-state :destination (my-name module) :module (my-name module) :params '(:last none :prep free))
+      (setf (last-prep module) nil)
+      (setf (exec-queue module) nil)
+      (setf (init-stamp module) -0.1))))
 
 
 ;;; CHECK-JAM      [Method]
@@ -308,9 +322,8 @@
   (:documentation "Returns NIL if the PM module is free, otherwise prints an error message and returns T."))
 
 (defmethod check-jam ((module pm-module))
-  (if (not (eq (prep-s module) 'busy))
-    nil
-    (progn
+  (bt:with-recursive-lock-held ((state-lock module))
+    (when (eq (prep-s module) 'busy)
       (model-warning "Module ~S jammed at time ~S" (my-name module) (mp-time))
       t)))
 
@@ -325,74 +338,41 @@
   (:documentation "Resets a PM module to base state:  all flags free, empty input queue."))
 
 (defmethod reset-pm-module ((module pm-module))
-  (setf (proc-s module) 'free)
-  (setf (exec-s module) 'free)
-  (setf (prep-s module) 'free)
-  (setf (mode-s module) 'free)
-  (setf (last-cmd module) 'none)
+  (bt:with-recursive-lock-held ((state-lock module))
+    (setf (proc-s module) 'free)
+    (setf (exec-s module) 'free)
+    (setf (prep-s module) 'free)
+    (setf (mode-s module) 'free)
+    (setf (last-cmd module) 'none)
   
-  ;;; DAN removed 
-  ;(update-dm-state module)  
-  
-  (setf (input-q module) nil)
-  (setf (last-prep module) nil)
-  (setf (exec-queue module) nil)
-  (setf (init-stamp module) -0.1)
-  )
-
-;;; UPDATE-MODULE      [Method]
-;;; Date        : 98.05.28
-;;; Description : Called each time the PS is run.  This will update the 
-;;;             : module's state.  If a specific module has other things
-;;;             : that need to be updated besides the DME state of that
-;;;             : module, define :BEFORE or :AFTER methods.
-;;;
-;;; DAN 
-;;; Only seems to be used by vision and device interface.
-;;; The device interface is now built in and I think the
-;;; vision module could be reworked.
-;;; For now, I've added a hook for the updates on time 
-;;; changes, but if vision can work without it I'd prefer
-;;; to remove this.
+    (setf (last-prep module) nil)
+    (setf (exec-queue module) nil)
+    (setf (init-stamp module) -0.1)))
 
 
-(defgeneric update-module (module old-time new-time)
-  (:documentation "Update the state of a PM module."))
+(defgeneric pm-module-last-cmd-name (module buffer-name chunk-spec)
+  (:documentation "Determine the name of the last command when it's not 'isa clear' and doesn't have a cmd slot."))
 
-(defmethod update-module ((mod pm-module) old-time new-time)
-  ;(update-dm-state mod)
-  (declare (ignore old-time) (ignore new-time)))
-
-
-;;; PRINT-MODULE-STATE      [Method]
-;;; Date        : 98.05.28
-;;; Description : For debugging help, this prints the state of the module
-;;;             : to stdout.
-
-(defgeneric print-module-state (module)
-  (:documentation "Prints a representation of a PM module's state."))
-
-(defmethod print-module-state ((mod pm-module))
-  (format t "~& State of module ~S" (my-name mod))
-  (format t "~% Modality:     ~S" (mode-s mod))
-  (format t "~% Preparation:  ~S" (prep-s mod))
-  (format t "~% Processor:    ~S" (proc-s mod))
-  (format t "~% Execution:    ~S" (exec-s mod))
-  (format t "~% Last command: ~S" (last-cmd mod)))
-
+(defmethod pm-module-last-cmd-name ((module pm-module) buffer-name chunk-spec)
+  (declare (ignorable module buffer-name chunk-spec)))
 
 (defgeneric pm-module-request (module buffer-name chunk-spec)
   (:documentation "Handles a request from a buffer."))
 
-
 ;;; This after method is used to make sure that all commands
 ;;; processed record the command in the module.
 
-(defmethod pm-module-request :after ((module pm-module) 
-                                     buffer-name 
-                                     chunk-spec)
-  (declare (ignore buffer-name))
-  (let ((last-cmd (chunk-spec-chunk-type chunk-spec)))
+(defmethod pm-module-request :after ((module pm-module) buffer-name chunk-spec)
+  (let ((last-cmd (or (let ((spec (chunk-spec-slot-spec chunk-spec)))
+                        (and (= (length spec) 1)
+                             (eq 'clear (spec-slot-name (first spec)))
+                             (spec-slot-value (first spec))
+                             'clear))
+                      (let ((spec (chunk-spec-slot-spec chunk-spec 'cmd)))
+                        (and (= (length spec) 1)
+                             (spec-slot-value (first spec))))
+                      (pm-module-last-cmd-name module buffer-name chunk-spec))))
+    
     (when (and last-cmd (not (eql (last-cmd module) last-cmd)))
       (change-state module :last last-cmd))))
 
@@ -403,27 +383,22 @@
   (:documentation "Prints the module's state in query form"))
 
 (defmethod print-module-status ((mod pm-module))
-  ;(command-output "  modality free         : ~S"
-  ;                (eq (mode-s mod) 'free))
-  ;(command-output "  modality busy         : ~S"
-  ;                (eq (mode-s mod) 'busy))
-  (command-output "  preparation free      : ~S"
-                  (eq (prep-s mod) 'free))
-  (command-output "  preparation busy      : ~S"
-                  (eq (prep-s mod) 'busy))
-  (command-output "  processor free        : ~S"
-                  (eq (proc-s mod) 'free))
-  (command-output "  processor busy        : ~S"
-                  (eq (proc-s mod) 'busy))
-  (command-output "  execution free        : ~S"
-                  (eq (exec-s mod) 'free))
-  (command-output "  execution busy        : ~S"
-                  (eq (exec-s mod) 'busy))
-  (command-output "  last-command          : ~S"
-                  (last-cmd mod)))
-  
-  
-
+  (bt:with-recursive-lock-held ((state-lock mod))
+    (concatenate 'string
+      (format nil "  preparation free      : ~S~%"
+        (eq (prep-s mod) 'free))
+      (format nil "  preparation busy      : ~S~%"
+        (eq (prep-s mod) 'busy))
+      (format nil "  processor free        : ~S~%"
+        (eq (proc-s mod) 'free))
+      (format nil "  processor busy        : ~S~%"
+        (eq (proc-s mod) 'busy))
+      (format nil "  execution free        : ~S~%"
+        (eq (exec-s mod) 'free))
+      (format nil "  execution busy        : ~S~%"
+        (eq (exec-s mod) 'busy))
+      (format nil "  last-command          : ~S"
+        (last-cmd mod)))))
 
 
 (defgeneric check-state (module &key modality preparation 
@@ -433,61 +408,60 @@
 
 (defmethod check-state ((mod pm-module) &key modality preparation 
                           execution processor last-command)
-  (cond ((and modality (not (eq modality (mode-s mod)))) nil)
-        ((and preparation (not (eq preparation (prep-s mod)))) nil)
-        ((and execution (not (eq execution (exec-s mod)))) nil)
-        ((and processor (not (eq processor (proc-s mod)))) nil)
-        ((and last-command (not (eq last-command (last-cmd mod)))) nil)
-        (t t)))
+  (bt:with-recursive-lock-held ((state-lock mod))
+    (cond ((and modality (not (eq modality (mode-s mod)))) nil)
+          ((and preparation (not (eq preparation (prep-s mod)))) nil)
+          ((and execution (not (eq execution (exec-s mod)))) nil)
+          ((and processor (not (eq processor (proc-s mod)))) nil)
+          ((and last-command (not (eq last-command (last-cmd mod)))) nil)
+          (t t))))
 
 
 (defgeneric generic-state-query (module buffer slot value)
   (:documentation "Handles BUSY/FREE tests on STATE, MODALITY, EXECUTION, PREPARATION and PROCESSOR."))
 
 (defmethod generic-state-query ((module pm-module) buffer slot value)
-  (case slot
-       ((state modality)
-         (case value
-          (busy
-           (eq (mode-s module) 'busy))
-          (free
-           (eq (mode-s module) 'free))
-          (t (model-warning 
-              "Invalid query made of the ~S buffer with slot ~S and value ~S" 
-              buffer slot value))))
-       (execution
-        (case value
-          (busy
-           (eq (exec-s module) 'busy))
-          (free
-           (eq (exec-s module) 'free))
-          (t (model-warning "Invalid query made of the ~S buffer with slot ~S and value ~S" 
-                            buffer slot value))))
-       (preparation
-        (case value
-          (busy
-           (eq (prep-s module) 'busy))
-          (free
-           (eq (prep-s module) 'free))
-          (t (model-warning "Invalid query made of the ~S buffer with slot ~S and value ~S" 
-                            buffer slot value))))
-       (processor
-        (case value
-          (busy
-           (eq (proc-s module) 'busy))
-          (free
-           (eq (proc-s module) 'free))
-          (t (model-warning "Invalid query made of the ~S buffer with slot ~S and value ~S" 
-                            buffer slot value))))
-    (last-command 
-     (eql (last-cmd module) value))
-    
-    ))
+  (bt:with-recursive-lock-held ((state-lock module))
+    (case slot
+      ((state modality)
+       (case value
+         (busy
+          (eq (mode-s module) 'busy))
+         (free
+          (eq (mode-s module) 'free))
+         (t (model-warning 
+             "Invalid query made of the ~S buffer with slot ~S and value ~S" 
+             buffer slot value))))
+      (execution
+       (case value
+         (busy
+          (eq (exec-s module) 'busy))
+         (free
+          (eq (exec-s module) 'free))
+         (t (model-warning "Invalid query made of the ~S buffer with slot ~S and value ~S" 
+                           buffer slot value))))
+      (preparation
+       (case value
+         (busy
+          (eq (prep-s module) 'busy))
+         (free
+          (eq (prep-s module) 'free))
+         (t (model-warning "Invalid query made of the ~S buffer with slot ~S and value ~S" 
+                           buffer slot value))))
+      (processor
+       (case value
+         (busy
+          (eq (proc-s module) 'busy))
+         (free
+          (eq (proc-s module) 'free))
+         (t (model-warning "Invalid query made of the ~S buffer with slot ~S and value ~S" 
+                           buffer slot value))))
+      (last-command 
+       (eql (last-cmd module) value)))))
+
 
 ;;;; ---------------------------------------------------------------------- ;;;;
 ;;;; preparation and execution stuff
-
-
 
 ;;; PREPARATION-COMPLETE      [Method]
 ;;; Date        : 98.07.22
@@ -500,28 +474,19 @@
   (:documentation "Method to be called when movement preparation is complete."))
 
 (defmethod preparation-complete ((module pm-module))
-  (change-state module :prep 'free)
-  (when (last-prep module)
-    (if (exec-immediate-p (last-prep module))
-      (setf (exec-queue module)
+  (bt:with-recursive-lock-held ((state-lock module))
+    (change-state module :prep 'free)
+    (when (last-prep module)
+      (if (exec-immediate-p (last-prep module))
+          (setf (exec-queue module)
             (append (exec-queue module) (mklist (last-prep module))))
-      (when (and (plusp (init-stamp module))
-                 (>= (mp-time-ms) (+ (init-stamp module) (seconds->ms (init-time module)))))
-        (change-state module :proc 'FREE))))
-  (maybe-execute-movement module))
+        (bt:with-recursive-lock-held ((param-lock module))
+          (when (or (minusp (init-stamp module))
+                    (and (plusp (init-stamp module))
+                         (>= (mp-time-ms) (+ (init-stamp module) (seconds->ms (init-time module))))))
+            (change-state module :proc 'FREE)))))
+    (maybe-execute-movement module)))
 
-
-;;; FINISH-MOVEMENT      [Method]
-;;; Date        : 98.07.22
-;;; Description : When a movement completes, FREE the execution state, and
-;;;             : check to see if there were any movements queued.
-
-(defgeneric finish-movement (module)
-  (:documentation "Method called when a movement finishes completely."))
-
-(defmethod finish-movement ((module pm-module))
-  (change-state module :exec 'free)
-  (maybe-execute-movement module))
 
 
 ;;; MAYBE-EXECUTE-MOVEMENT      [Method]
@@ -534,8 +499,9 @@
   (:documentation "If there are any movements in <module>'s execution queue, execute one."))
 
 (defmethod maybe-execute-movement ((module pm-module))
-  (when (and (exec-queue module) (eq (exec-s module) 'FREE))
-    (perform-movement module (pop (exec-queue module)))))
+  (bt:with-recursive-lock-held ((state-lock module))
+    (when (and (exec-queue module) (eq (exec-s module) 'FREE))
+      (perform-movement module (pop (exec-queue module))))))
 
 
 ;;; PREPARE      [Method]
@@ -549,6 +515,7 @@
 (defmethod prepare ((module pm-module) &rest params)
   (let ((inst (apply #'make-instance params)))
     (setf (exec-immediate-p inst) nil)
+    (setf (request-spec inst) (bt:with-lock-held ((prep-spec-lock module)) (prepare-spec module)))
     (prepare-movement module inst)))
 
 
@@ -560,18 +527,20 @@
 ;;;             : If those are OK, put the current style instance in the
 ;;;             : execution queue and go for it.
 
-(defgeneric execute (module)
+(defgeneric execute (module request)
   (:documentation "Tells <module> to execute the last movement prepared."))
 
-(defmethod execute ((module pm-module))
-  (cond ((not (last-prep module))
-         (model-warning "Motor Module has no movement to EXECUTE."))
-        ((eq (prep-s module) 'BUSY)
-         (model-warning "Motor Module cannot EXECUTE features being prepared."))
-        (t
-         (setf (exec-queue module)
-               (append (exec-queue module) (mklist (last-prep module))))
-         (maybe-execute-movement module))))
+(defmethod execute ((module pm-module) request)
+  (bt:with-recursive-lock-held ((state-lock module))
+    (cond ((not (last-prep module))
+           (model-warning "Motor Module has no movement to EXECUTE."))
+          ((eq (prep-s module) 'BUSY)
+           (model-warning "Motor Module cannot EXECUTE features being prepared."))
+          (t
+           (setf (request-spec (last-prep module)) request)
+           (setf (exec-queue module)
+             (append (exec-queue module) (mklist (last-prep module))))
+           (maybe-execute-movement module)))))
 
 
 ;;; PM-PREPARE-MOTOR-MTH      [Method]
@@ -587,10 +556,8 @@
 (defmethod pm-prepare-mvmt-mth ((module pm-module) params)
   (let ((inst (apply #'make-instance params)))
     (setf (exec-immediate-p inst) nil)
-    (setf (last-prep module) inst)))
-
-
-
+    (bt:with-recursive-lock-held ((state-lock module))
+      (setf (last-prep module) inst))))
 
 
 ;;;; ---------------------------------------------------------------------- ;;;;
@@ -608,8 +575,7 @@
    (style-name :accessor style-name :initarg :style-name :initform nil)
    (feature-slots :accessor feature-slots :initarg :feature-slots 
                   :initform nil)
-   (set-proc-p :accessor set-proc-p :initarg :set-proc-p :initform nil)
-))
+   (request-spec :accessor request-spec :initarg :request-spec :initform nil)))
 
 
 ;;; PREPARE-MOVEMENT      [Method]
@@ -622,19 +588,12 @@
   (:documentation "Tell <module> to prepare <movement>."))
 
 (defmethod prepare-movement ((module pm-module) (mvmt movement-style))
-  (change-state module :prep 'BUSY :proc 'BUSY)
-  (setf (fprep-time mvmt) 
-        (rand-time (compute-prep-time module mvmt)))
-  (setf (last-prep module) mvmt)
-  (schedule-event-relative (fprep-time mvmt) 'preparation-complete :destination (my-name module) :module (my-name module))
-  
-  (when (and (waiting-for-proc-p module) (null (exec-queue module))
-             (exec-immediate-p mvmt))
-    (setf (set-proc-p mvmt) t)
-    (schedule-event-relative (+ (fprep-time mvmt) (init-time module)) 'change-state 
-                             :destination (my-name module) :module (my-name module) 
-                             :params '(:proc free))))
-
+  (bt:with-recursive-lock-held ((state-lock module))
+    (change-state module :prep 'BUSY :proc 'BUSY)
+    (setf (fprep-time mvmt) 
+      (randomize-time (compute-prep-time module mvmt)))
+    (setf (last-prep module) mvmt))
+  (schedule-event-relative (seconds->ms (fprep-time mvmt)) 'preparation-complete :time-in-ms t :destination (my-name module) :module (my-name module)))
 
 
 ;;; COMPUTE-PREP-TIME      [Method]
@@ -649,13 +608,13 @@
   (:documentation "Return the feature preparation time for <movement>."))
 
 (defmethod compute-prep-time ((module pm-module) (mvmt movement-style))
-  (if (or (null (last-prep module))
-          (not (eq (style-name mvmt) (style-name (last-prep module)))))
-    (* (feat-prep-time module) (num-to-prepare mvmt))
-    (* (feat-prep-time module)
-       (feat-differences mvmt (last-prep module)))))
-
-
+  (bt:with-recursive-lock-held ((state-lock module))
+    (bt:with-recursive-lock-held ((param-lock module))
+      (if (or (null (last-prep module))
+              (not (eq (style-name mvmt) (style-name (last-prep module)))))
+          (* (feat-prep-time module) (num-to-prepare mvmt))
+        (* (feat-prep-time module)
+           (feat-differences mvmt (last-prep module)))))))
 
 
 ;;; PERFORM-MOVEMENT      [Method]
@@ -670,21 +629,35 @@
   (:documentation "Have <module> perform <movement>."))
 
 (defmethod perform-movement ((module pm-module) (mvmt movement-style))
-  (schedule-event-relative (init-time module) 'initiation-complete 
-                           :destination (my-name module) :module (my-name module))
+  (bt:with-recursive-lock-held ((param-lock module))
+    (schedule-event-relative (seconds->ms (init-time module)) 'initiation-complete 
+                             :time-in-ms t :destination (my-name module) :module (my-name module)))
   
   (change-state module :proc 'BUSY :exec 'BUSY)
   
-  (setf (init-stamp module) (mp-time-ms))
+  (bt:with-recursive-lock-held ((state-lock module))
+    (setf (init-stamp module) (mp-time-ms)))
   
   (setf (exec-time mvmt) (compute-exec-time module mvmt))
   (setf (finish-time mvmt) (compute-finish-time module mvmt))
   (queue-output-events module mvmt)
   (queue-finish-event module mvmt))
 
-
 (defmethod initiation-complete ((module pm-module))
   (change-state module :proc 'FREE))
+
+
+;;; FINISH-MOVEMENT      [Method]
+;;; Date        : 98.07.22
+;;; Description : When a movement completes, FREE the execution state, and
+;;;             : check to see if there were any movements queued.
+
+(defgeneric finish-movement (module mvmt)
+  (:documentation "Method called when a movement finishes completely."))
+
+(defmethod finish-movement ((module pm-module) (mvmt movement-style))
+  (change-state module :exec 'free)
+  (maybe-execute-movement module))
 
 
 ;;; COMPUTE-FINISH-TIME      [Method]
@@ -697,7 +670,8 @@
 
 (defmethod compute-finish-time ((module pm-module) (mvmt movement-style))
   "Return the finish time of the movement."
-  (+ (burst-time module) (exec-time mvmt)))
+  (bt:with-recursive-lock-held ((param-lock module))
+    (+ (burst-time module) (exec-time mvmt))))
 
 
 ;;; QUEUE-FINISH-EVENT      [Method]
@@ -708,8 +682,10 @@
   (:documentation "Queue the FINISH-MOVEMENT associated with <movement>."))
 
 (defmethod queue-finish-event ((module pm-module) (mvmt movement-style))
-  (schedule-event-relative (finish-time mvmt) 'finish-movement 
-                           :destination (my-name module) :module (my-name module)))
+  (schedule-event-relative (seconds->ms (finish-time mvmt)) 'finish-movement 
+                           :time-in-ms t :destination (my-name module) 
+                           :params (list mvmt) :module (my-name module)
+                           :details (format nil "~a" 'finish-movement)))
 
 
 ;;; Stubs that require overrides.
@@ -759,19 +735,19 @@
 
 (defmacro defstyle (name base-class &rest params)
   "Macro that defines new motor movement styles.  Pass in the name and the base 
-class [if NIL is passed, it will default to MOVEMENT-STYLE] and the base 
-parameters.  This will create a class and a method for any PM Module for the 
-class."
+   class [if NIL is passed, it will default to MOVEMENT-STYLE] and the base 
+   parameters.  This will create a class and a method for any PM Module for the 
+   class."
   `(progn
      (defclass ,name (,(if (not base-class) 'movement-style base-class))
        ,(build-accessors params)
        (:default-initargs
          :style-name ,(sym->key name)
          :feature-slots ',params))
-     (defmethod ,name ((module pm-module) &key ,@params)
+     (defmethod ,name ((module pm-module) &key ,@params request-spec)
        (unless (or (check-jam module) (check-specs ',name ,@params))
          (prepare-movement module
-                           (make-instance ',name
+                           (make-instance ',name :request-spec request-spec
                              ,@(build-initializer params)))))))
 
 (defun check-specs (name &rest specs)
@@ -824,89 +800,57 @@ class."
    ;; mdb moved from vision module definition 2005.01.07
    (loc-failure :accessor loc-failure :initform nil)
    (attend-failure :accessor attend-failure :initform nil)
-   ; Dan not needed (stuffed :accessor stuffed :initform nil)
-   )
-  )
+   
+   ;; modules can "unstuff" perceptual info if needed
+   (unstuff-loc :accessor unstuff-loc :initform nil)
+   (unstuff-event :accessor unstuff-event :initform nil)
+   (overstuff-loc :accessor overstuff-loc :initform nil)))
 
 
-(defmethod reset-pm-module ((module attn-module))
-  (call-next-method)
-  (clear-attended module)
-  (setf (current-marker module) nil)
-  )  
 
-(defmethod clear ((module attn-module))
-  (call-next-method)
-  (setf (current-marker module) nil)
-  (clear-attended module))
+(defmethod check-unstuff-buffer ((module attn-module) buffer chunk)
+  (let ((current (buffer-read buffer)))
+    (and
+     current
+     (query-buffer buffer '(buffer unrequested))
+     (multiple-value-bind (copy was-copy) (chunk-copied-from-fct current)
+       (declare (ignore copy))
+       (or ;; the copy of the chunk is still in the buffer unchanged
+        ;; regardless of whether the original has changed
+        
+        (eq was-copy chunk)
+        
+        ;; the original is no longer a chunk (deleted or purged)
+        ;; so all that can be tested is whether the chunk in the 
+        ;; buffer was copied from some chunk and hasn't been changed
+        
+        (and (null (chunk-p-fct chunk))
+             was-copy))))))
 
-
-(defgeneric clear-attended (module)
-  (:documentation "Set <module> so that it is attending nothing."))
-
-(defmethod clear-attended ((module attn-module))
-  (setf (currently-attended module) nil))
-
-(defgeneric set-attended (module object)
-  (:documentation "Note that <module> is now attending <object>."))
-
-(defmethod set-attended ((module attn-module) obj)
-  (setf (currently-attended module) obj))
-
-
-;;; DAN 
-;;; Functions that were moved from other places that are still needed
+(defmethod unstuff-buffer ((module attn-module) buffer chunk)
+  (declare (ignore chunk))
+  (schedule-event-now 'erase-buffer :params (list buffer) :module (my-name module)))
 
 
-;;; DAN 
-;;; moved from master-process and modified to schedule the event directly
-;;; in the meta-process schedule queue.
-;;;
-;;; QUEUE-COMMAND      [Function]
-;;; Date        : 98.01.21
-;;; Description : More generalized version, used by RPM functions.  Takes
-;;;             : all kinds of funky parameters to describe events.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Detect the clear requests.
 
-(defun queue-command (&key time where command (params nil) 
-                           (sent-by-act nil) (randomize nil)
-                           (priority 0)
-                           ;;; DAN 
-                           ;;; added this for clarity so that
-                           ;;; modules get credit for sending the command
-                           ;;; somewhere else
-                           ;;; Only seems to exist right now in speech and
-                           ;;; motor talking to the :device
-                           (from nil)
-                           ;;; DAN
-                           ;;; Adding this so that I can better control
-                           ;;; which traces an event gets shown in.
-                           ;;; Really, queue-command needs to go away
-                           ;;; and be replaced in the original code ...
-                           (output t)
-                           )
-  "Schedule a command in the MP's schedule queue."
-;  (new-message *mp*
-;               (make-instance 'input-queue-entry
-;                 :time-tag (if randomize (rand-time time) time)
-;                 :destination where
-;                 :act-p sent-by-act
-;                 :params (cons command (mklist params))
-;                 :priority priority)))
-  (declare (ignore sent-by-act))
-  (schedule-event-relative (if randomize (rand-time time) time)
-                           command
-                           :destination where
-                           :params (mklist params)
-                           :priority priority
-                           :output output
-                           ;;; Assuming that the sender and reciever are one and 
-                           ;;; the same unless the from is given
-                           ;;; which needs to be added to the speech and motor calls
-                           ;;; that do that type of thing.
-                           
-                           :module (if (null from) where from)))
+(defun test-for-clear-request (spec)
+  (if (act-r-chunk-spec-p spec)
+      (let ((main-spec (chunk-spec-slot-spec spec)))
+        (and (= (length main-spec) 1)
+             (eq '= (spec-slot-op (first main-spec)))
+             (or (and 
+                  (eq (spec-slot-name (first main-spec)) 'clear)
+                  (spec-slot-value (first main-spec)))
+                 (and
+                  (eq (spec-slot-name (first main-spec)) 'cmd)
+                  (eq (spec-slot-value (first main-spec)) 'clear)))))
+    (awhen (id-to-chunk-spec spec)
+           (test-for-clear-request it))))
 
-
+(add-act-r-command "test-for-clear-request" 'test-for-clear-request "Determine if a chunk-spec represents the clear request used by many modules. Params: chunk-spec.")
+    
 (provide "GENERAL-PM")
 
 #|

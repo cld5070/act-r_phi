@@ -13,7 +13,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; 
 ;;; Filename    : device-interface.lisp
-;;; Version     : 1.3
+;;; Version     : 7.1
 ;;; 
 ;;; Description : File for managing the device interface.
 ;;; 
@@ -196,299 +196,658 @@
 ;;;             :   duplicates between the "primary area" and the keypad.  Now
 ;;;             :   all of the keypad keys which appear in both areas are 
 ;;;             :   prefixed with "keypad-".
+;;; 2014.05.21 Dan [2.0]
+;;;             : * Just now noticed that the pixels-to-angle code isn't quite 
+;;;             :   right given that we compute the location of something as
+;;;             :   it's center point.  It should be 2*(atan (/ (w/2) d) not
+;;;             :   just (atan (/ w d)) because that assumes a view from one
+;;;             :   end.  Of course, it's even odder than that because we also
+;;;             :   consider everything on the screen as the same distance, but
+;;;             :   really that's only true if the display is a spherical
+;;;             :   surface centered on the viewing position...
+;;;             :   The difference in values between those 2 calculations is
+;;;             :   generally negligible for the typical sizes and default 
+;;;             :   viewing distance.  However, since I'm adding in code to
+;;;             :   allow for distances other than the default I'm going to
+;;;             :   switch to the "better" calculation.
+;;; 2014.10.31 Dan
+;;;             : * Changed synch-mouse so that it has an optional parameter
+;;;             :   for indicating whether the action was "model generated"
+;;;             :   instead of treating all usage like it was.
+;;; 2015.05.20 Dan 
+;;;             : * Adding a new method for devices: vis-loc-coordinate-slots.
+;;;             :   It needs to return a list of three values which indicate the
+;;;             :   names of the slots used to hold the x, y, and z coordinates
+;;;             :   respectively for the visual location chunks created by the
+;;;             :   device.  The default is '(screen-x screen-y distance), but
+;;;             :   now one can use something else instead.
+;;;             :   It is only called when the device is installed thus it can't
+;;;             :   change dynamically and must be consistent for all features 
+;;;             :   in the device.
+;;; 2015.05.21 Dan
+;;;             : * Fixed the decalim for xy-loc.
+;;; 2015.09.01 Dan
+;;;             : * Added press-key shortcuts for the keypad assuming that the
+;;;             :   hand has been moved to it with hand-to-keypad or start-hand-
+;;;             :   at-keypad.
+;;; 2016.04.04 Dan [2.1]
+;;;             : * Allow :show-focus to also take string and symbol values for
+;;;             :   true.  Those values MAY be used by the device to indicate
+;;;             :   a color for the fixation ring.
+;;; 2016.07.20 Dan
+;;;             : * Update-device now sends the clof value to device-update-attended-loc
+;;;             :   since the current-marker value may not be a chunk anymore.
+;;; 2016.12.15 Dan [3.0]
+;;;             : * Start of the work to basically eliminate the device approach
+;;;             :   to PM interfacing to better support remote modeling.  For now
+;;;             :   all I've done is remove proc-display and the lock/unlock-device
+;;;             :   commands since those really belong to vision.
+;;; 2016.12.16 Dan
+;;;             : * Removed the declaim for unlock-tracking and the pending-procs
+;;;             :   slot.
+;;; 2016.12.19 Dan
+;;;             : * Remove the generic process-display method.
+;;; 2017.01.05 Dan 
+;;;             : * Complete overhaul.  This is no longer tied to any particular
+;;;             :   modules by default.  A module must register as an interface
+;;;             :   if it needs access to "devices".  Devices must be registered
+;;;             :   as well.  Both the interface and the device indicate init
+;;;             :   and remove commands (if needed) when registered.  Install-
+;;;             :   device takes a list of 2 or 3 items: module device {details}.
+;;;             :   When installing a device:
+;;;             :    - if that device and details are already installed for
+;;;             :       indicated module then do nothing
+;;;             :    - else  
+;;;             :     - if the indicated module only allows a single device and
+;;;             :       there is one already installed
+;;;             :         call the remove commands for the module then device
+;;;             :     - call the init commands for the module and device
+;;;             :     - store the record for this device being installed
+;;; 2017.01.11 Dan
+;;;             : * Removed the show-focus parameter and moved it to vision.
+;;; 2017.01.13 Dan
+;;;             : * Added the interface function to a device definition and the
+;;;             :   signal-device command for communicating with it through that
+;;;             :   function.
+;;;             : * Removed the keyboard related code.
+;;; 2017.01.18 Dan
+;;;             : * Removed the echo-act-r-output from commands.  The assumption
+;;;             :   now is that echoing is handled by the user.
+;;;             : * Use handle-evaluate-results.
+;;; 2017.01.26 Dan
+;;;             : * Removed output-speech.  That happens directly from speech
+;;;             :   module now.
+;;; 2017.01.30 Dan
+;;;             : * Add-act-r-command call parameters reordered.
+;;; 2017.02.08 Dan
+;;;             : * Reworked the local versions of most remote commands to not
+;;;             :   go out through the dispatcher.
+;;;             : * Fixed bugs with the last change.
+;;; 2017.03.02 Dan
+;;;             : * Removed all the mouse code.
+;;; 2017.03.03 Dan
+;;;             : * Remove-device now returns t when remove is successful.
+;;; 2017.03.07 Dan [4.0]
+;;;             : * Signal-device command can't be single instance because it
+;;;             :   may be possible for a device being signaled to signal another
+;;;             :   which would cause a deadlock (the mouse signaling the exp-window
+;;;             :   is where it occurred).
+;;;             : * Reset and delete need to remove any installed devices.
+;;;             : * Adding a delete function to handle that now.
+;;;             : * When installing a device put it on the list before calling
+;;;             :   the init functions so that it can be referenced from there.
+;;;             :   Not certain that's the best way to handle things yet, but it
+;;;             :   fixes an issue with a window installing a mouse that then 
+;;;             :   needs to tell the window to draw the mouse...
+;;; 2017.06.02 Dan
+;;;             : * Wrapped some handle-evaluate-results around the evaluate 
+;;;             :   calls to catch errors.
+;;; 2017.06.16 Dan
+;;;             : * Adding a lock for protecting the device slot of the interface,
+;;;             :   a lock for the device-table and interface-table, a lock for the
+;;;             :   visual-fixation-marker, and a lock for the params.
+;;;             : * Removed the mouse tracing param and slots.
+;;; 2017.06.20 Dan
+;;;             : * Rewored install-, remove-, and signal- device to only lock as
+;;;             :   needed to avoid issues with devices that install devices (like
+;;;             :   experiment windows) and a recursive lock won't help because 
+;;;             :   since the interface/device actions themselves could be dispatched.
+;;;             : * Also marking them as not single instance.
+;;; 2017.06.23 Dan
+;;;             : * Added names for all the locks.
+;;; 2017.08.03 Dan
+;;;             : * Actually store the name of the interface in the structure.
+;;; 2017.08.09 Dan
+;;;             : * Remove all the declaims since they're unnecessary now. 
+;;; 2017.08.17 Dan
+;;;             : * Fixed a potential deadlock with respect to delete-device
+;;;             :   because it called the remove functions for devices and 
+;;;             :   interfaces while it held the device module's locks.
+;;; 2017.10.11 Dan
+;;;             : * Eliminate the vwt parameter and virtual-trace slot.
+;;; 2018.01.29 Dan
+;;;             : * Reformating the remove-device code since I was trying to
+;;;             :   figure out a problem with removing a mouse and realized that
+;;;             :   the indentation was off for remove-device eventhough it did
+;;;             :   work correctly.
+;;; 2018.02.08 Dan
+;;;             : * Don't abort from delete-device just because some device fails.
+;;;             :   Print a warning about that and continue with the rest.
+;;; 2018.03.05 Dan
+;;;             : * Rename signal-device notify-device since I call commands
+;;;             :   with no function signals...
+;;;             : * Why does notify-device have to go through dispatcher?  Is
+;;;             :   that necessary -- should it be monitorable?
+;;; 2018.03.12 Dan [5.0]
+;;;             : * Added available-devices and available-interfaces functions.
+;;;             : * Reworking it so that it's possible to install more than
+;;;             :   one of the same device -- that simplifies things with
+;;;             :   respect to a mouse because the device can be a cursor and
+;;;             :   the details can then specify mouse, joystick1, or joystick2
+;;;             :   and the same move-cursor command can just use whichever
+;;;             :   cursor device the hand is on.  It also allows more than
+;;;             :   one exp-window to be installed which means the cursor
+;;;             :   can be in global coordinates and if the windows translate
+;;;             :   things appropriately multiple windows could be available
+;;;             :   to vision at the same time.
+;;;             : * Interface fns all get whole device-list.
+;;; 2018.03.14 Dan
+;;;             : * Needs-mouse param can now be a symbol or string and will be
+;;;             :   converted to a color for the outline like show-focus does
+;;;             :   since each model has its own mouse now.  It also defaults to
+;;;             :   nil instead of t to avoid having to deal with it unless it's
+;;;             :   actually needed.
+;;; 2018.04.25 Dan [6.0]
+;;;             : * Eliminate the *pixels-per-inch-?* variables and just default
+;;;             :   to 72.
+;;;             : * Removed the visual-fixation-marker support and the cursor-loc.
+;;;             : * Renamed :mouse-fitts-coeff to :cursor-fitts-coeff.
+;;; 2018.04.26 Dan
+;;;             : * Current-devices now prints a warning if an invalid interface
+;;;             :   is provided.
+;;;             : * Added a remote current-devices.
+;;;             : * Defined-devices and defined-interfaces don't require a current
+;;;             :   model to operate.
+;;; 2018.05.21 Dan
+;;;             : * Renamed the slot from act-r-device-interface to -notification
+;;;             :   since it's called from notify-device to keep the terminology
+;;;             :   consistent.
+;;; 2018.05.30 Dan
+;;;             : * Put the key-closure-time param here instead of it being a
+;;;             :   fixed value (it was being added in the motor extensions).
+;;; 2018.06.13 Dan
+;;;             : * Updated the doc strings for remote commands to match the 
+;;;             :   current spec style.
+;;; 2018.10.04 Dan [7.0]
+;;;             : * An interface can now also provide a notification function 
+;;;             :   and there's a notify-interface command.  That allows for
+;;;             :   a better separation of device from module (for example
+;;;             :   keyboard and cursor device implementations currently access
+;;;             :   the motor module directly).
+;;;             : * Create a global variable with a default device interface to
+;;;             :   avoid having to create one for the non-model based commands.
+;;;             : * Notify-device and notify-interface decode the features provided
+;;;             :   from external calls with the embedded string mechanism, but
+;;;             :   don't decode the device or interface names.
+;;; 2018.11.01 Dan [7.1]
+;;;             : * A device now has two additional optional functions it can
+;;;             :   specify which are called by the motor module when a hand is
+;;;             :   set to the device and when the hand is unset from the device.
+;;;             :   They are called with two parameters: the device-list and the
+;;;             :   hand (left or right).
+;;;             : * Moved the default-target-width parameter here from motor.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 #+:packaged-actr (in-package :act-r)
 #+(and :clean-actr (not :packaged-actr) :ALLEGRO-IDE) (in-package :cg-user)
 #-(or (not :clean-actr) :packaged-actr :ALLEGRO-IDE) (in-package :cl-user)
 
-(declaim (ftype (function () t) unlock-tracking))
-(declaim (ftype (function (t) t) populate-loc-to-key-array))
-(declaim (ftype (function (t) t) xy-loc))
-(declaim (ftype (function (t) t) current-marker))
-
-;;; unless it's MCL define the pixels-per-inch
-#+(or (not :mcl) :openmcl)
-(progn
-  (defvar *pixels-per-inch-x* 72)
-  (defvar *pixels-per-inch-y* 72))
-
-;;; if it's ACL with the IDE (Windows) then find the true units-per-inch
-#+:ALLEGRO-IDE
-(multiple-value-bind (x y) 
-                     (cg:stream-units-per-inch  (cg:screen cg:*system*))
-  (setf *pixels-per-inch-x* x)
-  (setf *pixels-per-inch-y* y))
-
-
-;;;; ---------------------------------------------------------------------- ;;;;
-;;; The functions for ACT-R 6
-
-(defun current-device-interface ()
-  "Return the device-interface for current model in the current meta-process"
-  (values (get-module :device)))
-
-(defun install-device (device)
-  "Set the device with which a model will interact"
-  (verify-current-mp  
-   "install-device called with no current meta-process."
-   (verify-current-model
-    "install-device called with no current model."
-    (let ((devin (current-device-interface)))
-    
-      ;; If there's a current device and we're showing the
-      ;; fixation ring tell the old device that it's ring
-      ;; is going away by calling it with nil
-           
-      (when (show-focus-p devin)
-        (device-update-attended-loc (device devin) nil))
-    
-      (setf (device devin) device)))))
-
-(defun current-device ()
-  "Return the device for the current model in the current meta-process"
-  (verify-current-mp  
-   "current-device called with no current meta-process."
-   (verify-current-model
-    "current-device called with no current model."
-    (device (current-device-interface)))))
-
-(defun proc-display (&key clear)
-  "Processes the current display."
-  (verify-current-mp  
-   "proc-display called with no current meta-process."
-   (verify-current-model
-    "proc-display called with no current model."
-    (if (current-device-interface)
-        (process-display (current-device-interface) (get-module :vision) clear)
-      (print-warning "No device interface available to process")))))
-
-
-;;;; ---------------------------------------------------------------------- ;;;;
-;;; Replacement for some of the uses of *actr-enabled-p* (the AGI hacks) that 
-;;; works better with multiple models or a mixed model/human situation.  
-;;;
-;;; Don't expose the variable for user use so that things could be changed to 
-;;; something else if needed in the future.
-
-
-(defvar *model-generated-action* nil)
-
-(defmacro indicate-model-generated (&body body)
-  `(unwind-protect
-       (progn 
-         (setf *model-generated-action* (current-model))
-         ,@body)
-     (setf *model-generated-action* nil)))
-
-(defun model-generated-action ()
-  *model-generated-action*)
-
-  
-
-;;;; ---------------------------------------------------------------------- ;;;;
-;;;; Move these here
-
-(defun pm-pixels-to-angle (pixels)
-  "Convert <pixels> to degress of visual angle."
-  (pixels->angle-mth (current-device-interface) pixels))
-
-
-(defun pm-angle-to-pixels (angle)
-  "Convert visual <angle> in degress to pixels."
-  (angle->pixels-mth (current-device-interface) angle))
-
-
-;;;; ---------------------------------------------------------------------- ;;;;
-;;;; Base DEVICE-INTERFACE class and some quicky methods.
+;;; Class for the device-interface and a default one for convenience.
 
 (defclass device-interface ()
-  ((pixels-per-inch :accessor ppi :initarg :ppi
-                    :initform (/ (+ *pixels-per-inch-x* 
-                                    *pixels-per-inch-y*) 2.0))
+  ((pixels-per-inch :accessor ppi :initarg :ppi :initform 72)
    (viewing-distance :accessor viewing-distance :initform 15.0)
    (device :accessor device :initform nil)
+   (device-lock :accessor device-lock :initform (bt:make-lock "device-lock"))
    (key-closure-time :accessor key-closure-time :initform 0.010)
-   (microphone-delay :accessor microphone-delay :initform 0.100)
-   (keyboard :accessor keyboard :initform (make-instance 'virtual-keyboard))
    (with-cursor-p :accessor with-cursor-p :initform nil)
-   (input-q :accessor input-q :initform nil)
    (mouse-fitts-coeff :accessor mouse-fitts-coeff :initform 0.1)
    (show-focus-p :accessor show-focus-p :initarg :show-focus-p :initform nil)
-   (trace-mouse-p :accessor trace-mouse-p :initarg :trace-mouse-p :initform nil)
-   (mouse-trace :accessor mouse-trace :initarg :mouse-trace :initform nil)
    (needs-mouse-p :accessor needs-mouse-p :initarg :needs-mouse-p :initform t)
-   (true-cursor-loc :accessor true-cursor-loc :initarg :true-cursor-loc
-                    :initform #(0 0))
-   (locks :accessor locks :initform 0)
-   (pending-procs :accessor pending-procs :initform nil)
-   (virtual-trace :accessor virtual-trace :initform nil)
-   (version-string :accessor version-string :initarg :version-string 
-                   :initform "1.2")
-   (stable-names :accessor stable-names :initarg :stable-names
-                 :initform t)
-   (last-visual-marker :accessor last-visual-marker :initform nil)
-   (visual-fixation :accessor visual-fixation :initform nil)
-   (last-processed-device :accessor last-processed-device :initform nil)))
+   (version-string :accessor version-string :initarg :version-string :initform "7.1")
+   (stable-names :accessor stable-names :initarg :stable-names :initform t)
+   (param-lock :accessor device-param-lock :initform (bt:make-lock "device-param"))
+   (device-tables-lock :accessor device-tables-lock :initform (bt:make-lock "device-tables") :allocation :class)
+   (interface-table :accessor interface-table :initform (make-hash-table :test 'equalp) :allocation :class)
+   (default-target-width :accessor default-target-width :initarg :default-target-width :initform 1.0)
+   (device-table :accessor device-table :initform (make-hash-table :test 'equalp) :allocation :class)))
+
+(defvar *default-device-interface* (make-instance 'device-interface))
+
+
+
+(defstruct interface name init remove single-device notification)
+(defstruct act-r-device init remove notification set unset) 
+
+(defun define-interface (name &optional init remove single? notification)
+  (let ((di *default-device-interface*))
+    (bt:with-lock-held ((device-tables-lock di))
+      (if (gethash name (interface-table di))
+          (print-warning "Interface ~s already exists and cannot be created." name)
+        (progn
+          (when init 
+            (unless (check-act-r-command init)
+              (print-warning "Init function ~s specified for interface ~s is not available.  Cannot create interface." init name)
+              (return-from define-interface)))
+          (when remove 
+            (unless (check-act-r-command remove)
+              (print-warning "Remove function ~s specified for interface ~s is not available.  Cannot create interface." remove name)
+              (return-from define-interface)))
+          (when notification 
+            (unless (check-act-r-command notification)
+              (print-warning "Notification function ~s specified for interface ~s is not available.  Cannot create interface." notification name)
+              (return-from define-interface)))
+          (setf (gethash name (interface-table di)) (make-interface :name name :init init :remove remove :single-device single? :notification notification))
+          t)))))
+
+(add-act-r-command "define-interface" 'define-interface "Command to add a new interface. Params: name {init-command {remove-command {single-device {notification}}}}")
+
+(defun undefine-interface (name)
+  (let ((di *default-device-interface*))
+    (bt:with-lock-held ((device-tables-lock di))
+      (when (gethash name (interface-table di))
+        (remhash name (interface-table di))
+        t))))
+
+(add-act-r-command "undefine-interface" 'undefine-interface "Command to remove an interface. Params: name")
+
+
+
+(defun notify-interface (name features)
+  "Send the provided features to the named interface"
+  (let* ((di *default-device-interface*)
+         (interface (bt:with-lock-held ((device-tables-lock di)) (gethash name (interface-table di)))))
+    (if interface
+        (aif (interface-notification interface)
+             (dispatch-apply it features)
+             (print-warning "Interface ~s does not accept notifications. Ignoring notification features ~s." name features))
+      (print-warning "Interface ~s could not be found when calling notify-interface with features ~s." name features))))
+
+
+(defun external-notify-interface (name features)
+  (notify-interface name (decode-string-names features)))
+
+
+(add-act-r-command "notify-interface" 'external-notify-interface "Send features to the indicated interface. Params: interface 'features'" nil)
+
+(defun define-device (name &optional init remove notification set-hand unset-hand)
+  (let ((di *default-device-interface*))
+    (bt:with-lock-held ((device-tables-lock di))
+      (if (gethash name (device-table di))
+          (print-warning "Device ~s already exists and cannot be created." name)
+        (progn
+          (when init 
+            (unless (check-act-r-command init)
+              (print-warning "Init function ~s specified for device ~s is not available.  Cannot define device."
+                             init name)
+              (return-from define-device)))
+          (when remove 
+            (unless (check-act-r-command remove)
+              (print-warning "Remove function ~s specified for device ~s is not available.  Cannot define device."
+                             remove name)
+              (return-from define-device)))
+          (when notification 
+            (unless (check-act-r-command notification)
+              (print-warning "Notification function ~s specified for device ~s is not available.  Cannot define device."
+                             notification name)
+              (return-from define-device)))
+          (when set-hand 
+            (unless (check-act-r-command set-hand)
+              (print-warning "Set-hand function ~s specified for device ~s is not available.  Cannot define device."
+                             set-hand name)
+              (return-from define-device)))
+          (when unset-hand 
+            (unless (check-act-r-command unset-hand)
+              (print-warning "Unset-hand function ~s specified for device ~s is not available.  Cannot define device."
+                             unset-hand name)
+              (return-from define-device)))
+          (setf (gethash name (device-table di)) (make-act-r-device :init init :remove remove :notification notification :set set-hand :unset unset-hand))
+          t)))))
+
+(add-act-r-command "define-device" 'define-device "Command to add a new device. Params: name {init-command {remove-command {notification-command {hand-set {hand-unset}}}}")
+
+        
+
+(defun undefine-device (name)
+  (let ((di *default-device-interface*))
+    (bt:with-lock-held ((device-tables-lock di))
+      (when (gethash name (device-table di))
+        (remhash name (device-table di))
+        t))))
+
+(add-act-r-command "undefine-device" 'undefine-device "Command to remove a device. Params: name")
+
+
+
+(defun install-device (device-list)
+  "Set a device with which a model will interact"
+  (verify-current-model
+   "install-device called with no current model."
+      
+      (if (and (listp device-list) 
+               (<= 2 (length device-list) 3))
+          (let ((interface-name (first device-list))
+                (device-name (second device-list))
+                (devin (current-device-interface))
+                interface device)
+            
+            (bt:with-lock-held ((device-tables-lock devin))
+              (setf interface (gethash interface-name (interface-table devin)))
+              (setf device (gethash device-name (device-table devin))))
+            
+            (cond ((null interface)
+                   (print-warning "Invalid interface ~s in call to install-device with ~s. No device installed."
+                                  interface-name device-list))
+                  ((null device)
+                   (print-warning "Invalid device ~s in call to install-device with ~s. No device installed."
+                                  device-name device-list))
+                  (t
+                   (let ((d (bt:with-lock-held ((device-lock devin))
+                              (device devin))))
+                     
+                     (if (find device-list d :test 'equalp)
+                         (print-warning "The device ~s is already installed. No device installed." device-list)
+                       (progn
+                         (awhen (and (interface-single-device interface)
+                                     (find interface-name d :key 'first :test 'string-equal))
+                                (when (interface-remove interface)
+                                  (unless (handle-evaluate-results (evaluate-act-r-command (interface-remove interface) it))
+                                    (return-from install-device nil)))
+                                (when (act-r-device-remove device)
+                                  (unless (handle-evaluate-results (evaluate-act-r-command (act-r-device-remove device) it))
+                                    (return-from install-device nil)))
+                                (bt:with-lock-held ((device-lock devin))
+                                  (setf d (setf (device devin) (remove it (device devin))))))
+                         
+                         ;; should be there before trying to init 
+                         ;; but needs to be removed if errors occur
+                           
+                         (bt:with-lock-held ((device-lock devin))
+                           (push device-list (device devin)))
+                         
+                         (when (interface-init interface)
+                           (unless (handle-evaluate-results (evaluate-act-r-command (interface-init interface) device-list))
+                             (bt:with-lock-held ((device-lock devin))
+                               (setf (device devin) (remove device-list (device devin))))
+                             (return-from install-device nil)))
+                         (when (act-r-device-init device)
+                           (unless (handle-evaluate-results (evaluate-act-r-command (act-r-device-init device) device-list))
+                             (bt:with-lock-held ((device-lock devin))
+                               (setf (device devin) (remove device-list (device devin))))
+                             (return-from install-device nil)))
+                         device-list))))))
+        (print-warning "Invalid device-list provided ~s.  No device installed." device-list))))
+
+(add-act-r-command "install-device" 'install-device "Command to install a device for an interface. Params: (interface device {device-detail})" nil)
+
+(defun remove-device (device-list)
+  "Remove a device with which a model is interacting"
+   (verify-current-model
+    "remove-device called with no current model."
+    (let* ((devin (current-device-interface))
+           (device (bt:with-lock-held ((device-lock devin)) (device devin)))
+           (exists (find device-list device :test 'equalp)))
+          
+      (if exists
+          (let ((interface-name (first device-list))
+                (device-name (second device-list))
+                interface device)
+            (bt:with-lock-held ((device-tables-lock devin))
+              (setf interface (gethash interface-name (interface-table devin)))
+              (setf device (gethash device-name (device-table devin))))
+                
+            ;; The warning cases shouldn't happen since it was installed
+            ;; but it's possible that one was undefined after the install 
+            ;; which doesn't get caught currently.
+            
+            (cond ((null interface)
+                   (print-warning "Invalid interface ~s in call to remove-device with ~s. No device removed."
+                                  interface-name device-list))
+                  ((null device)
+                   (print-warning "Invalid device ~s in call to remove-device with ~s. No device removed."
+                                  device-name device-list))
+                  (t
+                   (when (interface-remove interface)
+                     (unless (handle-evaluate-results (evaluate-act-r-command (interface-remove interface) device-list))
+                           (return-from remove-device nil)))
+                   (when (act-r-device-remove device)
+                     (unless (handle-evaluate-results (evaluate-act-r-command (act-r-device-remove device) device-list))
+                       (return-from remove-device nil)))
+                   (bt:with-lock-held ((device-lock devin))
+                     (setf (device devin) (remove exists (device devin))))
+                   t)))
+        (print-warning "Device ~s is not currently installed and cannot be removed." device-list)))))
+
+(add-act-r-command "remove-device" 'remove-device "Command to remove a device for an interface. Params: (interface device {device-detail})" nil)
+
+(defun current-devices (interface)
+  "Return the devices for the named interface in the current model"
+  (verify-current-model
+   "current-devices called with no current model."
+   (let ((devin (current-device-interface)))
+     (bt:with-lock-held ((device-lock devin))
+       (if (gethash interface (interface-table devin))
+           (remove-if-not (lambda (x) (string-equal interface (first x))) (device devin))
+         (print-warning "~s does not name a valid interface in call to current-devices." interface))))))
+
+
+(add-act-r-command "current-devices" 'current-devices "Get the list of all devices installed for an interface. Params: interface" nil)
+
+(defun current-device-interface ()
+  "Return the device-interface for current model"
+  (values (get-module :device)))
+
+(defun defined-devices ()
+  (let ((di *default-device-interface*))
+    (bt:with-lock-held ((device-tables-lock di))
+      (hash-table-keys (device-table di)))))
+     
+
+(defun defined-interfaces ()
+  (let ((di *default-device-interface*))
+    (bt:with-lock-held ((device-tables-lock di))
+      (hash-table-keys (interface-table di)))))
+
+(add-act-r-command "defined-devices" 'defined-devices "Command to get the list of all defined devices. No params" nil)
+(add-act-r-command "defined-interfaces" 'defined-interfaces "Command to get the list of all defined interfaces. No params" nil)
+
+
+(defun notify-device (device-list features)
+  "Send the provided features to the named device for the specified interface in the current model in the current meta-process if such a function was provided"
+  (verify-current-model
+   "notify-device called with no current model."
+   (let ((di (current-device-interface)))
+     (if di
+         (let ((d (bt:with-lock-held ((device-lock di)) (device di))))
+           (if (find device-list d :test 'equalp)
+               (let ((device (gethash (second device-list) (bt:with-lock-held ((device-tables-lock di)) (device-table di)))))
+                 (when (and device (act-r-device-notification device))
+                   (let ((res (multiple-value-list (evaluate-act-r-command (act-r-device-notification device) device-list features))))
+                     (if (first res)
+                         (values-list (rest res))
+                       (values-list res))))
+                 ;; don't warn if there isn't a device-function just fall through and return nil
+                 )
+             (print-warning "Device ~s is not installed when trying to notify with features ~s." device-list features)))
+       (print-warning "Device-interface could not be found when trying notify device ~s." device-list)))))
+
+(defun external-notify-device (device-list features)
+  (notify-device device-list (decode-string-names features)))
+
+(add-act-r-command "notify-device" 'external-notify-device "Send features to the given device. Params: device-list 'features'" nil)
+
+(defun notify-device-hand-set (device-list hand)
+  "Call the set-hand command for the device if it has one"
+  (verify-current-model
+   "notify-device-hand-set called with no current model."
+   (let ((di (current-device-interface)))
+     (if di
+         (let ((d (bt:with-lock-held ((device-lock di)) (device di))))
+           (if (find device-list d :test 'equalp)
+               (let ((device (gethash (second device-list) (bt:with-lock-held ((device-tables-lock di)) (device-table di)))))
+                 (awhen (and device (act-r-device-set device))
+                   (dispatch-apply it device-list hand)))
+             (print-warning "Device ~s is not installed when trying to notify for hand being set." device-list)))
+       (print-warning "Device-interface could not be found when trying notify device ~s for hand being set." device-list)))))
+
+(defun notify-device-hand-unset (device-list hand)
+  "Call the unset-hand command for the device if it has one"
+  (verify-current-model
+   "notify-device-hand-set called with no current model."
+   (let ((di (current-device-interface)))
+     (if di
+         (let ((d (bt:with-lock-held ((device-lock di)) (device di))))
+           (if (find device-list d :test 'equalp)
+               (let ((device (gethash (second device-list) (bt:with-lock-held ((device-tables-lock di)) (device-table di)))))
+                 (awhen (and device (act-r-device-unset device))
+                   (dispatch-apply it device-list hand)))
+             (print-warning "Device ~s is not installed when trying to notify for hand being unset." device-list)))
+       (print-warning "Device-interface could not be found when trying notify device ~s for hand being unset." device-list)))))
+
+
+;;;; ---------------------------------------------------------------------- ;;;;
+;;;; some simple device-interface methods.
 
 
 (defmethod my-name ((mod device-interface))
   :DEVICE)
 
-(defgeneric angle->pixels-mth (devin angle)
+(defgeneric angle->pixels-mth (devin angle &optional dist)
   (:documentation  "Determine the number of pixels subtending a visual angle."))
 
-(defmethod angle->pixels-mth ((devin device-interface) (angle number))
-  (round (* (* (viewing-distance devin) (tan (deg->rad angle))) 
-            (ppi devin))))
+(defmethod angle->pixels-mth ((devin device-interface) (angle number) &optional dist)
+  (bt:with-lock-held ((device-param-lock devin))
+    (if (numberp dist)
+        (round (* 2 dist (tan (deg->rad (/ angle 2)))))
+      (round (* 2 (viewing-distance devin) (ppi devin) (tan (deg->rad (/ angle 2))))))))
 
 
-(defgeneric pixels->angle-mth (devin pixels)
+(defgeneric pixels->angle-mth (devin pixels &optional dist)
   (:documentation  "Determine the amount of visual angle subtended by <pixels>."))
 
-(defmethod pixels->angle-mth ((devin device-interface) (pixels number))
-  (rad->deg (atan (/ (/ pixels (ppi devin)) (viewing-distance devin)))))
+(defmethod pixels->angle-mth ((devin device-interface) (pixels number) &optional dist)
+  (bt:with-lock-held ((device-param-lock devin))
+    (if (numberp dist)
+        (rad->deg (* 2 (atan (/ pixels 2) dist)))
+      (rad->deg (* 2 (atan (/ pixels 2) (* (ppi devin) (viewing-distance devin))))))))
 
 
-(defgeneric find-viewing-dist-mth (devin angle pixels)
+(defgeneric find-viewing-dist-mth (devin angle pixels &optional in-pixels)
   (:documentation  "Given the number of pixels an angle subtends, what's the viewing distance?"))
 
-(defmethod find-viewing-dist-mth ((devin device-interface) angle pixels)
-  (floor 
-   (/ pixels (* (tan (deg->rad angle)) (ppi devin)))))
-
-
-
-;;;; Slot for device implementers to save a visual focus ring object
-;;;; so that there can be one per model.
-
-(defun visual-fixation-marker ()
-  (aif (current-device-interface)
-       (visual-fixation it)
-       (print-warning "No current device interface to return a visual-fixation-marker.")))
-
-(defun set-visual-fixation-marker (val)
-  (aif (current-device-interface)
-       (setf (visual-fixation it) val)
-       (print-warning "No current device interface to return a visual-fixation-marker.")))
-
-(defsetf visual-fixation-marker set-visual-fixation-marker)
-
+(defmethod find-viewing-dist-mth ((devin device-interface) angle pixels &optional in-pixels)
+  (bt:with-lock-held ((device-param-lock devin))
+    (if in-pixels
+        (floor (/ pixels 2) (tan (deg->rad (/ angle 2))))
+      (floor (/ pixels 2) (* (tan (deg->rad (/ angle 2))) (ppi devin))))))
 
 
 ;;;; ---------------------------------------------------------------------- ;;;;
-;;;; Interacting with the Master Process
+;;;; some simple user commands
 
+(defun pm-pixels-to-angle (pixels &optional dist)
+  "Convert <pixels> to degress of visual angle."
+  (pixels->angle-mth (current-device-interface) pixels dist))
+
+
+(defun pm-angle-to-pixels (angle &optional dist)
+  "Convert visual <angle> in degress to pixels."
+  (angle->pixels-mth (current-device-interface) angle dist))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; The actual module interface code.
 
 (defmethod reset-device ((devin device-interface))
-  (setf (input-q devin) nil)
-  (setf (mouse-trace devin) nil)
-  (setf (locks devin) 0)
-  (setf (pending-procs devin) nil)
   
-  ;; Clear the installed device now
-  (setf (device devin) nil)
+  (delete-device devin)
   
-  ;; clear the markers for checking device and attention history
-  (setf (last-visual-marker devin) (cons nil nil))
-  (setf (last-processed-device devin) nil))
+  ;; Clear the installed devices now
+  (bt:with-lock-held ((device-lock devin))
+    (setf (device devin) nil)))
 
-(defgeneric update-device (devin time)
-  (:documentation  "Update the device at <time>."))
-
-;;; the default method has to do the following:
-;;; [1] Update the attentional focus
-;;; [2] Call the device hook
-;;; [3] Make sure the cursor synch is maintained
-;;; [4] Call the device update method
-
-(defmethod update-device ((devin device-interface) time)
-  (when (show-focus-p devin)
-    (let ((vis-m (get-module :vision)))
-      (when vis-m
-        (let ((marker (current-marker vis-m))
-              (past-marker-exists (car (last-visual-marker devin)))
-              (past-marker (cdr (last-visual-marker devin))))
-          
-          (unless (and past-marker-exists (eq marker past-marker))
-            (if marker
-                (device-update-attended-loc (device devin) (xy-loc marker))
-              (device-update-attended-loc (device devin) nil))
-            (setf (last-visual-marker devin) (cons t marker)))))))
-  (synch-mouse devin)
-  (device-update (device devin) time))
-
-
-(defgeneric device-update-attended-loc (device xyloc)
-  (:documentation  "Tell the device to update the attended location, which is passed in."))
-
-(defmethod device-update-attended-loc (device xyloc)
-  (declare (ignore device xyloc))
-  nil)
-
-
-(defgeneric device-update (device time)
-  (:documentation  "Update the device at <time>.  A method should be defined for this if the device is dynamic."))
-
-(defmethod device-update (device time)
-  (declare (ignore device time))
-  nil)
+(defmethod delete-device ((devin device-interface))
+  (let (interface device)
+    
+    (dolist (device-list (bt:with-lock-held ((device-lock devin)) (device devin)))
+      (bt:with-lock-held ((device-tables-lock devin))
+        (setf interface (gethash (first device-list) (interface-table devin))
+          device (gethash (second device-list) (device-table devin))))
+      
+      ;; The warning cases shouldn't happen since it was installed
+      ;; but it's possible that one was undefined after the install 
+      ;; which doesn't get caught currently.
+      
+      (cond ((null interface)
+             (print-warning "Invalid interface ~s while trying to remove-device with ~s. No device removed."
+                            (first device-list) device-list))
+            ((null device)
+             (print-warning "Invalid device ~s while trying to remove-device with ~s. No device removed."
+                            (second device-list) device-list))
+            (t
+             (when (interface-remove interface)
+               (unless (handle-evaluate-results (evaluate-act-r-command (interface-remove interface) device-list))
+                 (print-warning "Interface-remove failed for ~S" device-list)))
+             (when (act-r-device-remove device)
+               (unless (handle-evaluate-results (evaluate-act-r-command (act-r-device-remove device) device-list))
+                 (print-warning "Device-remove failed for ~S ~S" (act-r-device-remove device) device-list)))
+             t)))))
 
 
 ;;;; ---------------------------------------------------------------------- ;;;;
 ;;;; Module interface functions
 
-
-(defun update-device-module (device old-time new-time)
-  "Call the device's update-device method with the new time"
-  (declare (ignore old-time))
-  (update-device device new-time))
-
-
 (defun params-device-module (device param)
-  (if (consp param)
-    (case (car param)
-     (:pixels-per-inch
-       (setf (ppi device) (cdr param)))
-      (:process-cursor
-       (setf (with-cursor-p device) (cdr param)))
-      (:show-focus
-       (setf (show-focus-p device) (cdr param))) 
-      (:viewing-distance
-       (setf (viewing-distance device) (cdr param)))
-      
-      (:mouse-fitts-coeff
-       (setf (mouse-fitts-coeff device) (cdr param)))
-      
-      (:needs-mouse
-       (setf (needs-mouse-p device) (cdr param)))
-      (:vwt
-       (setf (virtual-trace device) (cdr param)))
-      (:stable-loc-names
-       (setf (stable-names device) (cdr param)))
-      (:trace-mouse
-       (setf (trace-mouse-p device) (cdr param)))
-      )
-    (case param
-     (:pixels-per-inch
-      (ppi device))
-      (:process-cursor
-       (with-cursor-p device))
-      (:show-focus
-       (show-focus-p device)) 
-      (:viewing-distance
-       (viewing-distance device))
-      (:mouse-fitts-coeff
-       (mouse-fitts-coeff device))
-      (:needs-mouse
-       (needs-mouse-p device))
-      (:vwt
-       (virtual-trace device))
-      (:stable-loc-names
-       (stable-names device))
-      (:trace-mouse
-       (trace-mouse-p device)))))
-
+    (bt:with-lock-held ((device-param-lock device))
+      (if (consp param)
+          (case (car param)
+            (:pixels-per-inch
+             (setf (ppi device) (cdr param)))
+            (:process-cursor
+             (setf (with-cursor-p device) (cdr param)))
+            (:viewing-distance
+             (setf (viewing-distance device) (cdr param)))
+            
+            (:cursor-fitts-coeff
+             (setf (mouse-fitts-coeff device) (cdr param)))
+            
+            (:needs-mouse
+             (setf (needs-mouse-p device) (cdr param)))
+            (:default-target-width
+             (setf (default-target-width device) (cdr param)))
+            (:stable-loc-names
+             (setf (stable-names device) (cdr param)))
+            (:key-closure-time
+             (setf (key-closure-time device) (cdr param)))
+            )
+        (case param
+          (:pixels-per-inch
+           (ppi device))
+          (:process-cursor
+           (with-cursor-p device))
+          (:viewing-distance
+           (viewing-distance device))
+          (:cursor-fitts-coeff
+           (mouse-fitts-coeff device))
+          (:needs-mouse
+           (needs-mouse-p device))
+          (:key-closure-time
+           (key-closure-time device))
+          (:stable-loc-names
+           (stable-names device))
+          (:default-target-width
+           (default-target-width device))))))
+  
 ;;;; ---------------------------------------------------------------------- ;;;;
 ;;;; Module definition
 
@@ -501,16 +860,13 @@
      :default-value 72.0
      :warning "a non-negative number"
      :documentation "Pixels per inch of display")
+   
    (define-parameter :process-cursor
      :valid-test #'tornil 
      :default-value nil
      :warning "T or NIL"
-     :documentation "Should there be a visicon feature for the cursor?")
-   (define-parameter :show-focus
-     :valid-test #'tornil 
-     :default-value nil
-     :warning "T or NIL"
-     :documentation "Show the focus ring on the GUI?")
+     :documentation "Should the AGI create a visicon feature for the mouse cursor?")
+   
    (define-parameter :viewing-distance
      :valid-test #'posnum 
      :default-value 15.0
@@ -519,544 +875,45 @@
    
    ;; From motor
    
-   (define-parameter :mouse-fitts-coeff
+   (define-parameter :key-closure-time
+       :valid-test 'nonneg
+       :warning "a number"
+       :default-value 0.01
+       :documentation "Time between when a key is contacted and it registers as being hit.")
+   
+   (define-parameter :cursor-fitts-coeff
      :valid-test #'nonneg 
      :default-value 0.1
      :warning "a non-negative number"
      :documentation "b coefficient in Fitts's equation for aimed movements.")
+   
    (define-parameter :needs-mouse
-     :valid-test #'tornil 
-     :default-value t
-     :warning "T or NIL"
-     :documentation "Does ACT-R control the mouse?")
-   
-   ;; New general parameter
-   
-   (define-parameter :vwt
-     :valid-test #'tornil 
+     :valid-test (lambda (x) (or (tornil x) (symbolp x) (stringp x))) 
      :default-value nil
-     :warning "T or NIL"
-     :documentation "Virtual Window trace controls the << ... >> outputs from virtual windows")
+     :warning "T, NIL, a symbol, or string"
+     :documentation "Should the AGI install a mouse device?")
    
    (define-parameter :stable-loc-names
      :valid-test #'tornil 
      :default-value t
      :warning "T or NIL"
      :documentation "Whether or not to sort the virtual window's subviews to guarantee the names always line up")
-   (define-parameter :trace-mouse
-     :valid-test #'tornil 
-     :default-value t
-     :warning "T or NIL"
-     :documentation "Whether or not to record all mouse position data"))
-  :version "1.3"
+   
+   (define-parameter :default-target-width
+     :valid-test 'nonneg 
+     :default-value 1.0
+     :warning "a non-negative number"
+     :documentation 
+     "Width of targets with unspecified widths for approach-width calculations and ply motor actions (no units)."))
+  
+  :version (version-string (make-instance 'device-interface))
   :documentation "The device interface for a model"
-  :creation #'(lambda (x)
+  :creation (lambda (x)
                 (declare (ignore x))
                 (make-instance 'device-interface))
-  :reset #'reset-device
-  :params #'params-device-module
-  :update #'update-device-module)
-
-
-
-;;;; ---------------------------------------------------------------------- ;;;;
-;;;; Proc screen stuff
-
-;;; PROCESS-DISPLAY      [Method]
-;;; Description : Replacement for old PROC-SCREEN functionality.  A few things
-;;;             : have to be done to process the display.  First, make sure
-;;;             : a display is attached.  Then, set up the previous icon.
-;;;             : This is NIL if we're clearing the display.  Then, ask the
-;;;             : device for a new icon.  Then check the new icon against the
-;;;             : old one so we don't lose state information.  Update the
-;;;             : attended location, make sure everyone is current on the
-;;;             : mouse location.  Return the length of the icon, since ya
-;;;             : gotta return something.
-
-(defgeneric process-display (devin vis-mod &optional clear)
-  (:documentation  "Rebuild the Vision Module's icon based on the current display."))
-
-(defgeneric synch-mouse (devin)
-  (:documentation  "Make sure everyone agress on the current cursor position."))
-
-(defmethod synch-mouse ((devin device-interface))
-  (when (and (device devin)
-             (needs-mouse-p devin)
-             (not (vpt= (true-cursor-loc devin)
-                        (get-mouse-coordinates (device devin)))))
-    (indicate-model-generated 
-     (device-move-cursor-to (device devin) (true-cursor-loc devin))))
-  (let ((vis-m (get-module :vision)))
-    (when vis-m
-      (update-cursor-feat devin vis-m))))
-
-
-(defgeneric update-cursor-feat (devin vis-mod)
-  (:documentation  "Updates the feature in the icon with the current cursor position."))
-
-(defgeneric key->cmd (devin key)
-  (:documentation  "Given a key, return the appropriate Motor Module command to type it."))
-
-(defmethod key->cmd ((devin device-interface) key)
-  (key-to-command (keyboard devin) key))
-
-
-;;; Generic methods which will need to be overridden for specific devices.
-;;; These are defined for MCL windows.
-
-(defgeneric get-mouse-coordinates (device)
-  (:documentation  "Return the mouse coordinates in #(x y) form."))
-
-(defmethod get-mouse-coordinates (device)
-  (error "No method defined for GET-MOUSE-COORDINATES on object ~S." device))
-
-(defgeneric build-vis-locs-for (obj vis-mod)
-  (:documentation  "Return a list of visual-location chunks for an object."))
-
-(defmethod build-vis-locs-for (obj vis-mod)
-  (declare (ignore vis-mod))
-  (print-warning "No build-vis-locs-for defined on item ~s - no feature generated." obj))
-
-(defgeneric cursor-to-vis-loc (device)
-  (:documentation  "Reaturn a visual-location chunk reprsenting the current cursor."))
-
-(defmethod cursor-to-vis-loc (device)
-  (error "No method definded for CURSOR-TO-VIS-LOC on object ~S." device))  
-
-
-;;;; ---------------------------------------------------------------------- ;;;;
-;;;; Output functions:  mouse movements, keypress stuff.
-
-
-(defgeneric output-key (devin keyloc)
-  (:documentation  "Request that the device register a key output for the key at a given location."))
-
-(defmethod output-key ((devin device-interface) (keyloc vector))
-  (let* ((invalid (or (< (svref keyloc 1) 0)
-                      (> (svref keyloc 1) 6)
-                      (< (svref keyloc 0) 0)
-                      (and (> (svref keyloc 0) 22)
-                           (not (= (svref keyloc 0) 28)))))
-         (the-key (if invalid nil (loc->key (keyboard devin) keyloc))))
-    (indicate-model-generated 
-     (if (eq the-key 'mouse)
-         (device-handle-click (device devin))
-       (progn 
-         (when (null the-key)
-           (print-warning "Invalid key location pressed ~s" keyloc))
-         (device-handle-keypress (device devin) the-key))))))
-
-
-(defgeneric output-speech (devin text)
-  (:documentation  "Requests that the device output the provided text as speech."))
-
-(defmethod output-speech ((devin device-interface) (text string))
-  (device-speak-string (device devin) text))
-
-
-(defgeneric move-cursor-absolute (devin xyloc)
-  (:documentation  "Request that the device move the cursor to the absolute location <xyloc>."))
-
-(defmethod move-cursor-absolute ((devin device-interface) xyloc)
-  (when (trace-mouse-p devin)
-    (push (cons (mp-time) xyloc) (mouse-trace devin)))
-  (indicate-model-generated 
-   (device-move-cursor-to (device devin) xyloc))
-  (setf (true-cursor-loc devin) xyloc)
-  (synch-mouse devin))
-
-
-(defgeneric move-cursor-polar (devin rtheta)
-  (:documentation  "Request that the device move the cursor by <r> in direction <theta>."))
-
-(defmethod move-cursor-polar ((devin device-interface) rtheta)
-  (let ((newloc (polar-move-xy (get-mouse-coordinates (device devin)) rtheta)))
-    (when (trace-mouse-p devin)
-      (push (cons (mp-time) newloc) (mouse-trace devin)))
-    (indicate-model-generated
-     (device-move-cursor-to (device devin) newloc))
-    (setf (true-cursor-loc devin) newloc))
-  (synch-mouse devin))
-
-
-(defun get-mouse-trace ()
-  (let ((devin (current-device-interface)))
-    (cond ((and devin (trace-mouse-p devin))
-           (mouse-trace devin))
-          (devin
-           :mouse-trace-off)
-          (t 
-           (print-warning "No device interface found for get-mouse-trace.")))))
-
-(defgeneric output-click (devin)
-  (:documentation  "Output a mouse click to the device."))
-
-(defmethod output-click ((devin device-interface))
-  (indicate-model-generated
-   (device-handle-click (device devin))))
-
-
-;;; Generic methods which will need to be overridden for specific devices.
-;;; These are defined for MCL windows.
-
-(defgeneric device-handle-keypress (device key)
-  (:documentation  "Handle the press of the given key."))
-
-(defmethod device-handle-keypress (device key)
-  (declare (ignore key))
-  (error "No method defined for DEVICE-HANDLE-KEYPRESS for object ~S." device))
-
-(defgeneric device-move-cursor-to (device xyloc)
-  (:documentation  "Move the cursor to a specified location."))
-
-(defmethod device-move-cursor-to (device xyloc)
-  (declare (ignore xyloc))
-  (error "No method defined for DEVICE-MOVE-CURSOR-TO for object ~S." device))
-
-(defgeneric device-handle-click (device)
-  (:documentation  "Handle a click request."))
-
-(defmethod device-handle-click (device)
-  (error "No method defined for DEVICE-HANDLE-CLICK for object ~S." device))
-
-(defgeneric device-speak-string (device string)
-  (:documentation  "Handle a speech request."))
-
-(defmethod device-speak-string (device string)
-  (declare (ignore string))
-  (error "No method defined for DEVICE-SPEAK-STRING for object ~S." device))
-
-
-;;;; ---------------------------------------------------------------------- ;;;;
-;;;; The virtual keyboard.  Override one or more of these methods to 
-;;;; represent different keyboards.
-
-(defclass virtual-keyboard ()
-   ((key->cmd-ht :accessor key->cmd-ht 
-                  :initform (make-hash-table :test #'equal))
-    (key->loc-ht :accessor key->loc-ht
-                  :initform (make-hash-table :test #'equal))
-    (loc->key-array :accessor loc->key-arr 
-                     :initform (make-array '(23 7) :initial-element nil))))
-
-
-(defmethod initialize-instance :after ((vk virtual-keyboard) &key)
-  (populate-key-to-command-ht (key->cmd-ht vk))
-  (populate-key-to-loc-ht (key->loc-ht vk))
-  (populate-loc-to-key-array (loc->key-arr vk)))
-
-
-;;; LOC-TO-KEY      [Method]
-;;; Description : Given a location, return the corresponding character.
-;;;             : Accessed via the 'virtual keyboard' array.
-
-(defgeneric loc->key (vk loc)
-  (:documentation  "Given an location, return the corresponding key"))
-
-(defmethod loc->key ((vk virtual-keyboard) (loc vector))
-  (if (vpt= loc #(28 2))
-    'mouse
-    (aref (loc->key-arr vk) (px loc) (py loc))))
-
-
-(defgeneric key-to-command (vk key)
-  (:documentation  "Given a key, return the appropriate command."))
-
-(defmethod key-to-command ((vk virtual-keyboard) key)
-  (gethash key (key->cmd-ht vk)))
-
-
-(defmethod key-to-loc ((vk virtual-keyboard) key)
-  (gethash key (key->loc-ht vk)))
-
-
-(defgeneric populate-key-to-command-ht (ht)
-  (:documentation  "Populates the hash table that maps keys to motor commands"))
-
-(defmethod populate-key-to-command-ht ((ht hash-table))
-  (setf (gethash 'space ht) '(punch :hand left :finger thumb))
-  (setf (gethash 'backquote ht) 
-    '(peck-recoil :hand left :finger pinkie :r 2.24 :theta -2.03))
-  (setf (gethash 'tab ht) 
-    '(peck-recoil :hand left :finger pinkie :r 1.41 :theta -2.36))
-  (setf (gethash '1 ht) 
-    '(peck-recoil :hand left :finger pinkie :r 2 :theta -1.57))
-  (setf (gethash 'Q ht) 
-    '(peck-recoil :hand left :finger pinkie :r 1 :theta -1.57))
-  (setf (gethash 'A ht) '(punch :hand left :finger pinkie))
-  (setf (gethash 'Z ht) 
-    '(peck-recoil :hand left :finger pinkie :r 1 :theta 1.57))
-  (setf (gethash '2 ht) 
-    '(peck-recoil :hand left :finger ring :r 2 :theta -1.57))
-  (setf (gethash 'W ht) 
-    '(peck-recoil :hand left :finger ring :r 1 :theta -1.57))
-  (setf (gethash 'S ht) 
-    '(punch :hand left :finger ring))
-  (setf (gethash 'X ht) 
-    '(peck-recoil :hand left :finger ring :r 1 :theta 1.57))
-  (setf (gethash '3 ht) 
-    '(peck-recoil :hand left :finger middle :r 2 :theta -1.57))
-  (setf (gethash 'E ht) 
-    '(peck-recoil :hand left :finger middle :r 1 :theta -1.57))
-  (setf (gethash 'D ht) '(punch :hand left :finger middle))
-  (setf (gethash 'C ht) 
-    '(peck-recoil :hand left :finger middle :r 1 :theta 1.57))
-  (setf (gethash '4 ht) 
-    '(peck-recoil :hand left :finger index :r 2 :theta -1.57))
-  (setf (gethash 'R ht) 
-    '(peck-recoil :hand left :finger index :r 1 :theta -1.57))
-  (setf (gethash 'F ht) '(punch :hand left :finger index))
-  (setf (gethash 'V ht) 
-    '(peck-recoil :hand left :finger index :r 1 :theta 1.57))
-  (setf (gethash '5 ht) 
-    '(peck-recoil :hand left :finger index :r 2.24 :theta -1.11))
-  (setf (gethash 'T ht) 
-    '(peck-recoil :hand left :finger index :r 1.41 :theta -0.79))
-  (setf (gethash 'G ht) 
-    '(peck-recoil :hand left :finger index :r 1 :theta 0))
-  (setf (gethash 'B ht) 
-    '(peck-recoil :hand left :finger index :r 1.41 :theta 0.79))
-  (setf (gethash '6 ht) 
-    '(peck-recoil :hand right :finger index :r 2.24 :theta -2.03))
-  (setf (gethash 'Y ht) 
-    '(peck-recoil :hand right :finger index :r 1.41 :theta -2.36))
-  (setf (gethash 'H ht) 
-    '(peck-recoil :hand right :finger index :r 1 :theta 3.14))
-  (setf (gethash 'N ht) 
-    '(peck-recoil :hand right :finger index :r 1.41 :theta 2.36))
-  (setf (gethash '7 ht) 
-    '(peck-recoil :hand right :finger index :r 2 :theta -1.57))
-  (setf (gethash 'U ht) 
-    '(peck-recoil :hand right :finger index :r 1 :theta -1.57))
-  (setf (gethash 'J ht) 
-    '(punch :hand right :finger index))
-  (setf (gethash 'M ht) 
-    '(peck-recoil :hand right :finger index :r 1 :theta 1.57))
-  (setf (gethash '8 ht) 
-    '(peck-recoil :hand right :finger middle :r 2 :theta -1.57))
-  (setf (gethash 'I ht) 
-    '(peck-recoil :hand right :finger middle :r 1 :theta -1.57))
-  (setf (gethash 'K ht) '(punch :hand right :finger middle))
-  (setf (gethash 'comma ht) 
-    '(peck-recoil :hand right :finger middle :r 1 :theta 1.57))
-  (setf (gethash '9 ht) 
-    '(peck-recoil :hand right :finger ring :r 2 :theta -1.57))
-  (setf (gethash 'O ht) 
-    '(peck-recoil :hand right :finger ring :r 1 :theta -1.57))
-  (setf (gethash 'L ht) 
-    '(punch :hand right :finger ring))
-  (setf (gethash 'period ht) 
-    '(peck-recoil :hand right :finger ring :r 1 :theta 1.57))
-  (setf (gethash 'dot ht) 
-    '(peck-recoil :hand right :finger ring :r 1 :theta 1.57))
-  (setf (gethash '0 ht) 
-    '(peck-recoil :hand right :finger pinkie :r 2 :theta -1.57))
-  (setf (gethash 'P ht) 
-    '(peck-recoil :hand right :finger pinkie :r 1 :theta -1.57))
-  (setf (gethash 'semicolon ht) '(punch :hand right :finger pinkie))
-  (setf (gethash 'slash ht) 
-    '(peck-recoil :hand right :finger pinkie :r 1 :theta 1.57))
-  (setf (gethash '/ ht) 
-    '(peck-recoil :hand right :finger pinkie :r 1 :theta 1.57))
-  (setf (gethash 'hyphen ht) 
-    '(peck-recoil :hand right :finger pinkie :r 2.24 :theta -1.11))
-  (setf (gethash '- ht) 
-    '(peck-recoil :hand right :finger pinkie :r 2.24 :theta -1.11))
-  (setf (gethash '[ ht) 
-    '(peck-recoil :hand right :finger pinkie :r 1.41 :theta -0.78))
-  (setf (gethash 'quote ht) 
-    '(peck-recoil :hand right :finger pinkie :r 1 :theta 0))
-  (setf (gethash 'return ht) 
-    '(peck-recoil :hand right :finger pinkie :r 2 :theta 0))
-  
-  ;; some of these are stretching the pinkies to fill in the primary area...
-  (setf (gethash 'backslash ht)
-    '(peck-recoil :hand right :finger pinkie :r 3.16 :theta -0.32))
-  (setf (gethash '= ht)
-    '(peck-recoil :hand right :finger pinkie :r 2.83 :theta -0.78))
-  (setf (gethash '] ht)
-    '(peck-recoil :hand right :finger pinkie :r 2.24 :theta -0.46))
-  (setf (gethash 'delete ht)
-    '(peck-recoil :hand right :finger pinkie :r 3.6 :theta -0.59))
-  (setf (gethash 'right-shift ht)
-    '(peck-recoil :hand right :finger pinkie :r 1.41 :theta 0.78))
-  (setf (gethash 'right-control ht)
-    '(peck-recoil :hand right :finger pinkie :r 3.6 :theta 0.59))
-  (setf (gethash 'right-option ht)
-    '(peck-recoil :hand right :finger pinkie :r 2.83 :theta 0.78))
-  (setf (gethash 'right-command ht)
-    '(peck-recoil :hand right :finger pinkie :r 2.24 :theta 1.11))
-  
-  (setf (gethash 'shift ht)
-    '(peck-recoil :hand left :finger pinkie :r 1.41 :theta 2.36))
-  (setf (gethash 'left-shift ht)
-    '(peck-recoil :hand left :finger pinkie :r 1.41 :theta 2.36))
-  (setf (gethash 'left-control ht)
-    '(peck-recoil :hand left :finger pinkie :r 2.24 :theta 2.03))
-  (setf (gethash 'left-option ht)
-    '(peck-recoil :hand left :finger pinkie :r 2.0 :theta 1.57))
-  (setf (gethash 'left-command ht)
-    '(peck-recoil :hand left :finger ring :r 2.0 :theta 1.57))
-  (setf (gethash 'caps-lock ht)
-    '(peck-recoil :hand left :finger pinkie :r 1.0 :theta 3.14))
-      
-  ht)
-
-(defgeneric populate-key-to-loc-ht (ht)
-  (:documentation  "Build a hash table mapping keys to locations."))
-
-(defmethod populate-key-to-loc-ht ((ht hash-table))
-  ;; function key row
-  (setf (gethash 'escape ht) #(0 0))
-  (setf (gethash 'F1 ht) #(2 0))
-  (setf (gethash 'F2 ht) #(3 0))
-  (setf (gethash 'F3 ht) #(4 0))
-  (setf (gethash 'F4 ht) #(5 0))
-  (setf (gethash 'F5 ht) #(7 0))
-  (setf (gethash 'F6 ht) #(8 0))
-  (setf (gethash 'F7 ht) #(9 0))
-  (setf (gethash 'F8 ht) #(10 0))
-  (setf (gethash 'F9 ht) #(12 0))
-  (setf (gethash 'F10 ht) #(13 0))
-  (setf (gethash 'F11 ht) #(14 0))
-  (setf (gethash 'F12 ht) #(15 0))
-  (setf (gethash 'F13 ht) #(17 0))
-  (setf (gethash 'F14 ht) #(18 0))
-  (setf (gethash 'F15 ht) #(19 0))
-  ;; numeric key row
-  (setf (gethash 'backquote ht) #(0 2))
-  (setf (gethash 1 ht) #(1 2))
-  (setf (gethash 2 ht) #(2 2))
-  (setf (gethash 3 ht) #(3 2))
-  (setf (gethash 4 ht) #(4 2))
-  (setf (gethash 5 ht) #(5 2))
-  (setf (gethash 6 ht) #(6 2))
-  (setf (gethash 7 ht) #(7 2))
-  (setf (gethash 8 ht) #(8 2))
-  (setf (gethash 9 ht) #(9 2))
-  (setf (gethash 0 ht) #(10 2))
-  (setf (gethash '- ht) #(11 2))
-  (setf (gethash 'hyphen ht) #(11 2))
-  (setf (gethash '= ht) #(12 2))
-  (setf (gethash 'delete ht) #(13 2))
-  (setf (gethash 'help ht) #(15 2))
-  (setf (gethash 'home ht) #(16 2))
-  (setf (gethash 'pageup ht) #(17 2))
-  (setf (gethash 'clear ht) #(19 2))
-  (setf (gethash 'keypad-= ht) #(20 2))
-  (setf (gethash 'keypad-/ ht) #(21 2))
-  (setf (gethash 'keypad-* ht) #(22 2))
-  ;; QWERTY row
-  (setf (gethash 'tab ht) #(0 3))
-  (setf (gethash 'Q ht) #(1 3))
-  (setf (gethash 'W ht) #(2 3))
-  (setf (gethash 'E ht) #(3 3))
-  (setf (gethash 'R ht) #(4 3))
-  (setf (gethash 'T ht) #(5 3))
-  (setf (gethash 'Y ht) #(6 3))
-  (setf (gethash 'U ht) #(7 3))
-  (setf (gethash 'I ht) #(8 3))
-  (setf (gethash 'O ht) #(9 3))
-  (setf (gethash 'P ht) #(10 3))
-  (setf (gethash '[ ht) #(11 3))
-  (setf (gethash '] ht) #(12 3))
-  (setf (gethash 'backslash  ht) #(13 3))
-  (setf (gethash 'forward-delete ht) #(15 3))
-  (setf (gethash 'end ht) #(16 3))
-  (setf (gethash 'page-up ht) #(17 3))
-  (setf (gethash 'keypad-7 ht) #(19 3))
-  (setf (gethash 'keypad-8 ht) #(20 3))
-  (setf (gethash 'keypad-9 ht) #(21 3))
-  (setf (gethash 'keypad-hyphen ht) #(22 3))
-  ;; "A" row
-  (setf (gethash 'caps-lock ht) #(0 4))
-  (setf (gethash 'A ht) #(1 4))
-  (setf (gethash 'S ht) #(2 4))
-  (setf (gethash 'D ht) #(3 4))
-  (setf (gethash 'F ht) #(4 4))
-  (setf (gethash 'G ht) #(5 4))
-  (setf (gethash 'H ht) #(6 4))
-  (setf (gethash 'J ht) #(7 4))
-  (setf (gethash 'K ht) #(8 4))
-  (setf (gethash 'L ht) #(9 4))
-  (setf (gethash 'semicolon ht) #(10 4))
-  (setf (gethash 'quote ht) #(11 4))
-  (setf (gethash 'return ht) #(12 4))
-  (setf (gethash 'keypad-4 ht) #(19 4))
-  (setf (gethash 'keypad-5 ht) #(20 4))
-  (setf (gethash 'keypad-6 ht) #(21 4))
-  (setf (gethash 'keypad-plus ht) #(22 4))
-  (setf (gethash 'keypad-+ ht) #(22 4))
-  ;; "Z" row
-  (setf (gethash 'shift ht) #(0 5))
-  (setf (gethash 'left-shift ht) #(0 5))
-  (setf (gethash 'Z ht) #(1 5))
-  (setf (gethash 'X ht) #(2 5))
-  (setf (gethash 'C ht) #(3 5))
-  (setf (gethash 'V ht) #(4 5))
-  (setf (gethash 'B ht) #(5 5))
-  (setf (gethash 'N ht) #(6 5))
-  (setf (gethash 'M ht) #(7 5))
-  (setf (gethash 'comma ht) #(8 5))
-  (setf (gethash 'period ht) #(9 5))
-  (setf (gethash 'dot  ht) #(9 5))
-  (setf (gethash '/ ht) #(10 5))
-  (setf (gethash 'right-shift ht) #(11 5))
-  (setf (gethash 'up-arrow ht) #(16 5))
-  (setf (gethash 'keypad-1 ht) #(19 5))
-  (setf (gethash 'keypad-2 ht) #(20 5))
-  (setf (gethash 'keypad-3 ht) #(21 5))
-  (setf (gethash 'keypad-enter ht) #(22 5))
-  ;; space bar row
-  (setf (gethash 'left-control ht) #(0 6))
-  (setf (gethash 'left-option ht) #(1 6))
-  (setf (gethash 'left-command ht) #(2 6))
-  (setf (gethash 'spc ht) #(3 6))
-  (setf (gethash 'spc ht) #(4 6))
-  (setf (gethash 'spc ht) #(5 6))
-  (setf (gethash 'spc ht) #(6 6))
-  (setf (gethash 'space ht) #(6 6))
-  (setf (gethash 'spc ht) #(7 6))
-  (setf (gethash 'spc ht) #(8 6))
-  (setf (gethash 'spc ht) #(9 6))
-  (setf (gethash 'spc ht) #(10 6))
-  (setf (gethash 'right-command ht) #(11 6))
-  (setf (gethash 'right-option ht) #(12 6))
-  (setf (gethash 'right-control ht) #(13 6))
-  (setf (gethash 'left-arrow ht) #(15 6))
-  (setf (gethash 'down-arrow ht) #(16 6))
-  (setf (gethash 'right-arrow ht) #(17 6))
-  (setf (gethash 'keypad-0 ht) #(19 6))
-  (setf (gethash 'keypad-period ht) #(21 6))
-  (setf (gethash 'enter ht) #(22 6))
-  ht)
-
-
-;;;; ---------------------------------------------------------------------- ;;;;
-;;;; various toplevel commands, mostly for backward compatibility
-
-  
-
-(defmethod lock-device ((devin device-interface))
-  "Place a lock on proc-display to prevent it from actually occuring"
-  (incf (locks devin)))
-
-(defmethod unlock-device ((devin device-interface))
-  "Remove one of the locks from proc-display and run it now if all locks are
-   removed and there were any blocked calls"
-  (unless (zerop (locks devin))
-    (decf (locks devin)))
-  
-  ;; Check for tracking first
-  
-  (when (and (zerop (locks devin)) (find :tracking (pending-procs devin)))
-    (unlock-tracking)
-    (setf (pending-procs devin) (remove :tracking (pending-procs devin))))
-  
-  
-  (when (and (zerop (locks devin)) (pending-procs devin))
-    (proc-display  :clear (some #'identity (pending-procs devin)))
-    (setf (pending-procs devin) nil)))
+  :reset 'reset-device
+  :delete 'delete-device
+  :params 'params-device-module)
 
 
 #|

@@ -13,13 +13,13 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; 
 ;;; Filename    : buffer-history.lisp
-;;; Version     : 1.1
+;;; Version     : 2.0
 ;;; 
 ;;; Description : Code to support the buffer history tool in the environment.
 ;;; 
 ;;; Bugs        : 
 ;;;
-;;; To do       : [ ] Consider converting the internal time over to milliseconds
+;;; To do       : [x] Consider converting the internal time over to milliseconds
 ;;;             :     by using buffer-record-ms-time instead of -time-stamp.
 ;;;             :     The down side of that is the display for the environment
 ;;;             :     should probably still be in seconds.
@@ -46,25 +46,48 @@
 ;;;             :   since it wasn't really being used -- now it's either the
 ;;;             :   string of the chunk details or nil if the buffer is empty or
 ;;;             :   being cleared at that time.
+;;; 2015.06.09 Dan
+;;;             : * Record time in ms internally, but still show seconds to the
+;;;             :   user in the list.
+;;; 2016.04.22 Dan
+;;;             : * Start of the upgrade to allow saving history info so that it
+;;;             :   can be reloaded for the environment tools.
+;;; 2016.04.27 Dan
+;;;             : * Modify the environment interface functions so that they use
+;;;             :   the indicated underlying data.
+;;; 2016.05.04 Dan
+;;;             : * Just some minor code clean-up in the param function.
+;;; 2016.05.06 Dan
+;;;             : * Fixed an issue with buffers that were cleared and then set
+;;;             :   at the same time -- before the end state showed as empty.
+;;;             : * Also marked the to do as complete since that happened with
+;;;             :   the 2015.06.09 update.
+;;; 2016.05.16 Dan
+;;;             : * Previous fix actually broke the chunk recording so this now
+;;;             :   gets it right.
+;;; 2017.09.28 Dan [2.0]
+;;;             : * Reworking the buffer history to use the history data stream
+;;;             :   mechanism and to not rely upon the buffer trace recorder.
+;;;             :   Now it will record all the buffer information itself using
+;;;             :   an event hook for all buffers regardless of the :traced-
+;;;             :   buffers setting and it will record the information at the
+;;;             :   start of a time stamp and after each action so that it can
+;;;             :   report start of time stamp, after action, and end of time
+;;;             :   stamp results (where end is start of next if available).
+;;; 2018.02.05 Dan
+;;;             : * Rework this to actually use the internal event structs 
+;;;             :   directly since it'll get an id now.
+;;; 2018.02.22 Dan
+;;;             : * Need to protect access to time using meta-p-schedule-lock.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
 ;;; 
-;;; Open the buffer history window before running the model or set the
-;;; :save-buffer-history parameter to t in the model to enable the recording.
-;;; 
-;;; Once the model has run click the "Get history" button in the buffer history 
-;;; window.  Only those buffers specified with the :traced-buffers parameter
-;;; of the buffer-trace module will have thier history recorded.
 ;;; 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Public API:
 ;;;
-;;; :save-buffer-history parameter
-;;;  Enables the recording of buffer history for display (default is nil).
-;;;  This will also set the :save-buffer-trace parameter to t if it is not
-;;;  already set.
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -81,114 +104,151 @@
 #+(and :clean-actr (not :packaged-actr) :ALLEGRO-IDE) (in-package :cg-user)
 #-(or (not :clean-actr) :packaged-actr :ALLEGRO-IDE) (in-package :cl-user)
 
-(defstruct buffer-history-module
-  (table (make-hash-table))
-  enabled)
+
+(defclass buffer-history-module ()
+  ((history-lock :accessor history-lock :initform (bt:make-lock "buffer-history") :allocation :class)
+   (save-history :accessor save-history :initform nil)
+   (alive :accessor alive :initform t)
+   (start-time-data :accessor start-time-data :initform nil)
+   (recorded-data :accessor recorded-data :initform nil)
+   (current-data :accessor current-data :initform nil)
+   (last-time-stamp :accessor last-time-stamp :initform -1 :allocation :class)
+   (pre-recorder :accessor pre-recorder :initform nil :allocation :class)
+   (post-recorder :accessor post-recorder :initform nil :allocation :class)
+   (monitor-count :accessor monitor-count :initform 0 :allocation :class)))
+
+
+(defvar *top-level-buffer-history-module* (make-instance 'buffer-history-module))
+
+(defun buffer-start-time-recorder (evt)
+  (bt:with-lock-held ((history-lock *top-level-buffer-history-module*))
+    (let ((event (get-event-by-id evt)))
+      (unless (= (last-time-stamp *top-level-buffer-history-module*) (bt:with-recursive-lock-held ((meta-p-schedule-lock (current-mp))) (act-r-event-mstime event)))
+        (dolist (m (mp-models))
+          (with-model-eval m
+            (let ((module (get-module buffer-history)))
+              (when (save-history module)
+                (let ((last (start-time-data module)))
+                  (setf (start-time-data module)
+                    (mapcar (lambda (bn)
+                              (list bn
+                                    (aif (buffer-read bn) (printed-chunk it) "buffer empty")
+                                    (printed-buffer-status bn)))
+                      (buffers)))
+                  (unless (= (last-time-stamp module) -1)
+                    (let ((results nil))
+                      (dolist (x (current-data module))
+                        (push-last (concatenate 'list x (cdr (find (first x) last :key 'first)) (cdr (find (first x) (start-time-data module) :key 'first)))
+                                   results))
+                      (push-last (list (last-time-stamp module) results) (recorded-data module))))
+                  (setf (current-data module) nil)))))))
+      (setf (last-time-stamp *top-level-buffer-history-module*) (bt:with-recursive-lock-held ((meta-p-schedule-lock (current-mp))) (act-r-event-mstime event))))))
+
+(defun buffer-event-recorder (evt)
+  (when (current-model)
+    (let ((module (get-module buffer-history)))
+      (bt:with-lock-held ((history-lock module))
+        (let ((event (get-event-by-id evt)))
+          (when (save-history module)
+            (case (act-r-event-action event)
+              (set-buffer-chunk
+               (push-last (list (first (act-r-event-params event)) "set-buffer-chunk" (printed-chunk (second (act-r-event-params event))) (printed-buffer-status (first (act-r-event-params event))))
+                          (current-data module)))
+              (clear-buffer
+               (push-last (list (first (act-r-event-params event)) "clear-buffer" "" (printed-buffer-status (first (act-r-event-params event))))
+                          (current-data module)))
+              (mod-buffer-chunk
+               (push-last (list (first (act-r-event-params event)) "mod-buffer-chunk" (printed-chunk-spec (second (act-r-event-params event))) (printed-buffer-status (first (act-r-event-params event))))
+                          (current-data module)))
+              (overwrite-buffer-chunk
+               (push-last (list (first (act-r-event-params event)) "overwrite-buffer-chunk" (printed-chunk (second (act-r-event-params event))) (printed-buffer-status (first (act-r-event-params event))))
+                          (current-data module)))
+              (module-request
+               (push-last (list (first (act-r-event-params event)) "module-request" (printed-chunk-spec (second (act-r-event-params event))) (printed-buffer-status (first (act-r-event-params event))))
+                          (current-data module)))
+              (module-mod-request
+               (push-last (list (first (act-r-event-params event)) "module-mod-request" (printed-chunk-spec (second (act-r-event-params event))) (printed-buffer-status (first (act-r-event-params event))))
+                          (current-data module)))
+              (erase-buffer
+               (push-last (list (first (act-r-event-params event)) "erase-buffer" "" (printed-buffer-status (first (act-r-event-params event))))
+                          (current-data module))))))))))
   
-
-(defstruct buffer-history
-  time
-  chunk  ; a string or nil
-  status ; a string
-  )
-
-
-(defun equal-history-samples (h1 h2)
-  (and h1 h2
-       (or (eq (buffer-history-chunk h1) (buffer-history-chunk h2))
-           (and (stringp (buffer-history-chunk h1)) (stringp (buffer-history-chunk h2)) (string-equal (buffer-history-chunk h1) (buffer-history-chunk h2))))
-       (string-equal (buffer-history-status h1) (buffer-history-status h2))))
-
-
-(defun buffer-history-recorder (summaries)
-  (let ((history (get-module buffer-history))
-        (time (buffer-record-time-stamp summaries)))
-      
-    (when (and history (buffer-history-module-enabled history))
-      (dolist (summary (buffer-record-buffers summaries))
-        (let* ((name (buffer-summary-name summary))
-               (record (make-buffer-history :time time
-                                            :chunk (when (and (not (buffer-summary-cleared summary)) (buffer-read name))
-                                                     (capture-model-output (buffer-chunk-fct (list name))))
-                                            :status (capture-model-output (buffer-status-fct (list name))))))
-          (unless (equal-history-samples record (car (gethash name (buffer-history-module-table history))))
-            (push record (gethash name (buffer-history-module-table history)))))))))
-
-               
-(defun buffer-history-buffer-list ()
-  (let ((history (get-module buffer-history)))
-    (hash-table-keys (buffer-history-module-table history))))
-
-(defun buffer-history-text (time buffer)
-  (if (and time buffer)
-      (let ((history (get-module buffer-history)))
-        (when history 
-          (let* ((record (find-if (lambda (x) 
-                                    (<= (buffer-history-time x) time))
-                                  (gethash buffer (buffer-history-module-table history))))
-                 
-                 (chunk (when record (buffer-history-chunk record)))
-                 (status (when record (buffer-history-status record))))
-            
-            (concatenate 'string (cond ((and status (stringp status))
-                                        status)
-                                       (t "No buffer status information available"))
-              
-              (string #\newline)
-              (cond ((stringp chunk) 
-                     chunk)
-                    (t (format nil "buffer empty~%")))))))
-    ""))
-
-(defun buffer-history-time-list ()
-  (let ((history (get-module buffer-history)))
-    (when history
-      (let ((times nil))
-        (maphash (lambda (key value)
-                   (declare (ignore key))
-                   (setf times (append (mapcar 'buffer-history-time value) times)))
-                 (buffer-history-module-table history))
-        (sort (remove-duplicates times) #'<)))))
-
-
+  
 (defun reset-buffer-history-module (module)
-  (clrhash (buffer-history-module-table module)))
-
+  (bt:with-lock-held ((history-lock module))
+    (setf (recorded-data module) nil)
+    (setf (current-data module) nil)
+    (setf (last-time-stamp module) -1)
+    (setf (start-time-data module) nil)
   
-(defun params-buffer-history-module (instance param)
-  (if (consp param)
-      (case (car param)
-        (:save-buffer-history 
-          (no-output
-           (progn
-             (if (cdr param)
-                 (progn
-                   (sgp :save-buffer-trace t)
-                   (unless (find 'buffer-history-recorder (car (sgp :buffer-trace-hook)))
-                     (sgp :buffer-trace-hook buffer-history-recorder)))
-               
-               (progn
-                 (when (find 'buffer-history-recorder (car (sgp :buffer-trace-hook)))
-                   (let ((old-hooks (car (sgp :buffer-trace-hook))))
-                     (sgp :buffer-trace-hook nil)
-                     (dolist (x old-hooks)
-                       (unless (eq x 'buffer-history-recorder)
-                         (sgp-fct (list :buffer-trace-hook x))))))))
-          
-             (setf (buffer-history-module-enabled instance) (cdr param))))))
-    (case param
-      (:save-buffer-history (buffer-history-module-enabled instance)))))
+    (when (save-history module)
+      (setf (save-history module) nil)
+      (decf (monitor-count module))
+      (when (zerop (monitor-count module))
+        (delete-event-hook (pre-recorder module))
+        (delete-event-hook (post-recorder module))))))
 
-(define-module-fct 'buffer-history nil 
-  (list (define-parameter :save-buffer-history :valid-test 'tornil :default-value nil  
-          :warning "T or nil" 
-          :documentation "Whether or not to record the history of buffer changes."))
-  :creation (lambda (x) (declare (ignore x)) (make-buffer-history-module))
+
+(defun disable-buffer-history ()
+  (let ((module (get-module buffer-history)))
+    (bt:with-lock-held ((history-lock module))
+      (when (save-history module)
+        (setf (save-history module) nil)
+        (decf (monitor-count module))
+        (when (zerop (monitor-count module))
+          (delete-event-hook (pre-recorder module))
+          (delete-event-hook (post-recorder module))))
+      t)))
+
+
+(defun delete-buffer-history-module (module)
+  (bt:with-lock-held ((history-lock module))
+    (setf (alive module) nil)
+    (when (save-history module)
+      (setf (save-history module) nil)
+      (decf (monitor-count module))
+      (when (zerop (monitor-count module))
+        (delete-event-hook (pre-recorder module))
+        (delete-event-hook (post-recorder module))))
+    t))
+
+
+(define-module-fct 'buffer-history nil nil
+  :creation (lambda (x) (declare (ignore x)) (make-instance 'buffer-history-module))
   :reset 'reset-buffer-history-module
-  :params 'params-buffer-history-module
-  :version "1.0"
-  :documentation "Module to record buffer change history for display in the environment.")
+  :delete 'delete-buffer-history-module
+  :version "2.0"
+  :documentation "Module to record buffer change history.")
   
+
+(defun enable-buffer-history ()
+  (let ((module (get-module buffer-history)))
+    (bt:with-lock-held ((history-lock module))
+      (unless (save-history module)
+        (setf (save-history module) t)
+        (when (zerop (monitor-count module))
+          (setf (pre-recorder module) (add-pre-event-hook 'buffer-start-time-recorder))
+          (setf (post-recorder module) (add-post-event-hook 'buffer-event-recorder)))
+        (incf (monitor-count module)))
+      t)))
+
+
+(defun buffer-history-status ()
+  (let ((module (get-module buffer-history)))
+    (bt:with-lock-held ((history-lock module))
+      (values (save-history module) (when (or (recorded-data module) (current-data module)) t) (alive module)))))
+
+(defun get-buffer-history ()
+  (let ((module (get-module buffer-history)))
+    (if (null (current-data module))
+        (recorded-data module)
+      (let ((results nil))
+        (dolist (x (current-data module))
+          (push-last (concatenate 'list x (cdr (find (first x) (start-time-data module) :key 'first)) (list "" ""))
+                     results))
+        (append (recorded-data module)  (list (list (last-time-stamp module) results)))))))
+
+(define-history "buffer-history" enable-buffer-history disable-buffer-history buffer-history-status get-buffer-history)
 
 #|
 This library is free software; you can redistribute it and/or

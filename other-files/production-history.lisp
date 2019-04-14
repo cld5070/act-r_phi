@@ -13,7 +13,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; 
 ;;; Filename    : production-history.lisp
-;;; Version     : 1.1
+;;; Version     : 2.0
 ;;; 
 ;;; Description : Code to support the production trace tool in the environment.
 ;;; 
@@ -93,20 +93,66 @@
 ;;;             : * Changed the environment data cache to an equalp hashtable
 ;;;             :   since the keys are now a cons of the handler name and the
 ;;;             :   window to prevent issues with multi-environment settings.
+;;; 2015.06.10 Dan
+;;;             : * Changed time to use ms instead.
+;;; 2016.04.22 Dan
+;;;             : * Started work to be able to load saved history info.  First
+;;;             :   step is adding a function to get the current data because
+;;;             :   that will be used to save current results and since this is
+;;;             :   used for two different purposes it basically needs to save
+;;;             :   the whole module.
+;;; 2016.04.28 Dan
+;;;             : * Updating the interface functions to use the stored history
+;;;             :   info instead of pulling it from the module directly.
+;;;             : * Depricated the :draw-blank-columns parameter.  Only the 
+;;;             :   box on the viewer controls that now.
+;;;             : * Took the cache table out of the module and made it global
+;;;             :   because of the possibility of loading saved data without a
+;;;             :   model present.
+;;; 2016.05.16 Dan
+;;;             : * Send the production text over for the graph display so that
+;;;             :   it can be shown in a window since can't rely on opening a 
+;;;             :   procedural viewer since saved data may not match current 
+;;;             :   assuming there even is a current model.
+;;; 2016.05.26 Dan
+;;;             : * Send the production name over in the grid column info for
+;;;             :   a more detailed whynot output.
+;;; 2017.08.09 Dan
+;;;             : * Use printed-production-text instead of capturing the pp output.
+;;; 2017.09.22 Dan [2.0]
+;;;             : * Using a history data stream and removing the save-p-history
+;;;             :   parameter.
+;;; 2017.09.26 Dan
+;;;             : * Fixed a bug in the get-p-history-data since the tag is :stop
+;;;             :   not :end.
+;;;             : * Removed the unneeded parameters.
+;;;             : * Starting to convert the graph creation code into something
+;;;             :   general that can be returned from a data processor.
+;;; 2017.09.27 Dan
+;;;             : * Added all the processors and just have them return data that's
+;;;             :   still specific to drawing the graph, but in a slightly more
+;;;             :   general list format.
+;;;             : * Tags all the 'unused' items so they can be hidden when wanted.
+;;;             : * All the processors work now.
+;;; 2017.10.11 Dan
+;;;             : * Removed the parameters for spacing since it's hard-coded now.
+;;;             : * Eliminate the unused slots in the module and the global
+;;;             :   variable for the data cache.
+;;; 2018.02.28 Dan
+;;;             : * Updated the calls to define-history-processor to name the
+;;;             :   data stream first.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
 ;;; 
-;;; Open either of the production history tools, "Production History" or "Production
-;;; Graph" before running the model or set the :save-p-history parameter to t in the
-;;; model to enable the recording.  Once the model stops running the information
-;;; about the productions which were in the conflict set during the run can be
-;;; viewed using the tools.
+;;; Open either of the production history tools, "Production Grid" or "Production
+;;; Graph" before running the model or record the history "production-history" or 
+;;; "production-grid".
 ;;; 
-;;; For the "History" tool, once the model has run click the "Get history" button 
-;;; in the bottom left corner of the production history window.  It will draw a grid 
-;;; with the rows being the productions in the model and the columns being the times 
-;;; at which a conflict-resolution event occurred.
+;;; For the "Grid" tool, once the model has run click the "Get history" button 
+;;; at the bottom left corner of the window.  It will draw a grid with the rows 
+;;; being the productions in the model and the columns being the times at which
+;;; a conflict-resolution event occurred.
 ;;;
 ;;; The cells in the grid are color coded based on what happened during the 
 ;;; conflict resolution event at the time indicated for the column.
@@ -117,24 +163,29 @@
 ;;; If the production was not in the conflict set then the cell will be red.
 ;;; If the production did not exist at that time the cell will be white.
 ;;;
+;;; The colors for selected, matched, and mismatched can be changed by clicking
+;;; on the color in the tool.
+;;;
 ;;; Placing the cursor over a cell will cause some details for that production
 ;;; during that conflict resolution event to be printed at the bottom of the
 ;;; window.
 ;;;
-;;; For the green and orange cells it will print the utility value for the
+;;; For the selected and matched cells it will print the utility value for the
 ;;; production at that time.  For the red cells it will print the whynot 
 ;;; information indicating the condition that caused the production to not be
 ;;; in the conflict set.  There is no extra information to print for a white
 ;;; cell.
 ;;;
-;;; Clicking on the name of a production in the grid will open a new procedural
-;;; viewer dialog with that production selected.
+;;; Clicking on the name of a production in the grid will open a new window
+;;; showing the production text.
 ;;;
-;;; For the "Graph" tool, after the model has run click one of the 6 buttons 
-;;; "All transitions", "Frequencies", "Cycles", "Unique Cycles", "Runs", "Unique Runs" 
-;;; or "Utilities" to have the data displayed.  All of the displays are drawn the same 
-;;; way and the common features will be described before indicating what differs among
-;;;  the button choices.
+;;; Clicking a grid in the cell will open a window to display the whynot info or
+;;; utility values if it matched.
+;;;
+;;; For the "Graph" tool, after the model has run click the "get history" button
+;;; or select a different radio button to see a different view of the data.
+;;; All of the displays are drawn the same way and the common features will be 
+;;; described before indicating what differs among the choices.
 ;;; 
 ;;; The display will show all of the productions in the model in boxes.  If the
 ;;; box has a black border then it was selected and fired at some point in the 
@@ -149,8 +200,8 @@
 ;;; production B was selected and fired after A, but if the arrow has a dashed gray
 ;;; line then it was not selected and fired.
 ;;;
-;;; Clicking on the name of a production in the grid will open a new procedural
-;;; viewer dialog with that production selected.
+;;; Clicking on the name of a production in the graph will open a new window showing
+;;; the text of the production.
 ;;; 
 ;;; The "All transitions" button shows the data for all production firings over
 ;;; the entire run of the model.  The "Frequencies" button shows the same data
@@ -195,34 +246,6 @@
 ;;;
 ;;; Public API:
 ;;;
-;;; :save-p-history parameter
-;;;  Enables the recording of production history for display (default is nil).
-;;;
-;;; :draw-blank-columns parameter
-;;;  When set to t (the default value) all conflict resolution events get drawn
-;;;  in the environment tool.  If set to nil then conflict resolution events
-;;;  which had a null conflict set don't get drawn.
-;;; 
-;;; :p-history-colors
-;;;  This parameter can be used to change the colors displayed in the grid.
-;;;  If it is nil (the default) then the green, orange, and red defaults are 
-;;;  used for selected, conflict set, and mismatched respectively.  It can be
-;;;  set to a list of 3 values where each value is either a color string or nil.
-;;;  A valid color string starts with the character # and is followed by 3, 6,
-;;;  9 hex digits.  Those digits represent the components of the color to use
-;;;  and specify the Red, Green, and Blue values respectively using the same
-;;;  number of bits for each (thus either 8, 16, or 24 bits per color).  An
-;;;  example would be "#00F" for blue or "#44DA22" which is the green color 
-;;;  used by default.
-;;;
-;;; :p-history-graph-x
-;;;  The horizontal pixel spacing between the production boxes in the "Production
-;;;  Graph" tool view.
-;;;
-;;; :p-history-graph-y
-;;;  The vertical pixel spacing between the production boxes in the "Production
-;;;  Graph" tool view.
-;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Design Choices:
@@ -239,15 +262,12 @@
 #-(or (not :clean-actr) :packaged-actr :ALLEGRO-IDE) (in-package :cl-user)
 
 (defstruct p-history-module
-  history
+  (lock (bt:make-lock "p-history-module"))
+  (alive t)
   enabled
+  history
   why-not-list
-  draw-blanks
-  current-data
-  color-list
-  graph-table
-  x-spacing
-  y-spacing)
+  current-data)
   
 
 (defstruct p-history
@@ -256,114 +276,57 @@
   matched
   mismatched
   info
-  tag)
+  tag
+  reward)
+
 
 (defun production-history-reward-markers (reward)
-  (declare (ignore reward))
   (let ((history (get-module production-history)))
-    (when (p-history-module-enabled history)
-      (push (make-p-history :tag :reward :time (mp-time) :info (no-output (spp :name :u))) (p-history-module-history history)))))
+    (bt:with-lock-held ((p-history-module-lock history))
+      (push (make-p-history :tag :reward :reward reward :time (mp-time-ms) :info (no-output (spp :name :u))) (p-history-module-history history)))))
 
 (defun production-history-start-markers (ph)
-  (when (p-history-module-enabled ph)
-    (push (make-p-history :tag :start :time (mp-time)) (p-history-module-history ph))))
+  (bt:with-lock-held ((p-history-module-lock ph))
+    (when (p-history-module-enabled ph)
+      (push (make-p-history :tag :start :time (mp-time-ms)) (p-history-module-history ph)))))
 
 (defun production-history-stop-markers (ph)
-  (when (p-history-module-enabled ph)
-    (push (make-p-history :tag :stop :time (mp-time) :info (no-output (spp :name :u))) (p-history-module-history ph))))
+  (bt:with-lock-held ((p-history-module-lock ph))
+    (when (p-history-module-enabled ph)
+      (push (make-p-history :tag :stop :time (mp-time-ms) :info (no-output (spp :name :u))) (p-history-module-history ph)))))
 
 (defun production-history-recorder (cs)
   (let* ((history (get-module production-history))
          (best (car cs))
          (mismatched (set-difference (all-productions) cs))
-         (block (make-p-history :mismatched mismatched :time (mp-time))))
-    (no-output
-     (let ((ut (sgp :ut)))
-       (when (and best 
-                  (or (not (numberp ut))
-                      (and (numberp ut) (>= (caar (spp-fct (list best :utility))) ut))))
-         (setf (p-history-selected block) best))
-       (dolist (x cs)
-         (push (cons x (car (spp-fct (list x :utility :u))))
-               (p-history-info block)))
+         (block (make-p-history :mismatched mismatched :time (mp-time-ms))))
+    (bt:with-lock-held ((p-history-module-lock history))
+      (no-output
+       (let ((ut (sgp :ut)))
+         (when (and best 
+                    (or (not (numberp ut))
+                        (and (numberp ut) (>= (caar (spp-fct (list best :utility))) ut))))
+           (setf (p-history-selected block) best))
+         (dolist (x cs)
+           (push (cons x (car (spp-fct (list x :utility :u))))
+                 (p-history-info block)))
+         
+         (dolist (x mismatched)
+           (let* ((reason (production-failure-reason x))
+                  (index (position reason (p-history-module-why-not-list history) :test #'string-equal)))
+             (unless index
+               (setf index (length (p-history-module-why-not-list history)))
+               (push-last reason (p-history-module-why-not-list history)))
+             (push (list x index (caar (spp-fct (list x :u)))) (p-history-info block))))))
        
-       (dolist (x mismatched)
-         (let* ((reason (production-failure-reason x))
-                (index (position reason (p-history-module-why-not-list history) :test #'string-equal)))
-           (unless index
-             (setf index (length (p-history-module-why-not-list history)))
-             (push-last reason (p-history-module-why-not-list history)))
-           (push (cons x (list index 0)) (p-history-info block)))))
-     
-    (if (p-history-selected block)
-        (setf (p-history-matched block)
-          (cdr cs))
-        (setf (p-history-matched block)
-          cs))
-      
-    (push block (p-history-module-history history))
-    nil)))
+       (if (p-history-selected block)
+           (setf (p-history-matched block) (cdr cs))
+         (setf (p-history-matched block) cs))
+       
+      (push block (p-history-module-history history))
+      nil)))
 
-(defun production-history-chart-data (item)
-  (declare (ignore item))
-  (let ((history (get-module production-history)))
-    
-    (when (null (p-history-module-current-data history))
-      (parse-production-history-chart-data))
-    
-    (let ((data (p-history-module-current-data history)))
-      (if (> (length data) 200)
-          (let ((results (subseq data 0 200)))
-            (setf (p-history-module-current-data history) (subseq data 200))    
-            (mapcar (lambda (x) (format nil "~{~S ~}" x)) results))
-        (progn
-          (setf (p-history-module-current-data history) nil)    
-          (mapcar (lambda (x) (format nil "~{~S ~}" x)) (push (list 'done) data)))))))
 
-(defun parse-production-history-chart-data ()
-  (let* ((results nil)
-         (history (get-module production-history))
-         (p-names (all-productions))
-         (columns 0)
-         (name-size (apply 'max (mapcar (lambda (x) (length (symbol-name x))) p-names))))
-    
-    
-    (dolist (x (p-history-module-history history))
-      (when (and (or (p-history-module-draw-blanks history)
-                     (or (p-history-selected x) (p-history-matched x)))
-                 (null (p-history-tag x)))
-        (let ((col (list 'column (p-history-time x))))
-          (dolist (y p-names)
-            
-            (cond ((eq y (p-history-selected x))
-                   (push-last 0 col)
-                   (let ((utilities (cdr (assoc y (p-history-info x)))))
-                     (push-last (first utilities) col)
-                     (push-last (second utilities) col)))
-                  ((find y (p-history-matched x))
-                   (push-last 1 col)
-                   (let ((utilities (cdr (assoc y (p-history-info x)))))
-                     (push-last (first utilities) col)
-                     (push-last (second utilities) col)))
-                  ((find y (p-history-mismatched x))
-                   (push-last 2 col)
-                   (let ((utilities (cdr (assoc y (p-history-info x)))))
-                     (push-last (first utilities) col)
-                     (push-last (second utilities) col)))))
-          (incf columns)
-          (push col results))))
-    
-    (push (cons 'labels p-names) results)
-    (push (list 'colors 
-                (aif (nth 0 (p-history-module-color-list history)) it "#44DA22")
-                (aif (nth 1 (p-history-module-color-list history)) it "#FCA31D")
-                (aif (nth 2 (p-history-module-color-list history)) it "#E1031E"))
-          results)
-    (push (cons 'reasons (p-history-module-why-not-list history)) results)
-    (push (list 'size (* 20 (1+ (length p-names))) 20  (* 9 name-size) 80 (* 80 columns)) results)
-    
-    (setf (p-history-module-current-data history) results)
-    nil))
 
 
 (defstruct (p-history-node (:conc-name phn-)) name color-starts color-ends cycle-starts cycle-ends links utilities)
@@ -371,9 +334,10 @@
 (defstruct (p-history-display (:conc-name phd-)) name x y color width links starts ends utilities)
 (defstruct (p-history-cache (:conc-name phc-)) offsets holes max-loops max height min-u max-u)
 
-(defun parse-production-history-graph (which)
-  (let ((nodes (mapcar (lambda (x) (make-p-history-node :name x :links nil)) (all-productions)))
-        (history (get-module production-history))
+(defun parse-production-history-graph (data which)
+  (let* ((module-data data)
+        (nodes (mapcar (lambda (x) (make-p-history-node :name x :links nil)) (mapcar 'car (fourth (find "info" module-data :key 'second :test 'string-equal)))))
+        
         (loops nil)
         (current-loop nil)
         (cycle 0)
@@ -386,10 +350,13 @@
         (max-utility nil)
         (stop-utilities nil))
     
-    (dolist (x (reverse (p-history-module-history history)))
-      (let ((selected (p-history-selected x))
-            (matched (p-history-matched x))
-            (time (p-history-time x)))
+    (dolist (x module-data)
+
+      (unless (string-equal (second x) "info")
+        
+      (let ((selected (and (string-equal (second x) "conflict-resolution") (third x)))
+            (matched (and (string-equal (second x) "conflict-resolution") (fourth x)))
+            (time (first x)))
         
         (cond ((find which '(:all :freq :color :cycle))
                
@@ -407,13 +374,13 @@
                        (push (make-p-history-link :target y :cycle cycle :count nil :color -1 :from-time time :to-time time) (phn-links previous)))))
                  
                  (when selected
-                   (when (find selected current-loop :key 'car)
+                   (when (find selected current-loop :key 'car :test 'string-equal)
                      ;; completed a loop
                      (let* ((existing-color (position (cons selected (mapcar 'car current-loop)) loops :test 'equalp))
                             (color (if existing-color existing-color (length loops))))
                        
                        (dolist (check (mapcar 'car current-loop))
-                         (dolist (link (phn-links (find check nodes :key 'phn-name)))
+                         (dolist (link (phn-links (find check nodes :key 'phn-name :test 'string-equal)))
                            (when (= -1 (phl-color link))
                              (setf (phl-color link) color))))
                        
@@ -422,15 +389,15 @@
                                      (to (car to+time))
                                      (from-time (cdr from+time))
                                      (to-time (cdr from+time)))
-                                 (awhen (find to (phn-links (find from nodes :key 'phn-name)) :key (lambda (z) (when (and (null (phl-count z)) (= (phl-cycle z) cycle)) (phl-target z))))
-                                        (setf (phn-links (find from nodes :key 'phn-name)) (remove it (phn-links (find from nodes :key 'phn-name)))))
-                                 (push (make-p-history-link :target to :color color :count 1 :cycle cycle :from-time from-time :to-time to-time) (phn-links (find from nodes :key 'phn-name)))))
+                                 (awhen (find to (phn-links (find from nodes :key 'phn-name :test 'string-equal)) :test 'string-equal :key (lambda (z) (if (and (null (phl-count z)) (= (phl-cycle z) cycle)) (phl-target z) "")))
+                                        (setf (phn-links (find from nodes :key 'phn-name :test 'string-equal)) (remove it (phn-links (find from nodes :key 'phn-name :test 'string-equal)))))
+                                 (push (make-p-history-link :target to :color color :count 1 :cycle cycle :from-time from-time :to-time to-time) (phn-links (find from nodes :key 'phn-name :test 'string-equal)))))
                          current-loop (cons (cons selected time) (butlast current-loop)))
                        
-                       (pushnew  color (phn-color-starts (find (caar (last current-loop)) nodes :key 'phn-name)))
-                       (push  (cons cycle (cdar (last current-loop))) (phn-cycle-starts (find (caar (last current-loop)) nodes :key 'phn-name)))
-                       (pushnew  color (phn-color-ends (find selected nodes :key 'phn-name)))
-                       (push  (cons cycle time) (phn-cycle-ends (find selected nodes :key 'phn-name)))
+                       (pushnew  color (phn-color-starts (find (caar (last current-loop)) nodes :key 'phn-name :test 'string-equal)))
+                       (push  (cons cycle (cdar (last current-loop))) (phn-cycle-starts (find (caar (last current-loop)) nodes :key 'phn-name :test 'string-equal)))
+                       (pushnew  color (phn-color-ends (find selected nodes :key 'phn-name :test 'string-equal)))
+                       (push  (cons cycle time) (phn-cycle-ends (find selected nodes :key 'phn-name :test 'string-equal)))
                        
                        (when (> cycle max-cycle)
                          (setf max-cycle cycle))
@@ -443,12 +410,13 @@
                      (incf cycle)
                      (setf current-loop nil))
                    (push (cons selected time) current-loop)
-                   (setf previous (find selected nodes :key 'phn-name)))))
+                   (setf previous (find selected nodes :key 'phn-name :test 'string-equal)))))
               
               ((find which '(:run :run-color))
-               (when (or matched selected (p-history-tag x))
+               (when (or matched selected
+                         (not (string-equal (second x) "conflict-resolution")))
                  
-                 (when (eq :start (p-history-tag x))
+                 (when (string-equal (second x) "start")
                    (setf start-time time))
                  
                  (when (and (null top) selected)
@@ -459,21 +427,21 @@
                  (when (and previous matched)
                    
                    (dolist (y matched)
-                     (unless (find y (phn-links previous) :key (lambda (z) (when (= (phl-cycle z) cycle) (phl-target z))))
+                     (unless (find y (phn-links previous)  :test 'string-equal :key (lambda (z) (if (= (phl-cycle z) cycle) (phl-target z) "")))
                        (push (make-p-history-link :target y :cycle cycle :count nil :color -1 :from-time time :to-time time) (phn-links previous)))))
                  
                  (when selected
                    
                    (push (cons selected time) current-loop)
-                   (setf previous (find selected nodes :key 'phn-name)))
+                   (setf previous (find selected nodes :key 'phn-name :test 'string-equal)))
                  
-                 (when (and current-loop (eq :stop (p-history-tag x)))
+                 (when (and current-loop (string-equal "stop" (second x)))
                    ;; completed a loop
                    (let* ((existing-color (position (mapcar 'car current-loop) loops :test 'equalp))
                           (color (if existing-color existing-color (length loops))))
                      
                      (dolist (check (mapcar 'car current-loop))
-                       (dolist (link (phn-links (find check nodes :key 'phn-name)))
+                       (dolist (link (phn-links (find check nodes :key 'phn-name :test 'string-equal)))
                          (when (= -1 (phl-color link))
                            (setf (phl-color link) color))))
                      
@@ -482,15 +450,15 @@
                                    (to (car to+time))
                                    (from-time (cdr from+time))
                                    (to-time (cdr to+time)))
-                               (awhen (find to (phn-links (find from nodes :key 'phn-name)) :key (lambda (z) (when (and (null (phl-count z)) (= (phl-cycle z) cycle)) (phl-target z))))
-                                      (setf (phn-links (find from nodes :key 'phn-name)) (remove it (phn-links (find from nodes :key 'phn-name)))))
-                               (push (make-p-history-link :target to :color color :count 1 :cycle cycle :from-time from-time :to-time to-time) (phn-links (find from nodes :key 'phn-name)))))
+                               (awhen (find to (phn-links (find from nodes :key 'phn-name :test 'string-equal)) :test 'string-equal :key (lambda (z) (if (and (null (phl-count z)) (= (phl-cycle z) cycle)) (phl-target z) "")))
+                                      (setf (phn-links (find from nodes :key 'phn-name :test 'string-equal)) (remove it (phn-links (find from nodes :key 'phn-name :test 'string-equal)))))
+                               (push (make-p-history-link :target to :color color :count 1 :cycle cycle :from-time from-time :to-time to-time) (phn-links (find from nodes :key 'phn-name :test 'string-equal)))))
                        (cdr current-loop) (butlast current-loop))
                      
-                     (pushnew  color (phn-color-starts (find (caar (last current-loop)) nodes :key 'phn-name)))
-                     (pushnew  (cons cycle start-time) (phn-cycle-starts (find (caar (last current-loop)) nodes :key 'phn-name)))
-                     (pushnew  color (phn-color-ends (find (caar current-loop) nodes :key 'phn-name)))
-                     (push  (cons cycle time) (phn-cycle-ends (find (caar current-loop) nodes :key 'phn-name)))
+                     (pushnew  color (phn-color-starts (find (caar (last current-loop)) nodes :key 'phn-name :test 'string-equal)))
+                     (pushnew  (cons cycle start-time) (phn-cycle-starts (find (caar (last current-loop)) nodes :key 'phn-name :test 'string-equal)))
+                     (pushnew  color (phn-color-ends (find (caar current-loop) nodes :key 'phn-name :test 'string-equal)))
+                     (push  (cons cycle time) (phn-cycle-ends (find (caar current-loop) nodes :key 'phn-name :test 'string-equal)))
                      
                      (when (> cycle max-cycle)
                        (setf max-cycle cycle))
@@ -509,7 +477,7 @@
                    (setf previous nil))))
               
               (t  ;;(find which '(:utility))
-               (when (or matched selected (p-history-tag x))
+               (when (or matched selected (not (string-equal (second x) "conflict-resolution")))
                  
                  (when (and (null top) selected)
                    (dolist (y matched)
@@ -519,24 +487,22 @@
                  (when (and previous matched)
                    
                    (dolist (y matched)
-                     (unless (find y (phn-links previous) :key (lambda (z) (when (= (phl-cycle z) cycle) (phl-target z))))
+                     (unless (find y (phn-links previous)  :test 'string-equal :key (lambda (z) (if (= (phl-cycle z) cycle) (phl-target z) "")))
                        (push (make-p-history-link :target y :cycle cycle :count nil :color -1 :from-time time :to-time time) (phn-links previous)))))
                  
                  (when selected
                    
                    (push (cons selected time) current-loop)
-                   (setf previous (find selected nodes :key 'phn-name)))
+                   (setf previous (find selected nodes :key 'phn-name :test 'string-equal)))
                  
-                 (when (eq :stop (p-history-tag x))
-                   (setf stop-utilities (p-history-info x)))
+                 (when (string-equal "stop" (second x))
+                   (setf stop-utilities (third x)))
                  
-                 
-                 
-                 (when (and current-loop (eq :reward (p-history-tag x)))
+                 (when (and current-loop (string-equal "reward" (second x)))
                    
                    ;; set the current scores
-                   (dolist (reward (p-history-info x))
-                     (push-last (cons cycle (second reward)) (phn-utilities (find (first reward) nodes :key 'phn-name)))
+                   (dolist (reward (fourth x))
+                     (push-last (cons cycle (second reward)) (phn-utilities (find (first reward) nodes :key 'phn-name :test 'string-equal)))
                      (when (or (null min-utility) (< (second reward) min-utility))
                        (setf min-utility (second reward)))
                      
@@ -551,14 +517,14 @@
                                    (to (car to+time))
                                    (from-time (cdr from+time))
                                    (to-time (cdr to+time)))
-                               (awhen (find to (phn-links (find from nodes :key 'phn-name)) :key (lambda (z) (when (and (null (phl-count z)) (= (phl-cycle z) cycle)) (phl-target z))))
-                                      (setf (phn-links (find from nodes :key 'phn-name)) (remove it (phn-links (find from nodes :key 'phn-name)))))
-                               (push (make-p-history-link :target to :color 0 :count 1 :cycle cycle :from-time from-time :to-time to-time) (phn-links (find from nodes :key 'phn-name)))))
+                               (awhen (find to (phn-links (find from nodes :key 'phn-name :test 'string-equal)) :test 'string-equal :key (lambda (z) (if (and (null (phl-count z)) (= (phl-cycle z) cycle)) (phl-target z) "")))
+                                      (setf (phn-links (find from nodes :key 'phn-name :test 'string-equal)) (remove it (phn-links (find from nodes :key 'phn-name :test 'string-equal)))))
+                               (push (make-p-history-link :target to :color 0 :count 1 :cycle cycle :from-time from-time :to-time to-time) (phn-links (find from nodes :key 'phn-name :test 'string-equal)))))
                        (cdr current-loop) (butlast current-loop))
                      
                      
-                     (pushnew  (cons cycle (cdar (last current-loop))) (phn-cycle-starts (find (caar (last current-loop)) nodes :key 'phn-name)))
-                     (push  (cons cycle time) (phn-cycle-ends (find (caar current-loop) nodes :key 'phn-name)))
+                     (pushnew  (cons cycle (cdar (last current-loop))) (phn-cycle-starts (find (caar (last current-loop)) nodes :key 'phn-name :test 'string-equal)))
+                     (push (cons cycle time) (phn-cycle-ends (find (caar current-loop) nodes :key 'phn-name :test 'string-equal)))
                      
                      (when (> cycle max-cycle)
                        (setf max-cycle cycle))
@@ -568,11 +534,11 @@
                      ;; loop i.e. matched but not selected.
                      (setf previous nil))
                    (incf cycle)
-                   (setf current-loop nil)))))))
+                   (setf current-loop nil))))))))
     
     (when (and (eq which :utility) stop-utilities)
       (dolist (reward stop-utilities)
-        (push-last (cons cycle (second reward)) (phn-utilities (find (first reward) nodes :key 'phn-name)))
+        (push-last (cons cycle (second reward)) (phn-utilities (find (first reward) nodes :key 'phn-name :test 'string-equal)))
         (when (or (null min-utility) (< (second reward) min-utility))
           (setf min-utility (second reward)))
         
@@ -586,11 +552,11 @@
                     (to (car to+time))
                     (from-time (cdr from+time))
                     (to-time (cdr from+time)))
-                (push (make-p-history-link :target to :color (length loops) :count 1 :cycle cycle :from-time from-time :to-time to-time) (phn-links (find from nodes :key 'phn-name)))))
+                (push (make-p-history-link :target to :color (length loops) :count 1 :cycle cycle :from-time from-time :to-time to-time) (phn-links (find from nodes :key 'phn-name :test 'string-equal)))))
         (cdr current-loop) (butlast current-loop))
       
-      (pushnew (length loops) (phn-color-starts (find (caar (last current-loop)) nodes :key 'phn-name)))
-      (push  (cons cycle (cdar (last current-loop))) (phn-cycle-starts (find (caar (last current-loop)) nodes :key 'phn-name)))
+      (pushnew (length loops) (phn-color-starts (find (caar (last current-loop)) nodes :key 'phn-name :test 'string-equal)))
+      (push  (cons cycle (cdar (last current-loop))) (phn-cycle-starts (find (caar (last current-loop)) nodes :key 'phn-name :test 'string-equal)))
       (pushnew  (length loops) (phn-color-ends previous))
       (push (cons cycle (cdar current-loop)) (phn-cycle-ends previous))
       
@@ -603,170 +569,166 @@
 (defun filter-links (links which number)
   (case which
     ((:all :freq)
-     (setf links (remove-duplicates links :key (lambda (x) (cons (phl-target x) (phl-count x)))))
-     (remove-if (lambda (x) (and (null (phl-count x)) (find (phl-target x) links :key (lambda (y) (when (phl-count y) (phl-target y)))))) links))
+     (setf links (remove-duplicates links :key (lambda (x) (cons (phl-target x) (phl-count x))) :test 'equalp))
+     (remove-if (lambda (x) (and (null (phl-count x)) (find (phl-target x) links :key (lambda (y) (when (phl-count y) (phl-target y))) :test 'string-equal))) links))
     ((:run :cycle :utility)
      (remove-if-not (lambda (x) (= (phl-cycle x) number)) links))
     ((:run-color :color)
-     (remove-duplicates (remove-if-not (lambda (x) (= (phl-color x) number)) links) :key 'phl-target))))
+     (remove-duplicates (remove-if-not (lambda (x) (= (phl-color x) number)) links) :key 'phl-target :test 'string-equal))))
 
 
-(defun remove-p-history-entry (name)
- (remhash name (p-history-module-graph-table (get-module production-history))))
 
+(defun create-production-graph-coords (module-data which) ; number = generate all,  with-labels t,  show-unused = t
+  (let* ((raw-data (json:decode-json-from-string module-data))
+         (layer-data (parse-production-history-graph raw-data :cycle))
+         (data (if (find which '(:freq :all :color :cycle)) layer-data (parse-production-history-graph raw-data which)))
+         (min-u (first (fifth data)))
+         (max-u (second (fifth data)))
 
-(defun create-production-graph-coords (name which number with-labels show-unused)
-  (let ((module (get-module production-history)))
+         (all-production-names (mapcar 'car (fourth (find "info" raw-data :key 'second :test 'string-equal))))
+         (unused all-production-names)
+         (current (car data))
+         (next nil)
+         (layers nil)
+         (start (caar data))
+         (end (second data))
+         (max-loops (case which
+                      ((:all :freq) 0)
+                      ((:run-color :color) (first (fourth data)))
+                      ((:run :cycle :utility) (second (fourth data))))))
     
-    (if (p-history-module-history module)
-      (multiple-value-bind (value exists) (if with-labels (values nil nil) (gethash name (p-history-module-graph-table module)))
+    (while current
+      (dolist (x current)
+        (setf unused (remove x unused :test 'string-equal)))
+      (dolist (x current)
+        (dolist (y (phn-links (find x (third layer-data) :key 'phn-name :test 'string-equal)))
+          (when (and (phl-count y) (find (phl-target y) unused :test 'string-equal))
+            (setf unused (remove (phl-target y) unused :test 'string-equal))
+            (push (phl-target y) next))))
+      (push current layers)
+      (setf current next)
+      (setf next nil))
+    
+    (when unused 
+      (push unused layers))
+    
+    (let ((x-space 40)
+          (y-space 90)
+          (max 0)
+          (cur 0)
+          (y 65)
+          (offsets nil)
+          (widths nil)
+          (holes nil)
+          (max-width (* 10 (apply 'max (mapcar 'length all-production-names)))))
       
-      (if exists
-          (p-history-display-output which number with-labels (phc-offsets value) (phc-holes value) (phc-max-loops value) (phc-max value) (phc-height value) (phc-min-u value) (phc-max-u value))
-        
-        
-        (let* ((layer-data (parse-production-history-graph :cycle))
-               (data (if (find which '(:freq :all :color :cycle)) layer-data (parse-production-history-graph which)))
-               (min-u (first (fifth data)))
-               (max-u (second (fifth data)))
-               (unused (all-productions))
-               (current (car data))
-               (next nil)
-               (layers nil)
-               (start (caar data))
-               (end (second data))
-               (max-loops (case which
-                            ((:all :freq) 0)
-                            ((:run-color :color) (first (fourth data)))
-                            ((:run :cycle :utility) (second (fourth data))))))
-          
-          (while current
-            (dolist (x current)
-              (setf unused (remove x unused)))
-            (dolist (x current)
-              (dolist (y (phn-links (find x (third layer-data) :key 'phn-name)))
-                (when (and (phl-count y) (find (phl-target y) unused))
-                  (setf unused (remove (phl-target y) unused))
-                  (push (phl-target y) next))))
-            (push current layers)
-            (setf current next)
-            (setf next nil))
-          
-          (when (and unused show-unused)
-            (push unused layers))
-          
-          (let ((max 0)
-                (cur 0)
-                (y 65)
-                (offsets nil)
-                (widths nil)
-                (holes nil)
-                (max-width (* 10 (apply 'max (mapcar (lambda (x) (length (symbol-name x))) (all-productions))))))
-            
-            (dolist (layer (reverse layers))
-              (let ((hole (list (round (p-history-module-x-spacing module) 2))))
-                
-                (setf cur 0)
-                (dolist (item layer)
-                  (let ((width (if (eq which :utility) max-width (* 10 (length (symbol-name item))))))
-                    (push (make-p-history-display :name item :links (awhen (find item (third data) :key 'phn-name) (phn-links it)) :width width :x (+ cur (round width 2)) :y y 
-                                                  :starts (case which
-                                                            ((:all :freq) (if (eq item start) (list 0) nil))
-                                                            ((:cycle :run :utility)  (phn-cycle-starts (find item (third data) :key 'phn-name)))
-                                                            ((:color :run-color)  (phn-color-starts (find item (third data) :key 'phn-name))))
-                                                  
-                                                  :ends (case which
-                                                          ((:all :freq) (if (eq item end) (list 0) nil))
-                                                          ((:cycle :run :utility)  (phn-cycle-ends (find item (third data) :key 'phn-name)))
-                                                          ((:color :run-color)  (phn-color-ends (find item (third data) :key 'phn-name))))
-                                                  
-                                                  :color (if (find item unused) 'gray 'black)
-                                                  :utilities (awhen (find item (third data) :key 'phn-name) (phn-utilities it)))
-                          offsets) ; (cons item (cons (+ cur (round width 2)) y)) offsets)
-                    (when (= (length hole) 1)
-                      (push (- cur (round (p-history-module-x-spacing module) 2)) hole))
-                    (push (+ cur width (round (p-history-module-x-spacing module) 2)) hole)
-                    (incf cur (+ width (p-history-module-x-spacing module)))))
-                (decf cur (p-history-module-x-spacing module))
-                (when (> cur max)
-                  (setf max cur))
-                (push (cons cur y) widths)
-                (push-last y hole)
-                (push hole holes)
-                (incf y (+ 30 (p-history-module-y-spacing module)))))
-            
-            (incf max (* 2 (p-history-module-x-spacing module)))
-            (setf holes (mapcar (lambda (x) (reverse (cons (- max (round (p-history-module-x-spacing module) 2)) x))) holes))
-            
-            (dolist (w widths)
-              (unless (= (car w) max)
-                (dolist (o offsets)
-                  (when (= (phd-y o) (cdr w))
-                    (incf (phd-x o) (round (- max (car w)) 2))))
-                
-                (let ((h (find (cdr w) holes :key 'car)))
-                  (setf holes (cons (concatenate 'list (subseq h 0 2)  (mapcar (lambda (x) (+ x (round (- max (car w)) 2))) (subseq (butlast h) 2)) (last h)) (remove h holes))))))
-            
-            (setf (gethash name (p-history-module-graph-table module)) (make-p-history-cache :offsets offsets :holes holes :max-loops max-loops :max max :height y :min-u min-u :max-u max-u))
-            
-            (p-history-display-output which number with-labels offsets holes max-loops max y min-u max-u)))))
-      (list "size 300 40" "label \"no graph data to display\" 150 20 0 0 299 39 red" "cycles 0" "done"))))
+      (dolist (layer (reverse layers))
+        (let ((hole (list (round x-space 2))))
+          (setf cur 0)
+          (dolist (item layer)
+            (let ((width (if (eq which :utility) max-width (* 10 (length item)))))
+              (push (make-p-history-display :name item :links (awhen (find item (third data) :key 'phn-name :test 'string-equal) (phn-links it)) :width width :x (+ cur (round width 2)) :y y 
+                                            :starts (case which
+                                                      ((:all :freq) (if (eq item start) (list 0) nil))
+                                                      ((:cycle :run :utility)  (phn-cycle-starts (find item (third data) :key 'phn-name :test 'string-equal)))
+                                                      ((:color :run-color)  (phn-color-starts (find item (third data) :key 'phn-name :test 'string-equal))))
+                                            
+                                            :ends (case which
+                                                    ((:all :freq) (if (string-equal item end) (list 0) nil))
+                                                    ((:cycle :run :utility)  (phn-cycle-ends (find item (third data) :key 'phn-name :test 'string-equal)))
+                                                    ((:color :run-color)  (phn-color-ends (find item (third data) :key 'phn-name :test 'string-equal))))
+                                            
+                                            :color (if (find item unused :test 'string-equal) "gray" "black")
+                                            :utilities (awhen (find item (third data) :key 'phn-name :test 'string-equal) (phn-utilities it)))
+                    offsets) ; (cons item (cons (+ cur (round width 2)) y)) offsets)
+              (when (= (length hole) 1)
+                (push (- cur (round x-space 2)) hole))
+              (push (+ cur width (round x-space 2)) hole)
+              (incf cur (+ width x-space))))
+          (decf cur x-space)
+          (when (> cur max)
+            (setf max cur))
+          (push (cons cur y) widths)
+          (push-last y hole)
+          (push hole holes)
+          (incf y (+ 30 y-space))))
       
-(defun p-history-display-output (which number with-labels offsets holes max-loops max height min-u max-u)
+      (incf max (* 2 x-space))
+      (setf holes (mapcar (lambda (x) (reverse (cons (- max (round x-space 2)) x))) holes))
+      
+      (dolist (w widths)
+        (unless (= (car w) max)
+          (dolist (o offsets)
+            (when (= (phd-y o) (cdr w))
+              (incf (phd-x o) (round (- max (car w)) 2))))
+          
+          (let ((h (find (cdr w) holes :key 'car)))
+            (setf holes (cons (concatenate 'list (subseq h 0 2)  (mapcar (lambda (x) (+ x (round (- max (car w)) 2))) (subseq (butlast h) 2)) (last h)) (remove h holes))))))
+ 
+      (p-history-display-output raw-data which t offsets holes max-loops max y min-u max-u x-space y-space))))
+      
+(defun p-history-display-output (data which with-labels offsets holes max-loops max height min-u max-u x-space y-space)
   (let ((min-time -1)
         (max-time -1)
         (links nil)
-        (module (get-module production-history))
         (max-link-count 0)
-        (equal-link-counts t))
-    
+        (equal-link-counts t)
+        (all nil)
+        (info (find "info" data :key 'second :test 'string-equal)))
+     
     (when (and (numberp min-u) (numberp max-u) (= min-u max-u))
       (setf min-u (1- min-u))
       (setf max-u (1+ max-u)))
     
-    (dolist (o offsets)
+    (dotimes (number (1+ max-loops))
+      (setf links nil)
+      
+      (dolist (o offsets)
       (dolist (link (filter-links (phd-links o) which number))
-        
         ;; for now just using a next closest hole metric for 
         ;; multi-level links but at some point may want to try
         ;; a shortest path instead or some sort of non-intersecting algorithm
         
-        (let ((target (find (phl-target link) offsets :key 'phd-name))
-              (link-count (if (find which '(:freq #|:run :run-color if I want to do these too need to filter on color/run as well |#)) (count-if (lambda (x) (eq (phl-target x) (phl-target link))) (phd-links o)) nil)))
+        (let* ((target (find (phl-target link) offsets :key 'phd-name :test 'string-equal))
+               (used (if (string-equal (phd-color target) "black") 1 0))
+               (link-count (if (find which '(:freq #|:run :run-color if I want to do these too need to filter on color/run as well |#)) (count-if (lambda (x) (string-equal (phl-target x) (phl-target link))) (phd-links o)) nil)))
           
           (when (and (numberp link-count) (> link-count max-link-count))
             (unless (zerop max-link-count)
               (setf equal-link-counts nil))
             (setf max-link-count link-count))
           
-          (cond ((eq (phd-name o) (phd-name target))  ;; self link
+          (cond ((string-equal (phd-name o) (phd-name target))  ;; self link
                  
                  ;;; if left end loop on left side
                  ;;; if right end loop on right side
                  ;;; if in middle loop on bottom
                  
                  (cond ((= (phd-x o) (apply 'min (mapcar 'phd-x (remove-if-not (lambda (xx) (= (phd-y xx) (phd-y o))) offsets)))) ;; left end uses both left sides
-                        (push (list (phd-name o) (phd-name target) (if (phl-count link) 'black 'gray) link-count
+                        (push (list (phd-name o) (phd-name target) (if (phl-count link) "black" "gray") link-count used
                                     (- (phd-x o) (round (phd-width o) 2)) (phd-y o)
                                     (- (phd-x o) (round (phd-width o) 2) 15) (phd-y o)
                                     (- (phd-x o) (round (phd-width o) 2) 15) (+ (phd-y o) 30)
                                     (- (phd-x o) (round (phd-width o) 2) -15) (+ (phd-y o) 30)
-                                    (- (phd-x o) (round (phd-width o) 2) -15) (+ (phd-y o) 15))
+                                    (- (phd-x o) (round (phd-width o) 2) -15) (+ (phd-y o) 15)
+                                    )
                               links))
                        ((= (phd-x o) (apply 'max (mapcar 'phd-x (remove-if-not (lambda (xx) (= (phd-y xx) (phd-y o))) offsets)))) ;; right end uses both right sides
-                        (push (list (phd-name o) (phd-name target) (if (phl-count link) 'black 'gray) link-count
+                        (push (list (phd-name o) (phd-name target) (if (phl-count link) "black" "gray") link-count used
                                     (+ (phd-x o) (round (phd-width o) 2)) (phd-y o)
                                     (+ (phd-x o) (round (phd-width o) 2) 15) (phd-y o)
                                     (+ (phd-x o) (round (phd-width o) 2) 15) (+ (phd-y o) 30)
                                     (+ (phd-x o) (round (phd-width o) 2) -15) (+ (phd-y o) 30)
-                                    (+ (phd-x o) (round (phd-width o) 2) -15) (+ (phd-y o) 15))
+                                    (+ (phd-x o) (round (phd-width o) 2) -15) (+ (phd-y o) 15)
+                                    )
                               links))
                        (t
-                        (push (list (phd-name o) (phd-name target) (if (phl-count link) 'black 'gray) link-count
+                        (push (list (phd-name o) (phd-name target) (if (phl-count link) "black" "gray") link-count used
                                     (+ (phd-x o) 5) (+ (phd-y o) 15)
                                     (+ (phd-x o) 10) (+ (phd-y o) 25)
                                     (- (phd-x o) 10) (+ (phd-y o) 25)
-                                    (- (phd-x o) 5) (+ (phd-y o) 15))
+                                    (- (phd-x o) 5) (+ (phd-y o) 15)
+                                    )
                               links))))
                 
                 ((= (phd-y o) (phd-y target)) ;; same row
@@ -774,16 +736,18 @@
                  ;; link bottom right of leftmost to bottom left of rightmost
                  
                  (if (> (phd-x target) (phd-x o))     ;; left to right
-                     (push (list (phd-name o) (phd-name target) (if (phl-count link) 'black 'gray) link-count
+                     (push (list (phd-name o) (phd-name target) (if (phl-count link) "black" "gray") link-count used
                                  (+ (phd-x o) (round (phd-width o) 2)) (+ (phd-y o) 15)
-                                 (+ (+ (phd-x o) (round (phd-width o) 2)) (round (- (- (phd-x target) (round (phd-width target) 2)) (+ (phd-x o) (round (phd-width o) 2))) 2)) (+ (phd-y o) 15 (round (p-history-module-y-spacing module) 3))
-                                 (- (phd-x target) (round (phd-width target) 2)) (+ (phd-y o) 15))
+                                 (+ (+ (phd-x o) (round (phd-width o) 2)) (round (- (- (phd-x target) (round (phd-width target) 2)) (+ (phd-x o) (round (phd-width o) 2))) 2)) (+ (phd-y o) 15 (round y-space 3))
+                                 (- (phd-x target) (round (phd-width target) 2)) (+ (phd-y o) 15)
+                                 )
                            links)
                    ;; right to left
-                   (push (list (phd-name o) (phd-name target) (if (phl-count link) 'black 'gray) link-count
+                   (push (list (phd-name o) (phd-name target) (if (phl-count link) "black" "gray") link-count used
                                (- (phd-x o) (round (phd-width o) 2)) (+ (phd-y o) 15)
-                               (- (- (phd-x o) (round (phd-width o) 2)) (round (- (- (phd-x o) (round (phd-width o) 2)) (+ (phd-x target) (round (phd-width target) 2))) 2)) (+ (phd-y o) 15 (round (p-history-module-y-spacing module) 3))
-                               (+ (phd-x target) (round (phd-width target) 2)) (+ (phd-y o) 15))
+                               (- (- (phd-x o) (round (phd-width o) 2)) (round (- (- (phd-x o) (round (phd-width o) 2)) (+ (phd-x target) (round (phd-width target) 2))) 2)) (+ (phd-y o) 15 (round y-space 3))
+                               (+ (phd-x target) (round (phd-width target) 2)) (+ (phd-y o) 15)
+                               )
                          links)))
                 
                 ((> (phd-y target) (phd-y o)) ;; forward i.e. down
@@ -791,19 +755,21 @@
                  ;; if one layer down draw bottom center to top center directly
                  ;; otherwise draw bottom center to top center going through next closest hole
                  
-                 (if (= (- (phd-y target) (phd-y o)) (+ 30 (p-history-module-y-spacing module)))
-                     (push (list (phd-name o) (phd-name target) (if (phl-count link) 'black 'gray) link-count
+                 (if (= (- (phd-y target) (phd-y o)) (+ 30 y-space))
+                     (push (list (phd-name o) (phd-name target) (if (phl-count link) "black" "gray") link-count
+                                 used
                                  (phd-x o) (+ (phd-y o) 15)
-                                 (phd-x target) (- (phd-y target) 15))
+                                 (phd-x target) (- (phd-y target) 15)
+                                 )
                            links)
                    
                    
-                   (push (concatenate 'list (list (phd-name o) (phd-name target) (if (phl-count link) 'black 'gray) link-count
+                   (push (concatenate 'list (list (phd-name o) (phd-name target) (if (phl-count link) "black" "gray") link-count used
                                                   (phd-x o) (+ (phd-y o) 15))
                            (let ((x (phd-x o))
                                  (vals nil))
-                             (dotimes (i (- (/ (- (phd-y target) (phd-y o)) (+ 30 (p-history-module-y-spacing module))) 1))
-                               (let* ((y (+ (phd-y o) (* (1+ i) (+ 30 (p-history-module-y-spacing module)))))
+                             (dotimes (i (- (/ (- (phd-y target) (phd-y o)) (+ 30 y-space)) 1))
+                               (let* ((y (+ (phd-y o) (* (1+ i) (+ 30 y-space))))
                                       (hs (find y holes :key 'car))
                                       (min max)
                                       (min-x nil))
@@ -817,7 +783,9 @@
                                  (push (+ y 20) vals)
                                  (setf x min-x)))
                              (reverse vals))
-                           (list (phd-x target) (- (phd-y target) 15)))                         
+                           
+                           (list (phd-x target) (- (phd-y target) 15))
+                           )                         
                          links)))
                 (t ;; backward i.e. up
                  
@@ -835,17 +803,19 @@
                  ;;     otherwise use right for both
                  ;;  all intermediates are based on next closest hole (going up)
                  
-                 (if (= (- (phd-y o) (phd-y target)) (+ 30 (p-history-module-y-spacing module)))
+                 (if (= (- (phd-y o) (phd-y target)) (+ 30 y-space))
                      
                      ;; one level up 
                      (if (<= (phd-x o) (phd-x target))
-                         (push (list (phd-name o) (phd-name target) (if (phl-count link) 'black 'gray) link-count
+                         (push (list (phd-name o) (phd-name target) (if (phl-count link) "black" "gray") link-count
+                                     used
                                      (- (phd-x o) (round (phd-width o) 6)) (- (phd-y o) 15)
-                                     (- (phd-x target) (round (phd-width target) 6)) (+ (phd-y target) 15))
+                                     (- (phd-x target) (round (phd-width target) 6)) (+ (phd-y target) 15) )
                                links)
-                       (push (list (phd-name o) (phd-name target) (if (phl-count link) 'black 'gray) link-count
+                       (push (list (phd-name o) (phd-name target) (if (phl-count link) "black" "gray") link-count
+                                   used
                                    (+ (phd-x o) (round (phd-width o) 6)) (- (phd-y o) 15)
-                                   (+ (phd-x target) (round (phd-width target) 6)) (+ (phd-y target) 15))
+                                   (+ (phd-x target) (round (phd-width target) 6)) (+ (phd-y target) 15) )
                              links))
                    
                    ;; multiple levels
@@ -876,12 +846,12 @@
                             (setf end-x (+ (phd-x target) (round (phd-width target) 6)))))
                      
                      (push (concatenate 'list 
-                             (list (phd-name o) (phd-name target) (if (phl-count link) 'black 'gray) link-count start-x (- (phd-y o) 15))
+                             (list (phd-name o) (phd-name target) (if (phl-count link) "black" "gray") link-count used start-x (- (phd-y o) 15))
                              
                              (let ((x start-x)
                                    (vals nil))
-                               (dotimes (i (- (/ (- (phd-y o) (phd-y target)) (+ 30 (p-history-module-y-spacing module))) 1))
-                                 (let* ((y (- (phd-y o) (* (1+ i) (+ 30 (p-history-module-y-spacing module)))))
+                               (dotimes (i (- (/ (- (phd-y o) (phd-y target)) (+ 30 y-space)) 1))
+                                 (let* ((y (- (phd-y o) (* (1+ i) (+ 30 y-space))))
                                         (hs (find y holes :key 'car))
                                         (min max)
                                         (min-x nil))
@@ -899,42 +869,46 @@
                                    (setf x min-x)))
                                (reverse vals))
                              
-                             (list end-x (+ (phd-y target) 15)))
+                             (list end-x (+ (phd-y target) 15))
+                             )
                            links))))))))
     
-    (append (list (format nil "size ~d ~d" max height)) 
+    (push-last (append  
             (let ((results nil))
               (dolist (x offsets)
                 
                 (when with-labels
-                  (push (format nil "label ~S ~d ~d ~d ~d ~d ~d ~s" 
+                  (push (list "label"
                           (phd-name x) (phd-x x) (phd-y x) 
                           (- (phd-x x) (round (phd-width x) 2))
                           (- (phd-y x) 15)
                           (+ (phd-x x) (round (phd-width x) 2))
                           (+ (phd-y x) 15)
-                          (if (keywordp (phd-color x)) 'black (phd-color x)))
+                          (if (keywordp (phd-color x)) "black" (phd-color x))
+                          (cadr (assoc (phd-name x) (fourth info) :test 'string-equal)))
                         results))
                 
                 
                 (when (eq which :utility)
                   (awhen (assoc number (phd-utilities x))
-                         (push (format nil "box ~s ~d ~d ~d ~d ~s" (phd-name x)
+                         (push (list "box" (phd-name x)
                                  (- (phd-x x) (round (phd-width x) 2) -4)
                                  (- (phd-y x) 11)
                                  (+ (- (phd-x x) (round (phd-width x) 2) -4) (floor (* (- (phd-width x) 8) (/ (- (cdr it) min-u) (- max-u min-u)))))
                                  (- (phd-y x) 9)
-                                 'blue)
+                                     "blue"
+                                     (if (string-equal (phd-color x) "black") 1 0))
                                results))
                 
                   (awhen (assoc (1+ number) (phd-utilities x))
                          
-                         (push (format nil "box ~s ~d ~d ~d ~d ~s" (phd-name x)
+                         (push (list "box" (phd-name x)
                           (- (phd-x x) (round (phd-width x) 2) -4)
                           (+ (phd-y x) 11)
                           (+ (- (phd-x x) (round (phd-width x) 2) -4) (floor (* (- (phd-width x) 8) (/ (- (cdr it) min-u) (- max-u min-u)))))
                           (+ (phd-y x) 9)
-                          'blue)
+                                     "blue"
+                                     (if (string-equal (phd-color x) "black") 1 0))
                         results)))
 
                 (awhen (find number (phd-starts x) :key (if (or (eq which :cycle) (eq which :run) (eq which :utility)) 'car 'identity))
@@ -942,35 +916,36 @@
                   (when  (or (eq which :cycle) (eq which :run) (eq which :utility))
                     (setf min-time (cdr it)))
                        
-                  (push (format nil "box ~s ~d ~d ~d ~d ~s" (phd-name x)
+                  (push (list "box" (phd-name x)
                           (- (phd-x x) (round (phd-width x) 2) 2)
                           (- (phd-y x) 17)
                           (+ (phd-x x) (round (phd-width x) 2) 2)
                           (+ (phd-y x) 17)
-                          'green) results))
+                          "green" 1) results))
                 
                 (awhen (find number (phd-ends x) :key (if (or (eq which :cycle) (eq which :run) (eq which :utility)) 'car 'identity))
                   (when  (or (eq which :cycle) (eq which :run) (eq which :utility))
                     (setf max-time (cdr it)))
                        
-                  (push (format nil "box ~s ~d ~d ~d ~d ~s" (phd-name x)
+                  (push (list "box" (phd-name x)
                           (- (phd-x x) (round (phd-width x) 2) -2)
                           (- (phd-y x) 13)
                           (+ (phd-x x) (round (phd-width x) 2) -2)
                           (+ (phd-y x) 13)
-                          'red) results)))
+                          "red" 1) results)))
               results)
             
             (mapcar (lambda (x)
-                      (format nil "link ~s ~s ~s ~d~{ ~d~}" (first x) (second x) (third x) 
-                        (if (or (null (fourth x))
-                                equal-link-counts
-                                (= 1 max-link-count)
-                                (= 0 max-link-count))
-                            1
-                          (let ((max-width (round (p-history-module-x-spacing module) 4)))
-                            (max 1 (round (* max-width (/ (fourth x) max-link-count))))))
-                        (cddddr x)))
+                      (list "link" (first x) (second x) (third x) 
+                            (if (or (null (fourth x))
+                                    equal-link-counts
+                                    (= 1 max-link-count)
+                                    (= 0 max-link-count))
+                                1
+                              (let ((max-width x-space))
+                                (max 1 (round (* max-width (/ (fourth x) max-link-count))))))
+                            (fifth x)
+                            (nthcdr 5 x)))
               ;; because frequency needs to count links there are potentially duplicates but only need
               ;; to send over one of each...
               (remove-duplicates links :test (lambda (x y) (and (eq (first x) (first y)) (eq (second x) (second y)) (eq (third x) (third y))))))
@@ -978,10 +953,10 @@
             (when (and (or (eq which :cycle) (eq which :run) (eq which :utility))
                        (> min-time -1) (> max-time -1))
               (list
-               (format nil "min_time ~f" min-time)
-               (format nil "max_time ~f" max-time)))
+               (list "min_time" min-time)
+               (list "max_time" max-time)))
             
-            (list (format nil "cycles ~d" max-loops))
+            
             
             #| show the holes for debugging 
                (let ((z nil))
@@ -992,12 +967,14 @@
                 z)
               |#
             
-            (list "done"))))
+                  )
+          all))
+    (push (list "size" max height) all)))
 
 
 ;;; A command to allow getting .dot output of the graphs without using the environment.
 
-
+#|
 (defun production-transition-graph (&optional (which :all))
   (verify-current-model 
    "Cannot generate a production transition graph because there is no current model."
@@ -1011,7 +988,7 @@
    (when (eq which :unique-run)
      (setf which :run-color))
    
-   (let* ((data (parse-production-history-graph which))
+   (let* ((data (parse-production-history-graph (list (mapcar 'list (all-productions)) (get-module production-history)) which))
           (unused (all-productions))
           (start (caar data))
           (end (second data))
@@ -1109,85 +1086,130 @@
                 (command-output "  }")))
             (command-output "}"))))))
 
+|#
+
 
 (defun reset-p-history-module (module)
-  (setf (p-history-module-history module) nil)
-  (setf (p-history-module-why-not-list module) nil)
-  (setf (p-history-module-graph-table module) (make-hash-table :test 'equalp)))
+  (bt:with-lock-held ((p-history-module-lock module))
+    (setf (p-history-module-history module) nil)
+    (setf (p-history-module-why-not-list module) nil)))
   
-(defun params-p-history-module (instance param)
-  (if (consp param)
-      (case (car param)
-        (:save-p-history 
-          (no-output
-           (progn
-             (if (cdr param)
-                (progn 
-                 (unless (find 'production-history-recorder (car (sgp :conflict-set-hook)))
-                   (sgp :conflict-set-hook production-history-recorder))
-                 (unless (find 'production-history-reward-markers (car (sgp :reward-notify-hook)))
-                   (sgp :reward-notify-hook production-history-reward-markers)))
-              
-               (progn
-                 (when (find 'production-history-recorder (car (sgp :conflict-set-hook)))
-                   (let ((old-hooks (car (sgp :conflict-set-hook))))
-                     (sgp :conflict-set-hook nil)
-                     (dolist (x old-hooks)
-                       (unless (eq x 'production-history-recorder)
-                         (sgp-fct (list :conflict-set-hook x))))))
-                 (when (find 'production-history-reward-markers (car (sgp :reward-notify-hook)))
-                   (let ((old-hooks (car (sgp :reward-notify-hook))))
-                     (sgp :reward-notify-hook nil)
-                     (dolist (x old-hooks)
-                       (unless (eq x 'production-history-reward-markers)
-                         (sgp-fct (list :reward-notify-hook x))))))))
-          
-             (setf (p-history-module-enabled instance) (cdr param)))))
-        (:p-history-colors 
-         (setf (p-history-module-color-list instance) (cdr param)))
-        (:draw-blank-columns 
-         (setf (p-history-module-draw-blanks instance) (cdr param)))
-        (:p-history-graph-x
-         (setf (p-history-module-x-spacing instance) (cdr param)))
-        (:p-history-graph-y
-         (setf (p-history-module-y-spacing instance) (cdr param))))
-    (case param
-      (:save-p-history (p-history-module-enabled instance))
-      (:p-history-colors (p-history-module-color-list instance))
-      (:draw-blank-columns (p-history-module-draw-blanks instance))
-      (:p-history-graph-x (p-history-module-x-spacing instance))
-      (:p-history-graph-y (p-history-module-y-spacing instance)))))
 
-(define-module-fct 'production-history nil 
-  (list (define-parameter :save-p-history :valid-test 'tornil :default-value nil  
-          :warning "T or nil" 
-          :documentation "Whether or not to record the utility and whynot history of all conflict-resolution events.")
-        (define-parameter :p-history-colors 
-            :valid-test (lambda (x) 
-                          (or (null x)
-                              (and (listp x) (<= (length x) 3)
-                                   (every (lambda (y) (or (null y) (stringp y))) x))))
-          :default-value nil
-          :warning "nil or a list of up to 3 color strings" 
-          :documentation "The colors to use for the selected, other matched, and mismatched cells respectively.") 
-        (define-parameter :draw-blank-columns :valid-test 'tornil :default-value t
-          :warning "T or nil" 
-          :documentation "Whether or not to draw the columns which have no matched productions.")
-        
-        (define-parameter :p-history-graph-x :valid-test (lambda (x) (and (numberp x) (nonneg x) (integerp x))) :default-value 40
-          :warning "non-negative integer" 
-          :documentation "Horizontal pixels between production boxes.")
-        (define-parameter :p-history-graph-y :valid-test (lambda (x) (and (numberp x) (nonneg x) (integerp x))) :default-value 90
-          :warning "non-negative integer" 
-          :documentation "Vertical pixels between production boxes."))
+(define-module-fct 'production-history nil nil  
   :creation (lambda (x) (declare (ignore x)) (make-p-history-module))
+  :delete (lambda (x) (bt:with-lock-held ((p-history-module-lock x)) (setf (p-history-module-alive x) nil)))
   :reset 'reset-p-history-module
-  :params 'params-p-history-module
   :run-start 'production-history-start-markers
   :run-end 'production-history-stop-markers
-  :version "1.1"
+  :version "2.0"
   :documentation "Module to record production history for display in the environment.")
   
+
+
+(defun get-p-history-data ()
+  (let ((module (get-module production-history)))
+    (when module
+      (bt:with-lock-held ((p-history-module-lock module))
+        (let (data)
+          (dolist (x (p-history-module-history module))
+            (push 
+             (case (p-history-tag x)
+               (:start (list (p-history-time x) "start"))
+               (:stop (list (p-history-time x) "stop" (p-history-info x)))
+               (:reward (list (p-history-time x) "reward" (p-history-reward x) (p-history-info x)))
+               (t (list (p-history-time x) "conflict-resolution" (p-history-selected x) (p-history-matched x) (p-history-mismatched x) (p-history-info x))))
+             data))
+          (push (list 0 "info" (p-history-module-why-not-list module) (mapcar (lambda (x) (list x (printed-production-text x nil))) (all-productions))) data)
+          data)))))
+
+
+(defun enable-p-history () 
+  (no-output
+   (unless (find 'production-history-recorder (car (sgp :conflict-set-hook)))
+     (sgp :conflict-set-hook production-history-recorder))
+   (unless (find 'production-history-reward-markers (car (sgp :reward-notify-hook)))
+     (sgp :reward-notify-hook production-history-reward-markers)))
+  (let ((m (get-module production-history)))
+    (bt:with-lock-held ((p-history-module-lock m))
+      (setf (p-history-module-enabled m) t))))
+
+(defun disable-p-history ()
+  (no-output
+   (let ((old-hooks (car (sgp :conflict-set-hook))))
+     (when (find 'production-history-recorder old-hooks)
+       (sgp :conflict-set-hook nil)
+       (dolist (x (reverse old-hooks))
+         (unless (eq x 'production-history-recorder)
+           (sgp-fct (list :conflict-set-hook x)))))
+     (setf old-hooks (car (sgp :reward-notify-hook)))
+     (when (find 'production-history-reward-markers old-hooks)
+       (sgp :reward-notify-hook nil)
+       (dolist (x (reverse old-hooks))
+         (unless (eq x 'production-history-reward-markers)
+           (sgp-fct (list :reward-notify-hook x)))))))
+  (let ((m (get-module production-history)))
+    (bt:with-lock-held ((p-history-module-lock m))
+      (setf (p-history-module-enabled m) nil))))
+
+(defun p-history-status ()
+  (let ((m (get-module production-history)))
+    (if m
+        (bt:with-lock-held ((p-history-module-lock m))
+          (no-output 
+           (values 
+            (and (find 'production-history-recorder (car (sgp :conflict-set-hook)))
+                 (find 'production-history-reward-markers (car (sgp :reward-notify-hook)))
+                 t)
+            (when (p-history-module-history m) t)
+            (p-history-module-alive m))))
+      (values nil nil nil))))
+
+
+(define-history "production-history" enable-p-history disable-p-history p-history-status get-p-history-data t)
+
+
+(defun compute-production-grid (p-data)
+  (let ((data (json:decode-json-from-string p-data))
+        (results nil)
+        (p-list nil))
+    (dolist (x data)
+      (case (read-from-string (second x))
+        (info
+         (push-last x results)
+         (setf p-list (mapcar 'first (fourth x))))
+        (conflict-resolution
+         (push-last (list (first x)
+                          "conflict-resolution"
+                          (if (third x) t)
+                          (let (r)
+                            (dolist (y p-list)
+                              (push-last (cond ((string-equal y (third x))
+                                                (let ((details (find y (sixth x) :key 'first :test 'string-equal)))
+                                                  (list 0 (second details) (third details))))
+                                               ((find y (fourth x) :test 'string-equal)
+                                                (let ((details (find y (sixth x) :key 'first :test 'string-equal)))
+                                                  (list 1 (second details) (third details))))
+                                               ((find y (fifth x) :test 'string-equal)
+                                                (let ((details (find y (sixth x) :key 'first :test 'string-equal)))
+                                                  (list 2 (second details))))
+                                               (t
+                                                (list -1)))
+                                         r))
+                            r))
+                    results))))
+    results))
+    
+
+(define-history-processor "production-history" "production-grid" compute-production-grid)
+
+(define-history-processor-fct "production-history" "production-graph-all" (lambda (x) (create-production-graph-coords x :all)))
+(define-history-processor-fct "production-history" "production-graph-freq" (lambda (x) (create-production-graph-coords x :freq)))
+(define-history-processor-fct "production-history" "production-graph-cycles" (lambda (x) (create-production-graph-coords x :cycle)))
+(define-history-processor-fct "production-history" "production-graph-u-cycles" (lambda (x) (create-production-graph-coords x :color)))
+(define-history-processor-fct "production-history" "production-graph-runs" (lambda (x) (create-production-graph-coords x :run)))
+(define-history-processor-fct "production-history" "production-graph-u-runs" (lambda (x) (create-production-graph-coords x :run-color)))
+(define-history-processor-fct "production-history" "production-graph-utility" (lambda (x) (create-production-graph-coords x :utility)))
+
 
 #|
 This library is free software; you can redistribute it and/or

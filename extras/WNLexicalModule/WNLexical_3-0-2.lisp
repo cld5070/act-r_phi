@@ -109,7 +109,13 @@
 ;;;                     at random. Otherwise use the set-difference or intersection operators.
 ;;;                     Set difference applies to chunk id, while intersection applies to 
 ;;;                     synset-ids.
-;;;
+;;; 2014.07.07  DB    - Changed the chunk-type and request functions to work with the ACT-R 6.1
+;;;                     mechanism by just adding default slots for the request types and testing
+;;;                     for the existence of those slots.
+;;; 2015.07.28  DB    - Changed the logicals to ACT-R.
+;;; 2018.08.24  DB    - Removed *wnl-code-pathname-directory* because it's unused and not where
+;;;                     the file should be found now anyway.
+;;;                   - Added a lock for parameters and queries.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -120,6 +126,8 @@
 ;;;                   - Add word frequency information.  
 ;;;
 ;;; 2007.08.22  BE    - Proper integration sense key operator (sk).
+;;;
+;;; 2018.08.24  DB    - Does it need more locks?
 ;;; 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -140,13 +148,10 @@
 (defparameter *wordnet-lexical-version* "3.0.2")
 (defparameter *wordnet-lexical-documentation* "WN-Lexical: An ACT-R module implementing the Wordnet lexical database." )
 
-(defparameter *wnl-code-pathname-directory* 
-  (pathname-directory
-   (translate-logical-pathname (logical-pathname "ACT-R6:Modules;"))))
 
 (defparameter *wnl-data-pathname-directory* 
   (pathname-directory
-   (translate-logical-pathname (logical-pathname "ACT-R6:WNLexicalData;"))))
+   (translate-logical-pathname (logical-pathname "ACT-R:WNLexicalData;"))))
 
 (defparameter *wordnet-lexical-modules* nil)
 
@@ -242,6 +247,9 @@
                  :initform nil 
                  :accessor failed-state
                  :documentation "Hold the state of the module it a process failled. Request on the state returns either error or t.")
+   (wn-lock      :initform (bt:make-lock "WNLexical") 
+                 :accessor wn-lock
+                 :documentation "Lock to protect parameter and state access.")
    ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -344,9 +352,10 @@
 
 (defmethod wnl-module-reset ((wnl wordnet-lexical-module))
   (make-actr-wnl-chunk-types)
-  (setf (synset-context wnl) nil
-        (busy-state wnl)     nil
-        (failed-state wnl)   nil)
+  (bt:with-lock-held ((wn-lock wnl))
+    (setf (synset-context wnl) nil
+      (busy-state wnl)     nil
+      (failed-state wnl)   nil))
   wnl)
 
 ;;;
@@ -355,7 +364,8 @@
 
 (defmethod wnl-module-and-buffer-query ((wnl wordnet-lexical-module) 
                                         (buffer-name symbol) (slot-name symbol) (slot-value symbol))
-  (if (wnl-ready wnl)
+  (bt:with-lock-held ((wn-lock wnl))
+    (if (wnl-ready wnl)
       (case slot-name
         (state
          (case slot-value
@@ -375,7 +385,7 @@
         (t (print-warning  
             "Invalid module query for buffer ~S with slot ~S (must be either state, or buffer)." 
             buffer-name slot-name)))
-    (model-warning "WNL-CHUNKS are not loaded. Use (sgp :wnl-chunks wnl) at the top of your model.")))
+    (model-warning "WNL-CHUNKS are not loaded. Use (sgp :wnl-chunks wnl) at the top of your model."))))
   
 ;;;
 ;;; Module request
@@ -430,7 +440,7 @@
       (setf (failed-state wnl) t))))
 
 (defmethod retrieve-wn-chunks ((wnl wordnet-lexical-module) (request t))
-  (if (and (equal 'wnl-request (chunk-spec-chunk-type request))
+  (if (and (slot-in-chunk-spec-p request 'wnl-request)
            (slot-in-chunk-spec-p request 'wn-operator)
            (or (slot-in-chunk-spec-p request 'word)
                (slot-in-chunk-spec-p request 'synset-id)))
@@ -467,30 +477,30 @@
 (defmethod wnl-module-request ((wnl wordnet-lexical-module) (buffer-name symbol) (request t))
   (declare (ignore buffer-name)) 
   (if (wnl-ready wnl)
-      (progn
+      (bt:with-lock-held ((wn-lock wnl)) 
         (when (busy-state wnl)
           (model-warning "A lexical access event has been aborted by a new request")
           (dolist (event (busy-state wnl))
             (delete-event event)))
         (setf (failed-state wnl) nil)  
         (setf (busy-state wnl)
-              (case (chunk-spec-chunk-type request)
-                (wnl-request
-                 (list (schedule-event-relative 0 'retrieve-wn-chunks
-                                                :module 'wn-lexical
-                                                :destination 'wn-lexical
-                                                :details (symbol-name 'retrieve-wn-chunks)                             
-                                                :priority -1000
-                                                :params (list request)
-                                                :output 'medium)))
-                (wnl-clear-context
-                 (list (schedule-event-relative 0 'clear-synset-context
-                                                :module 'wn-lexical
-                                                :destination 'wn-lexical
-                                                :details (symbol-name 'clear-wn-lexical-synset-context)                             
-                                                :priority -1000
-                                                :params nil
-                                                :output 'medium))))))
+          (cond
+           ((slot-in-chunk-spec-p request 'wnl-request)
+            (list (schedule-event-relative 0 'retrieve-wn-chunks
+                                           :module 'wn-lexical
+                                           :destination 'wn-lexical
+                                           :details (symbol-name 'retrieve-wn-chunks)                             
+                                           :priority -1000
+                                           :params (list request)
+                                           :output 'medium)))
+           ((slot-in-chunk-spec-p request 'wnl-clear)
+            (list (schedule-event-relative 0 'clear-synset-context
+                                           :module 'wn-lexical
+                                           :destination 'wn-lexical
+                                           :details (symbol-name 'clear-wn-lexical-synset-context)                             
+                                           :priority -1000
+                                           :params nil
+                                           :output 'medium))))))
     (model-warning "WNL-CHUNKS are not loaded. Use (sgp :wnl-chunks wnl) at the top of your model.")))
 
 ;  (case (chunk-spec-chunk-type chunk-spec)
@@ -618,9 +628,9 @@
 
 (defun make-actr-wnl-chunk-types ()
   (unless (chunk-type-p wnl-request)
-    (chunk-type wnl-request word synset-id wn-operator context-criterion))
+    (chunk-type wnl-request word synset-id wn-operator context-criterion (wnl-request t)))
   (unless (chunk-type-p wnl-clear-context)
-    (chunk-type wnl-clear-context))
+    (chunk-type wnl-clear-context (wnl-clear t)))
   (unless (chunk-p success)
     (define-chunks (success isa chunk)))
   (dolist (wn-operator '(s g hyp ent sim mm ms mp der cls cs vgp at ant sa ppl per fr))
@@ -691,27 +701,29 @@
 
 
 (defmethod wn-lexical-parameters ((wnl wordnet-lexical-module) (parameter list))
-  (case (car parameter)
-    (:wnl-chunks
-     (setf (load-wnl-chunks wnl) (cdr parameter))
-     (case (load-wnl-chunks wnl)
-       (wnl (make-actr-wnl-chunk-types)
-            (when (not (wnl-ready wnl))
-              (load-all-data-sources-in-wn-lexical wnl))
-            (print-number-of-chunks wnl))
-       (dm (make-actr-wnl-chunk-types)
-           (when (not (wnl-ready wnl))
-             (load-all-data-sources-in-wn-lexical wnl))
-           (print-number-of-chunks wnl)
-           (load-wn-lexical-in-declarative-memory wnl))
-       (nil (reset-wordnet-lexical-modules))))
-    (otherwise (print-warning  "Unknown parameter ~S for module WNLexical." (car parameter)))))
+  (bt:with-lock-held ((wn-lock wnl))
+    (case (car parameter)
+      (:wnl-chunks
+       (setf (load-wnl-chunks wnl) (cdr parameter))
+       (case (load-wnl-chunks wnl)
+         (wnl (make-actr-wnl-chunk-types)
+              (when (not (wnl-ready wnl))
+                (load-all-data-sources-in-wn-lexical wnl))
+              (print-number-of-chunks wnl))
+         (dm (make-actr-wnl-chunk-types)
+             (when (not (wnl-ready wnl))
+               (load-all-data-sources-in-wn-lexical wnl))
+             (print-number-of-chunks wnl)
+             (load-wn-lexical-in-declarative-memory wnl))
+         (nil (reset-wordnet-lexical-modules))))
+      (otherwise (print-warning  "Unknown parameter ~S for module WNLexical." (car parameter))))))
 
 (defmethod wn-lexical-parameters ((wnl wordnet-lexical-module) (parameter symbol))
-  (case parameter
-    (:wnl-chunks
-     (load-wnl-chunks wnl))
-    (otherwise (print-warning  "Unknown parameter ~S for module WNLexical." parameter))))
+  (bt:with-lock-held ((wn-lock wnl))
+    (case parameter
+      (:wnl-chunks
+       (load-wnl-chunks wnl))
+      (otherwise (print-warning  "Unknown parameter ~S for module WNLexical." parameter)))))
 
 ;;;
 ;;; Module definition

@@ -16,13 +16,9 @@ global window_config
 set window_config(.copyright) \
     "400x466+[expr $screen_center_x - 200]+[expr $screen_center_y - 233]"
 
-if {$standalone_mode == 0} {
-  set window_config(.control_panel) \
-      "170x700+[expr $screen_width - 190]+[expr $screen_center_y - 350]"
-} else {
-  set window_config(.control_panel) \
-      "235x700+[expr $screen_width - 255]+[expr $screen_center_y - 350]"
-}
+
+set window_config(.control_panel) \
+    "235x700+[expr $screen_width - 255]+[expr $screen_center_y - 350]"
 
 
 set window_config(.reload_response) \
@@ -30,6 +26,10 @@ set window_config(.reload_response) \
 
 set window_config(.stepper) \
     "500x550+[expr $screen_center_x - 250]+[expr $screen_center_y - 275]"
+
+set window_config(.event_queue) \
+    "800x180+[expr $screen_center_x - 400]+[expr $screen_center_y - 90]"
+
 
 set window_config(.tutor_response) \
     "480x130+[expr $screen_center_x - 240]+[expr $screen_center_y - 65]"
@@ -51,10 +51,10 @@ set window_config(.buffers) \
     "350x240+[expr $screen_center_x - 175]+[expr $screen_center_y - 120]"
 
 set window_config(.bufferstatus) \
-    "350x240+[expr $screen_center_x - 175]+[expr $screen_center_y - 120]"
+    "450x240+[expr $screen_center_x - 225]+[expr $screen_center_y - 120]"
 
 set window_config(.visicon) \
-    "660x150+[expr $screen_center_x - 330]+[expr $screen_center_y - 100]"
+    "700x150+[expr $screen_center_x - 350]+[expr $screen_center_y - 100]"
 
 set window_config(.audicon) \
     "870x150+[expr $screen_center_x - 435]+[expr $screen_center_y - 100]"
@@ -82,6 +82,23 @@ set window_config(.retrieval_history) \
 set window_config(.buffer_history) \
     "530x290+[expr $screen_center_x - 265]+[expr $screen_center_y - 100]"
 
+set window_config(.audicon_history) \
+    "734x300+[expr $screen_center_x - 367]+[expr $screen_center_y - 150]"
+
+set window_config(.visicon_history) \
+    "810x340+[expr $screen_center_x - 405]+[expr $screen_center_y - 170]"
+
+set window_config(.text_trace_history) \
+    "714x340+[expr $screen_center_x - 387]+[expr $screen_center_y - 170]"
+
+set window_config(.history_recorder) \
+    "360x390+[expr $screen_center_x - 180]+[expr $screen_center_y - 195]"
+
+set window_config(.history_playback) \
+    "512x370+[expr $screen_center_x - 256]+[expr $screen_center_y - 185]"
+
+set window_config(.save_history_response) \
+    "630x150+[expr $screen_center_x - 315]+[expr $screen_center_y - 75]"
 
 set window_config(.bold_graphs) \
     "660x250+[expr $screen_center_x - 330]+[expr $screen_center_y - 120]"
@@ -96,8 +113,15 @@ set window_config(.bold_brain_3d_real) \
     "658x508+[expr $screen_center_x - 329]+[expr $screen_center_y - 250]"
 
 
+set window_config(.pick_buffers) \
+    "200x340+[expr $screen_center_x - 100]+[expr $screen_center_y - 170]"
+
 set window_config(.options) \
     "450x274+[expr $screen_center_x - 225]+[expr $screen_center_y - 137]"
+
+
+set window_config(.dispatcher) \
+    "700x274+[expr $screen_center_x - 350]+[expr $screen_center_y - 137]"
 
 
 set window_config(.model) \
@@ -155,10 +179,17 @@ bind all <Configure> {
   }
 }
 
+global gui_options
+
+set gui_options(p_selected) #44DA22
+set gui_options(p_matched) #FCA31D
+set gui_options(p_mismatched) #E1031E
+
 proc save_window_positions {} {
   global tcl_env_dir
   global changed_window_list
   global window_config
+  global gui_options
 
   set file [file join $tcl_env_dir init "10-userguisettings.tcl"]
 
@@ -182,4 +213,8 @@ proc save_window_positions {} {
   }
 
   append_data "}\n" $file
+
+  foreach name [array names gui_options] {
+    append_data "set gui_options($name) $gui_options($name)\n" $file
+  }
 }

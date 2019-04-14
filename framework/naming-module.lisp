@@ -109,6 +109,21 @@
 ;;; 2012.06.27 Dan
 ;;;             : * Fixed a bug in new-symbol because it would throw an error
 ;;;             :   if there isn't a current model instead of printing the warning.
+;;; 2017.05.31 Dan [2.0]
+;;;             : * Also adding a naming component which can generate symbols
+;;;             :   outside of any model and move new-symbol to use the component
+;;;             :   instead of the module.
+;;; 2017.06.16 Dan
+;;;             : * Add locks for the global tables and actually protect the
+;;;             :   symbols table (the name table is not protected yet).
+;;; 2017.06.21 Dan
+;;;             : * Protect everything else with locks (parameters, global 
+;;;             :   symbol table, local table, and model level 'updating' slots).
+;;; 2017.06.23 Dan
+;;;             : * Added names for all the locks.
+;;; 2018.02.27 Dan
+;;;             : * Allow the :dcsc-hook function to accept command strings.
+;;;             : * Provide remote versions of new-name, release-name, and new-symbol.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -138,6 +153,9 @@
 
 (defvar *global-symbols-table* (make-hash-table :test #'equal))
 
+(defvar *symbols-table-lock* (bt:make-lock "symbols-table"))
+(defvar *names-table-lock* (bt:make-lock "names-table"))
+
 (defconstant *naming-module-num-vector* (vector #\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9))
 
 (defun fast-num->string (n)
@@ -153,81 +171,108 @@
       (let ((s2 (make-string (length s))))
         (dotimes (i (length s))
           (setf (aref s2 i)
-           (aref *naming-module-num-vector* (pop s))))
+            (aref *naming-module-num-vector* (pop s))))
         s2))))
 
 
 (defstruct act-r-name (next-name 0) used-symbols)
 
-(defstruct naming-module model ncnar dcnn hook (table (make-hash-table :test #'equal)))
+(defstruct naming-module model ncnar dcnn hook (table (make-hash-table :test #'equal)) (table-lock (bt:make-lock "naming-table")) (param-lock (bt:make-lock "naming-param")))
 
 (defun create-naming-module (model-name)
   (make-naming-module :model model-name))
 
 
 (defun reset-naming-module (name-module)
-  (let ((m-name (naming-module-model name-module))
-        (table (naming-module-table name-module)))
-    (maphash #'(lambda (base val) 
-                 (dotimes (i (act-r-name-next-name val))
-                   
-                   (let* ((symbol-name (concatenate 'string base (fast-num->string i)))
-                          (val (gethash symbol-name *global-names-table*)))
+  (bt:with-lock-held ((naming-module-table-lock name-module))
+    (bt:with-lock-held (*names-table-lock*)
+      (let ((m-name (naming-module-model name-module))
+            (table (naming-module-table name-module)))
+        (maphash #'(lambda (base val) 
+                     (dotimes (i (act-r-name-next-name val))
+                       
+                       (let* ((symbol-name (concatenate 'string base (fast-num->string i)))
+                              (val (gethash symbol-name *global-names-table*)))
+                         
+                         (when (and val
+                                    (not (eq val t))
+                                    (find m-name val))
+                           (setf val (remove m-name val))
+                           (if (null val)
+                               (let ((symbol (intern symbol-name)))
+                                 (unintern symbol)
+                                 (remhash symbol-name *global-names-table*))
+                             (setf (gethash symbol-name *global-names-table*) val)))))
                      
-                     (when (and val
-                                (not (eq val t))
-                                (find m-name val))
-                       (setf val (remove m-name val))
-                       (if (null val)
-                           (let ((symbol (intern symbol-name)))
-                             (unintern symbol)
-                             (remhash symbol-name *global-names-table*))
-                         (setf (gethash symbol-name *global-names-table*) val)))))
-                 (dolist (x (act-r-name-used-symbols val))
-                   (let ((symbol (intern (concatenate 'string base "-" (fast-num->string x)))))
-                     (unintern symbol)))
-                 (remhash base table))
-           table)))
+                     (remhash base table))
+                 table)))))
+
+(defun reset-naming-component (name-module)
+  (bt:with-lock-held ((naming-module-table-lock name-module))
+    (let ((table (naming-module-table name-module)))
+      (maphash #'(lambda (base val) 
+                   (dolist (x (act-r-name-used-symbols val))
+                     (let ((symbol (intern (concatenate 'string base "-" (fast-num->string x)))))
+                       (unintern symbol)))
+                   (remhash base table))
+               table))))
 
 
 (defun params-naming-module (module param)
-  (if (consp param)
-      (case (car param)
-        (:ncnar
-         (cond ((null (cdr param))
-                (setf (act-r-model-chunk-update (current-model-struct)) nil)
-                (setf (act-r-model-delete-chunks (current-model-struct)) nil))
-               ((eq (cdr param) 'delete)
-                (setf (act-r-model-chunk-update (current-model-struct)) t)
-                (setf (act-r-model-delete-chunks (current-model-struct)) t))
-               (t  
-                (setf (act-r-model-chunk-update (current-model-struct)) t)
-                (setf (act-r-model-delete-chunks (current-model-struct)) nil)))
+  (bt:with-lock-held ((naming-module-param-lock module))
+    (if (consp param)
+        (case (car param)
+          (:ncnar
+           (let ((model (current-model-struct)))
+             (bt:with-lock-held ((act-r-model-chunk-updating-lock model))
+               (cond ((null (cdr param))
+                      (setf (act-r-model-chunk-update model) nil)
+                      (setf (act-r-model-delete-chunks model) nil))
+                     ((eq (cdr param) 'delete)
+                      (setf (act-r-model-chunk-update model) t)
+                      (setf (act-r-model-delete-chunks model) t))
+                     (t  
+                      (setf (act-r-model-chunk-update model) t)
+                      (setf (act-r-model-delete-chunks model) nil)))))
            
-         (setf (naming-module-ncnar module) (cdr param)))
-        (:dcnn (setf (act-r-model-dynamic-update (current-model-struct)) (cdr param))
-               (setf (naming-module-dcnn module) (cdr param)))
-        
-        (:dcsc-hook 
-            (if (cdr param)
-                (if  (member (cdr param) (naming-module-hook module))
-                    (print-warning 
-                     "Setting parameter ~s failed because ~s already on the hook."
-                     :dcnn-hook
-                     (cdr param))
-                  (progn
-                    (push (cdr param) (naming-module-hook module))
-                    (push (cdr param) (act-r-model-dynamic-update-hooks (current-model-struct)))))
-              (progn
-                (setf (naming-module-hook module) nil)
-                (setf (act-r-model-dynamic-update-hooks (current-model-struct)) nil))))
-        (:short-copy-names (setf (act-r-model-short-copy-names (current-model-struct)) (cdr param))))
-    (case param
-      (:ncnar (naming-module-ncnar module))
-      (:dcnn (naming-module-dcnn module))
-      (:dcsc-hook (naming-module-hook module))
-      (:short-copy-names (act-r-model-short-copy-names (current-model-struct))))))
-   
+           (setf (naming-module-ncnar module) (cdr param)))
+          
+          (:dcnn (let ((model (current-model-struct)))
+                   (bt:with-lock-held ((act-r-model-chunk-updating-lock model))
+                     
+                     (setf (act-r-model-dynamic-update model) (cdr param))))
+                 (setf (naming-module-dcnn module) (cdr param)))
+          
+          (:dcsc-hook 
+           (if (cdr param)
+               (if  (member (cdr param) (naming-module-hook module))
+                   (print-warning 
+                    "Setting parameter ~s failed because ~s already on the hook."
+                    :dcnn-hook
+                    (cdr param))
+                 (progn
+                   (push (cdr param) (naming-module-hook module))
+                   (let ((model (current-model-struct)))
+                     (bt:with-lock-held ((act-r-model-chunk-updating-lock model))
+                       (push (cdr param) (act-r-model-dynamic-update-hooks model))))))
+             (progn
+               (setf (naming-module-hook module) nil)
+               (let ((model (current-model-struct)))
+                 (bt:with-lock-held ((act-r-model-chunk-updating-lock model))
+                   (setf (act-r-model-dynamic-update-hooks model) nil))))))
+          (:short-copy-names 
+           (let ((model (current-model-struct)))
+             (bt:with-lock-held ((act-r-model-chunk-updating-lock model))
+               (setf (act-r-model-short-copy-names model) (cdr param))))))
+      (case param
+        (:ncnar (naming-module-ncnar module))
+        (:dcnn (naming-module-dcnn module))
+        (:dcsc-hook (naming-module-hook module))
+        (:short-copy-names 
+         (let ((model (current-model-struct)))
+           (bt:with-lock-held ((act-r-model-chunk-updating-lock model))
+             (act-r-model-short-copy-names model))))))))
+
 
 (define-module-fct 'naming-module nil 
   (list 
@@ -241,22 +286,29 @@
      :default-value t
      :warning "must be t or nil"
      :valid-test #'tornil)
-   (define-parameter :dcsc-hook :valid-test #'fctornil 
-          :default-value nil
-          :warning "a function or nil" 
+   (define-parameter :dcsc-hook :valid-test 'local-or-remote-function-or-nil 
+     :default-value nil
+     :warning "a function, string naming a command, or nil" 
      :documentation "Hook called when a chunk is changed due to normalizing")
    (define-parameter :short-copy-names :valid-test #'tornil
-          :default-value nil
-          :warning "T or nil" 
-          :documentation "Flag to signal how copied chunks are named"))
-            
-  :version "1.3"
+     :default-value nil
+     :warning "T or nil" 
+     :documentation "Flag to signal how copied chunks are named"))
+  
+  :version "2.0"
   :documentation "Provides safe and repeatable new name generation for models."
   :params #'params-naming-module
   :creation #'create-naming-module
   :reset #'reset-naming-module
   :delete #'reset-naming-module
   )
+
+
+
+(define-component naming :version "2.0" :documentation "Provides new symbol generation for the system."
+  :creation make-naming-module
+  :delete reset-naming-component
+  :clear-all reset-naming-component)
 
 
 (defmacro new-name (&optional (prefix "CHUNK"))
@@ -266,115 +318,137 @@
   (if (or (stringp prefix) (symbolp prefix))
       (let ((name-module (get-module naming-module)))
         (if name-module
-            (let* ((name-table (naming-module-table name-module))
-                   (m-name (naming-module-model name-module))
-                   (base (string-upcase prefix))
-                   (element (gethash base name-table)))
-              (unless element
-                (setf element
-                  (setf (gethash base name-table) (make-act-r-name))))
-              
-              (multiple-value-bind (symbol-name symbol previous)
-                  (do* ((count (act-r-name-next-name element) (1+ count))
-                        (symbol-name (concatenate 'string base (fast-num->string count))
-                                     (concatenate 'string base (fast-num->string count)))
-                        (existed (find-symbol symbol-name)
-                                 (find-symbol symbol-name))
-                        (symbol (intern symbol-name)
-                                (intern symbol-name)))
-                       ((not (get-chunk symbol))
-                        (progn
-                          (setf (act-r-name-next-name element) (1+ count)))
-                          (values symbol-name symbol existed)))
+            (bt:with-lock-held ((naming-module-table-lock name-module))
+              (let* ((name-table (naming-module-table name-module))
+                     (m-name (naming-module-model name-module))
+                     (base (string-upcase prefix))
+                     (element (gethash base name-table)))
+                (unless element
+                  (setf element
+                    (setf (gethash base name-table) (make-act-r-name))))
                 
-                (multiple-value-bind (val exists)
-                    (gethash symbol-name *global-names-table*)
-                  (if exists
-                      (unless (or (eq val t)
-                                  (find m-name val))
-                        (setf (gethash symbol-name *global-names-table*)
-                          (push m-name val)))
-                    (if previous
-                        (setf (gethash symbol-name *global-names-table*) t)
-                      (setf (gethash symbol-name *global-names-table*) (list m-name)))))
-                symbol))
+                (multiple-value-bind (symbol-name symbol previous)
+                    (do* ((count (act-r-name-next-name element) (1+ count))
+                          (symbol-name (concatenate 'string base (fast-num->string count))
+                                       (concatenate 'string base (fast-num->string count)))
+                          (existed (find-symbol symbol-name)
+                                   (find-symbol symbol-name))
+                          (symbol (intern symbol-name)
+                                  (intern symbol-name)))
+                         ((not (get-chunk symbol))
+                          (progn
+                            (setf (act-r-name-next-name element) (1+ count)))
+                          (values symbol-name symbol existed)))
+                  
+                  (bt:with-lock-held (*names-table-lock*)
+                    (multiple-value-bind (val exists)
+                        (gethash symbol-name *global-names-table*)
+                      (if exists
+                          (unless (or (eq val t)
+                                      (find m-name val))
+                            (setf (gethash symbol-name *global-names-table*)
+                              (push m-name val)))
+                        (if previous
+                            (setf (gethash symbol-name *global-names-table*) t)
+                          (setf (gethash symbol-name *global-names-table*) (list m-name))))))
+                  
+                  symbol)))
           (print-warning "No naming module available cannot create new name.")))
     (print-warning "Invalid parameter passed to new-name.  Must be a string or symbol.")))
-                  
+
+(add-act-r-command "new-name" 'new-name-fct "Create new item names within a model. Params: {name-prefix}")
+
 
 (defmacro release-name (symbol)
   `(release-name-fct ',symbol))
 
 (defun release-name-fct (symbol)
-  (multiple-value-bind (val exists) (gethash (symbol-name symbol) *global-names-table*)
-    (when (and exists 
-               (not (eq t val)))
-      (let ((name-module (get-module naming-module)))
-        (if name-module
-            (let ((m-name (naming-module-model name-module))) 
-              
-              (when (find m-name val)
-                (setf val (remove m-name val))
+  (bt:with-lock-held (*names-table-lock*)
+    (multiple-value-bind (val exists) (gethash (symbol-name symbol) *global-names-table*)
+      (when (and exists 
+                 (not (eq t val)))
+        (let ((name-module (get-module naming-module)))
+          (if name-module
+              (let ((m-name (naming-module-model name-module))) 
                 
-                (if (null val)
+                (when (find m-name val)
+                  (setf val (remove m-name val))
+                  
+                  (if (null val)
+                      (progn
+                        (remhash (symbol-name symbol) *global-names-table*)
+                        (unintern symbol)
+                        t)
                     (progn
-                      (remhash (symbol-name symbol) *global-names-table*)
-                      (unintern symbol)
-                      t)
-                  (progn
-                    (setf (gethash (symbol-name symbol) *global-names-table*) val)
-                    nil))))
-          (print-warning "No naming module available cannot release name ~s." symbol))))))
+                      (setf (gethash (symbol-name symbol) *global-names-table*) val)
+                      nil))))
+            (print-warning "No naming module available cannot release name ~s." symbol)))))))
 
-      
 
+(defun release-name-external (name-string)
+  (release-name-fct (string->name name-string)))
+
+(add-act-r-command "release-name" 'release-name-external "Unintern a name generated by new-name. Params: {name-string}")
 
 (defmacro new-symbol (&optional (prefix "CHUNK"))
   `(new-symbol-fct ',prefix))
 
 (defun new-symbol-fct (&optional (prefix "CHUNK"))
   (if (or (stringp prefix) (symbolp prefix))
-      (let ((name-table (awhen (get-module naming-module) (naming-module-table it))))
+      (let* ((component (get-component naming))
+             (name-table (when component (naming-module-table component))))
         (if name-table
-            (let* ((base (string-upcase prefix))
-                   (element (gethash base name-table)))
-              (unless element
-                (setf element
-                  (setf (gethash base name-table) (make-act-r-name ))))
-              
-              (unless (gethash base *global-symbols-table*)
-                (setf (gethash base *global-symbols-table*) 0))
-              
-              (do* ((count (gethash base *global-symbols-table*)
-                           (incf (gethash base *global-symbols-table*)))
-                    (symbol-name (concatenate 'string base "-" (fast-num->string count))
-                                 (concatenate 'string base "-" (fast-num->string count)))
-                    (existed (find-symbol symbol-name)
-                             (find-symbol symbol-name)))
-                   ((not existed)
-                    (progn
-                      (push count (act-r-name-used-symbols element))
-                      (incf (gethash base *global-symbols-table*))
-                      (values (intern symbol-name))))))
-          (print-warning "No naming module available cannot create new symbol.")))
+            (bt:with-lock-held ((naming-module-table-lock component))
+              (let* ((base (string-upcase prefix))
+                     (element (gethash base name-table)))
+                (unless element
+                  (setf element
+                    (setf (gethash base name-table) (make-act-r-name))))
+                (bt:with-lock-held (*symbols-table-lock*)
+                  (unless (gethash base *global-symbols-table*)
+                    (setf (gethash base *global-symbols-table*) 0))
+                  
+                  (do* ((count (gethash base *global-symbols-table*)
+                               (incf (gethash base *global-symbols-table*)))
+                        (symbol-name (concatenate 'string base "-" (fast-num->string count))
+                                     (concatenate 'string base "-" (fast-num->string count)))
+                        (existed (find-symbol symbol-name)
+                                 (find-symbol symbol-name)))
+                       ((not existed)
+                        (progn
+                          (push count (act-r-name-used-symbols element))
+                          (incf (gethash base *global-symbols-table*))
+                          (values (intern symbol-name))))))))
+          (print-warning "No naming component available cannot create new symbol.")))
     (print-warning "Invalid parameter passed to new-symbol.  Must be a string or symbol.")))
 
+(add-act-r-command "new-symbol" 'new-symbol-fct "Create new names outside of a model. Params: {name-prefix}")
 
 (defun update-chunks-at-all ()
-  (act-r-model-chunk-update (current-model-struct)))
-
+  (let ((model (current-model-struct)))
+    (bt:with-lock-held ((act-r-model-chunk-updating-lock model))
+      (act-r-model-chunk-update model))))
+    
 (defun update-chunks-on-the-fly ()
-  (and (act-r-model-chunk-update (current-model-struct))
-       (act-r-model-dynamic-update (current-model-struct))))
+  (let ((model (current-model-struct)))
+    (bt:with-lock-held ((act-r-model-chunk-updating-lock model))
+      (and (act-r-model-chunk-update model)
+           (act-r-model-dynamic-update model)))))
 
 (defun notify-on-the-fly-hooks ()
-  (act-r-model-dynamic-update-hooks (current-model-struct)))
+  (let ((model (current-model-struct)))
+    (bt:with-lock-held ((act-r-model-chunk-updating-lock model))
+      (act-r-model-dynamic-update-hooks model))))
 
 (defun delete-chunks-after-run ()
-  (act-r-model-delete-chunks (current-model-struct)))
+  (let ((model (current-model-struct)))
+    (bt:with-lock-held ((act-r-model-chunk-updating-lock model))
+      (act-r-model-delete-chunks model))))
 
 (defun use-short-copy-names ()
-  (act-r-model-short-copy-names (current-model-struct)))
+  (let ((model (current-model-struct)))
+    (bt:with-lock-held ((act-r-model-chunk-updating-lock model))
+      (act-r-model-short-copy-names model))))
 
 #|
 This library is free software; you can redistribute it and/or
@@ -391,3 +465,4 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 |#
+    

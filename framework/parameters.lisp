@@ -61,6 +61,26 @@
 ;;;             : * Sgp now prints the paramter table sorted by module name
 ;;;             :   and then by parameter name within a module when it prints
 ;;;             :   all parameters.
+;;; 2017.03.08 Dan
+;;;             : * Because (no-output (car (sgp :xxx))) is a frequently needed
+;;;             :   construct adding a function to do just that and making it
+;;;             :   available remotely: get-parameter-value.
+;;; 2017.06.29 Dan
+;;;             : * Protecting the parameters table with a lock.
+;;; 2017.07.14 Dan
+;;;             : * Make sure sgp is thread safe.
+;;; 2017.11.07 Dan
+;;;             : * Changed the warning in test-and-set-parameter-value to use
+;;;             :   ~s instead of ~a when printing an invalid value.
+;;; 2017.11.14 Dan
+;;;             : * Added the external command set-parameter-value.
+;;; 2018.01.26 Dan
+;;;             : * Renamed the things so that get-paraemter-value and set-
+;;;             :   parameter-value are valid user commands associated with the
+;;;             :   corresponding remote commands and don't error out for get.
+;;; 2018.06.14 Dan
+;;;             : * Set- and get- parameter-value need to encode/decode strings
+;;;             :   for remote calls only.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -93,6 +113,7 @@
 (defvar *act-r-parameters-table* (make-hash-table :test #'eq)
   "The table of all used parameters")
 
+(defvar *parameters-table-lock* (bt:make-lock "parameters-table"))
 
 
 (defun define-parameter (param-name 
@@ -122,48 +143,49 @@
 (defun parse-parameters (parameters-list)
   "Make sure that they are parameters and not already owned if ownership 
    requested or that it exists if not owned"
-  (if (every #'(lambda (x)
-                 (and (act-r-parameter-p x)
-                      (or (and (act-r-parameter-owner x) 
-                               (not (valid-parameter-name 
-                                     (act-r-parameter-param-name x))))
-                          (and (not (act-r-parameter-owner x)) 
-                               (valid-parameter-name 
-                                (act-r-parameter-param-name x))))))
+  (if (every (lambda (x)
+               (and (act-r-parameter-p x)
+                    (or (and (act-r-parameter-owner x) 
+                             (not (valid-parameter-name 
+                                   (act-r-parameter-param-name x))))
+                        (and (not (act-r-parameter-owner x)) 
+                             (valid-parameter-name 
+                              (act-r-parameter-param-name x))))))
              parameters-list)
       parameters-list
     :error))
                                  
 
 (defun install-parameters (module-name parameters)
-  (dolist (x parameters)
-    (if (act-r-parameter-owner x)
-        (let ((param-copy (copy-act-r-parameter x)))
-          (setf (act-r-parameter-owner param-copy) module-name)
-          (setf (gethash (act-r-parameter-param-name param-copy) 
-                         *act-r-parameters-table*)
-            param-copy))
-      (push module-name (act-r-parameter-users 
-                         (get-parameter-struct 
-                          (act-r-parameter-param-name x)))))))
-
+  (bt:with-lock-held (*parameters-table-lock*)
+    (dolist (x parameters)
+      (if (act-r-parameter-owner x)
+          (let ((param-copy (copy-act-r-parameter x)))
+            (setf (act-r-parameter-owner param-copy) module-name)
+            (setf (gethash (act-r-parameter-param-name param-copy) 
+                           *act-r-parameters-table*)
+              param-copy))
+        (push module-name (act-r-parameter-users 
+                           (gethash (act-r-parameter-param-name x) *act-r-parameters-table*)))))))  
 
 
 (defun remove-modules-parameters (module-name)
   "Remove all parameters of the module both owned and watched"
   
-  (maphash #'(lambda (name param)
+  (bt:with-lock-held (*parameters-table-lock*)
+    (maphash (lambda (name param)
                (when (eq module-name
                          (act-r-parameter-owner param))
                  (remhash name *act-r-parameters-table*))
                (setf (act-r-parameter-users param)
                  (remove module-name (act-r-parameter-users param))))
-           *act-r-parameters-table*))
+             *act-r-parameters-table*)))
 
 
 (defun remove-parameter (param-name)
   "Remove a specific parameter from the table"
-  (remhash param-name *act-r-parameters-table*))
+  (bt:with-lock-held (*parameters-table-lock*)
+    (remhash param-name *act-r-parameters-table*)))
  
 (defmacro sgp (&rest parameters)
   `(sgp-fct ',parameters))
@@ -179,9 +201,30 @@
 (defun set-or-get-parameters (params)
   (if (null params)
       (show-all-parameters)
-    (if (every #'keywordp params)
+    (if (every 'keywordp params)
         (get-parameters params)
       (set-parameters params))))
+
+
+(defun internal-get-parameter-value (parameter)
+  (first (get-parameters (list parameter) nil)))
+
+(defun get-parameter-value (parameter)
+  (let ((m (current-model)))
+    (cond ((null m)
+           (print-warning "get-parameter-value called with no current model.")
+           :no-model)
+          (t
+           (let ((p (internal-get-parameter-value parameter)))
+             (when (eq p :bad-parameter-name)
+               (print-warning "Invalid parameter name ~s in call to get-parameter-value." parameter))
+             p)))))
+
+(defun remote-get-parameter-value (parameter)
+  (encode-string-names (get-parameter-value (string->name parameter))))
+
+(add-act-r-command "get-parameter-value" 'remote-get-parameter-value "Return the current value of a parameter in the current model. Params: parameter-name." nil)
+
 
 (defun get-parameters (params &optional (output t))
   (let ((res nil))
@@ -201,10 +244,12 @@
 
 
 (defun get-parameter-struct (p-name)
-  (gethash p-name *act-r-parameters-table*))
+  (bt:with-lock-held (*parameters-table-lock*)
+    (gethash p-name *act-r-parameters-table*)))
 
 (defun valid-parameter-name (p-name)
-  (gethash p-name *act-r-parameters-table*))
+  (bt:with-lock-held (*parameters-table-lock*)
+    (gethash p-name *act-r-parameters-table*)))
 
 
 (defun set-parameters (params)
@@ -219,25 +264,39 @@
 
 
 (defun test-and-set-parameter-value (p-name value)
-  (let ((param (gethash p-name *act-r-parameters-table*)))
+  (let ((param (bt:with-lock-held (*parameters-table-lock*) (gethash p-name *act-r-parameters-table*))))
     (if param
         (if (or (null (act-r-parameter-test param))
                 (funcall (act-r-parameter-test param) value))
-            (set-parameter-value param value)
+            (internal-set-parameter-value param value)
           (progn
-            (print-warning "Parameter ~S cannot take value ~A because it must be ~A."
+            (print-warning "Parameter ~S cannot take value ~s because it must be ~A."
                            p-name value (act-r-parameter-warning param))
             :invalid-value))
       (progn
         (print-warning "Parameter ~s is not the name of an available parameter" p-name)
         :bad-parameter-name))))
 
-(defun set-parameter-value (param value)
+(defun internal-set-parameter-value (param value)
   (let* ((current-value (process-parameters (act-r-parameter-owner param)
                                             (cons (act-r-parameter-param-name param) value))))
-    (dolist (s (act-r-parameter-users param) current-value)
+    
+    (dolist (s (bt:with-lock-held (*parameters-table-lock*) (act-r-parameter-users param)) current-value)
       
       (process-parameters s (cons (act-r-parameter-param-name param) current-value)))))
+
+(defun set-parameter-value (param value)
+  (let ((m (current-model)))
+    (cond ((null m)
+           (print-warning "set-parameter-value called with no current model.")
+           :no-model)
+          (t
+           (test-and-set-parameter-value param value)))))
+
+(defun remote-set-parameter-value (param val)
+  (encode-string-names (set-parameter-value (string->name param) (decode-string-names val))))
+
+(add-act-r-command "set-parameter-value" 'remote-set-parameter-value "Sets the current value of a parameter in the current model. Params: parameter-name 'new-value'." nil)
 
 (defmacro with-parameters (temp-params &body body)
   (let ((params (gensym))
@@ -315,17 +374,17 @@
 
 (defun show-all-parameters ()
   (let ((current-val-table (make-hash-table)))
-    (maphash #'(lambda (p-name param)
-                 (push 
-                  (cons param (process-parameters (act-r-parameter-owner param) p-name)) 
-                  (gethash (act-r-parameter-owner param) current-val-table)))
-             *act-r-parameters-table*)
+    (maphash (lambda (p-name param)
+               (push 
+                (cons param (process-parameters (act-r-parameter-owner param) p-name)) 
+                (gethash (act-r-parameter-owner param) current-val-table)))
+             (bt:with-lock-held (*parameters-table-lock*) *act-r-parameters-table*))
     (let ((name-len (1+ (apply #'max 
-                               (mapcar #'(lambda (x) 
-                                           (length (string x)))
-                                 (hash-table-keys *act-r-parameters-table*)))))
+                               (mapcar (lambda (x) 
+                                         (length (string x)))
+                                 (hash-table-keys (bt:with-lock-held (*parameters-table-lock*) *act-r-parameters-table*))))))
           (default-len (apply #'max 
-                              (with-hash-table-iterator (generator-fn *act-r-parameters-table*)
+                              (with-hash-table-iterator (generator-fn (bt:with-lock-held (*parameters-table-lock*) *act-r-parameters-table*))
                                 (let ((items nil))
                                   (loop     
                                     (multiple-value-bind (more? key value) (generator-fn)

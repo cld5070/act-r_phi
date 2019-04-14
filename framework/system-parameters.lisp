@@ -13,7 +13,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; 
 ;;; Filename    : system-parameters.lisp
-;;; Version     : 1.0
+;;; Version     : 2.0
 ;;; 
 ;;; Description : Functions for setting and accessing system parameters.
 ;;; 
@@ -32,6 +32,18 @@
 ;;;             :   model.  Instead always print to *standard-output* when
 ;;;             :   no parameters provided and don't print details when a
 ;;;             :   particular parameter is given.
+;;; 2017.07.13 Dan [2.0]
+;;;             : * Make the simple handler thread safe by wrapping it with a
+;;;             :   lock, and use act-r-output instead of format for printing
+;;;             :   the results.
+;;;             : * Lock access to the underlying table too.
+;;; 2018.01.14 Dan
+;;;             : * Provide external set/get for single parameters as was done
+;;;             :   for sgp (could extend that to more general at some point).
+;;; 2018.06.21 Dan 
+;;;             : * The external set was broken since it used an internal fct
+;;;             :   that processed the actual parameter struct.  Cleaned up the
+;;;             :   internal/user interface appropriately.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -93,6 +105,8 @@
 (defvar *act-r-system-parameters-table* (make-hash-table :test #'eq)
   "The table of all system parameters")
 
+(defvar *act-r-system-parameter-table-lock* (bt:make-lock "ssp-table"))
+
 (defstruct (act-r-system-parameter (:include act-r-parameter (owner t)))
   handler)
                                    
@@ -111,7 +125,7 @@
          (print-warning "warning must be a string."))
         ((not (and handler (fctornil handler)))
          (print-warning "a handler function must be provided."))
-        ((gethash param-name *act-r-system-parameters-table*)
+        ((bt:with-lock-held (*act-r-system-parameter-table-lock*) (gethash param-name *act-r-system-parameters-table*))
          (print-warning "a system parameter with the name ~s already exists." param-name))
         ((and valid-test default-value (not (funcall valid-test default-value)))
          (print-warning "default-value does not pass the valid-test"))
@@ -122,17 +136,19 @@
                                                    :warning warning
                                                    :details documentation
                                                    :handler handler)))
-           (setf (gethash param-name *act-r-system-parameters-table*) param)
-           (set-system-parameter-value param default-value)
+           (bt:with-lock-held (*act-r-system-parameter-table-lock*)
+             (setf (gethash param-name *act-r-system-parameters-table*) param))
+           (internal-set-system-parameter-value param default-value)
            param-name))))
 
 
 
 (defun remove-system-parameter (param-name)
   "Remove a system parameter"
-  (when (gethash param-name *act-r-system-parameters-table*)
-    (remhash param-name *act-r-system-parameters-table*)
-    t))
+  (bt:with-lock-held (*act-r-system-parameter-table-lock*)
+    (when (gethash param-name *act-r-system-parameters-table*)
+      (remhash param-name *act-r-system-parameters-table*)
+      t)))
  
 (defmacro ssp (&rest parameters)
   `(ssp-fct ',parameters))
@@ -154,11 +170,24 @@
         (push :bad-parameter-name res)))))
 
 
+
+(defun get-system-parameter-value (parameter)
+  (first (get-system-parameters (list parameter))))
+
+(defun external-get-system-parameter-value (parameter)
+  (let ((p (get-system-parameter-value (string->name parameter))))
+    (encode-string-names p)))
+
+(add-act-r-command "get-system-parameter-value" 'external-get-system-parameter-value "Return the current value of a system parameter. Params: system-parameter-name." nil)
+
+
 (defun get-system-parameter-struct (p-name)
-  (gethash p-name *act-r-system-parameters-table*))
+  (bt:with-lock-held (*act-r-system-parameter-table-lock*)
+    (gethash p-name *act-r-system-parameters-table*)))
 
 (defun valid-system-parameter-name (p-name)
-  (gethash p-name *act-r-system-parameters-table*))
+  (bt:with-lock-held (*act-r-system-parameter-table-lock*)
+    (gethash p-name *act-r-system-parameters-table*)))
 
 
 (defun set-system-parameters (params)
@@ -177,7 +206,7 @@
     (if param
         (if (or (null (act-r-system-parameter-test param))
                 (funcall (act-r-system-parameter-test param) value))
-            (set-system-parameter-value param value)
+            (internal-set-system-parameter-value param value)
           (progn
             (print-warning "System parameter ~S cannot take value ~A because it must be ~A."
                            p-name value (act-r-parameter-warning param))
@@ -186,46 +215,61 @@
         (print-warning "Parameter ~s is not the name of an available system parameter" p-name)
         :bad-parameter-name))))
 
-(defun set-system-parameter-value (param value)
+(defun internal-set-system-parameter-value (param value)
   (funcall (act-r-system-parameter-handler param) t value))
+
+(defun set-system-parameter-value (param value)
+  (test-and-set-system-parameter-value param value))
+
+
+(defun external-set-system-parameter-value (param value)
+  (encode-string-names (test-and-set-system-parameter-value (string->name param) (decode-string-names value))))
+
+(add-act-r-command "set-system-parameter-value" 'external-set-system-parameter-value "Sets the current value of a system parameter. Params: system-parameter-name new-value." nil)
 
 
 (defun show-all-system-parameters ()
   (let ((current-val-table (make-hash-table :test 'eq))
         (name-len 0)
         (default-len 0)
-        (value-len 0))
-    (maphash #'(lambda (p-name param)
-                 (let ((val (funcall (act-r-system-parameter-handler param) nil nil)))
-                   
-                   (when (> (length (string p-name)) name-len)
-                     (setf name-len (length (string p-name))))
-                   (when (> (length (format nil "~s" (act-r-system-parameter-default param))) default-len)
-                     (setf default-len (length (format nil "~s" (act-r-system-parameter-default param)))))
-                   (when (> (length (format nil "~s" val)) value-len)
-                     (setf value-len (length (format nil "~s" val))))
-                   (setf (gethash (cons p-name val) current-val-table) param)))
-                   
-             *act-r-system-parameters-table*)
+        (value-len 0)
+        (keys (bt:with-lock-held (*act-r-system-parameter-table-lock*) (hash-table-keys *act-r-system-parameters-table*)))
+        (output nil))
+    (mapc (lambda (key)
+            (let* ((param (get-system-parameter-struct key))
+                   (val (funcall (act-r-system-parameter-handler param) nil nil)))
+                 
+                 (when (> (length (string key)) name-len)
+                   (setf name-len (length (string key))))
+                 (when (> (length (format nil "~s" (act-r-system-parameter-default param))) default-len)
+                   (setf default-len (length (format nil "~s" (act-r-system-parameter-default param)))))
+                 (when (> (length (format nil "~s" val)) value-len)
+                   (setf value-len (length (format nil "~s" val))))
+                 (setf (gethash (cons key val) current-val-table) param)))
+             keys)
     
-    (maphash #'(lambda (param value)
-                   
-                 (format t "~vS ~vS default: ~vS : ~A~%"
-                   (1+ name-len)
-                   (car param)
-                   value-len
-                   (cdr param)
-                   default-len
-                   (act-r-system-parameter-default value)
-                   (act-r-system-parameter-details value)))
-             current-val-table)))
+    (maphash (lambda (param value)
+               (push-last (format nil "~vS ~vS default: ~vS : ~A~%"
+                            (1+ name-len)
+                            (car param)
+                            value-len
+                            (cdr param)
+                            default-len
+                            (act-r-system-parameter-default value)
+                            (act-r-system-parameter-details value))
+                          output))
+             current-val-table)
+    (act-r-output "~{~a~}" output)))
 
 
 (defmacro simple-system-param-handler (var-name)
-  `(lambda (set-or-get value)
-     (if set-or-get
-         (setf ,var-name value)
-       ,var-name)))
+  (let ((lock (gensym)))
+    `(let ((,lock (bt:make-lock)))
+       (lambda (set-or-get value)
+         (bt:with-lock-held (,lock)
+           (if set-or-get
+               (setf ,var-name value)
+             ,var-name))))))
 
 #|
 This library is free software; you can redistribute it and/or
