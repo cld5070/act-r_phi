@@ -3,7 +3,7 @@
 *.ds_store
 *.DS_Store
 modules/Display_Scholar_sdsd/
-modules/SolverOut1032531681
+modules/SolverOut*
 modules/Structure_Stochastic_asdsdsds/
 *.lx32fsl
 *.lx64fsl
@@ -14,7 +14,10 @@ HumModExtras
 modules/SolverIn*
 CogSci18
 CogSci18 - Copy
-CECArous*
-CORT-Raw*
-EPI-Raw
-CRH-Raw
+phys-test-models/CEC*
+phys-test-models/CORT*
+phys-test-models/EPI*
+phys-test-models/CRH*
+phys-test-models/arous-ans*
+modules/HumMod.*
+

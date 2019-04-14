@@ -1,32 +1,32 @@
 ;;;  -*- mode: LISP; Package: CL-USER; Syntax: COMMON-LISP;  Base: 10 -*-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; 
-;;; Author      : Dan Bothell 
+;;;
+;;; Author      : Dan Bothell
 ;;; Address     : Carnegie Mellon University
 ;;;             : Psychology Department
 ;;;             : Pittsburgh,PA 15213-3890
 ;;;             : db30+@andrew.cmu.edu
-;;; 
+;;;
 ;;; Copyright   : (c)2002-2005 Dan Bothell
 ;;; Availability: Covered by the GNU LGPL, see LGPL.txt
-;;; 
+;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; 
+;;;
 ;;; Filename    : env-device.lisp
 ;;; Version     : 3.0
-;;; 
+;;;
 ;;; Description : No system dependent code.
 ;;;             : This file contains the code that handles passing
 ;;;             : the virtual windows out through Tk - the visible
 ;;;             : virtuals, and the AGI support.
 ;;; Bugs        : [ ] What should happen if a button goes away between when the
 ;;;             :     model initiates an action and finishes it?
-;;; 
-;;; Todo        :   
+;;;
+;;; Todo        :
 ;;; ----- History -----
 ;;;
 ;;; 10/01/2002  Dan
-;;;             : Added this header. 
+;;;             : Added this header.
 ;;; 10/01/2002  Dan
 ;;;             : Updated version to 1.1 and fixed the packaging
 ;;;             : for building a standalone in ACL.
@@ -45,7 +45,7 @@
 ;;; 2005.04.13  Dan [2.0]
 ;;;             : * Moved over to ACT-R 6.
 ;;; 2005.06.07 Dan
-;;;             : * Replaced a call to device-interface with 
+;;;             : * Replaced a call to device-interface with
 ;;;             :   current-device-interface.
 ;;; 2005.06.28 Dan
 ;;;             : * Removed a pm-proc-display call that was still lingering
@@ -60,7 +60,7 @@
 ;;;             :   when shifting between visible and virtual.
 ;;; -------------------------------------------------------------------------
 ;;; 2011.05.20 Dan [3.0]
-;;;             : * Start of a complete overhaul to eliminate most of the 
+;;;             : * Start of a complete overhaul to eliminate most of the
 ;;;             :   global variable usage and better encapsulate things so
 ;;;             :   that multiple model support can be added.
 ;;; 2011.11.21 Dan
@@ -89,7 +89,7 @@
 ;;;             :   be based on the owning model's settings instead of whichever
 ;;;             :   model (if any) happens to be current.
 ;;; 2012.08.10 Dan
-;;;             : * Support more than one fixation ring per window since 
+;;;             : * Support more than one fixation ring per window since
 ;;;             :   multiple models may be sharing a device by using the
 ;;;             :   model name in a tag.
 ;;; 2012.08.31 Dan
@@ -111,7 +111,7 @@
 ;;;             :   which is defined here instead.
 ;;; 2013.07.18 Dan
 ;;;             : * Fixed a potential bug in vv-click-event-handler because
-;;;             :   the button could be removed between the model's click 
+;;;             :   the button could be removed between the model's click
 ;;;             :   initiation and execution in which case it can't send
 ;;;             :   the update to the environment.  Probably shouldn't eval
 ;;;             :   the action either, but I'm not fixing that now.
@@ -129,7 +129,7 @@
 ;;; Inherits much of the functionality from the rpm-virtual-window
 ;;; but needs to send the commands to Tcl/Tk as well
 
-(defun check-with-environment-for-visible-virtuals () 
+(defun check-with-environment-for-visible-virtuals ()
   "Return whether or not the visible-virtuals are available"
   (and (environment-control-connections *environment-control*)
        (environment-control-use-env-windows *environment-control*)))
@@ -137,20 +137,20 @@
 
 (defvar *vv-table* (make-hash-table :test 'equal))
 
-;;; First define all the stuff necessary for it and its possible 
+;;; First define all the stuff necessary for it and its possible
 ;;; 'subviews' as it relates to the device interface
 
 (defclass visible-virtual-window (rpm-virtual-window)
   ((vv-model :accessor vv-model :initform (current-model))))
 
 (defmethod initialize-instance :after ((win visible-virtual-window) &key)
-  (let ((name (string-downcase (symbol-name (new-symbol-fct "VVW"))))) ;; need a unique name and is should be downcase so 
+  (let ((name (string-downcase (symbol-name (new-symbol-fct "VVW"))))) ;; need a unique name and is should be downcase so
                                                                        ;; it can be used directly on the tcl side
     (setf (id win) name)
-    
+
     ;; store the window in the lookup table
     (setf (gethash name *vv-table*) win)
-  
+
     (send-env-window-update (list 'open name (window-title win) (x-pos win)
                                   (y-pos win) (width win) (height win)))))
 
@@ -185,12 +185,12 @@
   (send-env-window-update (list 'cursor (id vw) (px loc) (py loc))))
 
 (defmethod device-update-attended-loc ((wind visible-virtual-window) xyloc)
-  
+
   (when (and (visual-fixation-marker) (not (eq wind (visual-fixation-marker))))
     (send-env-window-update (list 'clearattention (id wind) (current-model))))
-  
+
   (setf (visual-fixation-marker) wind)
-  
+
   (if xyloc
       (send-env-window-update (list 'attention (id wind) (px xyloc) (py xyloc) (current-model)))
     (send-env-window-update (list 'clearattention (id wind) (current-model)))))
@@ -198,8 +198,8 @@
 
 ;;; Redefine the vw-output command since in a multiple model situation
 ;;; this could be called in other than the owning model's context (particularly
-;;; if a person performs the action, but also when there is more than one 
-;;; model using the window as its device), but always use the owner's 
+;;; if a person performs the action, but also when there is more than one
+;;; model using the window as its device), but always use the owner's
 ;;; settings to determine if and where to output things.
 
 
@@ -207,7 +207,7 @@
   ;; DAN
   ;; seems like this should be in the trace
   ;;(format (outstrm vw)
-  
+
   (multiple-value-bind (mp model) (exp-window-owner vw)
     (if (and mp model)
         (with-meta-process-eval mp
@@ -231,16 +231,16 @@
 (defmethod add-visual-items-to-rpm-window ((win visible-virtual-window) &rest items)
   (dolist (item items)
     (add-subviews win item)
-    (send-env-window-update 
+    (send-env-window-update
      (case (type-of item)
        (env-button-vdi
-        (list 'button (id win) (id item) (x-pos item) (y-pos item) 
+        (list 'button (id win) (id item) (x-pos item) (y-pos item)
           (width item) (height item) (dialog-item-text item) (color-symbol->env-color (color item))))
        (env-text-vdi
-        (list 'text (id win) (id item) (x-pos item) (y-pos item) 
+        (list 'text (id win) (id item) (x-pos item) (y-pos item)
           (color-symbol->env-color (color item))  (dialog-item-text item)))
        (env-line-vdi
-        (list 'line (id win) (id item) (x-pos item) (y-pos item) 
+        (list 'line (id win) (id item) (x-pos item) (y-pos item)
               (color-symbol->env-color (color item)) (width item) (height item)))))))
 
 
@@ -264,7 +264,7 @@
 
 
 
-(defmethod remove-visual-items-from-rpm-window ((win visible-virtual-window) 
+(defmethod remove-visual-items-from-rpm-window ((win visible-virtual-window)
                                                 &rest items)
   (dolist (item items)
     (remove-subviews win item)
@@ -277,26 +277,26 @@
   (send-env-window-update (list 'clear (id win))))
 
 
-(defmethod make-button-for-rpm-window ((win visible-virtual-window) 
-                                       &key (x 0) (y 0) (text "Ok")  
+(defmethod make-button-for-rpm-window ((win visible-virtual-window)
+                                       &key (x 0) (y 0) (text "Ok")
                                        (action nil) (height 18) (width 60) (color 'gray))
   (with-model-eval (vv-model win)
     (make-instance 'env-button-vdi
-      :x-pos x 
+      :x-pos x
       :y-pos y
       :dialog-item-text text
       :action action
       :height height
       :width width
       :color color)))
-  
-  
-(defmethod make-static-text-for-rpm-window ((win visible-virtual-window) 
-                                            &key (x 0) (y 0) (text "") 
+
+
+(defmethod make-static-text-for-rpm-window ((win visible-virtual-window)
+                                            &key (x 0) (y 0) (text "")
                                             (height 20) (width 80) (color 'black))
   (with-model-eval (vv-model win)
     (make-instance 'env-text-vdi
-      :x-pos x 
+      :x-pos x
       :y-pos y
       :dialog-item-text text
       :height height
@@ -307,7 +307,7 @@
 (defmethod rpm-window-visible-status ((win visible-virtual-window))
   t)
 
-(defmethod make-line-for-rpm-window ((wind visible-virtual-window) 
+(defmethod make-line-for-rpm-window ((wind visible-virtual-window)
                                      start-pt end-pt &optional (color 'black))
   (with-model-eval (vv-model wind)
     (make-instance 'env-line-vdi
@@ -318,7 +318,7 @@
       :height (second end-pt))))
 
 ;;; This is a little tricky, because if it's a real window in an IDE'ed
-;;; Lisp, it's still got to do the right thing to prevent hanging, 
+;;; Lisp, it's still got to do the right thing to prevent hanging,
 ;;; which is lisp specific...
 
 (defmethod allow-event-manager ((win visible-virtual-window))
