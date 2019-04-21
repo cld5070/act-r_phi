@@ -9,8 +9,8 @@
 
 
 
-global copyrightlab30var 
-   
+global copyrightlab30var
+
 proc select_copyrights {} {
   global got_actr_connection
   global environment_socket
@@ -34,10 +34,10 @@ proc select_copyrights {} {
 
     label .copyright.lab22 -font intro_l_font -height 1 -text {ACT-R Environment} -anchor center
     label .copyright.lab30 -font intro_l_font -height 2 -textvariable copyrightlab30var -anchor center
-    label .copyright.lab24 -font intro_s_font -height 1 -text {© 2002-2017} -anchor center
-    label .copyright.lab33 -font intro_s_font -height 1 -anchor center -text {Dan Bothell} 
-    label .copyright.lab43 -font intro_s_font -height 1 -anchor center -text {John R. Anderson}  
-    label .copyright.lab35 -font intro_s_font -height 1 -anchor center -text {Department of Psychology, Carnegie Mellon University}  
+    label .copyright.lab24 -font intro_s_font -height 1 -text {ï¿½ 2002-2017} -anchor center
+    label .copyright.lab33 -font intro_s_font -height 1 -anchor center -text {Dan Bothell}
+    label .copyright.lab43 -font intro_s_font -height 1 -anchor center -text {John R. Anderson}
+    label .copyright.lab35 -font intro_s_font -height 1 -anchor center -text {Department of Psychology, Carnegie Mellon University}
 
     global tcl_env_dir
 
@@ -50,7 +50,7 @@ proc select_copyrights {} {
     # SETTING GEOMETRY
     ###################
     pack .copyright.lab22
-    pack .copyright.lab30 
+    pack .copyright.lab30
     pack .copyright.lab24
     pack .copyright.lab33
     pack .copyright.lab43
@@ -58,21 +58,21 @@ proc select_copyrights {} {
     pack .copyright.image
 
     # get the version strings, but being careful because an
-    # overzelous clicker could clear the dialog before the 
+    # overzelous clicker could clear the dialog before the
     # register messages arrive, so make sure the update messages
     # arrive (they're sent after the registers) before showing
     # the window
 
-    global copyrightlab30var 
+    global copyrightlab30var
 
     set copyrightlab30var [call_act_r_command "act-r-version"]
 
     # show the window if the user wants it
     # sort of cheats because it still gets "built"
 
-    if {$options_array(show_copyrights) == 1} {
-      wm deiconify .copyright
-    }
+    #if {$options_array(show_copyrights) == 1} {
+    #  wm deiconify .copyright
+    #}
   }
 }
 
@@ -80,7 +80,7 @@ proc select_copyrights {} {
 
 select_copyrights
 
-# then if it's supposed to be shown 
+# then if it's supposed to be shown
 
 if {$options_array(show_copyrights) == 1} {
 
@@ -103,4 +103,3 @@ if {$options_array(show_copyrights) == 1} {
 # close the window
 
 destroy .copyright
-

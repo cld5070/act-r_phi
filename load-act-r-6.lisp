@@ -2,7 +2,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Author      : Dan Bothell
-;;; Copyright   : (c) 2015 Dan Bothell
+;;; Copyright   : (c) 2004 Dan Bothell
 ;;; Availability: Covered by the GNU LGPL, see LGPL.txt
 ;;; Address     : Department of Psychology
 ;;;             : Carnegie Mellon University
@@ -12,10 +12,10 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
-;;; Filename    : load-act-r.lisp
-;;; Version     : 2.0
+;;; Filename    : load-act-r-6.lisp
+;;; Version     : 1.0
 ;;;
-;;; Description : Top level loader for the whole ACT-R system.
+;;; Description : Top level loader for the whole ACT-R 6 system.
 ;;;
 ;;; Bugs        : ???
 ;;;
@@ -186,112 +186,17 @@
 ;;;             :   compiled code.
 ;;; 2013.12.19 Dan
 ;;;             : * Added an :ecl switch to the logical path definitions.
-;;; 2014.02.21 Dan
-;;;             : * Big warnings that this shouldn't be used!
-;;; 2014.05.29 Dan
-;;;             : * Define the variable used to test for applying the hacks to
-;;;             :   work more like ACT-R 6.0.
 ;;; 2014.06.16 Dan
 ;;;             : * Added a use :ccl to the :act-r package for CCL.
-;;; 2014.07.14 Dan
-;;;             : * Changed the feature switch from :ACT-R-6.0 to :ACT-R-6.1
-;;;             :   and added a separate :ACT-R switch which can be used in
-;;;             :   the future for testing that "some" ACT-R is loaded.
-;;; 2014.08.28 Dan
-;;;             : * Changed the warning from don't use to pre-release and let me
-;;;             :   know about issues.
-;;; 2014.08.29 Dan
-;;;             : * Double check for the :act-r being on *features* because
-;;;             :   the compiler switch isn't sufficient if the file gets
-;;;             :   compiled when the switch isn't set.
-;;;             : * Removed the second "do not use" warning as well.
-;;; 2014.09.11 Dan
-;;;             : * Changed the final load print out to say 6.1.
-;;; 2014.09.29 Dan
-;;;             : * Added the actr-load function which does a translate on the
-;;;             :   parameter it's passed so that I can use that in the test
-;;;             :   models and have them work with SBCL and any others which
-;;;             :   don't accept logical to load.
-;;; 2014.09.30 Dan
-;;;             : * Changed the warning to beta instead of pre-release.
-;;; 2014.12.01 Dan
-;;;             : * Removed the beta warning at load time.
-;;; 2014.12.02 Dan
-;;;             : * Added a translate-logical-pathname to the directory passed
-;;;             :   to smart-load so it can be used with logicals in Lisps that
-;;;             :   don't like logicals as pathnames.
-;;; 2015.07.28 Dan
-;;;             : * Renamed it to load-act-r-7.lisp.
-;;;             : * Changed the logical from "ACT-R6" to "ACT-R" and use the
-;;;             :   general form for all Lisps.
-;;;             : * Removed all the special code for MCL.
-;;;             : * Get rid of the 6.0 compatibility hack variable.
-;;;             : * Changed the feature to :act-r-7.
-;;;             : * Changed the output to say ACT-R 7.
-;;;             : * Added an "ACT-R-support" logical for use in other places.
-;;; 2015.08.03 Dan
-;;;             : * Change the package shadowing for CLisp because it seems to
-;;;             :   need the nicknames now.
-;;; 2015.08.05 Dan
-;;;             : * Changed the name again to load-act-r.lisp because I might as
-;;;             :   well do so now while I'm changing everything else...
-;;; 2015.10.26 Dan
-;;;             : * The hack for defconstant in SBCL doesn't work for the newer
-;;;             :   versions so replaced that with something that doesn't depend
-;;;             :   on the internals and just ignores any error in the "rebinding"
-;;;             :   situation.  This works for both the old and new versions and
-;;;             :   should continue to work with future versions as well.
-;;; 2016.03.03 Dan
-;;;             : * Only push :act-r onto features here and do specific version
-;;;             :   tags in the version-string file.
-;;;             : * Use the *actr-architecture-version* value where appropriate.
-;;; 2016.03.07 Dan
-;;;             : * Added system parameters for version info and version checking,
-;;;             :   and also a function for indicating the version a model was
-;;;             :   written for to provide warnings when it is loaded in a
-;;;             :   possibly incompatible version.
-;;; 2016.03.09 Dan
-;;;             : * Added an optional parameter to written-for-act-r-version to
-;;;             :   provide a description for use in the warning.
-;;; 2016.03.14 Dan
-;;;             : * Added the require-extra macro to make it easier to use the
-;;;             :   extras and the requiring-extra function to test in the main
-;;;             :   extra file so it can load more files when needed.
-;;; 2016.03.30 Dan
-;;;             : * Changed written-for-act-r-version to provide more details
-;;;             :   when there is a mismatch and change the system parameter
-;;;             :   :act-r-minor-version to return 0 instead of nil when there
-;;;             :   isn't currently a minor version.
-;;; 2016.05.31 Dan
-;;;             : * Added the finish-format macro which can be used to do a format
-;;;             :   followed by a finish-output on the stream because *error-output*
-;;;             :   is buffered in some Lisps (Windows CCL 1.10+ at least) and
-;;;             :   need to make sure warnings/errors get output immediately.
-;;; 2016.06.01 Dan
-;;;             : * Fixed the :check-act-r-version parameter so that it could
-;;;             :   actually check the versions returned by the :act-r-version
-;;;             :   parameter which includes the -<...> tag at the end.
-;;; 2017.03.28 Dan
-;;;             : * Moved the code for loading the quicklisp libraries here.
-;;; 2017.12.04 Dan
-;;;             : * Editted the warning about Quicklisp to captialize it correctly.
-;;; 2018.01.09 Dan
-;;;             : * Fix the require-extra macro since it was checking the count
-;;;             :   of meta-processes which isn't recorded now.
-;;; 2018.03.29 Dan
-;;;             : * Can't print the version info when building the standalone
-;;;             :   since mp-print-versions now goes through the dispatcher.
-;;; 2018.08.27 Dan
-;;;             : * Keep track separately of the things which were loaded with
-;;;             :   require-extra and require-compiled in case they need to be
-;;;             :   removed from *modules* for some reason (reloading ACT-R in
-;;;             :   a separate package for example).  The variable *act-r-modules*
-;;;             :   holds the things that were loaded with those.
+;;; 2014.07.15 Dan
+;;;             : * Added the additional keyword :ACT-R to the features list as
+;;;             :   a general indicator that some version of ACT-R has been
+;;;             :   loaded.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
 ;;;
-;;; Using logical pathnames a directory structure for ACT-R 7 can be created
+;;; Using logical pathnames a directory structure for ACT-R 6 can be created
 ;;; that allows users to add or remove files from a specific directory within
 ;;; the system, and through the use of require and provide also remove the
 ;;; need to edit a "load order" file.
@@ -301,8 +206,8 @@
 ;;;
 ;;; Public API:
 ;;;
-;;; The logical hostname "ACT-R" can be used as a relative reference for the
-;;; directory where the ACT-R 7 folders are located.
+;;; The logical hostname "ACT-R6" can be used as a relative reference for the
+;;; directory where the ACT-R 6 folders are located.
 ;;;
 ;;;
 ;;; require-compiled (code-module pathname)
@@ -337,9 +242,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;----Added by Chris Dancy, xml libraries needed for physiology module
-;;No longer needed (ACT-R7 needs QL anyway, so we can just load it that way),
-;; but kept for historical purposes
-#|
 ;;Load sxml files
 (load (merge-pathnames "sxml/package.lisp" *LOAD-TRUENAME*))
 (load (merge-pathnames "sxml/dom.lisp" *LOAD-TRUENAME*))
@@ -347,7 +249,8 @@
 (load (merge-pathnames "sxml/sxml-dom.lisp" *LOAD-TRUENAME*))
 (load (merge-pathnames "sxml/xml.lisp" *LOAD-TRUENAME*))
 (load (merge-pathnames "sxml/xml-struct-dom.lisp" *LOAD-TRUENAME*))
-|#
+;;----
+
 
 #+:packaged-actr (make-package :act-r
                                :use '("COMMON-LISP-USER"
@@ -371,15 +274,12 @@
 
 
 #+:act-r (error "Only one version of ACT-R should be loaded at a time.")
-#-:act-r (if (find :act-r *features*)
-             (error "Only one version of ACT-R should be loaded at a time.")
-           (progn
-             (pushnew :act-r *features*)))
+#-:act-r (progn (pushnew :act-r *features*) (pushnew :act-r-6.0 *features*))
 
 
 ;; Clisp has an implementation-specific function execute that conflicts with
 ;; the generic function execute in ACT-R, so shadow it
-#+:clisp (eval `(defpackage ,(package-name *package*) (:nicknames "CL-USER" "USER") (:shadow "EXECUTE")))
+#+:clisp (eval `(defpackage ,(package-name *package*) (:shadow "EXECUTE")))
 
 ;; SBCL has a function called reset we need to shadow and there's an issue
 ;; with their defconstat because it throws an error if you compile and then
@@ -392,9 +292,7 @@
   (eval `(defpackage ,(package-name *package*) (:shadow "RESET" "DEFCONSTANT" "DIRECTORY")))
 
 #+:sbcl (defmacro defconstant (name value &optional documentation)
-          `(if (boundp ',name)
-               (ignore-errors (cl::defconstant ,name ,value ,documentation))
-             (cl::defconstant ,name ,value ,documentation)))
+          `(sb-c::%defconstant ',name ,value ',documentation (sb-c:source-location)))
 
 ;;; The Windows version of SBCL doesn't properly handle wild cards in the
 ;;; directory command so this hacks around that for now sufficiently to load
@@ -418,13 +316,44 @@
       (cl::directory pathname))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; Create the logical host "ACT-R" relative to the current location
+;;; Create the logical host "ACT-R6" relative to the current location
 
-(setf (logical-pathname-translations "ACT-R")
-  `(("**;*.*" ,(namestring (merge-pathnames "**/*.*" *load-truename*)))))
+#+:allegro (setf (logical-pathname-translations "ACT-R6")
+             (list (list "**;*.*" (let ((name (namestring *load-truename*))
+                                        (file (file-namestring *load-truename*)))
+                                    (subseq name 0 (- (length name) (length file)))))))
 
-(setf (logical-pathname-translations "ACT-R-support")
-  `(("**;*.*" ,(namestring (merge-pathnames "**/*.*" (translate-logical-pathname "ACT-R:support;"))))))
+
+#+:digitool (setf (logical-pathname-translations "ACT-R6")
+  (list (list "**;*.*" (concatenate 'string
+                         (host-namestring *load-truename*)
+                         (directory-namestring *load-truename*) "**:"))))
+
+#+:lispworks (setf (logical-pathname-translations "ACT-R6")
+               (list (list "**;*.*"
+                           (concatenate 'string
+                             (format nil "~A" (make-pathname
+                                               :host
+                                               (pathname-host *load-truename*)
+                                               :directory
+                                               (pathname-directory
+                                                *load-truename*)))
+                             "**/*.*"))))
+
+;; just copied the lispworks one for now...
+#+:cmu (setf (logical-pathname-translations "ACT-R6")
+               (list (list "**;*.*"
+                           (concatenate 'string
+                             (format nil "~A" (make-pathname
+                                               :host
+                                               (pathname-host *load-truename*)
+                                               :directory
+                                               (pathname-directory
+                                                *load-truename*)))
+                             "**/*.*"))))
+
+#+(or :clisp :sbcl :openmcl :abcl :ecl) (setf (logical-pathname-translations "ACT-R6")
+                      `(("**;*.*" ,(namestring (merge-pathnames "**/*.*" *load-truename*)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; define the file extension (the pathname type) for compiled and source files
@@ -482,6 +411,30 @@
 ;;; Based on the smart-load function from the ACT-R loader.
 
 
+;;; Specific loader for the newer MCL 5/5.1
+
+#+(and :ccl-4.3.5 :ccl-5.0)
+(defun compile-and-load (pathname)
+  (when (pathname-type pathname) ;; throw away the type to allow for
+                                 ;; the merging with a binary type
+    (if (string-equal (pathname-type pathname) "lisp")
+        (setf pathname (make-pathname :host (pathname-host pathname)
+                                      :directory (pathname-directory pathname)
+                                      :device (pathname-device pathname)
+                                      :name (pathname-name pathname)))
+      (error "To compile a file it must have a .lisp extension")))
+
+  (let* ((srcpath (merge-pathnames pathname *.lisp-pathname*))
+         (binpath (merge-pathnames pathname *.fasl-pathname*)))
+    (unless (probe-file srcpath)
+      (error "File ~S does not exist" srcpath))
+    (when (or (member :actr-recompile *features*)
+              (not (probe-file binpath))
+              (> (file-write-date srcpath) (file-write-date binpath)))
+      (compile-file srcpath :output-file binpath :external-format :unix))
+    (load binpath)))
+
+#-(and :ccl-4.3.5 :ccl-5.0)
 (defun compile-and-load (pathname)
   (when (pathname-type pathname) ;; throw away the type to allow for
                                  ;; the merging with a binary type
@@ -502,13 +455,7 @@
       (compile-file srcpath :output-file binpath))
     (load binpath)))
 
-;;; Going to use this in a few places to make sure output to *error-output*
-;;; happens since it could be buffered.
 
-(defmacro finish-format (stream string &rest args)
-  `(prog1
-     (format ,stream ,string ,@args)
-     (finish-output ,stream)))
 
 ;;; SMART-LOAD      [Function]
 ;;; Date        : 99.12.21
@@ -523,26 +470,16 @@
 (defun smart-load (this-files-dir file &optional (error? nil))
   "Loads binary <file> in directory <this-files-dir> or compiles and loads
    source version"
-  (let* ((true-dir (translate-logical-pathname this-files-dir))
-         (srcpath (merge-pathnames
+  (let* ((srcpath (merge-pathnames
                    (merge-pathnames file *.lisp-pathname*)
-                   true-dir)))
+                   this-files-dir))
+         )
     (if (not (probe-file srcpath))
         (if error?
             (error "File ~S does not exist" srcpath)
-          (finish-format *error-output* "File ~S does not exist" srcpath)))
+          (format *error-output* "File ~S does not exist" srcpath)))
     (compile-and-load srcpath)))
 
-
-(defun actr-load (file)
-  "Loads the file specified after translating the pathname"
-  (let ((path (translate-logical-pathname file)))
-    (if (not (probe-file path))
-        (finish-format *error-output* "#|Warning: File ~S does not exist.|#~%" path)
-      (load path))))
-
-
-(defvar *act-r-modules* nil)
 
 ;;; require-compiled (code-module pathname)
 ;;;
@@ -562,16 +499,17 @@
 (defmacro require-compiled (code-module pathname)
   `(eval-when (:compile-toplevel :load-toplevel :execute)
      (unless (member ,code-module *modules* :test #'string=)
-       (push ,code-module *act-r-modules*)
        (compile-and-load (translate-logical-pathname ,pathname)))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; load any special system support files here
 
-;; Warn about the case sensitive mode in ACL because things like t vs T shouldn't
-;; matter (and both probably occur in the code), and won't work in the case sensitive
-;; versions of ACL.
+#+(and :mcl (not :openmcl)) (require 'quickdraw)
+
+#+(and :ccl-5.0 (not :ccl-5.2))
+(when (osx-p)
+  (load "ACT-R6:support;CFBundle.lisp"))
 
 #+:allegro (when (or (eq :case-sensitive-lower *current-case-mode*)
                      (eq :case-sensitive-upper *current-case-mode*))
@@ -580,209 +518,56 @@
                   "WARNING: you are using a case sensitive Lisp.  ACT-R may not load or run correctly.  Continue anyway?")
                (break)))
 
-;; Load the quicklisp libraries for threads, sockets, and JSON parsing.
-;; For now, assume quicklisp is available, but eventually want to include local
-;; versions with the sources so it can be loaded without them too.
-
-
-#-:QUICKLISP (eval-when (:compile-toplevel :load-toplevel :execute)
-               (when (probe-file "~/quicklisp/setup.lisp")
-                 (load "~/quicklisp/setup.lisp"))
-               (unless (find :quicklisp *features*)
-                 (error "This version of ACT-R requires Quicklisp to load the components necessary for the remote connection.")))
-
-;;; Load the libraries
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (ql:quickload :bordeaux-threads)
-  (ql:quickload :usocket)
-  (ql:quickload :cl-json)
-	(ql:quickload "s-xml"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Load the framework's loader file (it is order dependent)
 
 (defvar *file-list*)
 
-(smart-load (translate-logical-pathname "ACT-R:framework;") "framework-loader.lisp")
+(smart-load (translate-logical-pathname "ACT-R6:framework;") "framework-loader.lisp")
 
 (dolist (the-file *file-list*)
-  (smart-load (translate-logical-pathname "ACT-R:framework;") the-file t))
+  (smart-load (translate-logical-pathname "ACT-R6:framework;") the-file t))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; Define system parameters for version information before anything could
-;;; change the global variables.
-
-
-
-(let ((set-version-info 4))
-  (defun version-info-ignored (val)
-    (declare (ignore val))
-    (if (zerop set-version-info)
-        nil
-      (decf set-version-info))))
-
-(defun fixed-version-parameter-value (val)
-  (lambda (a b)
-    (declare (ignore a b))
-    val))
-
-(create-system-parameter :act-r-version :valid-test 'version-info-ignored
-                         :default-value *actr-version-string* :warning "unmodified"
-                         :documentation "The full software version"
-                         :handler (fixed-version-parameter-value *actr-version-string*))
-
-(create-system-parameter :act-r-architecture-version :valid-test 'version-info-ignored
-                         :default-value (read-from-string *actr-architecture-version*) :warning "unmodified"
-                         :documentation "The ACT-R architecture version"
-                         :handler (fixed-version-parameter-value (read-from-string *actr-architecture-version*)))
-
-(create-system-parameter :act-r-major-version :valid-test 'version-info-ignored
-                         :default-value (read-from-string *actr-major-version-string*) :warning "unmodified"
-                         :documentation "The major software version"
-                         :handler (fixed-version-parameter-value (read-from-string *actr-major-version-string*)))
-
-(create-system-parameter :act-r-minor-version :valid-test 'version-info-ignored
-                         :default-value (if *actr-minor-version-string* (read-from-string *actr-minor-version-string*) 0) :warning "unmodified"
-                         :documentation "The minor software version"
-                         :handler (fixed-version-parameter-value (if *actr-minor-version-string* (read-from-string *actr-minor-version-string*) 0)))
-
-(defun valid-version-test-string (val)
-  (if (eq val t)
-      t
-    (when (stringp val)
-      (awhen (position #\- val)
-             (setf val (subseq val 0 it)))
-      (and
-       (every (lambda (x) (find x '(#\. #\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9))) val)
-       (<= (count #\. val) 2)
-       (> (length val) 0)))))
-
-(let ((last-result t))
-  (defun check-act-r-version-string (set-or-get val)
-    (if set-or-get
-        (setf last-result (if (stringp val)
-                              (let* ((ver (subseq val 0 (position #\- val)))
-                                     (version-numbers (read-from-string (format nil "(~a)" (substitute #\space #\. ver)))))
-                                (case (length version-numbers)
-                                  (1 (= (first version-numbers) (car (ssp :act-r-architecture-version))))
-                                  (2 (and (= (first version-numbers) (car (ssp :act-r-architecture-version)))
-                                          (= (second version-numbers) (car (ssp :act-r-major-version)))))
-                                  (3 (and (= (first version-numbers) (car (ssp :act-r-architecture-version)))
-                                          (= (second version-numbers) (car (ssp :act-r-major-version)))
-                                          (<= (third version-numbers) (car (ssp :act-r-minor-version)))))
-                                  (t nil))) ;; just to be safe, but the valid test should avoid this...
-                            val))
-      last-result)))
-
-
-(create-system-parameter :check-act-r-version :valid-test 'valid-version-test-string
-                         :default-value t :warning "a valid version string of the form A{.B{.C}} where A, B, and C are integers followed by optional data after a dash"
-                         :documentation "Test a version string against the current version for t or nil result"
-                         :handler 'check-act-r-version-string)
-
-
-
-(defun written-for-act-r-version (version &optional description)
-  (if (stringp version)
-      (let ((strip-tag (subseq version 0 (position #\- version))))
-        (if (valid-version-test-string strip-tag)
-            (let ((given-version-numbers (read-from-string (format nil "(~a)" (substitute #\space #\. strip-tag))))
-                  (current-version-numbers (mapcar (lambda (x) (car (ssp-fct (list x))))
-                                             (list :act-r-architecture-version
-                                                   :act-r-major-version
-                                                   :act-r-minor-version))))
-              (cond ((not (= (first given-version-numbers) (first current-version-numbers)))
-                     (print-warning "Current ACT-R architecture ~d is not the same as ~d specified in ~a~@[ for ~a~]."
-                                    (first current-version-numbers) (first given-version-numbers) version description))
-                    ((and (second given-version-numbers)
-                          (not (= (second given-version-numbers) (second current-version-numbers))))
-                     (if (> (second given-version-numbers) (second current-version-numbers))
-                         (print-warning "Current ACT-R major version ~d is older than major version ~d specified in ~a~@[ for ~a~].~%           Some features may not be implemented."
-                                        (second current-version-numbers) (second given-version-numbers) version description)
-                       (print-warning "Current ACT-R major version ~d is newer than major version ~d specified in ~a~@[ for ~a~].~%           It may not be backward compatible."
-                                      (second current-version-numbers) (second given-version-numbers) version description)))
-                    ((and (third given-version-numbers)
-                          (> (third given-version-numbers) (third current-version-numbers)))
-                     (print-warning "Current ACT-R minor version ~d is older than minor version ~d specified in ~a~@[ for ~a~].~%           Some features may not be implemented."
-                                    (third current-version-numbers) (third given-version-numbers) version description))
-                    (t t)))
-          (progn
-            (print-warning "Invalid version specified in written-for-act-r-version: ~s.  Version must be an ACT-R version string." version)
-            :invalid-value)))
-    (progn
-      (print-warning "Invalid version specified in written-for-act-r-version: ~s.  Version must be an ACT-R version string." version)
-      :invalid-value)))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; Define a macro to make loading extras easier
-
-(defvar *requiring-extra* nil)
-
-(defun requiring-extra ()
-  *requiring-extra*)
-
-
-(defmacro require-extra (name)
-  `(eval-when (:compile-toplevel :load-toplevel :execute)
-     (unless (member ,name *modules* :test #'string=)
-       (cond
-             ((mp-models)
-              (print-warning "Cannot require an extra when there is a current model."))
-             ((not (probe-file (translate-logical-pathname (format nil "ACT-R:extras;~a;" ,name))))
-              (print-warning "Directory ~a for specified extra ~a not found."
-                             (translate-logical-pathname (format nil "ACT-R:extras;~a;" ,name))
-                             ,name))
-             ((not (probe-file (translate-logical-pathname (format nil "ACT-R:extras;~a;~a.lisp" ,name ,name))))
-              (print-warning "Load file for extra ~a at location ~a not found." ,name
-                             (translate-logical-pathname (format nil "ACT-R:extras;~a;~a.lisp" ,name ,name))))
-             (t
-              (unwind-protect
-               (progn
-                 (setf *requiring-extra* t)
-                 (compile-and-load (translate-logical-pathname (format nil "ACT-R:extras;~a;~a.lisp" ,name ,name))))
-                (progn
-                  (pushnew ,name *act-r-modules*)
-                  (setf *requiring-extra* nil)))
-              (if (member ,name *modules* :test #'string=)
-                  t
-                (print-warning "Extra ~a was loaded, but did not have a provide to prevent it from being loaded again." ,name)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Load the core modules
 
-(smart-load (translate-logical-pathname "ACT-R:core-modules;") "core-loader.lisp")
+(smart-load (translate-logical-pathname "ACT-R6:core-modules;") "core-loader.lisp")
 
 (dolist (the-file *file-list*)
-  (smart-load (translate-logical-pathname "ACT-R:core-modules;") the-file))
+  (smart-load (translate-logical-pathname "ACT-R6:core-modules;") the-file))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; First, load any additional extensions.
 
-(dolist (file (directory (translate-logical-pathname "ACT-R:commands;*.lisp")))
+(dolist (file (directory (translate-logical-pathname "ACT-R6:commands;*.lisp")))
   (compile-and-load file))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; When a new device is added it should be included with a switch below so that it can be loaded
+;;; Indicate that there is a device available so that it can be loaded
+;;; When a new device is added it should be included with a switch below
 
 (defvar *device-interface-pathname* nil)
 
 ;;; Here are the devices that are defined
 
-#+(and :allegro-ide :mswindows) (setf *device-interface-pathname* "ACT-R:devices;acl;")
+#+(and :allegro-ide :mswindows) (setf *device-interface-pathname* "ACT-R6:devices;acl;")
 
 #+(and :allegro-ide (not :mswindows)) (print-warning "Native ACL device not available for Mac or Linux versions because~%they lack the commands for controlling the mouse and keyboard as described here~%http://www.franz.com/support/documentation/6.2/doc/cggtk-relnotes.html#2.3~%")
 
-#+:lispworks (setf *device-interface-pathname* "ACT-R:devices;lw;")
+;; #+:digitool (setf *device-interface-pathname* "ACT-R6:devices;mcl;")
 
-#+(and :clozure :darwin :apple-objc :ccl-1.8) (setf *device-interface-pathname* "ACT-R:devices;ccl-cocoa;")
+#+:lispworks (setf *device-interface-pathname* "ACT-R6:devices;lw;")
+
+#+(and :clozure :darwin :apple-objc :ccl-1.8) (setf *device-interface-pathname* "ACT-R6:devices;ccl-cocoa;")
 
 ;;; Load the virtual device
 
-(compile-and-load (translate-logical-pathname "ACT-R:devices;virtual;device.lisp"))
-(compile-and-load (translate-logical-pathname "ACT-R:devices;virtual;uwi.lisp"))
+(compile-and-load (translate-logical-pathname "ACT-R6:devices;virtual;device.lisp"))
+(compile-and-load (translate-logical-pathname "ACT-R6:devices;virtual;uwi.lisp"))
 
 ;;; Load any Lisp specific device that's defined
 
@@ -805,27 +590,26 @@
 ;;; After the modules and devices files are done load any files in the
 ;;; modules, tools and then finally the other-files drectories.
 
-(dolist (file (directory (translate-logical-pathname "ACT-R:modules;*.lisp")))
+(dolist (file (directory (translate-logical-pathname "ACT-R6:modules;*.lisp")))
   (compile-and-load file))
 
-(dolist (file (directory (translate-logical-pathname "ACT-R:tools;*.lisp")))
+(dolist (file (directory (translate-logical-pathname "ACT-R6:tools;*.lisp")))
   (compile-and-load file))
 
-(dolist (file (directory (translate-logical-pathname "ACT-R:other-files;*.lisp")))
+(dolist (file (directory (translate-logical-pathname "ACT-R6:other-files;*.lisp")))
   (compile-and-load file))
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
-;;; Print a confirmation message to let the user know ACT-R has been loaded
+;;; Print a conformation message to let the user know ACT-R has been loaded
 ;;; along with the version numbers of all the modules.
 
 (format t "~%##################################~%")
-#-:standalone (mp-print-versions)
-(format t "~%######### Loading of ACT-R ~d is complete #########~%" *actr-architecture-version*)
+(mp-print-versions )
+(format t "~%######### Loading of ACT-R 6 is complete #########~%")
 
 
-(let ((d (directory (translate-logical-pathname "ACT-R:user-loads;*.lisp"))))
+(let ((d (directory (translate-logical-pathname "ACT-R6:user-loads;*.lisp"))))
   (when d
     (format t "~%######### Loading user files #########~%")
     (dolist (file (sort d 'string< :key (lambda (x) (string (pathname-name x)))))
