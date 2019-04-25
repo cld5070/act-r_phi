@@ -1,26 +1,26 @@
 ;;;  -*- mode: LISP; Syntax: COMMON-LISP;  Base: 10 -*-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; 
+;;;
 ;;; Author      : Dan Bothell
 ;;; Copyright   : (c) 2017 Dan Bothell
 ;;; Availability: Covered by the GNU LGPL, see LGPL.txt
-;;; Address     : Department of Psychology 
+;;; Address     : Department of Psychology
 ;;;             : Carnegie Mellon University
 ;;;             : Pittsburgh, PA 15213-3890
 ;;;             : db30@andrew.cmu.edu
-;;; 
-;;; 
+;;;
+;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; 
+;;;
 ;;; Filename    : keyboard.lisp
 ;;; Version     : 2.2
-;;; 
-;;; Description : Implement the virtual keyboard device for models.
-;;; 
-;;; Bugs        : 
 ;;;
-;;; To do       : 
-;;; 
+;;; Description : Implement the virtual keyboard device for models.
+;;;
+;;; Bugs        :
+;;;
+;;; To do       :
+;;;
 ;;; ----- History -----
 ;;; 2017.01.19 Dan [1.0]
 ;;;             : * Actually put a header on this file after splitting it out
@@ -38,7 +38,7 @@
 ;;;             :   functions upcase the given value.
 ;;; 2017.02.27 Dan
 ;;;             : * Schedule "output-key" directly now instead of going through
-;;;             :   the stub function, but still need the stub since human 
+;;;             :   the stub function, but still need the stub since human
 ;;;             :   input gets routed through that and putting the remote call
 ;;;             :   into the interface code would be ugly.
 ;;; 2017.03.06 Dan
@@ -80,7 +80,7 @@
 ;;; 2018.07.26 Dan [1.1]
 ;;;             : * Don't worry about completing requests.
 ;;; 2018.10.04 Dan [2.2]
-;;;             : * Use notify-interface instead of touching the internals of 
+;;;             : * Use notify-interface instead of touching the internals of
 ;;;             :   the motor module for some commands (new styles still use a
 ;;;             :   little internal knowledge for efficiency).
 ;;;             : * Using the third item in the device list to name the keyboard
@@ -90,11 +90,11 @@
 ;;;             :   still requires one to create a keyboard device in Lisp, but
 ;;;             :   for now that's better than how things were before...
 ;;; 2018.10.08 Dan
-;;;             : * Also adding a set-default-keyboard which specifies the 
+;;;             : * Also adding a set-default-keyboard which specifies the
 ;;;             :   keyboard that's installed when no third item provided.
 ;;;             :   That is a global change which is unaffected by clear-all!
 ;;;             : * Added a way to extend the notifications which are handled
-;;;             :   by the keyboard through the other-notifications method 
+;;;             :   by the keyboard through the other-notifications method
 ;;;             :   since the keyboards are always Lisp objects at this point.
 ;;;             : * Don't create a keyboard entry in the component for models
 ;;;             :   automatically (only when installed).
@@ -111,35 +111,35 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
-;;; 
+;;;
 ;;; Implement the keyboard as a device under the new PM interface mechanisms.
 ;;; Create a single default keyboard definition with which any model can interact,
 ;;; but also specify a component which holds a table of keyboards so each model
 ;;; can have a different one.
-;;; 
+;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Public API:
 ;;;
 ;;; Virtual-keyboard class and initialization methods.
 ;;;
-;;; 
+;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Design Choices:
-;;; 
+;;;
 ;;; Simplify the construction of a keyboard because the three separate methods
 ;;; that the old code used have always had inconsistencies and/or errors in the
 ;;; specifications between the methods.
 ;;;
 ;;; The motor commands related to keyboards are moved here too since the motor
 ;;; module itself doesn't "know" about any particular device with which it can
-;;; interact.  That's a departure from the older versions where the motor 
+;;; interact.  That's a departure from the older versions where the motor
 ;;; module assumed a keyboard and mouse existed and was built around them.
-;;; 
+;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; 
+;;;
 ;;; The code
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -149,10 +149,10 @@
 
 
 ;;;; ---------------------------------------------------------------------- ;;;;
-;;;; The virtual keyboard.  
+;;;; The virtual keyboard.
 
 (defclass virtual-keyboard ()
-   ((key->cmd-ht :accessor key->cmd-ht 
+   ((key->cmd-ht :accessor key->cmd-ht
                   :initform (make-hash-table :test #'equalp))
     (key->loc-ht :accessor key->loc-ht
                   :initform (make-hash-table :test #'equalp))
@@ -169,7 +169,7 @@
   (populate-key-details vk))
 
 
-;; Instead of building up the three tables (name->press-key-command, position->name, 
+;; Instead of building up the three tables (name->press-key-command, position->name,
 ;; and name->position) with separate methods just use one method that takes all of
 ;; the components and then enters the information appropriately.  This avoids
 ;; the inconsistencies (and errors) between tables that the old methods often
@@ -212,26 +212,28 @@
 (defmethod populate-key-details ((k virtual-keyboard))
   ;; Top row
   (specify-key k 0 0 '("ESC" "ESCAPE"))
-  
-  (specify-key k 2 0 "F1")
-  (specify-key k 3 0 "f2")
-  (specify-key k 4 0 "f3")
-  (specify-key k 5 0 "f4")
-  
-  (specify-key k 7 0 "F5")
-  (specify-key k 8 0 "f6")
-  (specify-key k 9 0 "f7")
-  (specify-key k 10 0 "f8")
-  
-  (specify-key k 12 0 "F9")
-  (specify-key k 13 0 "f10")
+
+  #|--Begin modified Section for function keys [Dancy]--|#
+  (specify-key k 2 0 "F1" :style '(peck-recoil :hand left :finger ring :r 4 :theta -1.57))
+  (specify-key k 3 0 "f2" :style '(peck-recoil :hand left :finger middle :r 4 :theta -1.57))
+  (specify-key k 4 0 "f3" :style '(peck-recoil :hand left :finger index :r 4 :theta -1.57))
+  (specify-key k 5 0 "f4" :style '(peck-recoil :hand left :finger index :r 4 :theta -1.33))
+
+  (specify-key k 7 0 "f5" :style '(peck-recoil :hand right :finger index :r 4 :theta -1.57))
+  (specify-key k 8 0 "f6" :style '(peck-recoil :hand right :finger middle :r 4 :theta -1.57))
+  (specify-key k 9 0 "f7" :style '(peck-recoil :hand right :finger ring :r 4 :theta -1.57))
+  (specify-key k 10 0 "f8" :style '(peck-recoil :hand right :finger pinkie :r 4 :theta -1.57))
+
+  (specify-key k 12 0 "F9" :style '(peck-recoil :hand right :finger pinkie :r 4 :theta -1.11))
+  (specify-key k 13 0 "f10" :style '(peck-recoil :hand right :finger pinkie :r 4 :theta -0.93))
+	#|--End modified section for function keys--|#
   (specify-key k 14 0 "f11")
   (specify-key k 15 0 "f12")
 
   (specify-key k 17 0 '("f13" "print-screen"))
   (specify-key k 18 0 '("f14" "scroll-lock"))
   (specify-key k 19 0 '("f15" "pause"))
-  
+
   ;; numeric key row
   (specify-key k 0 2 '("`" "backquote") :style '(peck-recoil :hand left :finger pinkie :r 2.24 :theta -2.03))
   (specify-key k 1 2 "1" :style '(peck-recoil :hand left :finger pinkie :r 2 :theta -1.57))
@@ -247,17 +249,17 @@
   (specify-key k 11 2 '("-" "hyphen") :style '(peck-recoil :hand right :finger pinkie :r 2.24 :theta -1.11))
   (specify-key k 12 2 '( "=" "equal") :style '(peck-recoil :hand right :finger pinkie :r 2.83 :theta -0.78))
   (specify-key k 13 2 "delete" :style '(peck-recoil :hand right :finger pinkie :r 3.6 :theta -0.59))
-  
+
   (specify-key k 15 2 "help")
   (specify-key k 16 2 "home")
   (specify-key k 17 2 "pageup")
-  
+
   (specify-key k 19 2 "clear" :style '(peck-recoil :hand right :finger index :r 2 :theta -1.57))
   (specify-key k 20 2 '("keypad-=" "keypad-equal") :style '(peck-recoil :hand right :finger middle :r 2 :theta -1.57))
   (specify-key k 21 2 '("keypad-/" "keypad-slash" "keypad-divide") :style '(peck-recoil :hand right :finger ring :r 2 :theta -1.57))
   (specify-key k 22 2 '("keypad-*" "keypad-asterisk" "keypad-times") :style '(peck-recoil :hand right :finger pinkie :r 3 :theta -1.57))
 
-  
+
   ;; qwerty row
   (specify-key k 0 3 "tab" :style '(peck-recoil :hand left :finger pinkie :r 1.41 :theta -2.36))
   (specify-key k 1 3 "q" :style '(peck-recoil :hand left :finger pinkie :r 1 :theta -1.57))
@@ -273,16 +275,16 @@
   (specify-key k 11 3 '("[" "left-bracket") :style '(peck-recoil :hand right :finger pinkie :r 1.41 :theta -0.78))
   (specify-key k 12 3 '("]" "right-bracket") :style '(peck-recoil :hand right :finger pinkie :r 2.24 :theta -0.46))
   (specify-key k 13 3 '("\\" "backslash") :style '(peck-recoil :hand right :finger pinkie :r 3.16 :theta -0.32))
-  
+
   (specify-key k 15 3 '("forward-delete" "del"))
   (specify-key k 16 3 "end")
   (specify-key k 17 3 "pagedown")
-  
+
   (specify-key k 19 3 "keypad-7" :style '(peck-recoil :hand right :finger index :r 1 :theta -1.57))
   (specify-key k 20 3 "keypad-8" :style '(peck-recoil :hand right :finger middle :r 1 :theta -1.57))
   (specify-key k 21 3 "keypad-9" :style '(peck-recoil :hand right :finger ring :r 1 :theta -1.57))
   (specify-key k 22 3 '("keypad--" "keypad-minus" "keypad-hyphen") :style '(peck-recoil :hand right :finger pinkie :r 2 :theta -1.57))
-  
+
 
   ;; ASDF row
   (specify-key k 0 4 "caps-lock" :style '(peck-recoil :hand left :finger pinkie :r 1.0 :theta 3.14))
@@ -299,12 +301,12 @@
   (specify-key k 11 4 '("'" "quote") :style '(peck-recoil :hand right :finger pinkie :r 1 :theta 0))
   (specify-key k 12 4 '("return" "newline") :style '(peck-recoil :hand right :finger pinkie :r 2 :theta 0))
   (specify-key k 13 4 '("return" "newline") :default nil)
-  
+
   (specify-key k 19 4 "keypad-4" :style '(punch :hand right :finger index))
   (specify-key k 20 4 "keypad-5" :style '(punch :hand right :finger middle))
   (specify-key k 21 4 "keypad-6" :style '(punch :hand right :finger ring))
   (specify-key k 22 4 '("keypad-+" "keypad-plus") :style '(peck-recoil :hand right :finger pinkie :r 1 :theta -1.57))
-  
+
   ;; Z row
   (specify-key k 0 5 '("shift" "left-shift") :style '(peck-recoil :hand left :finger pinkie :r 1.41 :theta 2.36))
   (specify-key k 1 5 "z" :style '(peck-recoil :hand left :finger pinkie :r 1 :theta 1.57))
@@ -322,12 +324,12 @@
   (specify-key k 13 5 "right-shift" :default nil)
 
   (specify-key k 16 5 "up-arrow")
-  
+
   (specify-key k 19 5 "keypad-1" :style '(peck-recoil :hand right :finger index :r 1 :theta 1.57))
   (specify-key k 20 5 "keypad-2" :style '(peck-recoil :hand right :finger middle :r 1 :theta 1.57))
   (specify-key k 21 5 "keypad-3" :style '(peck-recoil :hand right :finger ring :r 1 :theta 1.57))
   (specify-key k 22 5 '("enter" "keypad-enter") :style '(punch :hand right :finger pinkie))
-  
+
   ;; space bar row
   (specify-key k 0 6 '("control" "left-control") :style '(peck-recoil :hand left :finger pinkie :r 2.24 :theta 2.03))
   (specify-key k 1 6 '("option" "left-option") :style '(peck-recoil :hand left :finger pinkie :r 2.0 :theta 1.57))
@@ -348,11 +350,11 @@
   (specify-key k 15 6 "left-arrow")
   (specify-key k 16 6 "down-arrow")
   (specify-key k 17 6 "right-arrow")
-  
+
   (specify-key k 19 6 "keypad-0" :style '(punch :hand right :finger thumb))
   (specify-key k 20 6 "keypad-0" :default nil)
   (specify-key k 21 6 '("keypad-." "keypad-dot" "keypad-period") :style '(peck-recoil :hand right :finger ring :r 2 :theta 1.57))
-  (specify-key k 22 6 '("enter" "keypad-enter") :default nil))             
+  (specify-key k 22 6 '("enter" "keypad-enter") :default nil))
 
 
 (defgeneric other-notifications (keyboard device features)
@@ -370,7 +372,6 @@
   (if (every 'stringp names)
       (progn
         (dolist (n (mapcar 'string-upcase names))
-          
           (when default
             (when (gethash n (key->loc-ht k))
               (print-warning "Key name ~s already has a location and that is being overwritten." n))
@@ -440,7 +441,7 @@
             (home-hands k)
             t))
       (print-warning "No keyboard-table component was found when trying to install a keyboard device."))))
-                
+
 
 (add-act-r-command "initialize-keyboard" 'initialize-keyboard "Function which sets up a keyboard when it is installed. Do not call directly.")
 
@@ -472,7 +473,7 @@
   (dispatch-apply "output-key" model key))
 
 
-;; Create some new motor styles.  Styles are defined on the motor module, which 
+;; Create some new motor styles.  Styles are defined on the motor module, which
 ;; means these require motor-module methods, and since it's available using that
 ;; directly for efficiency.  However, a device "should" handle actions through
 ;; notifications to the interface.
@@ -480,7 +481,7 @@
 
 ;; Create a press-key style which evaluates the underlying action for the indicated
 ;; key.  Doesn't check hand position so if it's not at the home row then the wrong
-;; key will likely be pressed.  
+;; key will likely be pressed.
 
 (defclass press-key (movement-style)
   nil
@@ -497,7 +498,7 @@
            (progn
              (unless (stringp key)
                (setf key (princ-to-string key)))
-           
+
              (let ((command (key->cmd it key)))
                (if (null (first command))
                    (print-warning "No press-key mapping available for key ~s." key)
@@ -530,14 +531,14 @@
 (defmethod hand-to-home ((mtr-mod motor-module) &key request-spec hand)
   (aif (find "keyboard" (current-devices "motor") :key 'second :test 'string-equal)
       (let ((k (current-keyboard)))
-        (when (null hand) 
+        (when (null hand)
           (setf hand 'right))
         (if k
             (if (or (eq hand 'right) (eq hand 'left))
                 (let* ((cur-hand (if (eq hand 'left)
                                      (left-hand mtr-mod)
                                    (right-hand mtr-mod)))
-                       (keyboard-hand (if (eq hand 'left) 
+                       (keyboard-hand (if (eq hand 'left)
                                           (left-home k)
                                         (right-home k)))
                        (home-pos (coerce (rest (find 'hand keyboard-hand :key 'first)) 'vector)))
@@ -588,10 +589,10 @@
        (progn
          (unless (stringp to-key)
            (setf to-key (princ-to-string to-key)))
-        
+
          (let ((new-loc (key->loc (current-keyboard) to-key)))
            (if new-loc
-               (let* ((cur-hand (ecase hand 
+               (let* ((cur-hand (ecase hand
                                   (right (right-hand mtr-mod))
                                   (left (left-hand mtr-mod))))
                       (new-polar (xy-to-polar (bt:with-lock-held ((hand-lock cur-hand)) (loc cur-hand)) new-loc)))
@@ -620,7 +621,7 @@
         (notify-interface "motor" (list 'set-hand-device 'right device))
         (notify-interface "motor" (list 'set-hand-position 'right (second r-pos) (third r-pos)))
         (notify-interface "motor" (append (list 'set-finger-offset 'right) r-fingers))))
-      
+
     (when (or force-hand-to-device (null (notify-interface "motor" '(get-hand-device left))))
       (let* ((l-pos (find 'hand (left-home k) :key 'first))
              (l-fingers (remove l-pos (left-home k))))
@@ -631,13 +632,13 @@
 
 (defun start-hands-at-home ()
   "Start the hands on the home row locations"
-  (verify-current-model 
+  (verify-current-model
    "No current model.  Cannot start hands at home positions."
-   
+
    (unless (find "keyboard" (current-devices "motor") :key 'second :test 'string-equal)
      (install-device (list "motor" "keyboard"))
      (model-warning "Default keyboard device installed automatically by start-hands-at-home"))
-   
+
    (home-hands (current-keyboard) t)
    t))
 
@@ -646,12 +647,12 @@
 
 (defun start-hand-at-key (hand key)
   "Start a hand on the indicated key instead of the 'home row' location"
-   (verify-current-model 
+   (verify-current-model
     "No current model.  Cannot start hand at key."
     (unless (find "keyboard" (current-devices "motor") :key 'second :test 'string-equal)
       (install-device (list "motor" "keyboard"))
       (model-warning "Default keyboard device installed automatically by start-hand-at-key."))
-    
+
     (let ((k (current-keyboard)))
       (unless (stringp key)
         (setf key (princ-to-string key)))
@@ -672,19 +673,19 @@
 
 (defun start-hand-at-keypad ()
   "Starts the right hand on the keypad instead of the 'home row' location"
-  (verify-current-model 
+  (verify-current-model
     "No current model.  Cannot start hand at key."
     (unless (find "keyboard" (current-devices "motor") :key 'second :test 'string-equal)
       (install-device (list "motor" "keyboard"))
       (model-warning "Default keyboard device installed automatically by start-hand-at-keypad."))
-    
+
    (let* ((k (current-keyboard))
           (pos (find 'hand (keypad k) :key 'first))
           (fingers (remove pos (keypad k))))
      (notify-interface "motor" (list 'set-hand-device 'right (find "keyboard" (current-devices "motor") :key 'second :test 'string-equal)))
      (notify-interface "motor" (list 'set-hand-position 'right (second pos) (third pos)))
      (notify-interface "motor" (append (list 'set-finger-offset 'right) fingers)))))
-                 
+
 (add-act-r-command "start-hand-at-keypad" 'start-hand-at-keypad "Place the model's right hand on middle row of the keyboard device's keypad area. No params.")
 
 
@@ -711,7 +712,7 @@
               t)
           (print-warning "Set-default-keyboard requires nil or a subclass of virtual-keyboard but given ~s." class))
       (print-warning "No keyboard-table component found when calling set-default-keyboard."))))
-               
+
 (defun current-keyboard ()
   (awhen (current-model)
          (let ((k-c (get-component keyboard-table)))
