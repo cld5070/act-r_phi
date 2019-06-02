@@ -217,18 +217,18 @@
   (specify-key k 2 0 "F1" :style '(peck-recoil :hand left :finger ring :r 4 :theta -1.57))
   (specify-key k 3 0 "f2" :style '(peck-recoil :hand left :finger middle :r 4 :theta -1.57))
   (specify-key k 4 0 "f3" :style '(peck-recoil :hand left :finger index :r 4 :theta -1.57))
-  (specify-key k 5 0 "f4" :style '(peck-recoil :hand left :finger index :r 4 :theta -1.33))
+  (specify-key k 5 0 "f4" :style '(peck-recoil :hand left :finger index :r 4.12 :theta -1.32))
 
   (specify-key k 7 0 "f5" :style '(peck-recoil :hand right :finger index :r 4 :theta -1.57))
   (specify-key k 8 0 "f6" :style '(peck-recoil :hand right :finger middle :r 4 :theta -1.57))
   (specify-key k 9 0 "f7" :style '(peck-recoil :hand right :finger ring :r 4 :theta -1.57))
   (specify-key k 10 0 "f8" :style '(peck-recoil :hand right :finger pinkie :r 4 :theta -1.57))
 
-  (specify-key k 12 0 "F9" :style '(peck-recoil :hand right :finger pinkie :r 4 :theta -1.11))
-  (specify-key k 13 0 "f10" :style '(peck-recoil :hand right :finger pinkie :r 4 :theta -0.93))
+  (specify-key k 12 0 "F9" :style '(peck-recoil :hand right :finger pinkie :r 4.47 :theta -0.46))
+  (specify-key k 13 0 "f10" :style '(peck-recoil :hand right :finger pinkie :r 5 :theta -0.93))
+  (specify-key k 14 0 "f11" :style '(peck-recoil :hand right :finger pinkie :r 5.66 :theta -0.79))
+  (specify-key k 15 0 "f12" :style '(peck-recoil :hand right :finger pinkie :r 6.40 :theta -0.67))
 	#|--End modified section for function keys--|#
-  (specify-key k 14 0 "f11")
-  (specify-key k 15 0 "f12")
 
   (specify-key k 17 0 '("f13" "print-screen"))
   (specify-key k 18 0 '("f14" "scroll-lock"))
