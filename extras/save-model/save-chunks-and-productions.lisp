@@ -65,6 +65,9 @@
 ;;; 2018.08.24  Dan
 ;;;             : * Use the new user command add-dm-chunks instead of the internal
 ;;;             :   add-chunk-into-dm.
+;;; 2019.03.21 Dan [3.1a]
+;;;             : * Updating because of changes in the internal representations of
+;;;             :   chunks and chunk-types.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -237,8 +240,8 @@ PROCEDURAL module
          chunk-name
          (act-r-chunk-documentation chunk)
          (mapcar (lambda (slot) 
-                   (list (car slot) (cdr slot)))
-           (sort (copy-tree (act-r-chunk-slot-value-lists chunk)) #'< :key (lambda (x) (slot-name->index (car x))))))))))
+                   (list (act-r-slot-name (car slot)) (cdr slot)))
+           (sort (copy-tree (act-r-chunk-slot-value-lists chunk)) #'< :key (lambda (x) (act-r-slot-index (car x))))))))))
     
 
 (defun save-chunks-and-productions (file-name &optional (zero-ref t))

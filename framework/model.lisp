@@ -212,6 +212,12 @@
 ;;; 2019.02.13 Dan
 ;;;             : * The model now holds a bitvector indicating which buffers
 ;;;             :   currently have chunks in them.
+;;; 2019.03.13 Dan
+;;;             : * The act-r-chunk-type-info-slot->mask table isn't used anymore.
+;;; 2019.04.03 Dan
+;;;             : * Store the instance of the module in the buffer struct when
+;;;             :   creating a model and also in a list to use upon reset (so
+;;;             :   it doesn't need to pull them from the hash-table).
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -384,32 +390,38 @@
              
               (bt:with-lock-held ((act-r-model-modules-lock new-model))
                 (dolist (module-name (all-module-names))
-                  (setf (gethash module-name (act-r-model-modules-table new-model))
-                    (instantiate-module module-name name))))
-             
-             ;; instantiate the buffers
-             
-              (bt:with-lock-held (*buffers-table-lock*) 
-                (maphash (lambda (buffer-name buffer-struct)
-                           (let ((buffer (copy-act-r-buffer buffer-struct)))
+                  (let ((i (instantiate-module module-name name)))
+                    
+                    (push-last i (act-r-model-module-instances new-model))
+                    (setf (gethash module-name (act-r-model-modules-table new-model)) i)))
+                 
+                ;; instantiate the buffers
+                
+                (bt:with-lock-held (*buffers-table-lock*) 
+                  (bt:with-lock-held ((act-r-model-buffers-lock new-model))
+                    
+                    (maphash (lambda (buffer-name buffer-struct)
+                               (let ((buffer (copy-act-r-buffer buffer-struct)))
+                                 
+                                 (setf (act-r-buffer-module-instance buffer)
+                                   (gethash (act-r-buffer-module buffer) (act-r-model-modules-table new-model)))
+                                 
+                                 (when (act-r-buffer-multi buffer)
+                                   (setf (act-r-buffer-chunk-set buffer) (make-hash-table :test 'eq :size 5)))
+                                 
+                                 (dolist (x (act-r-buffer-requests buffer))
+                                   (add-request-parameter x)
+                                   (setf (act-r-buffer-requests-mask buffer) (logior (slot-name->mask x) (act-r-buffer-requests-mask buffer))))
+                                 
+                                 (dolist (x (act-r-buffer-queries buffer))
+                                   (add-buffer-query x))
+                                 
+                                 (setf (gethash buffer-name (act-r-model-buffers new-model)) buffer)))
                              
-                             (when (act-r-buffer-multi buffer)
-                               (setf (act-r-buffer-chunk-set buffer) (make-hash-table :test 'eq :size 5)))
-                             
-                             (dolist (x (act-r-buffer-requests buffer))
-                               (add-request-parameter x)
-                               (setf (act-r-buffer-requests-mask buffer) (logior (slot-name->mask x) (act-r-buffer-requests-mask buffer))))
-                             
-                             (dolist (x (act-r-buffer-queries buffer))
-                               (add-buffer-query x))
-                             
-                             (bt:with-lock-held ((act-r-model-buffers-lock new-model))
-                               (setf (gethash buffer-name (act-r-model-buffers new-model)) buffer))))
-                         
-                         *buffers-table*))
-             
-             (dolist (module-name (all-module-names))
-               (reset-module module-name))
+                             *buffers-table*))))
+              
+             (dolist (m (act-r-model-module-instances new-model))
+                (reset-module m))
              
              
              (maphash (lambda (parameter-name parameter)
@@ -417,8 +429,9 @@
                       (bt:with-lock-held (*parameters-table-lock*) *act-r-parameters-table*))
              
              
-             (dolist (module-name (all-module-names))
-               (secondary-reset-module module-name))
+             (dolist (m (act-r-model-module-instances new-model))
+               (secondary-reset-module m))
+              
              
              (let ((errored nil))
                (dolist (form model-code-list)
@@ -457,8 +470,8 @@
              
              (setf (act-r-model-code new-model) model-code-list)
              
-             (dolist (module-name (all-module-names))
-               (tertiary-reset-module module-name)))
+             (dolist (m (act-r-model-module-instances new-model))
+                (tertiary-reset-module m)))
              
                         
             name))))))
@@ -484,8 +497,7 @@
             (when (some (lambda (x) (find x (symbol-name name))) (list #\$ #\{ #\} #\[ #\]))
               (print-warning "Model names that contain any of the characters $, {, }, [, or ] may not work correctly with the ACT-R Environment."))
             
-            (let ((new-model (make-act-r-model :name name))
-                  )
+            (let ((new-model (make-act-r-model :name name)))
              (let ((*current-act-r-model* new-model))
                (when (or *model-chunk-table-size* *model-chunk-table-rehash-threshold*)
                 (bt:with-recursive-lock-held ((act-r-model-chunk-lock new-model))
@@ -507,49 +519,55 @@
                (create-model-default-chunk-types-and-chunks new-model)
                
                (bt:with-lock-held ((act-r-model-modules-lock new-model))
-                 (dolist (module-name (all-module-names))
-                   (setf (gethash module-name (act-r-model-modules-table new-model))
-                     (instantiate-module module-name name))))
+                (dolist (module-name (all-module-names))
+                  (let ((i (instantiate-module module-name name)))
+                                        
+                    (push-last i (act-r-model-module-instances new-model))
+                    (setf (gethash module-name (act-r-model-modules-table new-model)) i)))
+                                 
+                ;; instantiate the buffers
+                
+                (bt:with-lock-held (*buffers-table-lock*) 
+                  (bt:with-lock-held ((act-r-model-buffers-lock new-model))
+                    
+                    (maphash (lambda (buffer-name buffer-struct)
+                               (let ((buffer (copy-act-r-buffer buffer-struct)))
+                                 
+                                 (setf (act-r-buffer-module-instance buffer)
+                                   (gethash (act-r-buffer-module buffer) (act-r-model-modules-table new-model)))
+                                 
+                                 (when (act-r-buffer-multi buffer)
+                                   (setf (act-r-buffer-chunk-set buffer) (make-hash-table :test 'eq :size 5)))
+                                 
+                                 (dolist (x (act-r-buffer-requests buffer))
+                                   (add-request-parameter x)
+                                   (setf (act-r-buffer-requests-mask buffer) (logior (slot-name->mask x) (act-r-buffer-requests-mask buffer))))
+                                 
+                                 (dolist (x (act-r-buffer-queries buffer))
+                                   (add-buffer-query x))
+                                 
+                                 (setf (gethash buffer-name (act-r-model-buffers new-model)) buffer)))
+                             
+                             *buffers-table*))))
                
-               ;; instantiate the buffers
-               
-               (bt:with-lock-held (*buffers-table-lock*)
-                 (maphash (lambda (buffer-name buffer-struct)
-                            (let ((buffer (copy-act-r-buffer buffer-struct)))
-                              
-                              (when (act-r-buffer-multi buffer)
-                                (setf (act-r-buffer-chunk-set buffer) (make-hash-table :test 'eq :size 5)))
-                              
-                              (dolist (x (act-r-buffer-requests buffer))
-                                (add-request-parameter x)
-                                (setf (act-r-buffer-requests-mask buffer) (logior (slot-name->mask x) (act-r-buffer-requests-mask buffer))))
-                              
-                              (dolist (x (act-r-buffer-queries buffer))
-                                (add-buffer-query x))
-                              
-                              (bt:with-lock-held ((act-r-model-buffers-lock new-model))
-                                (setf (gethash buffer-name (act-r-model-buffers new-model)) buffer))))
-                          *buffers-table*))
-               
-               
-               (dolist (module-name (all-module-names))
-                 (reset-module module-name))             
+              (dolist (m (act-r-model-module-instances new-model))
+                (reset-module m))
                
                (maphash (lambda (parameter-name parameter)
                           (sgp-fct (list parameter-name (act-r-parameter-default parameter))))
                          (bt:with-lock-held (*parameters-table-lock*) *act-r-parameters-table*))
                
                
-               (dolist (module-name (all-module-names))
-                 (secondary-reset-module module-name))
+               (dolist (m (act-r-model-module-instances new-model))
+                 (secondary-reset-module m))
                
                (dolist (form model-code-list)
                  (eval form))
                
                (setf (act-r-model-code new-model) model-code-list)
                
-               (dolist (module-name (all-module-names))
-                 (tertiary-reset-module module-name)))
+              (dolist (m (act-r-model-module-instances new-model))
+                (tertiary-reset-module m)))
              
              
              
@@ -663,7 +681,6 @@
         (bt:with-recursive-lock-held ((act-r-chunk-type-info-lock info))
           (clrhash (act-r-chunk-type-info-slot->index info))
           (setf (act-r-chunk-type-info-index->slot info) (make-array (list 0) :adjustable t :fill-pointer t))
-          (clrhash (act-r-chunk-type-info-slot->mask info))
           (setf (act-r-chunk-type-info-size info) 0)
           (clrhash (act-r-chunk-type-info-distinct-types info))
           (setf (act-r-chunk-type-info-extended-slots info) nil)
@@ -679,27 +696,30 @@
         
         
         (create-model-default-chunk-types-and-chunks model)
-        (bt:with-lock-held ((act-r-model-buffers-lock model))
-          (setf (act-r-model-buffer-state model) 0)
+        
           
-          (maphash (lambda (buffer-name buffer)
-                     (declare (ignore buffer-name))
-                     (bt:with-recursive-lock-held ((act-r-buffer-lock buffer))
-                       (setf (act-r-buffer-chunk buffer) nil)
-                       (when (act-r-buffer-multi buffer)
-                         (setf (act-r-buffer-chunk-set buffer) (make-hash-table :test 'eq :size 5)))
-                       (dolist (x (act-r-buffer-requests buffer))
-                         (add-request-parameter x)
-                         (setf (act-r-buffer-requests-mask buffer) (logior (slot-name->mask x) (act-r-buffer-requests-mask buffer))))
-                       (dolist (x (act-r-buffer-queries buffer))
-                         (add-buffer-query x))
-                       ;; clear any flags
-                       (setf (act-r-buffer-flags buffer) nil)))
-                   (act-r-model-buffers model)))
+          (bt:with-lock-held ((act-r-model-buffers-lock model))
+            (setf (act-r-model-buffer-state model) 0)
+          
+            (maphash (lambda (buffer-name buffer)
+                       (declare (ignore buffer-name))
+                       (bt:with-recursive-lock-held ((act-r-buffer-lock buffer))
+                         (setf (act-r-buffer-chunk buffer) nil)
+                         (when (act-r-buffer-multi buffer)
+                           (setf (act-r-buffer-chunk-set buffer) (make-hash-table :test 'eq :size 5)))
+                         (dolist (x (act-r-buffer-requests buffer))
+                           (add-request-parameter x)
+                           (setf (act-r-buffer-requests-mask buffer) (logior (slot-name->mask x) (act-r-buffer-requests-mask buffer))))
+                         (dolist (x (act-r-buffer-queries buffer))
+                           (add-buffer-query x))
+                         ;; clear any flags
+                         (setf (act-r-buffer-flags buffer) nil)
+                         ))
+                     (act-r-model-buffers model)))
         
         (dispatch-apply "reset-step1")
         
-        (dolist (module-name (all-module-names))
+        (dolist (module-name (act-r-model-module-instances model))
           (reset-module module-name))
         
         (maphash (lambda (parameter-name parameter)
@@ -708,7 +728,7 @@
         
         (dispatch-apply "reset-step2")
         
-        (dolist (module-name (all-module-names))
+        (dolist (module-name (act-r-model-module-instances model))
           (secondary-reset-module module-name))
         
         (dolist (form (act-r-model-code model))
@@ -716,7 +736,7 @@
         
         (dispatch-apply "reset-step3")
         
-        (dolist (module-name (all-module-names))
+        (dolist (module-name (act-r-model-module-instances model))
           (tertiary-reset-module module-name))))))
 
 

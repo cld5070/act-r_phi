@@ -13,7 +13,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; 
 ;;; Filename    : stepper-control.lisp
-;;; Version     : 4.0
+;;; Version     : 5.0
 ;;; 
 ;;; Description : No system dependent code.
 ;;;             : This file contains the Lisp to support the stepper window.
@@ -133,6 +133,10 @@
 ;;;             : * Need to add a check for whether a varaible is the name of
 ;;;             :   a buffer for the update when in tutor mode and add extra 
 ;;;             :   quotes around a binding which is a string.
+;;; 2019.05.31 Dan [5.0]
+;;;             : * Add the ability to step on all events regardless of :v
+;;;             :   setting.  Goes along with the ability to open the stepper
+;;;             :   while ACT-R is running now.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 #+:packaged-actr (in-package :act-r)
@@ -140,8 +144,8 @@
 #-(or (not :clean-actr) :packaged-actr :ALLEGRO-IDE) (in-package :cl-user)
 
 (defstruct stepper-control
-  (lock (bt:make-lock "stepper-lock"))
-  open pre-hook post-hook skip-type skip-val tutoring current-event tutor-bindings tutor-responses)
+  (lock (bt:make-recursive-lock "stepper-lock"))
+  open pre-hook post-hook skip-type skip-val tutoring current-event tutor-bindings tutor-responses step-all)
 
 (defvar *stepper* (make-stepper-control))
 
@@ -152,7 +156,7 @@
   (setf (stepper-module-rs instance) nil)
   (setf (stepper-module-cs instance) nil)
   
-  (when (bt:with-lock-held ((stepper-control-lock *stepper*)) (stepper-control-open *stepper*))
+  (when (bt:with-recursive-lock-held ((stepper-control-lock *stepper*)) (stepper-control-open *stepper*))
     
     (no-output
      (unless (find 'stepper-rr-hook (car (sgp :retrieval-request-hook)))
@@ -169,15 +173,18 @@
 (define-module stepper nil nil 
   :creation create-stepper-module 
   :reset (nil reset-stepper-module) 
-  :version 1.0 
+  :version 5.0 
   :documentation "Store the model specific information for the Environment's stepper tool.")
 
 (defun check-model-output-for-stepper ()
-  (if (bt:with-lock-held ((stepper-control-lock *stepper*)) (stepper-control-open *stepper*))
+  (if (bt:with-recursive-lock-held ((stepper-control-lock *stepper*)) (stepper-control-open *stepper*))
       "already"
-    (if (every (lambda (x) (with-model-eval x (null (car (no-output (sgp :v)))))) (mp-models))
-        "none"
-      t)))
+    (if (bt:with-recursive-lock-held ((stepper-control-lock *stepper*))
+          (stepper-control-step-all *stepper*))
+        t
+      (if (every (lambda (x) (with-model-eval x (null (car (no-output (sgp :v)))))) (mp-models))
+          "none"
+        t))))
 
 (add-act-r-command "stepper-status-check" 'check-model-output-for-stepper "Internal command for communicating with the Environment stepper.  Do not call.")
 
@@ -215,12 +222,21 @@
            (print-warning "Unexpected value passed to stepper-condition function.")
            (setf type nil val nil))))))
   
-  (bt:with-lock-held ((stepper-control-lock *stepper*))
+  (bt:with-recursive-lock-held ((stepper-control-lock *stepper*))
     (setf (stepper-control-skip-type *stepper*) type)
     (setf (stepper-control-skip-val *stepper*) val))
   1)
 
 (add-act-r-command "stepper-condition" 'stepper-condition "Internal command for communicating with the Environment stepper. Do not call.")
+
+
+(defun change-step-all (value)
+  (bt:with-recursive-lock-held ((stepper-control-lock *stepper*))
+    (setf (stepper-control-step-all *stepper*)
+      (if (zerop value) nil t)))
+  1)
+
+(add-act-r-command "change-step-all" 'change-step-all "Internal command for communicating with the Environment stepper. Do not call.")
 
 
 (defun model-trace-enabled (event)
@@ -229,12 +245,13 @@
 
 
 (defun stepper-pre-hook (event)
-  (let (type val)
-    (bt:with-lock-held ((stepper-control-lock *stepper*))
+  (let (type val all)
+    (bt:with-recursive-lock-held ((stepper-control-lock *stepper*))
       (setf type (stepper-control-skip-type *stepper*)
-        val (stepper-control-skip-val *stepper*)))
-    
-    (when (or (and type ;; running until a specific action
+        val (stepper-control-skip-val *stepper*)
+        all (stepper-control-step-all *stepper*)))
+    (when (or all
+              (and type ;; running until a specific action
                    (event-displayed-p event)
                    (model-trace-enabled event)
                    (case type
@@ -255,13 +272,13 @@
                          ))))
       (prog1
           (dispatch-apply "wait_for_stepper" (format-event event))
-      
-        (bt:with-lock-held ((stepper-control-lock *stepper*))
+        
+        (bt:with-recursive-lock-held ((stepper-control-lock *stepper*))
           (setf (stepper-control-current-event *stepper*) event))))))
 
 
 (defun stepper-post-hook (event)
-  (when (eq event (bt:with-lock-held ((stepper-control-lock *stepper*)) (stepper-control-current-event *stepper*)))
+  (when (eq event (bt:with-recursive-lock-held ((stepper-control-lock *stepper*)) (stepper-control-current-event *stepper*)))
     (let ((details (cond ((or (eq (evt-action event) 'production-selected)
                               (eq (evt-action event) 'production-fired))
                           (list (with-model-eval (evt-model event)
@@ -282,7 +299,7 @@
 
 (defun update-stepper-info (item)
   (if item
-      (let ((event (bt:with-lock-held ((stepper-control-lock *stepper*)) (stepper-control-current-event *stepper*))))
+      (let ((event (bt:with-recursive-lock-held ((stepper-control-lock *stepper*)) (stepper-control-current-event *stepper*))))
         (cond ((or (eq (evt-action event) 'production-selected)
                    (eq (evt-action event) 'production-fired))
                (with-model-eval (evt-model event)
@@ -324,21 +341,20 @@
 
 
 (defun install-stepper-hooks ()
-  (if (bt:with-lock-held ((stepper-control-lock *stepper*)) (stepper-control-open *stepper*))
+  (bt:with-recursive-lock-held ((stepper-control-lock *stepper*))
+    (if (stepper-control-open *stepper*)
       (print-warning "Second stepper was opened but the Environment controls only support a single Stepper at a time.")
     (progn
-      (bt:with-lock-held ((stepper-control-lock *stepper*))
         (setf (stepper-control-open *stepper*) t)
         (setf (stepper-control-pre-hook *stepper*)
           (add-pre-event-hook 'stepper-pre-hook))
         (setf (stepper-control-post-hook *stepper*)
           (add-post-event-hook 'stepper-post-hook))
-        )
       (dolist (m (mp-models))
         (with-model-eval m
           (let ((s (get-module stepper)))
             (reset-stepper-module s))))
-      t)))
+      t))))
 
 (defun stepper-rr-hook (request)
   (setf (stepper-module-rr (get-module stepper)) (printed-chunk-spec request))
@@ -353,7 +369,7 @@
   nil)
                         
 (defun uninstall-stepper-hooks ()
-  (bt:with-lock-held ((stepper-control-lock *stepper*))
+  (bt:with-recursive-lock-held ((stepper-control-lock *stepper*))
     (setf (stepper-control-open *stepper*) nil)
     (setf (stepper-control-current-event *stepper*) nil)
     (when (stepper-control-pre-hook *stepper*)
@@ -361,7 +377,7 @@
       (setf (stepper-control-pre-hook *stepper*) nil))
     (when (stepper-control-post-hook *stepper*)
       (delete-event-hook (stepper-control-post-hook *stepper*))
-      (setf (stepper-control-post-hook *stepper*) nil)))
+      (setf (stepper-control-post-hook *stepper*) nil))
         
   (dolist (m (mp-models)) ;; have to put back other hook functions...
     (with-model-eval m
@@ -374,7 +390,7 @@
            (sgp-fct (list :retrieval-set-hook x))))
        (when (find 'stepper-cs-hook (car (sgp :conflict-set-hook)))
          (dolist (x (reverse (remove 'stepper-cs-hook (car (sgp :conflict-set-hook)))))
-           (sgp-fct (list :conflict-set-hook x))))))))
+           (sgp-fct (list :conflict-set-hook x)))))))))
 
 
 (defun turn-on-stepper-tutoring ()

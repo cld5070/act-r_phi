@@ -4,7 +4,7 @@
 wm deiconify .
 update
 wm withdraw .
-if {[winfo screenwidth .] != 1920 || [winfo screenheight .] != 1080 || [lindex [wm maxsize .] 0] != 1924 || [lindex [wm maxsize .] 1] != 1055} {
+if {[winfo screenwidth .] != 3440 || [winfo screenheight .] != 1440 || [lindex [wm maxsize .] 0] != 3444 || [lindex [wm maxsize .] 1] != 1421} {
   set size_mismatch 1
 } else {
   set size_mismatch 0

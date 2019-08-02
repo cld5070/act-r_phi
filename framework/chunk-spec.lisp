@@ -301,9 +301,20 @@
 ;;; 2019.02.13 Dan
 ;;;             : * Add a comment with an alternate test for slots-vector-match-
 ;;;             :   signature.
-;;; 2018.03.06 Dan
+;;; 2019.03.06 Dan
 ;;;             : * Adjust how act-r-chunk-slot-value-lists is used since its
 ;;;             :   first elements are slot structs.
+;;; 2019.04.04 Dan
+;;;             : * Take advantage of slot-struct being returned by tests to
+;;;             :   simplify some code.
+;;;             : * Instantiating a chunk-spec always calls replace-variables
+;;;             :   on the value because it could be a list which wouldn't have
+;;;             :   been flagged as a variable.
+;;;             : * Put slot names into a slot of the struct so for chunk-spec-
+;;;             :   slots to use instead of recomputing.
+;;; 2019.04.18 Dan
+;;;             : * Fix a bug with creating a chunk-spec where nil is used in a
+;;;             :   slot name position.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -452,10 +463,7 @@
 (defun define-query-spec-fct (specifications-list)
   (verify-current-model
    "define-query-spec-fct called with no current model."
-   (cond ((= (length specifications-list) 1)
-          (print-warning "define-query-spec was only given one parameter: ~S" specifications-list))
-         (t
-          (process-query-specs specifications-list)))))
+   (process-query-specs specifications-list)))
 
 (defun chunk-name-to-chunk-spec (chunk-name)
   (let ((spec (make-act-r-chunk-spec))
@@ -467,6 +475,7 @@
             (setf (act-r-chunk-spec-equal-slots spec) slot-vector)
             (dolist (slot (act-r-chunk-slot-value-lists chunk) spec)
               (let ((s (make-act-r-slot-spec :name (act-r-slot-name (car slot)) :value (cdr slot))))
+                (pushnew (act-r-slot-name (car slot)) (act-r-chunk-spec-slot-names spec))
                 (push s (act-r-chunk-spec-slots spec))
                 (push s (act-r-chunk-spec-testable-slots spec))))))
       (print-warning "Chunk-name-to-chunk-spec called with a non-chunk ~s." chunk-name))))
@@ -488,20 +497,21 @@
         (bt:with-recursive-lock-held ((act-r-chunk-lock chunk1))
           (bt:with-recursive-lock-held ((act-r-chunk-lock chunk2))
             (let* ((slot-vector (act-r-chunk-filled-slots chunk1))
-                   (slots-not-in-c1 (lognot (act-r-chunk-filled-slots chunk1)))
                    (slots-in-c2 (act-r-chunk-filled-slots chunk2))
-                   (slots-to-remove-from-c2 (logand slots-not-in-c1 slots-in-c2)))
+                   (slots-to-remove-from-c2 (logandc2 slots-in-c2 slot-vector)))
               (setf (act-r-chunk-spec-filled-slots spec) slot-vector)
               (setf (act-r-chunk-spec-empty-slots spec) slots-to-remove-from-c2)
               (setf (act-r-chunk-spec-equal-slots spec) (logior slot-vector slots-to-remove-from-c2))
               (dolist (slot (act-r-chunk-slot-value-lists chunk1))
                 
                 (let ((s (make-act-r-slot-spec :name (act-r-slot-name (car slot)) :value (cdr slot))))
+                  (pushnew (act-r-slot-name (car slot)) (act-r-chunk-spec-slot-names spec))
                   (push s (act-r-chunk-spec-slots spec))
                   (push s (act-r-chunk-spec-testable-slots spec))))
               (dolist (slot (slot-mask->names slots-to-remove-from-c2))
                 
                 (let ((s (make-act-r-slot-spec :name slot :value nil)))
+                  (pushnew slot (act-r-chunk-spec-slot-names spec))
                   (push s (act-r-chunk-spec-slots spec))
                   (push s (act-r-chunk-spec-testable-slots spec))))
               spec)))
@@ -528,9 +538,9 @@
 
 (defun chunk-spec-slots (chunk-spec)
   (if (act-r-chunk-spec-p chunk-spec)
-      (remove-duplicates (mapcar 'act-r-slot-spec-name (act-r-chunk-spec-slots chunk-spec)))
+      (act-r-chunk-spec-slot-names chunk-spec) ;(remove-duplicates (mapcar 'act-r-slot-spec-name (act-r-chunk-spec-slots chunk-spec)))
     (aif (id-to-chunk-spec chunk-spec)
-         (remove-duplicates (mapcar 'act-r-slot-spec-name (act-r-chunk-spec-slots it)))
+         (act-r-chunk-spec-slot-names chunk-spec) ;(remove-duplicates (mapcar 'act-r-slot-spec-name (act-r-chunk-spec-slots it)))
          (print-warning "Chunk-spec-slots called with something other than a chunk-spec or chunk-spec-id"))))
 
 
@@ -553,14 +563,13 @@
 
 (defun slot-in-chunk-spec-p (chunk-spec slot)
   (if (act-r-chunk-spec-p chunk-spec)
-      (if (chunk-spec-variable-p slot)
-            (when (find slot (act-r-chunk-spec-slots chunk-spec) :key 'act-r-slot-spec-name)
-              t)
-          (let ((mask (slot-name->mask slot)))
-            (and mask
-                 (or (logtest mask (act-r-chunk-spec-filled-slots chunk-spec))
-                     (logtest mask (act-r-chunk-spec-empty-slots chunk-spec)))
-                 t)))
+      (aif (valid-slot-name slot)
+          (let ((index (act-r-slot-index it)))
+            (and (or (logbitp index (act-r-chunk-spec-filled-slots chunk-spec))
+                     (logbitp index (act-r-chunk-spec-empty-slots chunk-spec)))
+                 t))
+           (when (find slot (act-r-chunk-spec-slots chunk-spec) :key 'act-r-slot-spec-name)
+             t))
     (aif (id-to-chunk-spec chunk-spec)
          (slot-in-chunk-spec-p it slot)
          (print-warning "Slot-in-chunk-spec-p called with something other than a chunk-spec or chunk-spec-id"))))
@@ -595,7 +604,8 @@
               (add-slot-spec-to-chunk-spec x spec))))
         (return (values spec extended?)))
       
-      (let ((slot-spec (make-act-r-slot-spec)))
+      (let ((slot-spec (make-act-r-slot-spec))
+            (slot-struct nil))
         
         (when (find (car specs) '(= - > < >= <=))
           (setf (act-r-slot-spec-modifier slot-spec) (pop specs)))
@@ -605,19 +615,21 @@
           (return nil))
         
         (let ((slot? (car specs)))
+          (when (null slot?)
+            (print-warning "Cannot use nil as a slot name.")
+            (return nil))
           (when (and (keywordp slot?) (not (eq (act-r-slot-spec-modifier slot-spec) '=)))
             (print-warning "Request parameters may not use a modifier other than =.")
             (return nil))
-          (unless (or (and chunk-type (valid-ct-slot chunk-type slot?))
-                      (and (null chunk-type) (valid-slot-name slot?))
-                      (and (keywordp slot?) (valid-slot-name slot?))
-                      (chunk-spec-variable-p slot?))
-            (if (and extend (not (keywordp slot?)) (not (chunk-spec-variable-p slot?))
+          (setf slot-struct (if chunk-type (valid-ct-slot chunk-type slot?) (valid-slot-name slot?)))
+          (unless (or slot-struct (chunk-spec-variable-p slot?))
+            (if (and extend (not (keywordp slot?)) ;; unnecessary since the alphanumericp catches this too  (not (chunk-spec-variable-p slot?))
                      (symbolp slot?) (alphanumericp (char (symbol-name slot?) 0)))
                 (let ((extended (extend-possible-slots slot? nil)))
                   (if extended
                       (progn
                         (push extended extended?)
+                        (setf slot-struct (valid-slot-name slot?))
                         (when warn
                           (model-warning "Chunks extended with slot ~s during a chunk-spec definition." slot?)))
                     (if chunk-type
@@ -636,9 +648,7 @@
           (setf (act-r-slot-spec-name slot-spec) slot)
           
           (when (chunk-spec-variable-p slot)
-            (setf (act-r-slot-spec-variable slot-spec) :slot))
-          
-          )
+            (setf (act-r-slot-spec-variable slot-spec) :slot)))
         
         (when (null specs)
           (print-warning "Invalid specs in call to define-chunk-spec - not enough arguments")
@@ -652,7 +662,7 @@
                 (setf (act-r-slot-spec-variable slot-spec) :both)
               (setf (act-r-slot-spec-variable slot-spec) :value))))
         
-        (unless (add-slot-spec-to-chunk-spec slot-spec spec)
+        (unless (add-slot-spec-to-chunk-spec slot-spec spec slot-struct)
           (return nil))))))
 
 
@@ -664,12 +674,12 @@
       
       (let ((slot-spec (make-act-r-slot-spec)))
         
-        (when (find (car specs) '(= - > < >= <=))
+        (if (find (car specs) '(= -))
+            (setf (act-r-slot-spec-modifier slot-spec) (pop specs))
           (if (find (car specs) '(> < >= <=))
               (progn
                 (print-warning "Query specs only allow = or - modifiers.")
-                (return nil))
-            (setf (act-r-slot-spec-modifier slot-spec) (pop specs))))
+                (return nil))))
         
         (when (null specs)
           (print-warning "Invalid specs in call to define-query-spec - not enough arguments")
@@ -680,6 +690,7 @@
           (return nil))
         
         (setf (act-r-slot-spec-name slot-spec) (pop specs))
+        (pushnew (act-r-slot-spec-name slot-spec) (act-r-chunk-spec-slot-names spec))
         
         (when (null specs)
           (print-warning "Invalid specs in call to define-query-spec - not enough arguments")
@@ -694,9 +705,11 @@
         (push-last slot-spec (act-r-chunk-spec-slots spec))))))
 
 
-(defun add-slot-spec-to-chunk-spec (slot-spec spec)
+(defun add-slot-spec-to-chunk-spec (slot-spec spec &optional slot-struct)
   
   (push-last slot-spec (act-r-chunk-spec-slots spec))
+  
+  (pushnew (act-r-slot-spec-name slot-spec) (act-r-chunk-spec-slot-names spec))
   
   (case (act-r-slot-spec-variable slot-spec)
     (:slot
@@ -721,8 +734,9 @@
   (let* ((mod (act-r-slot-spec-modifier slot-spec))
          (slot-name (act-r-slot-spec-name slot-spec))
          (val (act-r-slot-spec-value slot-spec))
-         (mask (slot-name->mask slot-name))
-         (index (slot-name->index slot-name)))
+         (struct (aif slot-struct it (valid-slot-name slot-name)))
+         (mask (act-r-slot-mask struct))
+         (index (act-r-slot-index struct)))
     
     (when (keywordp slot-name)
       (setf (act-r-chunk-spec-request-param-slots spec) (logior mask (act-r-chunk-spec-request-param-slots spec))))
@@ -766,44 +780,40 @@
           (t
            (let ((new-spec (make-act-r-chunk-spec)))
              (dolist (x (act-r-chunk-spec-slots chunk-spec))
-               (aif (act-r-slot-spec-variable x)
-                    (let* ((slot (if (eq it :value) 
-                                     (act-r-slot-spec-name x)
-                                   (aif (assoc (act-r-slot-spec-name x) bindings)
-                                        (cdr it)
-                                        (act-r-slot-spec-name x))))
-                           (value (if (eq it :slot) 
-                                      (act-r-slot-spec-value x)
-                                    (replace-variables (act-r-slot-spec-value x) bindings))))
-                      
-                      (unless (or (chunk-spec-variable-p slot)
-                                  (valid-slot-name slot))
-                        (if extend
-                            (let ((extended (if (keywordp slot) nil (extend-possible-slots slot))))
-                              (if extended
-                                  (push slot extended-slots)
-                                (progn
-                                  (print-warning "Invalid slot-name ~s in instantiation of chunk spec for variable ~s" slot (act-r-slot-spec-name x))
-                                  (return-from instantiate-chunk-spec nil))))
-                          (progn
-                            (print-warning "Invalid slot-name ~s in instantiation of chunk spec for variable ~s" slot (act-r-slot-spec-name x))
-                            (return-from instantiate-chunk-spec nil))))
-                      
-                      (add-slot-spec-to-chunk-spec (make-act-r-slot-spec :modifier (act-r-slot-spec-modifier x)
-                                                                         :name slot
-                                                                         :value value
-                                                                         :variable (cond ((and (chunk-spec-variable-p slot)
-                                                                                               (chunk-spec-variable-p value))
-                                                                                          :both)
-                                                                                         ((chunk-spec-variable-p slot)
-                                                                                          :slot)
-                                                                                         ((chunk-spec-variable-p value)
-                                                                                          :value)
-                                                                                         (t nil)))
-                                                   new-spec))
-                    ;; just add a copy of the old one
-                    (add-slot-spec-to-chunk-spec (copy-act-r-slot-spec x) new-spec)))
-             (values new-spec extended-slots))))))
+               (let ((it (act-r-slot-spec-variable x)))
+                 (let* ((slot (if (eq it :value) 
+                                  (act-r-slot-spec-name x)
+                                (aif (assoc (act-r-slot-spec-name x) bindings)
+                                     (cdr it)
+                                     (act-r-slot-spec-name x))))
+                        (value (replace-variables (act-r-slot-spec-value x) bindings)))
+                   
+                   (unless (or (chunk-spec-variable-p slot)
+                               (valid-slot-name slot))
+                     (if extend
+                         (let ((extended (if (keywordp slot) nil (extend-possible-slots slot))))
+                           (if extended
+                               (push slot extended-slots)
+                             (progn
+                               (print-warning "Invalid slot-name ~s in instantiation of chunk spec for variable ~s" slot (act-r-slot-spec-name x))
+                               (return-from instantiate-chunk-spec nil))))
+                       (progn
+                         (print-warning "Invalid slot-name ~s in instantiation of chunk spec for variable ~s" slot (act-r-slot-spec-name x))
+                         (return-from instantiate-chunk-spec nil))))
+                   
+                   (add-slot-spec-to-chunk-spec (make-act-r-slot-spec :modifier (act-r-slot-spec-modifier x)
+                                                                      :name slot
+                                                                      :value value
+                                                                      :variable (cond ((and (chunk-spec-variable-p slot)
+                                                                                            (chunk-spec-variable-p value))
+                                                                                       :both)
+                                                                                      ((chunk-spec-variable-p slot)
+                                                                                       :slot)
+                                                                                      ((chunk-spec-variable-p value)
+                                                                                       :value)
+                                                                                      (t nil)))
+                                                new-spec))))
+           (values new-spec extended-slots))))))
 
 
 (defun instantiate-query-spec (chunk-spec bindings)
@@ -816,15 +826,13 @@
         (t
          (let ((new-spec (make-act-r-chunk-spec)))
            (dolist (x (act-r-chunk-spec-slots chunk-spec))
-             (if (act-r-slot-spec-variable x) ;; it has to be value for a query
-                 (let ((value (replace-variables (act-r-slot-spec-value x) bindings)))
-                   (push-last (make-act-r-slot-spec :modifier (act-r-slot-spec-modifier x)
+             (let ((value (replace-variables (act-r-slot-spec-value x) bindings)))
+               (pushnew (act-r-slot-spec-name x) (act-r-chunk-spec-slot-names new-spec))
+               (push-last (make-act-r-slot-spec :modifier (act-r-slot-spec-modifier x)
                                                     :name (act-r-slot-spec-name x)
                                                     :value value
                                                     :variable (if (chunk-spec-variable-p value) :value nil))
-                              (act-r-chunk-spec-slots new-spec)))
-                  ;; just add a copy of the old one
-                  (push-last (copy-act-r-slot-spec x) (act-r-chunk-spec-slots new-spec))))
+                              (act-r-chunk-spec-slots new-spec))))
            (values new-spec nil)))))
 
 ;;; A specific value of nil may be important to some things, so that's why it

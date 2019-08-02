@@ -1,7 +1,7 @@
 ;;;  -*- mode: LISP; Syntax: COMMON-LISP;  Base: 10 -*-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; 
-;;; Author      : Dan Bothell & Mike Byrne
+;;; Author      : Dan Bothell
 ;;; Copyright   : (c) 2017 Dan Bothell
 ;;; Availability: Covered by the GNU LGPL, see LGPL.txt
 ;;; Address     : Department of Psychology 
@@ -13,7 +13,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; 
 ;;; Filename    : dispatcher-client.lisp
-;;; Version     : 1.1
+;;; Version     : 2.1
 ;;; 
 ;;; Description : * Code to connect to the remote interface ACT-R and provide the
 ;;;             :   modeling commands necessary to run the remote tutorial model tasks.
@@ -144,21 +144,38 @@
 ;;;             : * Added mp-time and mp-time-ms.
 ;;; 2018.03.14 Dan
 ;;;             : * Use get-new-command-name to set the echo command's name.
+;;; 2019.05.21 Dan [2.0]
+;;;             : * Read the connection values from the files in the ~ directory.
+;;;             : * Send the set-name call to be "Remote Lisp connection".
+;;; 2019.05.22 Dan
+;;;             : * Starting to update this so it can run all of the current
+;;;             :   tutorial models.
+;;;             :   That means the ACT-R macros really need to be macros since
+;;;             :   the .lisp files don't use strings when referring to names.
+;;; 2019.06.20 Dan [2.1]
+;;;             : * Add include/exclude -model-trace functions to control
+;;;             :   whether that's echoed.  By default all echoed, but for the
+;;;             :   standalone it will exclude-model-trace.
+;;;             : * Fixed a typo with first attempt...
+;;; 2019.06.27 Dan
+;;;             : * Don't reload the libraries if it's the standalone since 
+;;;             :   they're already in the image.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 #-:QUICKLISP (eval-when (:compile-toplevel :load-toplevel :execute)
-               (when (probe-file "~/quicklisp/setup.lisp")
-                 (load "~/quicklisp/setup.lisp"))
-               (unless (find :quicklisp *features*)
-                 (error "This version of ACT-R requires Quicklisp to load the components necessary for the remote connection.")))
+               (unless (find :standalone *features*)
+                 (when (probe-file "~/quicklisp/setup.lisp")
+                   (load "~/quicklisp/setup.lisp"))
+                 (unless (find :quicklisp *features*)
+                   (error "This version of ACT-R requires Quicklisp to load the components necessary for the remote connection."))))
 
 
 
-(ql:quickload :bordeaux-threads)
+#-:standalone (ql:quickload :bordeaux-threads)
 
-(ql:quickload :usocket)
+#-:standalone (ql:quickload :usocket)
 
-(ql:quickload :cl-json)
+#-:standalone (ql:quickload :cl-json)
 
 (defparameter *default-package* *package*)
 
@@ -204,10 +221,10 @@
                    (format stream "~s" error))
 
 #+(or :acl :ccl) (defun cl-user::print-error-message (stream error colon-p atsign-p &optional (width 0) padchar commachar)
-         (declare (ignore colon-p atsign-p width padchar commachar))
-         (format stream "#<~a " (type-of error))
-         (write error :stream stream :escape nil)
-         (format stream  ">"))
+                   (declare (ignore colon-p atsign-p width padchar commachar))
+                   (format stream "#<~a " (type-of error))
+                   (write error :stream stream :escape nil)
+                   (format stream  ">"))
 
 
 
@@ -269,24 +286,24 @@
 
 (defstruct client-action name parameters id model)
 (defstruct client-request (lock (bt:make-lock)) (cv (bt:make-condition-variable)) id success result complete)
-  
+
 
 (defun add-client-command (name function)
   (handler-case
+      (progn
+        (unless (and (stringp name)
+                     (or (functionp function)
+                         (and (symbolp function)
+                              (fboundp function))))
           (progn
-            (unless (and (stringp name)
-                         (or (functionp function)
-                             (and (symbolp function)
-                                  (fboundp function))))
-              (progn
-                (format *error-output* "Invalid parameters when trying to add commmand ~s for function ~s" name function)
-                (return-from add-client-command nil)))
-            (bt:with-lock-held ((client-dispatcher-command-lock *dispatcher*))
-              (if (gethash name (client-dispatcher-command-table *dispatcher*))
-                  (format *error-output* "~s already names a command in the table" name)
-                (setf (gethash name (client-dispatcher-command-table *dispatcher*)) function))))
-        ((or error condition) (x) 
-         (format *error-output* "Error ~/print-error-message/ occurred while trying to add command ~s" x name))))
+            (format *error-output* "Invalid parameters when trying to add commmand ~s for function ~s" name function)
+            (return-from add-client-command nil)))
+        (bt:with-lock-held ((client-dispatcher-command-lock *dispatcher*))
+          (if (gethash name (client-dispatcher-command-table *dispatcher*))
+              (format *error-output* "~s already names a command in the table" name)
+            (setf (gethash name (client-dispatcher-command-table *dispatcher*)) function))))
+    ((or error condition) (x) 
+     (format *error-output* "Error ~/print-error-message/ occurred while trying to add command ~s" x name))))
 
 
 (defvar *current-act-r-model* nil)
@@ -327,12 +344,19 @@
       (dolist (x (rest result) nil)
         (format *error-output* x)))))
 
+(defun evaluate-act-r-command-decoded (&rest parameters)
+  (let ((result (multiple-value-list (apply 'send-command-to-act-r "evaluate" (cons (first parameters) (cons *current-act-r-model* (cdr parameters)))))))
+    (if (first result)
+        (values-list (mapcar 'decode-string-names (rest result)))
+      (dolist (x (rest result) nil)
+        (format *error-output* x)))))
+
 
 (defun start-des-client (&optional (host "127.0.0.1") (remote-port 2650))
   (let ((socket (handler-case (usocket:socket-connect host remote-port :nodelay :if-supported)
-                (error (x) (progn
-                             (format *error-output* "Error ~/print-error-message/ occurred while trying to open a socket connection to host ~s port ~s" x host remote-port)
-                             nil)))))
+                  (error (x) (progn
+                               (format *error-output* "Error ~/print-error-message/ occurred while trying to open a socket connection to host ~s port ~s" x host remote-port)
+                               nil)))))
     (if socket
         (let* ((dispatcher
                 (make-client-dispatcher 
@@ -379,24 +403,24 @@
                                                             (format *error-output* m)
                                                             (values nil m)))))
                   (list nil "Invalid command name"))))
-        
-        (when (client-action-id a)
-          
-          (let* ((success (car result))
-                 (res (handler-case
-                          (json:encode-json-to-string (cdr result))
-                        (error ()
-                          (format nil "Unable to encode return result ~s in JSON" (cdr result))
-                          (setf success nil))))
-                 (json-result (if success
-                                  (format nil "{\"result\": ~a, \"error\": null, \"id\": ~s}~c" res (client-action-id a) (code-char 4))
-                                (format nil "{\"result\": null, \"error\": {\"message\": ~a}, \"id\": ~s}~c" res (client-action-id a) (code-char 4)))))
-            (handler-case
-                (bt:with-lock-held ((client-dispatcher-stream-lock dispatcher))
-                  (format (client-dispatcher-stream dispatcher) json-result)
-                  (force-output (client-dispatcher-stream dispatcher)))
-              ((or error condition) (x)
-               (format *error-output* "Error ~/print-error-message/ while trying to return results of evaluating a command." x)))))))
+    
+    (when (client-action-id a)
+      
+      (let* ((success (car result))
+             (res (handler-case
+                      (json:encode-json-to-string (cdr result))
+                    (error ()
+                      (format nil "Unable to encode return result ~s in JSON" (cdr result))
+                      (setf success nil))))
+             (json-result (if success
+                              (format nil "{\"result\": ~a, \"error\": null, \"id\": ~s}~c" res (client-action-id a) (code-char 4))
+                            (format nil "{\"result\": null, \"error\": {\"message\": ~a}, \"id\": ~s}~c" res (client-action-id a) (code-char 4)))))
+        (handler-case
+            (bt:with-lock-held ((client-dispatcher-stream-lock dispatcher))
+              (format (client-dispatcher-stream dispatcher) json-result)
+              (force-output (client-dispatcher-stream dispatcher)))
+          ((or error condition) (x)
+           (format *error-output* "Error ~/print-error-message/ while trying to return results of evaluating a command." x)))))))
 
 
 
@@ -409,7 +433,7 @@
                        (gethash (client-action-name a) (client-dispatcher-command-table dispatcher)))))
         (bt:make-thread (lambda ()
                           (process-action-thread dispatcher command action)))))
-                                
+    
     (setf (client-dispatcher-action-list dispatcher) nil)
     (bt:condition-wait (client-dispatcher-action-cv dispatcher) (client-dispatcher-action-lock dispatcher))))
 
@@ -474,13 +498,38 @@
      (usocket:socket-close (client-dispatcher-socket dispatcher))
      (format *error-output* "Error ~/print-error-message/ occurred in process-client-input.  Connection terminated." x))))
 
-(start-des-client)
 
+;; Read the ACT-R configuration files for the connection information
+
+(defvar *address* (ignore-errors (with-open-file (f (translate-logical-pathname "~/act-r-address.txt") :direction :input)
+                                   (read-line f))))
+(defvar *port* (ignore-errors (with-open-file (f (translate-logical-pathname "~/act-r-port-num.txt") :direction :input)
+                                (read f))))
+
+
+(start-des-client *address* *port*)
+
+(send-command-to-act-r "set-name" "Remote Lisp connection")
 
 (defvar *current-stream* nil)
 
 (defvar *trace-command-name* nil)
+(defvar *include-model-trace* t)
 
+
+(defun exclude-model-trace ()
+  (when *include-model-trace*
+    (setf *include-model-trace* nil)
+    (when *trace-command-name*
+      (send-command-to-act-r "remove-monitor" "model-trace" *trace-command-name*))))
+
+(defun include-model-trace ()
+  (unless *include-model-trace*
+    (setf *include-model-trace* t)
+    (when *trace-command-name*
+      (send-command-to-act-r "monitor" "model-trace" *trace-command-name*))))
+      
+      
 (defun echo-trace-stream (string)
   (format *current-stream* string))
 
@@ -498,7 +547,7 @@
       (if name
           (progn
             (setf *trace-command-name* name)
-      
+            
             (send-command-to-act-r "add" *trace-command-name* "echo")
             
             (send-command-to-act-r "monitor" "model-trace" *trace-command-name*)
@@ -564,7 +613,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
-;;; Anything that needs to pass keywords has to be in a list first because the
+;;; Anything that needs to pass keywords has to be in a string first because the
 ;;; default JSON encoding will mess that up e.g. (spp :u) wouldn't work as-is.
 ;;; So, for commands where that's important, like spp, do a quick re-encoding
 ;;; to convert keywords to strings (leave everything else alone).
@@ -580,6 +629,18 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Add functions for the ACT-R commands instead of always calling evaluate.
 
+(defun current-model ()
+  (if *current-act-r-model*
+      *current-act-r-model*
+    (evaluate-act-r-command "current-model")))
+
+(defun set-current-model (name)
+  (let ((models (evaluate-act-r-command "mp-models")))
+    
+    (if (find name models :test 'string-equal)
+        (setf *current-act-r-model* name)
+      (format t "~s is not one of the currently available models: ~s~%" name models))))
+
 (defun reset ()
   (evaluate-act-r-command "reset"))
 
@@ -592,41 +653,50 @@
 (defun run-full-time (time &optional real-time)
   (evaluate-act-r-command "run-full-time" time real-time))
 
+(defun run-until-time (time &optional real-time)
+  (evaluate-act-r-command "run-until-time" time real-time))
+
+(defun run-n-events (count &optional real-time)
+  (evaluate-act-r-command "run-n-events" count real-time))
+
 (defun run-until-condition (condition &optional real-time)
   (evaluate-act-r-command "run-until-condition" condition real-time))
 
-(defun buffer-chunk (&rest buffers)
-  (apply 'evaluate-act-r-command "buffer-chunk" buffers))
+(defmacro buffer-chunk (&rest buffers)
+  `(apply 'evaluate-act-r-command "buffer-chunk" ',buffers))
 
 (defun buffer-chunk-fct (buffers)
   (apply 'evaluate-act-r-command "buffer-chunk" buffers))
 
-(defun whynot (&rest productions)
-  (apply 'evaluate-act-r-command "whynot" productions))
+(defmacro whynot (&rest productions)
+  `(apply 'evaluate-act-r-command "whynot" ',productions))
 
 (defun whynot-fct (productions)
   (apply 'evaluate-act-r-command "whynot" productions))
 
-(defun whynot-dm (&rest productions)
-  (apply 'evaluate-act-r-command "whynot-dm" productions))
+(defmacro whynot-dm (&rest chunks)
+  `(apply 'evaluate-act-r-command "whynot-dm" ',chunks))
 
-(defun whynot-dm-fct (productions)
-  (apply 'evaluate-act-r-command "whynot-dm" productions))
+(defun whynot-dm-fct (chunks)
+  (apply 'evaluate-act-r-command "whynot-dm" chunks))
 
-(defun penable (&rest productions)
-  (apply 'evaluate-act-r-command "penable" productions))
+(defmacro penable (&rest productions)
+  `(apply 'evaluate-act-r-command "penable" ',productions))
 
 (defun penable-fct (productions)
   (apply 'evaluate-act-r-command "penable" productions))
 
-(defun pdisable (&rest productions)
-  (apply 'evaluate-act-r-command "pdisable" productions))
+(defmacro pdisable (&rest productions)
+  `(apply 'evaluate-act-r-command "pdisable" ',productions))
 
 (defun pdisable-fct (productions)
   (apply 'evaluate-act-r-command "pdisable" productions))
 
 (defun load-act-r-model (file-name)
   (evaluate-act-r-command "load-act-r-model" file-name))
+
+(defun load-act-r-code (file-name)
+  (evaluate-act-r-command "load-act-r-code" file-name))
 
 (defmacro goal-focus (&optional chunk-name)
   `(evaluate-act-r-command "goal-focus" ',chunk-name))
@@ -636,7 +706,7 @@
 
 (defun clear-exp-window (&optional window)
   (evaluate-act-r-command "clear-exp-window" window))
-   
+
 (defun permute-list (list)
   (let ((indexes (make-list (length list)))
         (result (make-list (length list))))
@@ -647,14 +717,29 @@
         (setf (nth i result) (nth (nth i new-indexes) list))))
     result))
 
-(defun open-exp-window (title &rest details)
-  (apply 'evaluate-act-r-command "open-exp-window" title details))
+(defun open-exp-window (title &key (visible t) (width 300) (height 300) (x 300) (y 300))
+  (evaluate-act-r-command "open-exp-window" title (list (list "visible" visible)
+                                                        (list "width" width)
+                                                        (list "height" height)
+                                                        (list "x" x)
+                                                        (list "y" y))))
 
-(defun add-text-to-exp-window (window text &rest details)
-  (apply 'evaluate-act-r-command "add-text-to-exp-window" window text details))
+(defun add-text-to-exp-window (window text &key (x 0) (y 0)  (color 'black) (height 20) (width 75) (font-size 12))
+  (evaluate-act-r-command "add-text-to-exp-window" window text (list (list "x" x)
+                                                                     (list "y" y)
+                                                                     (list "color" color)
+                                                                     (list "height" height)
+                                                                     (list "width" width)
+                                                                     (list "font-size" font-size))))
 
-(defun add-button-to-exp-window (window text &rest details)
-  (apply 'evaluate-act-r-command "add-button-to-exp-window" window text details))
+(defun add-button-to-exp-window (window &key (text "") (x 0) (y 0)  (color 'gray) (height 20) (width 75) action)
+  (evaluate-act-r-command "add-button-to-exp-window" window (list (list "x" x)
+                                                                  (list "y" y)
+                                                                  (list "color" color)
+                                                                  (list "height" height)
+                                                                  (list "width" width)
+                                                                  (list "text" text)
+                                                                  (list "action" action))))
 
 (defun remove-items-from-exp-window (window &rest items)
   (apply 'evaluate-act-r-command "remove-items-from-exp-window" (cons window items)))
@@ -668,14 +753,15 @@
 (defmacro print-warning (warning-string &rest params)
   `(evaluate-act-r-command "print-warning" (format nil "~@?" ,warning-string ,@params)))
 
-(defun model-output (model-string)
-  (evaluate-act-r-command "model-output" model-string))
+(defmacro model-output  (model-string &rest params)
+  `(evaluate-act-r-command "model-output" (format nil "~@?" ,model-string ,@params)))
 
-(defun act-r-output (output-string)
-  (evaluate-act-r-command "act-r-output" output-string))
+(defmacro act-r-output (output-string &rest params)
+  `(evaluate-act-r-command "act-r-output" (format nil "~@?" ,output-string ,@params)))
 
 
-(defun add-act-r-command (name function &optional (documentation "No documentation provided.") (single-instance t))
+
+(defun add-act-r-command (name function &optional (documentation "No documentation provided.") (single-instance t) local-name)
   (let ((current (gethash name (client-dispatcher-command-table *dispatcher*))))
     (if (and current (eq current function))
         (print-warning (format nil "Command ~s already exists locally and is being reused." name))
@@ -684,7 +770,7 @@
             (print-warning (format nil "Command ~s exists locally, but with a different function.  Replacing prior function." name))
             (setf (gethash name (client-dispatcher-command-table *dispatcher*)) function))
         (setf (gethash name (client-dispatcher-command-table *dispatcher*)) function)))
-    (let ((result (multiple-value-list (send-command-to-act-r "add" name name documentation single-instance))))
+    (let ((result (multiple-value-list (send-command-to-act-r "add" name name documentation single-instance local-name))))
       (if (first result)
           (values-list (rest result))
         (dolist (x (rest result) nil)
@@ -697,11 +783,6 @@
       (dolist (x (rest result) nil)
         (format *error-output* x)))))
 
-#-(or :allegro-ide (and :allegro-version>= (version>= 6)))
-(defmacro while (test &body body)
-  `(do ()
-       ((not ,test))
-     ,@body))
 
 (defun remove-act-r-command-monitor (act-r-command local-command)
   (let ((result (multiple-value-list (send-command-to-act-r "remove-monitor" act-r-command local-command))))
@@ -738,8 +819,8 @@
   (evaluate-act-r-command "get-time" model-time))
 
 
-(defun buffer-status (&rest buffers)
-  (apply 'evaluate-act-r-command "buffer-status" buffers))
+(defmacro buffer-status (&rest buffers)
+  `(apply 'evaluate-act-r-command "buffer-status" ',buffers))
 
 (defun buffer-status-fct (buffers)
   (apply 'evaluate-act-r-command "buffer-status" buffers))
@@ -760,17 +841,30 @@
 (defun new-digit-sound (digit &optional onset time-in-ms)
   (evaluate-act-r-command "new-digit-sound" digit onset time-in-ms))
 
-(defun define-chunks (&rest chunk-definitions)
-  (apply 'evaluate-act-r-command "define-chunks" chunk-definitions))
+
+(defun encode-string-names (sn)
+  (cond ((null sn)
+         nil)
+        ((or (symbolp sn) (numberp sn))
+         sn)
+        ((stringp sn)
+         (format nil "'~a'" sn))
+        ((listp sn)
+         (mapcar 'encode-string-names sn))
+        (t
+         (error "Invalid item ~s found when encoding strings." sn))))
+
+(defmacro define-chunks (&rest chunk-definitions)
+  `(apply 'evaluate-act-r-command "define-chunks" (encode-string-names ',chunk-definitions)))
 
 (defun define-chunks-fct (chunk-definitions)
-  (apply 'evaluate-act-r-command "define-chunks" chunk-definitions))
+  (apply 'evaluate-act-r-command "define-chunks" (encode-string-names chunk-definitions)))
 
-(defun add-dm (&rest chunk-definitions)
-  (evaluate-act-r-command "add-dm-fct" chunk-definitions))
+(defmacro add-dm (&rest chunk-definitions)
+  `(evaluate-act-r-command "add-dm-fct" (encode-string-names ',chunk-definitions)))
 
 (defun add-dm-fct (chunk-definitions)
-  (evaluate-act-r-command "add-dm-fct" chunk-definitions))
+  (evaluate-act-r-command "add-dm-fct" (encode-string-names chunk-definitions)))
 
 (defmacro pprint-chunks (&rest chunks)
   `(apply 'evaluate-act-r-command "pprint-chunks" ',chunks))
@@ -778,39 +872,50 @@
 (defun pprint-chunks-fct (chunks)
   (apply 'evaluate-act-r-command "pprint-chunks" chunks))
 
+(defun decode-string-names (sn)
+  (cond ((null sn)
+         nil)
+        ((or (symbolp sn) (numberp sn))
+         sn)
+        ((stringp sn)
+         (decode-string sn))
+        ((listp sn)
+         (mapcar 'decode-string-names sn))
+        (t
+         (error "Invalid item ~s found when parsing strings into ACT-R elements." sn))))
 
-(defun chunk-slot-value (chunk-name slot-name)
-  (evaluate-act-r-command "chunk-slot-value" chunk-name slot-name))
+(defmacro chunk-slot-value (chunk-name slot-name)
+  `(evaluate-act-r-command-decoded "chunk-slot-value" ',chunk-name ',slot-name))
 
 (defun chunk-slot-value-fct (chunk-name slot-name)
-  (evaluate-act-r-command "chunk-slot-value" chunk-name slot-name))
+  (evaluate-act-r-command-decoded "chunk-slot-value" chunk-name slot-name))
 
-(defun set-chunk-slot-value (chunk-name slot-name new-value)
-  (evaluate-act-r-command "set-chunk-slot-value" chunk-name slot-name new-value))
+(defmacro set-chunk-slot-value (chunk-name slot-name new-value)
+  `(evaluate-act-r-command-decoded "set-chunk-slot-value" ',chunk-name ',slot-name (encode-string-names ',new-value)))
 
 (defun set-chunk-slot-value-fct (chunk-name slot-name new-value)
-  (evaluate-act-r-command "set-chunk-slot-value" chunk-name slot-name new-value))
+  (evaluate-act-r-command-decoded "set-chunk-slot-value" chunk-name slot-name (encode-string-names new-value)))
 
-(defun mod-focus (&rest modifications)
-  (apply 'evaluate-act-r-command "mod-focus" modifications))
+(defmacro mod-focus (&rest modifications)
+  `(apply 'evaluate-act-r-command "mod-focus" (encode-string-names ',modifications)))
 
 (defun mod-focus-fct (modifications)
-  (apply 'evaluate-act-r-command "mod-focus" modifications))
+  (apply 'evaluate-act-r-command "mod-focus" (encode-string-names modifications)))
 
-(defun mod-chunk (chunk-name &rest modifications)
-  (apply 'evaluate-act-r-command "mod-chunk" chunk-name modifications))
+(defmacro mod-chunk (chunk-name &rest modifications)
+  `(apply 'evaluate-act-r-command "mod-chunk" ',chunk-name (encode-string-names ',modifications)))
 
 (defun mod-chunk-fct (chunk-name modifications)
-  (apply 'evaluate-act-r-command "mod-chunk" chunk-name modifications))
+  (apply 'evaluate-act-r-command "mod-chunk" chunk-name (encode-string-names modifications)))
 
-(defun chunk-p (chunk-name?)
-  (evaluate-act-r-command "chunk-p" chunk-name?))
+(defmacro chunk-p (chunk-name?)
+  `(evaluate-act-r-command "chunk-p" ',chunk-name?))
 
 (defun chunk-p-fct (chunk-name?)
   (evaluate-act-r-command "chunk-p" chunk-name?))
 
-(defun copy-chunk (chunk-name?)
-  (evaluate-act-r-command "copy-chunk" chunk-name?))
+(defmacro copy-chunk (chunk-name?)
+  `(evaluate-act-r-command "copy-chunk" ',chunk-name?))
 
 (defun copy-chunk-fct (chunk-name?)
   (evaluate-act-r-command "copy-chunk" chunk-name?))
@@ -834,12 +939,58 @@
 
 (defun start-hand-at-mouse ()
   (evaluate-act-r-command "start-hand-at-mouse"))
-  
-(defun schedule-simple-event (time action &optional params (module :none) (priority 0) (maintenance nil))
-  (evaluate-act-r-command "schedule-simple-event" time action params module priority maintenance))
 
-(defun schedule-simple-event-relative (time action &optional params (module :none) (priority 0) (maintenance nil))
-  (evaluate-act-r-command "schedule-simple-event-relative" time action params module priority maintenance))
+(defun schedule-event (time action &key params (module :NONE) (priority 0) maintenance destination details (output t) time-in-ms precondition)
+  (evaluate-act-r-command "schedule-event" time action (list (list "params" params)
+                                                             (list "module" module)
+                                                             (list "priority" (encode-keyword-names priority))
+                                                             (list "maintenance" maintenance)
+                                                             (list "destination" destination)
+                                                             (list "details" details)
+                                                             (list "output" output)
+                                                             (list "time-in-ms" time-in-ms)
+                                                             (list "precondition" precondition))))
+
+(defun schedule-event-now (action &key params (module :NONE) (priority 0) maintenance destination details (output t) precondition)
+  (evaluate-act-r-command "schedule-event-now" action (list (list "params" params)
+                                                            (list "module" module)
+                                                            (list "priority" (encode-keyword-names priority))
+                                                            (list "maintenance" maintenance)
+                                                            (list "destination" destination)
+                                                            (list "details" details)
+                                                            (list "output" output)
+                                                            (list "precondition" precondition))))
+
+
+(defun schedule-event-relative (time-delay action &key params (module :NONE) (priority 0) maintenance destination details (output t) time-in-ms precondition)
+  (evaluate-act-r-command "schedule-event-relative" time-delay action (list (list "params" params)
+                                                                            (list "module" module)
+                                                                            (list "priority" (encode-keyword-names priority))
+                                                                            (list "maintenance" maintenance)
+                                                                            (list "destination" destination)
+                                                                            (list "details" details)
+                                                                            (list "output" output)
+                                                                            (list "time-in-ms" time-in-ms)
+                                                                            (list "precondition" precondition))))
+
+
+(defun schedule-event-after-module (after-module action &key params (module :NONE) maintenance destination details (output t) precondition dynamic (delay t) include-maintenance)
+  (evaluate-act-r-command "schedule-event-after-module" after-module action (list (list "params" params)
+                                                                                  (list "module" module)
+                                                                                  (list "maintenance" maintenance)
+                                                                                  (list "destination" destination)
+                                                                                  (list "details" details)
+                                                                                  (list "output" output)
+                                                                                  (list "precondition" precondition)
+                                                                                  (list "dynamic" dynamic)
+                                                                                  (list "delay" delay)
+                                                                                  (list "include-maintenance" include-maintenance))))
+
+(defun schedule-break-relative (time-delay &key (priority :max) details time-in-ms)
+  (evaluate-act-r-command "schedule-break-relative" time-delay (list (list "priority" (encode-keyword-names priority))
+                                                                     (list "details" details)
+                                                                     (list "time-in-ms" time-in-ms))))
+
 
 (defun mp-show-queue (&optional mark-traced?)
   (evaluate-act-r-command "mp-show-queue" mark-traced?))
@@ -847,8 +998,8 @@
 (defun print-dm-finsts ()
   (evaluate-act-r-command "print-dm-finsts"))
 
-(defun spp (&rest params)
-  (apply 'evaluate-act-r-command "spp" (encode-keyword-names params)))
+(defmacro spp (&rest params)
+  `(apply 'evaluate-act-r-command "spp" (encode-keyword-names ',params)))
 
 (defun spp-fct (params)
   (evaluate-act-r-command "spp" (encode-keyword-names params)))
@@ -872,16 +1023,16 @@
   (evaluate-act-r-command "print-audicon"))
 
 (defun printed-parameter-details (param)
-  (evaluate-act-r-command "printed-parameter-details" param))
+  (evaluate-act-r-command "printed-parameter-details" (encode-keyword-names param)))
 
 (defun sorted-module-names ()
   (evaluate-act-r-command "sorted-module-names"))
 
 (defun modules-parameters (module)
-  (evaluate-act-r-command "modules-parameters" module))
+  (evaluate-act-r-command "modules-parameters" (encode-keyword-names module)))
 
 (defun modules-with-parameters ()
-  (evaluate-act-r-command "modules-with-parameeters"))
+  (evaluate-act-r-command "modules-with-parameters"))
 
 (defun used-production-buffers ()
   (evaluate-act-r-command "used-production-buffers"))
@@ -916,9 +1067,9 @@
   `(if ',params
        (sdm-fct ',params)
      (evaluate-act-r-command "sdm")))
- 
+
 (defun sdm-fct (params)
-  (apply 'evaluate-act-r-command (push "sdm" params)))
+  (apply 'evaluate-act-r-command (cons "sdm" (encode-string-names params))))
 
 
 (defmacro sgp (&rest parameters)
@@ -937,21 +1088,32 @@
 
 
 (defun get-parameter-value (param)
-  (evaluate-act-r-command "get-parameter-value" param))
+  (evaluate-act-r-command-decoded "get-parameter-value" (encode-keyword-names param)))
 
 (defun set-parameter-value (param value)
-  (evaluate-act-r-command "set-parameter-value" param value))
+  (evaluate-act-r-command-decoded "set-parameter-value" (encode-keyword-names param) (encode-string-names value)))
+
+
+(defun get-system-parameter-value (param)
+  (evaluate-act-r-command-decoded "get-system-parameter-value" (encode-keyword-names param)))
+
+(defun set-system-parameter-value (param value)
+  (evaluate-act-r-command-decoded "set-system-parameter-value" (encode-keyword-names param) (encode-string-names value)))
+
 
 (defmacro sdp (&rest params)
   `(if ',params
        (sdp-fct ',params)
      (evaluate-act-r-command "sdp")))
- 
-(defun sdp-fct (params)
-  (apply 'evaluate-act-r-command (push "sdp" params)))
 
-(defun simulate-retrieval-request (&rest params)
-  (evaluate-act-r-command "simulate-retrieval-request" params))
+(defun sdp-fct (params)
+  (apply 'evaluate-act-r-command (cons "sdp" (encode-keyword-names params))))
+
+(defmacro simulate-retrieval-request (&rest params)
+  `(evaluate-act-r-command "simulate-retrieval-request" (encode-string-names ',params)))
+
+(defun simulate-retrieval-request-fct (params)
+  (evaluate-act-r-command "simulate-retrieval-request" (encode-string-names params)))
 
 (defun saved-activation-history ()
   (evaluate-act-r-command "saved-activation-history"))
@@ -959,60 +1121,166 @@
 (defun print-activation-trace (time &optional (ms t))
   (evaluate-act-r-command "print-activation-trace" time ms))
 
-(defun print-chunk-activation-trace (chunk time &optional (ms t))
+(defmacro print-chunk-activation-trace (chunk time &optional (ms t))
+  `(evaluate-act-r-command "print-chunk-activation-trace" ',chunk ,time ,ms))
+
+(defun print-chunk-activation-trace-fct (chunk time &optional (ms t))
   (evaluate-act-r-command "print-chunk-activation-trace" chunk time ms))
 
 (defmacro pp (&rest names)
   `(if ',names
        (pp-fct ',names)
      (evaluate-act-r-command "pp")))
-   
+
 (defun pp-fct (names)
   (apply 'evaluate-act-r-command (push "pp" names)))
 
 (defun trigger-reward (reward &optional maintenance)
   (evaluate-act-r-command "trigger-reward" reward maintenance))
 
-(defun define-chunk-spec (&rest spec)
-  (apply 'evaluate-act-r-command (push "define-chunk-spec" spec)))
+(defmacro define-chunk-spec (&rest spec)
+  `(apply 'evaluate-act-r-command (cons "define-chunk-spec" (encode-keyword-names (encode-string-names ',spec)))))
 
-(define release-chunk-spec (chunk-spec)
+(defun define-chunk-spec-fct (spec)
+  (apply 'evaluate-act-r-command (cons "define-chunk-spec" (encode-keyword-names (encode-string-names spec)))))
+
+(defun release-chunk-spec (chunk-spec)
   (evaluate-act-r-command "release-chunk-spec-id" chunk-spec))
 
-(define chunk-spec-to-chunk-def (chunk-spec)
-  (evaluate-act-r-command "chunk-spec-to-chunk-def" chunk-spec))
+(defun chunk-spec-to-chunk-def (chunk-spec)
+  (evaluate-act-r-command-decoded "chunk-spec-to-chunk-def" chunk-spec))
 
 
-(defun schedule-simple-event-after-module (after-module action &optional params (module :none) (priority 0) (maintenance nil))
-  (evaluate-act-r-command "schedule-simple-event-after-module" after-module action params module priority maintenance))
+(defun schedule-set-buffer-chunk (buffer chunk time &key (module :NONE) (priority 0) (output 'low) time-in-ms (requested t))
+  (evaluate-act-r-command "schedule-set-buffer-chunk" buffer chunk time
+                          (list (list "module" module)
+                                (list "priority" priority)
+                                (list "output" output)
+                                (list "time-in-ms" time-in-ms)
+                                (list "requested" requested))))
 
-(defun schedule-simple-set-buffer-chunk (buffer-name chunk-name time-delta &optional (module :none) (priority 0) (requested t))
-  (evaluate-act-r-command "schedule-simple-set-buffer-chunk" buffer-name chunk-name time-delta module priority requested))
+(defun schedule-mod-buffer-chunk (buffer mod-list-or-spec time &key (module :NONE) (priority 0) (output 'low) time-in-ms)
+  (evaluate-act-r-command "schedule-mod-buffer-chunk" buffer (encode-string-names mod-list-or-spec) time
+                          (list (list "module" module)
+                                (list "priority" priority)
+                                (list "output" output)
+                                (list "time-in-ms" time-in-ms))))
 
-(defun schedule-simple-mod-buffer-chunk (buffer-name mod-list-or-spec time-delta &optional (module :none) (priority 0))
-  (evaluate-act-r-command "schedule-simple-set-buffer-chunk" buffer-name mod-list-or-spec time-delta module priority))
-
-
-(define undefine-module (name)
+(defun undefine-module (name)
   (evaluate-act-r-command "undefine-module" name))
 
-(defun define-module (name buffer-list params version doc interface-list)
-  (evaluate-act-r-command "define-module" name buffer-list params version doc interface-list))
 
-(defun complete-request (spec-id)
-  (evaluate-act-r-command "complete-request" spec-id))
+(defun delete-chunk (name) 
+  (evaluate-act-r-command "delete-chunk" name))
 
-(defun complete-all-buffer-requests (buffer-name)
-  (evaluate-act-r-command "complete-all-buffer-requests" buffer-name))
+(defun purge-chunk (name)
+  (evaluate-act-r-command "purge-chunk" name))
 
-(defun complete-all-module-requests (module-name)
-  (evaluate-act-r-command "complete-all-module-requests" module-name))
+
+(defun define-module (name buffer-list parameters
+                           &key (version nil) 
+                           (documentation nil)
+                           (creation nil) (reset nil) (query nil)
+                           (request nil) (buffer-mod nil) (params nil) 
+                           (delete nil) 
+                           (notify-on-clear nil)
+                           (update nil)
+                           (warning nil)
+                           (search nil)
+                           (offset nil)
+                           (run-start nil)
+                           (run-end nil))
+  
+  (evaluate-act-r-command "define-module" name buffer-list parameters 
+                          (list (list "version" version)
+                                (list "documentation" documentation)
+                                (list "creation" creation) 
+                                (list "reset" reset) 
+                                (list "query" query) 
+                                (list "request" request) 
+                                (list "buffer-mod" buffer-mod) 
+                                (list "params" params) 
+                                (list "delete" delete) 
+                                (list "notify-on-clear" notify-on-clear) 
+                                (list "update" update) 
+                                (list "warning" warning) 
+                                (list "search" search) 
+                                (list "offset" offset) 
+                                (list "run-start" run-start) 
+                                (list "run-end" run-end))))
+
+
+
+(defmacro command-output (output-string &rest params)
+  `(evaluate-act-r-command "command-output" (format nil "~@?" ,output-string ,@params)))
+
+(defun chunk-copied-from (chunk-name)
+  (evaluate-act-r-command "chunk-copied-from" chunk-name))
 
 (defun mp-time ()
   (evaluate-act-r-command "mp-time"))
 
 (defun mp-time-ms ()
   (evaluate-act-r-command "mp-time-ms"))
+
+
+
+(defun predict-bold-response (&optional start end output)
+  (if (null start)
+      (evaluate-act-r-command "predict-bold-response")
+    (if (null end)
+        (evaluate-act-r-command "predict-bold-response" start)
+      (if (null output)
+          (evaluate-act-r-command "predict-bold-response" start end)
+        (evaluate-act-r-command "predict-bold-response" start end output)))))
+
+(defmacro pbreak (&rest params)
+  `(apply 'evaluate-act-r-command "pbreak" ',params))
+
+(defun pbreak-fct (params)
+  (apply 'evaluate-act-r-command "pbreak" params))
+
+(defmacro punbreak (&rest params)
+  `(apply 'evaluate-act-r-command "punbreak" ',params))
+
+(defun punbreak-fct (params)
+  (apply 'evaluate-act-r-command "punbreak" params))
+
+
+(defun create-image-for-exp-window (window text file &key (x 0) (y 0) (height 50) (width 50) action)
+  (evaluate-act-r-command "create-image-for-exp-window" window text file (list (list "x" x)
+                                                                               (list "y" y)
+                                                                               (list "height" height)
+                                                                               (list "width" width)
+                                                                               (list "action" action))))
+
+(defun add-image-to-exp-window (window text file &key (x 0) (y 0) (height 50) (width 50) action)
+  (evaluate-act-r-command "add-image-to-exp-window" window text file (list (list "x" x)
+                                                                           (list "y" y)
+                                                                           (list "height" height)
+                                                                           (list "width" width)
+                                                                           (list "action" action))))
+
+(defun add-items-to-exp-window (window &rest items)
+  (apply 'evaluate-act-r-command "add-items-to-exp-window" window items))
+
+
+(defun add-visicon-features (&rest features)
+  (apply 'evaluate-act-r-command "add-visicon-features" (encode-string-names features)))
+
+(defun delete-visicon-features (&rest features)
+  (apply 'evaluate-act-r-command "delete-visicon-features" features))
+
+
+(defun delete-all-visicon-features ()
+  (evaluate-act-r-command "delete-all-visicon-features"))
+
+(defun modify-visicon-features (&rest features)
+  (apply 'evaluate-act-r-command "modify-visicon-features" (encode-string-names features)))
+
+(defun running ()
+  (evaluate-act-r-command "act-r-running-p"))
+
 
 #|
 This library is free software; you can redistribute it and/or

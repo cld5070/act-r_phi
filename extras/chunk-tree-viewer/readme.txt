@@ -17,4 +17,4 @@ code version).  The file named "35a-chunk-tree.tcx" must be renamed to
 "35a-chunk-tree.tcl" before starting the Environment.  Doing so will
 add a button called "Chunk Tree" to the Control Panel.  
 
-The chunk-tree document in this directory describes how to use it.
+The tree-viewer document in this directory describes how to use it.

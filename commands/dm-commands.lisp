@@ -282,6 +282,9 @@
 ;;;             : * Fixed a couple typos from the previous update.
 ;;; 2018.12.17 Dan
 ;;;             : * The remote whynot-dm wasn't using the external version.
+;;; 2019.04.04 Dan
+;;;             : * Cache the result of chunk-spec-slots in the retrieval
+;;;             :   request since that's costly don't want to do it twice.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -1510,58 +1513,59 @@
                                       (print-warning x))
                                     (return-from simulate-retrieval-request-plus-seed-fct)))
                     
-                      (when (member :recently-retrieved (chunk-spec-slots request))
-                        (let ((recent (chunk-spec-slot-spec request :recently-retrieved)))
-                          (cond ((> (length recent) 1)
-                                 (invalid '("Invalid retrieval request." ":recently-retrieved parameter used more than once.")))
-                                ((not (or (eq '- (caar recent)) (eq '= (caar recent))))
-                                 (invalid '("Invalid retrieval request." ":recently-retrieved parameter's modifier can only be = or -.")))
-                                ((not (or (eq t (third (car recent)))
-                                          (eq nil (third (car recent)))
-                                          (and (eq 'reset (third (car recent)))
-                                               (eq '= (caar recent)))))
-                                 (invalid '("Invalid retrieval request." ":recently-retrieved parameter's value can only be t, nil, or reset.")))
-                                
-                                (t ;; it's a valid value for recently-retrieved
-                                 
-                                 (if (eq 'reset (third (car recent)))
-                                     (bt:with-lock-held ((dm-state-lock dm))
-                                       (setf (dm-finsts dm) nil))
+                      (let ((requested-slots (chunk-spec-slots request)))
+                        (when (member :recently-retrieved requested-slots)
+                          (let ((recent (chunk-spec-slot-spec request :recently-retrieved)))
+                            (cond ((> (length recent) 1)
+                                   (invalid '("Invalid retrieval request." ":recently-retrieved parameter used more than once.")))
+                                  ((not (or (eq '- (caar recent)) (eq '= (caar recent))))
+                                   (invalid '("Invalid retrieval request." ":recently-retrieved parameter's modifier can only be = or -.")))
+                                  ((not (or (eq t (third (car recent)))
+                                            (eq nil (third (car recent)))
+                                            (and (eq 'reset (third (car recent)))
+                                                 (eq '= (caar recent)))))
+                                   (invalid '("Invalid retrieval request." ":recently-retrieved parameter's value can only be t, nil, or reset.")))
+                                  
+                                  (t ;; it's a valid value for recently-retrieved
                                    
-                                   (let ((finsts (remove-old-dm-finsts dm)))
+                                   (if (eq 'reset (third (car recent)))
+                                       (bt:with-lock-held ((dm-state-lock dm))
+                                         (setf (dm-finsts dm) nil))
                                      
-                                     (cond ((or (and (eq t (third (car recent)))   ;; = request t
-                                                     (eq (caar recent) '=)) 
-                                                (and (null (third (car recent)))   ;; - request nil
-                                                     (eq (caar recent) '-)))
-                                            
-                                            ;; only those chunks marked are available
-                                            
-                                            (setf chunk-list (intersection (mapcar 'car finsts) chunk-list))
-                                            
-                                            (command-output "Only recently retrieved chunks: ~s" chunk-list))
-                                           (t
-                                            
-                                            (command-output "Removing recently retrieved chunks:")
-                                            
-                                            (setf chunk-list 
-                                              (remove-if (lambda (x)
-                                                           (when (member x finsts :key 'car :test 'eq-chunks-fct)
-                                                             (command-output "~s" x)
-                                                             t))
-                                                         chunk-list))))))))))
-                      
-                      (when (member :mp-value (chunk-spec-slots request))
-                        (let ((mp-value (chunk-spec-slot-spec request :mp-value)))
-                          (cond ((> (length mp-value) 1)
-                                 (invalid '("Invalid retrieval request." ":mp-value parameter used more than once.")))
-                                ((not (eq '= (caar mp-value)))
-                                 (invalid '("Invalid retrieval request." ":mp-value parameter's modifier can only be =.")))
-                                ((not (numornil (third (car mp-value))))
-                                 (invalid '("Invalid retrieval request." ":mp-value parameter's value can only be nil or a number.")))
-                                
-                                (t ;; it's a valid request
-                                 (setf mp (third (car mp-value)))))))
+                                     (let ((finsts (remove-old-dm-finsts dm)))
+                                       
+                                       (cond ((or (and (eq t (third (car recent)))   ;; = request t
+                                                       (eq (caar recent) '=)) 
+                                                  (and (null (third (car recent)))   ;; - request nil
+                                                       (eq (caar recent) '-)))
+                                              
+                                              ;; only those chunks marked are available
+                                              
+                                              (setf chunk-list (intersection (mapcar 'car finsts) chunk-list))
+                                              
+                                              (command-output "Only recently retrieved chunks: ~s" chunk-list))
+                                             (t
+                                              
+                                              (command-output "Removing recently retrieved chunks:")
+                                              
+                                              (setf chunk-list 
+                                                (remove-if (lambda (x)
+                                                             (when (member x finsts :key 'car :test 'eq-chunks-fct)
+                                                               (command-output "~s" x)
+                                                               t))
+                                                           chunk-list))))))))))
+                        
+                        (when (member :mp-value requested-slots)
+                          (let ((mp-value (chunk-spec-slot-spec request :mp-value)))
+                            (cond ((> (length mp-value) 1)
+                                   (invalid '("Invalid retrieval request." ":mp-value parameter used more than once.")))
+                                  ((not (eq '= (caar mp-value)))
+                                   (invalid '("Invalid retrieval request." ":mp-value parameter's modifier can only be =.")))
+                                  ((not (numornil (third (car mp-value))))
+                                   (invalid '("Invalid retrieval request." ":mp-value parameter's value can only be nil or a number.")))
+                                  
+                                  (t ;; it's a valid request
+                                   (setf mp (third (car mp-value))))))))
                       
                     
                     

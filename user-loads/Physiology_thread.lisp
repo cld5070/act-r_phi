@@ -29,6 +29,13 @@
 ;	(let ((*compile-file-pathname* nil))
 ;		(asdf:load-system :bordeaux-threads)))
 
+#|(load (merge-pathnames "sxml/package.lisp" *LOAD-TRUENAME*))
+(load (merge-pathnames "sxml/dom.lisp" *LOAD-TRUENAME*))
+(load (merge-pathnames "sxml/lxml-dom.lisp" *LOAD-TRUENAME*))
+(load (merge-pathnames "sxml/sxml-dom.lisp" *LOAD-TRUENAME*))
+(load (merge-pathnames "sxml/xml.lisp" *LOAD-TRUENAME*))
+(load (merge-pathnames "sxml/xml-struct-dom.lisp" *LOAD-TRUENAME*))|#
+
 ;;;Function to test for non ACT-R/Phi based events in queue (modified run function in scheduling.lisp to use)
 (defun non-phi-events ()
 	(or

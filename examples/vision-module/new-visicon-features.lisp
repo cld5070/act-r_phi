@@ -19,9 +19,9 @@
   ;;
   ;; All features must have an x and y position which default
   ;; to being in the screen-x and screen-y slots (see the
-  ;; new-location-slots example for how to change that).  The
-  ;; distance (z position) can be specified, but if not the
-  ;; default distance will be included.  Similarly, a size
+  ;; new-visicon-features-position-slots example for how to change
+  ;; that).  The distance (z position) can be specified, but if 
+  ;; not the default distance will be included.  Similarly, a size
   ;; (which is measured in degrees of visual angle squared)
   ;; can be provided, but if not it will be computed from the
   ;; height and width if specified or set to a default size if

@@ -1148,6 +1148,21 @@
 ;;;             :   given point along the z axis.  Both are simplifications to 
 ;;;             :   avoid having to know head and eye geometry as well as head
 ;;;             :   position.
+;;; 2019.03.22 Dan
+;;;             : * Changed add-visicon-features to not use valid-vis-loc-chunk
+;;;             :   since it can do the tests while processing other things and
+;;;             :   save the chunk lookups.
+;;; 2019.04.12 Dan 
+;;;             : * Changed set-default-vis-loc-slots to a macro and made a -fct
+;;;             :   and remote command for it, added some safety checks to attend-
+;;;             :   visual-coordinate, and made chunk-to-visual-position return
+;;;             :   just nil for 'bad' chunks.
+;;; 2019.04.15 Dan
+;;;             : * Depend on splice-into-position-des being destructive and 
+;;;             :   don't setf with the returned value.
+;;; 2019.05.21 Dan
+;;;             : * When checking to unstuff the vis-loc buffer, don't unstuff
+;;;             :   it if the chunk is being tracked.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 
@@ -1339,17 +1354,25 @@
        (fast-chunk-slot-value-fct chunk (first slots))
        (fast-chunk-slot-value-fct chunk (second slots))))
 
+(defmacro set-default-vis-loc-slots (x y z)
+  `(set-default-vis-loc-slots-fct ',x ',y ',z))
 
-(defun set-default-vis-loc-slots (x y z)
+(defun set-default-vis-loc-slots-fct (x y z)
   (let ((vis-m (get-module :vision)))
     (if vis-m
         (if (every 'valid-slot-name (list x y z))
-            (bt:with-lock-held ((vis-loc-lock vis-m)) (setf (vis-loc-slots vis-m) (list x y z)))
+            (if (or (eq x y) (eq y z) (eq x z))
+                (print-warning "Duplicate slot names provided for set-default-vis-loc-slots: ~s, ~s, ~s" x y z)
+              (bt:with-lock-held ((vis-loc-lock vis-m)) (setf (vis-loc-slots vis-m) (list x y z))))
           (dolist (name (list x y z))
             (unless (valid-slot-name name)
               (print-warning "Slot ~s is not valid in call to set-default-vis-loc-slots." name))))
       (print-warning "No vision module available in call to set-default-vis-loc-slots."))))
 
+(defun remote-set-default-vis-loc-slots-fct (x y z)
+  (set-default-vis-loc-slots-fct (string->name x) (string->name y) (string->name z)))
+
+(add-act-r-command "set-default-vis-loc-slots" 'remote-set-default-vis-loc-slots-fct "Change the names of the default location slots for visual locations. Params: x-slot y-slot z-slot.")
 
 (defmethod set-current-marker ((vis-mod vision-module) marker &optional lof)
   (let ((old-clof (clof vis-mod)))
@@ -1466,7 +1489,7 @@
                 ((zerop pos)
                  (push chunk (visicon vis-mod)))
                 (t
-                 (setf (visicon vis-mod) (splice-into-position-des (visicon vis-mod) pos chunk)))))))))
+                 (splice-into-position-des (visicon vis-mod) pos chunk))))))))
 
 
 
@@ -1698,10 +1721,13 @@
 
 
 (defun chunk-to-visual-position (chunk)
-  (when (chunk-p-fct chunk)
-    (let* ((screen-pos (chunk-slot-value-fct chunk 'screen-pos))
-           (pos-chunk (and (chunk-p-fct screen-pos) screen-pos)))
-      (coerce (xyz-loc (or pos-chunk chunk)) 'list))))
+  (verify-current-model
+   "chunk-to-visual-position requires a current model."
+   (when (chunk-p-fct chunk)
+     (let* ((screen-pos (chunk-slot-value-fct chunk 'screen-pos))
+            (pos-chunk (and (chunk-p-fct screen-pos) screen-pos))
+            (loc (coerce (xyz-loc (or pos-chunk chunk)) 'list)))
+       (when (every 'numberp loc) loc)))))
 
 (defun external-chunk-to-visual-position (chunk)
   (chunk-to-visual-position (string->name chunk)))
@@ -1799,7 +1825,11 @@
        (declare (ignore copy))
        (and was-copy                                     ;; unchanged
             (eq chunk (chunk-visicon-entry current))     ;; matches the stuffed entry
-            (query-buffer buffer '(buffer unrequested))))))) ;; and was actually stuffed
+            (query-buffer buffer '(buffer unrequested))  ;; and was actually stuffed
+            (let ((tracked (bt:with-lock-held ((marker-lock module))
+                             (tracked-obj-lastloc module))))
+              (or (null tracked)
+                  (not (eq current tracked)))))))))
 
 
 (defun convert-visicon-chunk-to-vis-loc (chunk)
@@ -3666,8 +3696,15 @@ Whenever there's a change to the display the buffers will be updated as follows:
                                                                                  e))))
                                               (push-last (list (first od) nil (second od)) chunk-specs))))))
                                     
-                                    (let* ((loc-spec (mapcan (lambda (x) 
-                                                               (when (second x) (list (first x) (second x)))) 
+                                    (let* ((has-x nil)
+                                           (has-y nil)
+                                           (loc-spec (mapcan (lambda (x) 
+                                                               (when (second x) 
+                                                                 (if (eq (first x) (first loc-slots))
+                                                                     (setf has-x (numberp (second x)))
+                                                                   (when (eq (first x) (second loc-slots))
+                                                                     (setf has-y (numberp (second x)))))
+                                                                 (list (first x) (second x))))
                                                        chunk-specs))
                                            (obj-spec (mapcan (lambda (x) 
                                                                (unless (find (first x) loc-slots)
@@ -3683,8 +3720,7 @@ Whenever there's a change to the display the buffers will be updated as follows:
                                            (visicon-chunk (car (define-chunks-fct (list (push (new-name "visicon-id") visicon-spec))))))
                                       
                                       
-                                      (if (and (valid-vis-loc-chunk visicon-chunk vis-mod loc-slots)
-                                               (valid-vis-loc-chunk loc-chunk vis-mod loc-slots))
+                                      (if (and loc-chunk visicon-chunk has-x has-y)
                                           
                                           (progn
                                             (setf (chunk-vis-loc-slots loc-chunk) loc-slots)
@@ -4036,14 +4072,19 @@ Whenever there's a change to the display the buffers will be updated as follows:
 (defun attend-visual-coordinates (x y &optional distance)
   "Tells the Vision Module to start with attention at a certain location."
   (aif (get-module :vision)
-       (let ((vis-loc-slots (bt:with-lock-held ((vis-loc-lock it)) (vis-loc-slots it))))
-         (bt:with-lock-held ((marker-lock it))
-           (set-current-marker it 
-                               (car (define-chunks-fct `((isa visual-location
-                                                              ,(first vis-loc-slots) ,x
-                                                              ,(second vis-loc-slots) ,y
-                                                              ,(third vis-loc-slots) ,(if (numberp distance) distance (bt:with-recursive-lock-held ((param-lock it)) (view-dist it))))))))))
+       (if (and (numberp x) (numberp y) (or (null distance) (numberp distance)))
+           (let ((vis-loc-slots (bt:with-lock-held ((vis-loc-lock it)) (vis-loc-slots it))))
+             (bt:with-lock-held ((marker-lock it))
+               (set-current-marker it 
+                                   (car (define-chunks-fct `((isa visual-location
+                                                                  ,(first vis-loc-slots) ,x
+                                                                  ,(second vis-loc-slots) ,y
+                                                                  ,(third vis-loc-slots) ,(if (numberp distance) distance (bt:with-recursive-lock-held ((param-lock it)) (view-dist it)))))))))
+             t)
+         (print-warning "Invalid position value in call to attend-visual-coordinates: ~s ~s ~s" x y distance))
        (print-warning "No vision module found.  Cannot set visual coordinates.")))
+
+(add-act-r-command "attend-visual-coordinates" 'attend-visual-coordinates "Set the current position of the model's visual attention. Params: x y {z}.")
 
 (defun remove-visual-finsts (&optional set-new restuff)
   (let ((vis-m (get-module :vision)))

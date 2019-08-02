@@ -210,6 +210,9 @@
 ;;; 2018.08.23 Dan
 ;;;             : * Switched print-blending-trace to go to command output since
 ;;;             :   it's a command.
+;;; 2019.04.04 Dan
+;;;             : * Cache the result of chunk-spec-slots in the blending
+;;;             :   request since that's costly don't want to do it twice.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -467,7 +470,8 @@
                               (return-from start-blending)))
     (let ((ignore nil) 
           (dont-generalize nil)
-          (sblt nil))
+          (sblt nil)
+          (requested-slots (chunk-spec-slots request)))
       (bt:with-recursive-lock-held ((blending-module-lock instance))
         
         ;; set the currently pending request
@@ -479,7 +483,7 @@
           (setf (gethash (mp-time-ms) (blending-module-trace-table instance)) sblt)
           (setf (sblt-trace-request sblt) (printed-chunk-spec request)))
         
-        (when (member :ignore-slots (chunk-spec-slots request))
+        (when (member :ignore-slots requested-slots)
           
           (let ((ignore-slots (chunk-spec-slot-spec request :ignore-slots)))
             (cond ((> (length ignore-slots) 1)
@@ -489,7 +493,7 @@
                   (t 
                    (setf ignore (spec-slot-value (first ignore-slots)))))))
         
-        (when (member :do-not-generalize (chunk-spec-slots request))
+        (when (member :do-not-generalize requested-slots)
           
           (let ((ignore-slots (chunk-spec-slot-spec request :do-not-generalize)))
             (cond ((> (length ignore-slots) 1)

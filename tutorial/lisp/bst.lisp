@@ -33,9 +33,9 @@
   (setf *current-line* nil)
   (setf *window* (open-exp-window "Building Sticks Task" :visible *visible* :width 600 :height 400))
   
-  (add-button-to-exp-window *window* :text "A" :x 5 :y 23 :action (list "bst-button-pressed" a 'under) :height 24 :width 40)
-  (add-button-to-exp-window *window* :text "B" :x 5 :y 48 :action (list "bst-button-pressed" b 'over) :height 24 :width 40)
-  (add-button-to-exp-window *window* :text "C" :x 5 :y 73 :action (list "bst-button-pressed" c 'under) :height 24 :width 40)
+  (add-button-to-exp-window *window* :text "A" :x 5 :y 23 :action (list "bst-button-pressed" a "under") :height 24 :width 40)
+  (add-button-to-exp-window *window* :text "B" :x 5 :y 48 :action (list "bst-button-pressed" b "over") :height 24 :width 40)
+  (add-button-to-exp-window *window* :text "C" :x 5 :y 73 :action (list "bst-button-pressed" c "under") :height 24 :width 40)
   (add-button-to-exp-window *window* :text "Reset" :x 5 :y 123 :action "bst-reset-button-pressed" :height 24 :width 65)
   
   (add-line-to-exp-window *window* (list 75 35)  (list (+ a 75) 35) 'black)
@@ -114,7 +114,7 @@
         (setf result (mapcar '+ 
                        result 
                        (mapcar (lambda (x) 
-                                 (if (equal x 'over) 1 0))
+                                 (if (string-equal x "over") 1 0))
                          (bst-set human (or human (= n 1)) stims nil))))))))
 
 (defun bst-experiment (n &optional human)
@@ -126,7 +126,7 @@
         (reset)
         (setf result (mapcar '+ result 
                        (mapcar (lambda (x) 
-                                 (if (equal x 'over) 1 0)) 
+                                 (if (string-equal x "over") 1 0)) 
                          (bst-set human human stims))))
         (no-output
          (setf p-values (mapcar (lambda (x) 

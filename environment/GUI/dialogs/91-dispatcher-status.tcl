@@ -54,6 +54,14 @@ proc make_dispatcher_status_viewer {} {
     set li1 [label .dispatcher.li1 -text "" -font label_font -justify center -textvariable .dispatcher.li1.value]
     set li2 [label .dispatcher.li2 -text "" -font label_font -justify center -textvariable .dispatcher.li2.value]
     
+    # Label and text box to hold the doc strings when a command is clicked
+
+    set d1 [label .dispatcher.d1 -text "Documentation:" -justify left -font label_font]
+
+    set d2 [label .dispatcher.d2 -font text_font -text "" -textvar .dispatcher.d2.value -justify left -anchor nw]
+
+    global .dispatcher.d2.value 
+    set .dispatcher.d2.value ""
 
     # make name selection update the other displays and create a global to
     # hold the data when the button is pressed
@@ -70,8 +78,13 @@ proc make_dispatcher_status_viewer {} {
     set .dispatcher.li0.value ""
     set .dispatcher.li1.value ""
     set .dispatcher.li2.value ""
+    set .dispatcher.d2.value ""
 
     bind $list_box_1 <<ListboxSelect>> "select_dispatcher_name"
+
+    bind $list_box_2 <<ListboxSelect>> "select_command_name"
+
+    bind $d2 <Configure> "resize_documentation %w"
 
     button .dispatcher.get -text "Get Status" -font button_font -command "get_dispatcher_status"
 
@@ -86,7 +99,9 @@ proc make_dispatcher_status_viewer {} {
     pack $list_box_2 -side left -expand 1 -fill both
 
     place .dispatcher.get -relx 0 -y 0 -height 25 -relwidth .3
-    place $list_frame_1 -relx 0 -y 25 -relheight 1.0 -height -25 -relwidth .3
+    place $list_frame_1 -relx 0 -y 25 -relheight 1.0 -height -85 -relwidth .3
+
+    place $d1 -relx 0 -rely 1.0 -y -43 -height 25 -relwidth .3
 
 
     place $l1 -relx .3 -y 0 -height 25 -relwidth .7
@@ -98,7 +113,10 @@ proc make_dispatcher_status_viewer {} {
     place $li2 -relx .65 -y 100 -height 25 -relwidth .35
 
     place $l5 -relx .3 -y 125 -height 25 -relwidth .7
-    place $list_frame_2 -relx .3 -y 150 -relheight 1.0 -height -150 -relwidth .7
+    place $list_frame_2 -relx .3 -y 150 -relheight 1.0 -height -210 -relwidth .7
+
+
+    place $d2 -relx .3 -rely 1.0 -y -60 -height 60 -relwidth .7
 
     # now show the window 
 
@@ -116,12 +134,14 @@ proc get_dispatcher_status {} {
   global .dispatcher.li0.value
   global .dispatcher.li1.value
   global .dispatcher.li2.value
+  global .dispatcher.d2.value
 
   .dispatcher.list_frame_1.list_box delete 0 end
   .dispatcher.list_frame.list_box delete 0 end
   set .dispatcher.li0.value ""
   set .dispatcher.li1.value ""
   set .dispatcher.li2.value ""
+  set .dispatcher.d2.value ""
 
   set dispatcher_data [lindex [send_cmd {list-connections} ""] 0]
 
@@ -133,17 +153,49 @@ proc get_dispatcher_status {} {
 }
 
 
+proc select_command_name {} {
+
+  global .dispatcher.d2.value
+
+  set .dispatcher.d2.value ""
+
+  set selections [.dispatcher.list_frame.list_box curselection]
+
+  if {[llength $selections] != 0} {
+    set cmd [.dispatcher.list_frame.list_box get [lindex $selections 0]]
+    
+    set result [send_cmd "check" [list $cmd]]
+ 
+    set w [expr "floor(.7 * [winfo width .dispatcher])"]
+
+    .dispatcher.d2 configure -wraplength $w
+
+    set .dispatcher.d2.value [lindex $result 2]
+
+  }
+}
+
+proc resize_documentation {w} {
+
+  .dispatcher.d2 configure -wraplength $w
+}
+
+
+
+
 proc select_dispatcher_name {} {
 
   global dispatcher_data
   global .dispatcher.li0.value
   global .dispatcher.li1.value
   global .dispatcher.li2.value
+  global .dispatcher.d2.value
 
   .dispatcher.list_frame.list_box delete 0 end
   set .dispatcher.li0.value ""
   set .dispatcher.li1.value ""
   set .dispatcher.li2.value ""
+  set .dispatcher.d2.value ""
 
   set selections [.dispatcher.list_frame_1.list_box curselection]
 
@@ -162,6 +214,10 @@ proc select_dispatcher_name {} {
 }
 
 
-button [control_panel_name].dispatcher_status -command make_dispatcher_status_viewer -text "Connections" -font button_font
+if {$tcl_platform(os) == "Darwin"} {
+  button [control_panel_name].dispatcher_status -command make_dispatcher_status_viewer -text "Connections & Commands" -font button_font -justify center
+} else {
+  button [control_panel_name].dispatcher_status -command make_dispatcher_status_viewer -text "Connections &\nCommands" -font button_font -justify center
+}
 
 pack [control_panel_name].dispatcher_status

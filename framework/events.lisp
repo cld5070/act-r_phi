@@ -75,6 +75,8 @@
 ;;;             : * Meta-p-schedule-lock is a recursive lock which is important.
 ;;; 2018.06.13 Dan
 ;;;             : * Updated the command doc strings to match current spec.
+;;; 2019.04.09 Dan
+;;;             : * Adjust evt-priority to check the new min and max slots.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -163,7 +165,9 @@
 
 (defun evt-priority (event)
   (aif (get-event-by-id event)
-       (values (bt:with-recursive-lock-held ((meta-p-schedule-lock (current-mp))) (act-r-event-priority it)) t)
+       (values (bt:with-recursive-lock-held ((meta-p-schedule-lock (current-mp))) (or (act-r-event-max it)
+                                                                                      (act-r-event-min it)
+                                                                                      (act-r-event-priority it))) t)
        (values nil nil)))
 
 (defun evt-action (event)

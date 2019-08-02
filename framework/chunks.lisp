@@ -538,6 +538,19 @@
 ;;;             : * Added remote chunk-filled-slots-list and chunks.
 ;;; 2019.01.30 Dan
 ;;;             : * Don't need to repeatedly grab the lock for param size.
+;;; 2019.03.06 Dan
+;;;             : * Tried storing the slot struct in the chunks, but not a 
+;;;             :   noticeable difference in performance.
+;;;             : * Now trying the index instead.
+;;; 2019.03.14 Dan
+;;;             : * Undoing the change to indexes, since it actually hurt the
+;;;             :   overall performance on the zbrodoff test model, but keeping
+;;;             :   some of the minor cleanups that went along with it.
+;;; 2019.04.04 Dan
+;;;             : * valid-ct-slot now returns the slot-struct so save a test
+;;;             :   by using that.
+;;; 2019.06.06 Dan
+;;;             : * Add an external printed-chunk command.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -656,6 +669,11 @@
                     *chunk-parameters-list*))))
             (get-output-stream-string s)))
           "")))
+
+(defun external-printed-chunk (name &optional w-params)
+  (printed-chunk (string->name name) w-params))
+
+(add-act-r-command "printed-chunk" 'external-printed-chunk "Return the text output of printing a chunk optionally with the parameter values. Params: chunk-name {show-parameters?}." nil)
 
 (defmacro pprint-chunks (&rest chunk-names)
   "Print the chunks"
@@ -912,7 +930,8 @@
    "define-chunks called with no current model."
    
    (let ((model (current-model-struct))
-         (chunk-list nil))
+         (chunk-list nil)
+         )
      ;; lock it early to avoid conflicting attempts to create chunks
      
      (bt:with-recursive-lock-held ((act-r-model-chunk-lock model))
@@ -939,11 +958,11 @@
                          (setf (gethash name (act-r-model-chunks-table model)) c))))))
              ((every 'listp chunk-def-list)
               (dolist (chunk-def chunk-def-list)
-                (let* (name doc type slots slots-and-values
-                       (type-pos (position 'isa chunk-def))
-                       (doc-pos (position-if 'stringp (subseq chunk-def 0 (min (length chunk-def) 2))))
-                       (parity (if (oddp (length chunk-def)) 'odd 'even)))
-                  (cond ((> (count 'isa chunk-def) 1)
+                (let (name doc type slots slots-and-values
+                      (type-pos (position 'isa chunk-def))
+                      (doc-pos (position-if 'stringp (subseq chunk-def 0 (min (length chunk-def) 2))))
+                      (parity (if (oddp (length chunk-def)) 'odd 'even)))
+                  (cond ((and type-pos (> (count 'isa chunk-def) 1))
                          (print-warning "Invalid chunk definition: ~S has more than one ISA." chunk-def))
                         ((and type-pos (> type-pos 2))
                          (print-warning "Invalid chunk definition: ~S too many specifiers before ISA." chunk-def))
@@ -955,6 +974,8 @@
                          (print-warning "Invalid chunk definition: ~S odd number of items after type specification." chunk-def))
                         ((and type-pos (zerop type-pos) (eq parity 'odd))
                          (print-warning "Invalid chunk definition: ~s odd number of items after type specification." chunk-def))
+                        ((and type-pos (null doc-pos) (= type-pos 2))
+                         (print-warning "Invalid chunk definition: ~s non-string between name and isa." chunk-def))
                         (t
                          (when type-pos
                            (setf type (get-chunk-type (nth (1+ type-pos) chunk-def))))
@@ -983,10 +1004,6 @@
                                 (print-warning "Invalid chunk definition: ~S chunk name is not a valid symbol." chunk-def))
                                ((not (alphanumericp (char (symbol-name name) 0)))
                                 (print-warning "Invalid chunk definition: ~S chunk name must be a symbol starting with an alphanumeric character." chunk-def))
-                               ((and doc (not (stringp doc)))
-                                (print-warning "Invalid chunk definition: ~S documentation is not a string." chunk-def))
-                               ((oddp (length slots-and-values)) ;; shouldn't happen but just be safe
-                                (print-warning "Invalid chunk definition: ~S slot and values list is an odd length." chunk-def))
                                ((chunk-p-fct name)
                                 (print-warning "Invalid chunk definition: ~S names a chunk which already exists." chunk-def))
                                (t
@@ -994,9 +1011,8 @@
                                       (s-name (first s) (first s))
                                       (s-val (second s) (second s)))
                                      ((null s))
-                                  (let ((slot-struct (valid-slot-name s-name)))
-                                    (if (or (and type (valid-ct-slot type s-name))
-                                            (and (null type) slot-struct (not (keywordp s-name))))
+                                  (let ((slot-struct (if type (valid-ct-slot type s-name) (valid-slot-name s-name))))
+                                    (if (and slot-struct (not (keywordp s-name)))
                                       (aif (assoc slot-struct slots)
                                            (setf (cdr it) s-val)
                                            (push (cons slot-struct s-val) slots))
@@ -1017,9 +1033,9 @@
                                               (extend-possible-slots s-name)
                                               (push (cons (valid-slot-name s-name) s-val) slots)))
                                         (progn
-                                        (print-warning "Invalid chunk definition: ~S invalid slot name ~s." chunk-def s-name)
-                                        (setf s nil)
-                                        (setf slots :error))))))
+                                          (print-warning "Invalid chunk definition: ~S invalid slot name ~s." chunk-def s-name)
+                                          (setf s nil)
+                                          (setf slots :error))))))
                               
                                 (unless (eq slots :error)
                                   (let ((c (make-act-r-chunk 
@@ -1112,7 +1128,8 @@
       (bt:with-recursive-lock-held ((act-r-chunk-lock c))
         (if sorted
             (mapcar (lambda (x) (act-r-slot-name (car x)))
-              (sort (copy-tree (act-r-chunk-slot-value-lists c)) #'< :key (lambda (x) (act-r-slot-index (car x)))))
+              (setf (act-r-chunk-slot-value-lists c)
+                (sort (act-r-chunk-slot-value-lists c) #'< :key (lambda (x) (act-r-slot-index (car x))))))
           (mapcar (lambda (x) (act-r-slot-name (car x))) (act-r-chunk-slot-value-lists c)))))))
 
 
@@ -1128,10 +1145,13 @@
 
 (defun set-chunk-slot-value-fct (chunk-name slot-name value)
   "Set the value of a chunk's slot"
-  (when (stringp chunk-name)
+  
+  #| shouldn't happen, should it?
+   (when (stringp chunk-name)
     (setf chunk-name (string->name chunk-name))
     (setf slot-name (string->name slot-name))
     (setf value (decode-string-names value)))
+  |#
   (let ((c (get-chunk-warn chunk-name)))
     (when c
       (bt:with-recursive-lock-held ((act-r-chunk-lock c))
@@ -1160,6 +1180,7 @@
     (print-warning "~s is not a valid slot name.  You can use extend-possible-slots to add it first if needed." slot-name)))
 
 
+
 (defun set-c-slot-value (c slot-struct slot-name value) ;; only call when the lock is held
   "Set the chunk's slot value assuming the chunk is not immutable and the slot name is valid"
   
@@ -1169,42 +1190,44 @@
   
   (setf (act-r-chunk-copied-from c) nil)
   
-  ;; If the value in the slot now is a chunk then
-  ;; remove this chunk from the back links of that chunk
-  
-  (when (update-chunks-on-the-fly)
-    (let ((old (chk-slot-value c slot-name)))
-      (when (chunk-p-fct old)
-        (bt:with-recursive-lock-held ((act-r-model-chunk-lock (current-model-struct)))
-          (let* ((bl (chunk-back-links old))
-                 (new-links (remove slot-name (gethash (act-r-chunk-name c) bl))))
-            (if new-links
-                (setf (gethash (act-r-chunk-name c) bl) new-links)
-              (remhash (act-r-chunk-name c) bl)))))))
-  
-  ;; If the new value should be a chunk but isn't
-  ;; create one for it and if it is get its true name
-  ;; when necessary
-  
-  (setf value (get-true-slot-value-name c slot-name value))
-  
-  ;; Set the new slot value
-  (let ((mask (act-r-slot-mask slot-struct)))
+  (let ((current (assoc slot-struct (act-r-chunk-slot-value-lists c))))
     
-    (if value
-        (if (logtest mask (act-r-chunk-filled-slots c))
-            ;; already there so just replace the value
-            (rplacd (assoc slot-struct (act-r-chunk-slot-value-lists c)) value)
-          ;; add the slot to the list and set the filled slot bit
-          (progn
-            (push (cons slot-struct value) (act-r-chunk-slot-value-lists c))
-            (setf (act-r-chunk-filled-slots c) (logior mask (act-r-chunk-filled-slots c)))))
+    ;; If the value in the slot now is a chunk then
+    ;; remove this chunk from the back links of that chunk
+    
+    (when (and current (update-chunks-on-the-fly))
+      (let ((old (cdr current)))
+        (when (chunk-p-fct old)
+          (bt:with-recursive-lock-held ((act-r-model-chunk-lock (current-model-struct)))
+            (let* ((bl (chunk-back-links old))
+                   (new-links (remove slot-name (gethash (act-r-chunk-name c) bl))))
+              (if new-links
+                  (setf (gethash (act-r-chunk-name c) bl) new-links)
+                (remhash (act-r-chunk-name c) bl)))))))
+    
+    ;; If the new value should be a chunk but isn't
+    ;; create one for it and if it is get its true name
+    ;; when necessary
+    
+    (setf value (get-true-slot-value-name c slot-name value))
+    
+    ;; Set the new slot value
+    (let ((mask (act-r-slot-mask slot-struct)))
       
-      ;; if it's on the list remove it and clear the filled bit
-      (when (logtest mask (act-r-chunk-filled-slots c))
-        (setf (act-r-chunk-slot-value-lists c) (delete slot-struct (act-r-chunk-slot-value-lists c) :key 'car))
-        (setf (act-r-chunk-filled-slots c) (logandc1 mask (act-r-chunk-filled-slots c))))))
-  value)
+      (if value
+          (if current
+              ;; already there so just replace the value
+              (setf (cdr current) value)
+            ;; add the slot to the list and set the filled slot bit
+            (progn
+              (push (cons slot-struct value) (act-r-chunk-slot-value-lists c))
+              (setf (act-r-chunk-filled-slots c) (logior mask (act-r-chunk-filled-slots c)))))
+        
+        ;; if it's on the list remove it and clear the filled bit
+        (when (logtest mask (act-r-chunk-filled-slots c))
+          (setf (act-r-chunk-slot-value-lists c) (delete slot-struct (act-r-chunk-slot-value-lists c) :key 'car))
+          (setf (act-r-chunk-filled-slots c) (logandc1 mask (act-r-chunk-filled-slots c))))))
+    value))
 
 (defmacro mod-chunk (chunk-name &rest modifications)
   "Modify the slot values of a chunk"
@@ -1213,16 +1236,18 @@
 (defun mod-chunk-fct (chunk-name modifications-list)
   "Modify the slot values of a chunk"
   
-  (when (stringp chunk-name)
+  #| shouldn't happen...
+   (when (stringp chunk-name)
     (setf chunk-name (string->name chunk-name))
     (setf modifications-list (decode-string-names modifications-list)))
+  |#
   
   (let ((c (get-chunk-warn chunk-name)))
     (when c
       (bt:with-recursive-lock-held ((act-r-chunk-lock c))
         (cond ((act-r-chunk-immutable c)
                (print-warning "Cannot modify chunk ~s because it is immutable." chunk-name))
-        
+              
               ((oddp (length modifications-list))
                (print-warning "Odd length modifications list in call to mod-chunk."))
               
@@ -1233,23 +1258,23 @@
                      ((null s))
                    (pushnew (car s) slots)
                    (push (cons (car s) (second s)) slots-and-values))
-            
-            (cond ((not (= (length slots) (length slots-and-values)))
-                   (print-warning "Slot name used more than once in modifications list."))
-                  (t
-                   (setf slots nil)
-                   (dolist (x slots-and-values)
-                     (let* ((name (car x))
-                            (slot-struct (valid-slot-name name)))
-                       (if slot-struct
-                           (push-last  (list slot-struct name (cdr x)) slots)
-                         (progn
-                           
-                           (print-warning "Invalid slot name ~s specified for mod-chunk."  name)
-                           (return-from mod-chunk-fct)))))
-                   
-                   (dolist (slot-value slots chunk-name)
-                     (set-c-slot-value c (first slot-value) (second slot-value) (third slot-value))))))))))))
+                 
+                 (cond ((not (= (length slots) (length slots-and-values)))
+                        (print-warning "Slot name used more than once in modifications list."))
+                       (t
+                        (setf slots nil)
+                        (dolist (x slots-and-values)
+                          (let* ((name (car x))
+                                 (slot-struct (valid-slot-name name)))
+                            (if slot-struct
+                                (push-last  (list slot-struct name (cdr x)) slots)
+                              (progn
+                                
+                                (print-warning "Invalid slot name ~s specified for mod-chunk."  name)
+                                (return-from mod-chunk-fct)))))
+                        
+                        (dolist (slot-value slots chunk-name)
+                          (set-c-slot-value c (first slot-value) (second slot-value) (third slot-value))))))))))))
 
 (defun mod-chunk-external (name &rest modifications)
   (mod-chunk-fct (string->name name) (decode-string-names modifications)))
@@ -1328,11 +1353,14 @@
               ;; If this chunk has back-links from others to it then warn because
               ;; that's likely a problem
               (when (update-chunks-on-the-fly) 
-                (when (and (hash-table-p (chunk-back-links chunk-name)) (not (zerop (hash-table-count (chunk-back-links chunk-name)))))
-                  (model-warning "Chunk ~s is being deleted but it is still used as a slot value in other chunks." chunk-name))
+                (let ((bl (chunk-back-links chunk-name)))
+                  (when (and (hash-table-p bl) (not (zerop (hash-table-count bl))))
+                    (model-warning "Chunk ~s is being deleted but it is still used as a slot value in other chunks." chunk-name))
                 
-                (when (and (not (eq tn chunk-name)) (hash-table-p (chunk-back-links tn)) (not (zerop (hash-table-count (chunk-back-links tn)))))
-                  (model-warning "Chunk ~s is being deleted but its true name ~s is still used as a slot value in other chunks." chunk-name tn))
+                  (when (not (eq tn chunk-name))
+                    (let ((t-bl (chunk-back-links tn)))
+                      (when (and (hash-table-p t-bl) (not (zerop (hash-table-count t-bl))))
+                        (model-warning "Chunk ~s is being deleted but its true name ~s is still used as a slot value in other chunks." chunk-name tn)))))
                 
                 ;; Delete all of the back-links to this chunk
                 
@@ -1395,9 +1423,9 @@
         
         (bt:with-recursive-lock-held ((act-r-chunk-lock c1))
           (bt:with-recursive-lock-held ((act-r-chunk-lock c2))
-          
+            
             ;; update the parameters for c1
-        
+            
             (dolist (param (bt:with-lock-held (*chunk-parameters-lock*)
                              *chunk-parameters-merge-list*))
               (setf (aref (act-r-chunk-parameter-values c1) (act-r-chunk-parameter-index param))
@@ -1405,22 +1433,22 @@
                   (:second 
                    (aref (act-r-chunk-parameter-values c2) (act-r-chunk-parameter-index param)))
                   (:second-if
-                   (if (aref (act-r-chunk-parameter-values c2) (act-r-chunk-parameter-index param))
-                       (aref (act-r-chunk-parameter-values c2) (act-r-chunk-parameter-index param))
-                     (aref (act-r-chunk-parameter-values c1) (act-r-chunk-parameter-index param))))
+                   (aif (aref (act-r-chunk-parameter-values c2) (act-r-chunk-parameter-index param))
+                        it
+                        (aref (act-r-chunk-parameter-values c1) (act-r-chunk-parameter-index param))))
                   (t
                    (dispatch-apply (act-r-chunk-parameter-merge param) chunk-name1 chunk-name2)))))
-        
+            
             ;; If either is immutable then the result should be as well.
             ;; Since c1 will maintain its immutability need to check if c2 
             ;; is immutable and then make c1 immutable if c2 is.
             
             (when (act-r-chunk-immutable c2)
               (setf (act-r-chunk-immutable c1) t))
-        
+            
             ;; For any chunks which had been merged with c2 also remap them
             ;; and indicate them in c1
-        
+            
             (let ((model (current-model-struct)))
               (bt:with-recursive-lock-held ((act-r-model-chunk-lock model))
                 (dolist (x (act-r-chunk-merged-chunks c2))
@@ -1444,9 +1472,9 @@
                           (if new-links
                               (setf (gethash chunk-name2 bl) new-links)
                             (remhash chunk-name2 bl))))))
-          
+                  
                   ;; replace all the slot values which hold chunk-name2 with chunk-name1
-          
+                  
                   (when (hash-table-p (chunk-back-links chunk-name2))
                     (maphash (lambda (chunk slots)
                                (dolist (x slots)

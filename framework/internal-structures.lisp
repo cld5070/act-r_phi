@@ -427,6 +427,23 @@
 ;;;             : * Add a slot to the model to hold a bitvector of buffers with
 ;;;             :   chunks in them and slots to the buffer to hold their index
 ;;;             :   and a mask.
+;;; 2019.03.13 Dan
+;;;             : * Change the chunk-type-info to get rid of slot->mask and to
+;;;             :   specify tests for the hash tables.
+;;; 2019.03.14 Dan
+;;;             : * Can't use = as the test for a hash-table outside of ACL.
+;;;             : * Just removing all the tests now.
+;;; 2019.03.19 Dan
+;;;             : * Added a slot to chunk-types for a possible-slots vector.
+;;; 2019.04.03 Dan
+;;;             : * Store a module instance in the buffer struct of a model
+;;;             :   and a list of instances in the model.
+;;; 2019.04.03 Dan
+;;;             : * Added a slot to store the unique slot names in a chunk-spec
+;;;             :   to avoid having to recompute them.
+;;; 2019.04.09 Dan
+;;;             : * Have the event priorities default to 0 and add slots for min
+;;;             :   and max so priority values are always numbers.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -481,7 +498,8 @@
   trackable
   (lock (bt:make-recursive-lock "buffer-lock"))
   index
-  mask)
+  mask
+  module-instance)
 
 (defstruct act-r-chunk-spec 
   "The internal structure of a chunk-spec"
@@ -496,7 +514,8 @@
   slot-vars
   dependencies
   slots
-  testable-slots)
+  testable-slots
+  slot-names)
 
 (defstruct act-r-slot-spec 
   "The internal structure of a chunk-spec's slot specification"
@@ -508,14 +527,15 @@
   ;; don't need this any more: subtypes 
   slots ;; your slots (direct and inherited) including possible default values
   possible-slots ;; slot names only of all the slots of self and children
-  slot-vector ;; a mask of the possible-slots
+  slot-vector ;; a mask of the direct slots
+  (possible-slot-vector 0) ;; a mask of the possible-slots
   (initial-spec (make-act-r-chunk-spec)))
 
 (defstruct act-r-chunk-type-info 
   "The structure to hold chunk-type information for a model"
-  (slot->index (make-hash-table)) 
+  (slot->index (make-hash-table))
   (index->slot (make-array (list 0) :adjustable t :fill-pointer t)) 
-  (slot->mask (make-hash-table)) 
+   
   (size 0) 
   (distinct-types (make-hash-table))
   extended-slots
@@ -542,8 +562,8 @@
 
 (defstruct act-r-event  
   "Internal ACT-R event"
-  mstime priority action model mp module destination params details (output t)
-  wait-condition dynamic precondition num)
+  mstime (priority 0) action model mp module destination params details (output t)
+  wait-condition dynamic precondition num min max)
 
 (defstruct (act-r-maintenance-event (:include act-r-event (output 'low)))
   "Events for system maintenance")
@@ -698,7 +718,8 @@
   tracked-requests
   (tracked-requests-id 0)
   (lock-table (make-hash-table :test 'equal))
-  (buffer-state 0))
+  (buffer-state 0)
+  module-instances)
 
 (defvar *current-act-r-model* nil)
 

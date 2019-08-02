@@ -348,6 +348,8 @@
 ;;;             :   symbol to a string twice.
 ;;; 2019.02.05 Dan
 ;;;             : * Adjustments because meta-p-models is now an alist.
+;;; 2019.04.15 Dan
+;;;             : * Use the truely destructive splice-into-position-des.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -614,7 +616,7 @@
         (nconc (subseq lis 0 position) item (nthcdr position lis))   
       (nconc (subseq lis 0 position) (list item) (nthcdr position lis)))))
   
-
+#|
 ;;; splice-into-position-des
 ;;; Doesn't unpack a list like splice-into-list-des does.
 
@@ -623,15 +625,16 @@
       (push item lis)
     (nconc (subseq lis 0 position) (list item) (nthcdr position lis))))
 
-#|
-
 doesn't seem to be any better...
+
+|#
+
+
 
 (defun splice-into-position-des (l p i)
   (if (zerop p)
       (rplaca (rplacd (nthcdr 0 l) (cons (car l) (nthcdr 1 l))) i)
     (rplacd (nthcdr (1- p) l) (cons i (nthcdr p l)))))
-|#
 
 
 

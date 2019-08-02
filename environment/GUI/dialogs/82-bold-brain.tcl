@@ -382,6 +382,4 @@ proc get_brain_history_data {win model canvas scale {fname ""}} {
   }
 }
 
-button [control_panel_name].brain_graph -command make_bold_brains -text "BOLD 2D brain" -font button_font
-
-pack [control_panel_name].brain_graph
+add_bold_trace_type "2D brain" make_bold_brains

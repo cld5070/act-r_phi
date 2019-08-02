@@ -245,6 +245,19 @@
 ;;;             :   lock from it.
 ;;;             : * Adding valid-slot-index because want to be able to test
 ;;;             :   for an index with out the warning from slot-name->index.
+;;; 2019.03.13 Dan
+;;;             : * Ditching the struct and just storing a vector in the table.
+;;;             : * Added accessors for the conversions without warnings which 
+;;;             :   can be used when there's already a model.
+;;;             : * Switch from expt 2 index to ash 1 index.
+;;; 2019.03.14 Dan
+;;;             : * Undoing most of last update since it actually hurt performance.
+;;; 2019.03.15 Dan
+;;;             : * Using the slot-vector in valid-ct-slot-check.
+;;; 2019.03.19 Dan
+;;;             : * Using a new possible-slot-vector record instead.
+;;; 2019.04.04 Dan
+;;;             : * Have valid-ct-slot return the slot-struct 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -276,7 +289,6 @@
 (declaim (ftype (function (t) (values t t)) get-chunk))
 (declaim (ftype (function (&optional t) (values t t t)) new-name-fct))
 (declaim (ftype (function (t &optional t t) (values t t)) define-chunk-spec-fct))
-
 
 (defstruct act-r-slot name index mask)
 
@@ -416,7 +428,10 @@
                    (dolist (type-name (act-r-chunk-type-super-types ct))
                      (let ((type (if (eq type-name name) ct (get-chunk-type type-name))))
                        (dolist (s (mapcar 'chunk-type-slot-name slots))
-                         (pushnew s (act-r-chunk-type-possible-slots type) :test 'eq))))
+                         (pushnew s (act-r-chunk-type-possible-slots type) :test 'eq)
+                         (let ((s-struct (gethash s (act-r-chunk-type-info-slot->index info))))
+                           (setf (act-r-chunk-type-possible-slot-vector type) 
+                             (logior (act-r-slot-mask s-struct) (act-r-chunk-type-possible-slot-vector type)))))))
                
                
                    ;; set the default spec info (only care about filled slots, right?)
@@ -545,7 +560,6 @@
          (awhen (gethash slot (act-r-chunk-type-info-slot->index info))
                 (act-r-slot-index it)))))))
 
-
 (defun valid-query-name (query)
   (let ((info (act-r-model-chunk-types-info (current-model-struct))))
     (bt:with-recursive-lock-held ((act-r-chunk-type-info-lock info))
@@ -559,14 +573,18 @@
 
 
 (defun valid-ct-slot (chunk-type slot)
-  (let ((info (act-r-model-chunk-types-info (current-model-struct))))
-    (when info
-      (valid-ct-slot-check chunk-type slot info))))
+  (when chunk-type
+    (let ((info (act-r-model-chunk-types-info (current-model-struct))))
+      (when info
+        (valid-ct-slot-check chunk-type slot info)))))
 
 (defun valid-ct-slot-check (chunk-type slot info)
   (bt:with-recursive-lock-held ((act-r-chunk-type-info-lock info))
-    (and chunk-type (or (find slot (act-r-chunk-type-possible-slots chunk-type) :key 'chunk-type-slot-name)
-                        (find slot (act-r-chunk-type-info-extended-slots info))))))
+    (let ((struct (gethash slot (act-r-chunk-type-info-slot->index info))))
+      (when struct
+        (and (or (logtest (act-r-slot-mask struct) (act-r-chunk-type-possible-slot-vector chunk-type))
+                 (find slot (act-r-chunk-type-info-extended-slots info)))
+            struct)))))
 
 (defun chunk-type-possible-slot-names-fct (chunk-type-name)
   (let ((ct (get-chunk-type chunk-type-name)))
@@ -604,7 +622,7 @@
                     ;; entries for it.
                     (push slot-name (act-r-chunk-type-info-extended-slots info))    
                     (let* ((index (vector-push-extend slot-name (act-r-chunk-type-info-index->slot info)))
-                           (new-s (make-act-r-slot :name slot-name :index index :mask (expt 2 index))))
+                           (new-s (make-act-r-slot :name slot-name :index index :mask (ash 1 index))))
                       (setf (gethash slot-name (act-r-chunk-type-info-slot->index info)) new-s)
                       (setf (act-r-chunk-type-info-size info) (1+ index)))
                     slot-name)))))
@@ -637,7 +655,7 @@
                     ;; entries for it.
                     (push parameter-name (act-r-chunk-type-info-extended-slots info))    
                     (let* ((index (vector-push-extend parameter-name (act-r-chunk-type-info-index->slot info)))
-                           (new-s (make-act-r-slot :name parameter-name :index index :mask (expt 2 index))))
+                           (new-s (make-act-r-slot :name parameter-name :index index :mask (ash 1 index))))
                       (setf (gethash parameter-name (act-r-chunk-type-info-slot->index info)) new-s)
                       (setf (act-r-chunk-type-info-size info) (1+ index)))
                     parameter-name)))))
@@ -662,10 +680,11 @@
                     (push query-name (act-r-chunk-type-info-query-slots info))    
                     ;(let ((index (vector-push-extend query-name (act-r-chunk-type-info-index->slot info))))
                     ;  (setf (gethash query-name (act-r-chunk-type-info-slot->index info)) index)
-                    ;  (setf (gethash query-name (act-r-chunk-type-info-slot->mask info)) (expt 2 index))
+                    ;  (setf (gethash query-name (act-r-chunk-type-info-slot->mask info)) (ash 1 index))
                     ;  (setf (act-r-chunk-type-info-size info) (1+ index)))
                     query-name)))))
        (print-warning "Current model not available so the query ~s cannot be added." query-name)))
+
 
 (defun slot-name->mask (slot-name)
   (aif (current-model-struct)
@@ -676,6 +695,7 @@
                   (print-warning "~s does not name a valid slot in the current model." slot-name))
            (print-warning "Chunk-type info not available so a mask for the slot ~s cannot be found." slot-name)))
        (print-warning "Current model not available so a mask for the slot ~s cannot be found." slot-name)))
+
 
 (defun slot-name->index (slot-name)
   (aif (current-model-struct)
@@ -688,6 +708,7 @@
        (print-warning "Current model not available so an index for the slot ~s cannot be found." slot-name)))
 
 
+
 (defun slot-index->name (slot-index)
   (aif (current-model-struct)
        (let ((info (act-r-model-chunk-types-info it)))
@@ -698,6 +719,7 @@
                  (print-warning "~s is not a valid slot index in the current model." slot-index)))
            (print-warning "Chunk-type info not available so a name for the slot index ~s cannot be found." slot-index)))
        (print-warning "Current model not available so a name for the slot index ~s cannot be found." slot-index)))
+
 
 (defun slot-mask->names (slot-mask)
   (aif (current-model-struct)
@@ -716,15 +738,13 @@
 
 
 (defun all-chunk-type-names ()
-  (verify-current-mp  
-   "all-chunk-type-names called with no current meta-process."
-   (verify-current-model
-    "all-chunk-type-names called with no current model."
-    (let ((info (act-r-model-chunk-types-info (current-model-struct))))
-      (if info
-          (bt:with-recursive-lock-held ((act-r-chunk-type-info-lock info))
-            (act-r-chunk-type-info-types info))
-        (print-warning "Chunk-type info not available cannot return chunk-type names."))))))
+  (verify-current-model
+   "all-chunk-type-names called with no current model."
+   (let ((info (act-r-model-chunk-types-info (current-model-struct))))
+     (if info
+         (bt:with-recursive-lock-held ((act-r-chunk-type-info-lock info))
+          (act-r-chunk-type-info-types info))
+       (print-warning "Chunk-type info not available cannot return chunk-type names.")))))
 
 #|
 This library is free software; you can redistribute it and/or

@@ -187,11 +187,11 @@ def add_to_report(target, chunk):
         else:
             actr.print_warning(
                 "Incorrectly formed verb. Presented %s and produced verb %s,stem %s,suffix %s."%
-                (target[0],word,stem,suffx))
+                (target[0],word,stem,suffix))
     else:
         actr.print_warning(
             "Incorrectly formed verb. Presented %s and produced verb %s,stem %s,suffix %s."%
-            (target[0],word,stem,suffx))
+            (target[0],word,stem,suffix))
         report.append([irreg,'error'])
 
 reward_check = False
