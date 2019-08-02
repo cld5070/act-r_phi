@@ -2635,7 +2635,6 @@ Goes to 'active' listener:
 
 (add-act-r-command "act-r-version" 'act-r-version-string "Returns the current ACT-R version string. No params." nil)
 
-
 ;;; Actually echo the output by default now if it's not the standalone.
 
 #-:standalone (echo-act-r-output)

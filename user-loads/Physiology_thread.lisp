@@ -644,18 +644,23 @@ t)
 
 ;;;find the time (in seconds) of the last event within the specified modules
 (defun find-last-event-time (moduleList)
- (verify-current-mp
-	 "mp-show-queue called with no current meta-process."
-	 (let ((events (meta-p-events (current-mp)))
-		(lastTime nil))
-		(dolist (event events (length events))
-	(dolist (mod moduleList (length moduleList))
-	 (if (or (eq (evt-module event) mod)
-			(eq (evt-module event) 'NONE))
-			(if (or (eq lastTime nil)
-					(> (evt-time event) lastTime))
-					(setf lastTime (evt-time event))
-					))))
+	(verify-current-mp
+	"mp-show-queue called with no current meta-process."
+		(let ((events (meta-p-events (current-mp)))
+					(lastTime nil))
+			(dolist (event events (length events))
+				(print "ERERERERERERRRRR~&~&")
+				(dolist (module moduleList (length moduleList))
+					(print "2222222222~&~&")
+					(print (evt-module event))
+					(print "444")
+					(when (or (eq (evt-module event) module)
+						(eq (evt-module event) 'NONE))
+						(print "33333333~&~&")
+						(if (or (eq lastTime nil)
+								(> (evt-time event) lastTime))
+								(setf lastTime (evt-time event))
+								))))
 	 (if lastTime
 		lastTime
 		0))))
@@ -675,11 +680,11 @@ t)
 			(not (phys-module-updateSwitch (get-module physio)))
 			(> (+ (phys-module-lastUpdate (get-module physio)) delay) (find-last-event-time (list 'procedural 'declarative :fatigue 'vision 'audio 'blending 'temporal 'goal 'imaginal 'motor 'speech))))
 		(progn
-		 (setf *nextUpdateEvent* (schedule-event-after-change 'update-phys-vars :module 'physio :delay t :output t :maintenance t))
-		 (if (phys-module-physValList (get-module physio))
-		(return-from schedule-update-phys nil)
-		(return-from schedule-update-phys t))
-		(setf (phys-module-updateSwitch (get-module physio)) t))
+			(setf *nextUpdateEvent* (schedule-event-after-change 'update-phys-vars :module 'physio :delay t :output t :maintenance t))
+			(if (phys-module-physValList (get-module physio))
+				(return-from schedule-update-phys nil)
+				(return-from schedule-update-phys t))
+			(setf (phys-module-updateSwitch (get-module physio)) t))
 		(progn
 		 (setf *nextUpdateEvent* (schedule-event-relative delay 'update-phys-vars :module 'physio :priority :max :output t :maintenance t))
 		 (setf (phys-module-updateSwitch (get-module physio)) nil)
@@ -1251,6 +1256,9 @@ t)
 			(:phys-ics-exp-file
 				(phys-module-ics-exp-file phys)))))
 
+
+;;;Deprecated, keeping for now for records
+#|
 ;Define query function for module (b = buffer)
 (defun phys-module-query (phys b slot value)
 	(case slot
@@ -1263,12 +1271,14 @@ t)
 			 "Bad state query to ~s buffer" b))))
 	 (t (print-warning
 		 "Invalid slot ~s in query to buffer ~s" slot b)))
-)
+|#
 
 (defun free-phys-module (phys)
 	(setf (phys-module-busy phys) nil)
 )
 
+;;;Deprecated, keeping for now for records
+#|
 ;;;Define request function for module (slides 53-54 in extending-actr.ppt)
 (defun phys-module-requests (phys buffer spec)
 	;;start underlying substrate
@@ -1283,8 +1293,10 @@ t)
 		(set-food-intake 0)))
 	(if (eq buffer 'efferent)
 		(phys-create-chunk phys spec))
-)
+)|#
 
+;;;Deprecated, keeping for now for records
+#|
 ;;;;For now only explicit changes of the value will be parsed, later we will add relative changes (i.e. original value +- chunk slot value)
 (defun phys-create-chunk (phys spec)
 		(progn	(if (or (eq (chunk-spec-chunk-type spec) 'phys-var)
@@ -1301,10 +1313,10 @@ t)
 							:module 'physio :priority :min))
 					(progn (print (chunk-spec-chunk-type spec))
 					 (print "Warning - invalid chunk-type in efferent buffer")))))
-
+|#
 
 (define-module-fct 'physio
-	'(phys-substrate efferent output)
+	'();'(phys-substrate efferent output)
 	(list
 		(define-parameter
 			:phys-delay
@@ -1357,6 +1369,6 @@ t)
 	:reset 'reset-phys-module
 	:delete 'delete-phys-module
 	:params 'phys-module-params
-	:query 'phys-module-query
-	:request 'phys-module-requests
+	:query nil;'phys-module-query
+	:request nil;'phys-module-requests
 )
