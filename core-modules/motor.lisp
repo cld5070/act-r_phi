@@ -404,6 +404,9 @@
 ;;;             :   the result which is wrong:
 ;;;             :     1[5]: (DIRECTION= -2.7610862 2.8501358)
 ;;;             :     1[5]: returned NIL
+;;; 2019.04.23 Dan
+;;;             : * Create the chunk-type definition for motor extensions when
+;;;             :   they're added instead of at every reset.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 #+:packaged-actr (in-package :act-r)
@@ -1176,9 +1179,13 @@
            (bt:with-lock-held ((requests-table-lock dummy-module))
              (if (gethash ct-name (new-requests-table dummy-module))
                  (print-warning "Request ~s is already an extension of the manual buffer.  To redefine you must remove it first with remove-manual-request." ct-name)
-               (progn
+               (let ((type-list
+                      (if (listp (first chunk-type))
+                          (append chunk-type (list (list 'cmd ct-name)))
+                        (append (list (list ct-name '(:include motor-command))) (rest chunk-type) (list (list 'cmd ct-name))))))                
+                 
                  (setf (gethash ct-name (new-requests-table dummy-module))
-                   (cons (copy-list chunk-type) function-name))
+                   (cons type-list function-name))
                  t)))))))
 
 (defmacro remove-manual-request (chunk-type)
@@ -1297,15 +1304,12 @@
   ;; Define the chunk-types for the specified extensions
   
   (maphash (lambda (name value)
-             (let* ((chunk-type-list (car value))
-                    (type (chunk-type-fct (if (listp (first chunk-type-list))
-                                              (append chunk-type-list `((cmd ,name)))
-                                            (append `((,(first chunk-type-list) (:include motor-command))) (rest chunk-type-list) `((cmd ,name)))))))
+             (let ((type (chunk-type-fct (car value))))
                (if type
                    (unless (chunk-p-fct name)
                      (define-chunks-fct (list (list name 'isa name)))
                      (make-chunk-immutable name))
-                 (print-warning "Failed to extend motor capabilities with chunk-type definition: ~s" chunk-type-list))))
+                 (print-warning "Failed to extend motor capabilities with chunk-type definition: ~s" (car value)))))
            (bt:with-lock-held ((requests-table-lock instance)) (new-requests-table instance)))
   )
 

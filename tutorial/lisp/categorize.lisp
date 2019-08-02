@@ -71,7 +71,7 @@
   `(categorize-fct ,n ,offset ',slots))
 
 (defun categorize-fct (n offset slots)
-  (setf *count* 0)
+  
   (if (numberp offset)
       (setf *attribute-offset* offset)
     (setf *attribute-offset* 0))

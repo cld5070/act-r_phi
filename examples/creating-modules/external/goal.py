@@ -123,7 +123,7 @@ def goal_focus (name=None):
                 return name
 
             else:
-                actr.print_warning('%S is not the name of a chunk in the current model - goal-focus failed' % name)
+                actr.print_warning('%s is not the name of a chunk in the current model - goal-focus failed' % name)
 
         else:
             chunk = actr.buffer_read('goal')
@@ -144,7 +144,7 @@ def goal_focus (name=None):
             else:
                 copy = actr.chunk_copied_from(chunk)
 
-                if copy.lower() == delayed.lower():
+                if copy and (copy.lower() == delayed.lower()):
 
                     actr.pprint_chunks(chunk)
                     return chunk

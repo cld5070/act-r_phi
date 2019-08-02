@@ -264,6 +264,12 @@
 ;;;             :   failure reason when using that mask.
 ;;; 2019.02.21 Dan
 ;;;             : * For queries store a chunk-spec in the test slot of the condition.
+;;; 2019.04.15 Dan
+;;;             : * Depend on splice-into-position-des being destructive and 
+;;;             :   don't setf with the returned value.
+;;; 2019.05.03 Dan
+;;;             : * Can't put searchable buffers on the buffer-full mask because
+;;;             :   they are allowed to be empty and then searched for a value.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -421,7 +427,9 @@
                    
                    (setf unbound-vars (remove bv unbound-vars))
                    
-                   (setf (production-buffer-full production) (logior (production-buffer-full production) (buffer-mask buffer-name)))
+                   (unless (searchable-buffer buffer-name)
+                     (setf (production-buffer-full production) (logior (production-buffer-full production) (buffer-mask buffer-name))))
+                   
                    (pushnew (cons bn (buffer-mask buffer-name)) (production-buffer-list production) :key 'car)
                    
                    (if (searchable-buffer buffer-name)
@@ -1691,7 +1699,7 @@
   (let ((result nil))
     (dolist (x ordering result)
       (aif (position-if (lambda (y) (find (caar x) (cdar y))) result)
-           (setf result (splice-into-position-des result it x))
+           (splice-into-position-des result it x)
            (push-last x result)))))
 
 

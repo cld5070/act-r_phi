@@ -452,6 +452,15 @@
 ;;; 2019.02.08 Dan
 ;;;             : * Keep track of an index and mask in the buffers and update
 ;;;             :   a bitvector in the model with full/empty buffers.
+;;; 2019.04.03 Dan
+;;;             : * Use the module instance stored in the buffer struct now to
+;;;             :   call the module functions.
+;;; 2019.05.03 Dan
+;;;             : * Added a new command, max-buffer-index, which returns the
+;;;             :   current *buffer-index* value.
+;;; 2019.06.06 Dan
+;;;             : * Added a multi-buffer-p command.
+;;;             : * Added a remote get-m-buffer-chunks.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -500,6 +509,7 @@
 (defvar *buffers-table-lock* (bt:make-lock "buffers-table"))
 
 (defvar *buffer-index* -1)
+
 
 
 (defun buffers (&optional sorted)
@@ -662,6 +672,10 @@
              (return-from parse-buffers :error))))))
 
 
+(defun max-buffer-index ()
+  (bt:with-lock-held (*buffers-table-lock*)
+    *buffer-index*))
+
 (defun install-buffers (module-name buffers)
    (bt:with-lock-held (*buffers-table-lock*)
      (dolist (buffer buffers)
@@ -756,6 +770,11 @@
                  (print-warning "get-m-buffer-chunks cannot return a buffer set for buffer ~s because it is not a multi-buffer" buffer-name))
                 (t
                  (hash-table-keys (act-r-buffer-chunk-set buffer)))))))))
+
+(defun external-get-m-buffer-chunks (buffer-name)
+  (get-m-buffer-chunks (string->name buffer-name)))
+
+(add-act-r-command "get-m-buffer-chunks" 'external-get-m-buffer-chunks "Return a list of possible chunks for specified multi-buffer. Params: buffer-name." nil)
 
 (defun remove-all-m-buffer-chunks (buffer-name)
    (verify-current-model
@@ -914,7 +933,7 @@
     (let ((buffer (buffer-instance buffer-name)))
       (if buffer 
           (bt:with-recursive-lock-held ((act-r-buffer-lock buffer))
-            (act-r-buffer-chunk buffer) )
+            (act-r-buffer-chunk buffer))
         (print-warning "Buffer-read called with an invalid buffer name ~S" buffer-name)))))
 
 (defun buffer-read-external (buffer-name)
@@ -961,7 +980,7 @@
   (declare (ignore buffer-name)))
 
 (defun query-buffer-no-lock (buffer query-spec)
-  (do ((module (act-r-buffer-module buffer))
+  (do ((module (act-r-buffer-module-instance buffer))
        (queries (act-r-chunk-spec-slots query-spec) (cdr queries)))
       ((null queries) t)
     (let* ((test (act-r-slot-spec-modifier (car queries)))
@@ -1020,7 +1039,7 @@
                      (setf buffer-chunk (act-r-buffer-chunk buffer)
                        flags (act-r-buffer-flags buffer)
                        requested (act-r-buffer-requested buffer)))
-                   (do ((module (act-r-buffer-module buffer))
+                   (do ((module (act-r-buffer-module-instance buffer))
                         (queries (act-r-chunk-spec-slots query-spec) (cdr queries)))
                        ((null queries) t)
                      (let* ((test (act-r-slot-spec-modifier (car queries)))
@@ -1313,8 +1332,6 @@
 
 
 (defun module-warning (buffer-name chunk-spec)
-  (verify-current-mp  
-   "module-warning called with no current meta-process."
    (verify-current-model
     "module-warning called with no current model."
     (let ((buffer (buffer-instance buffer-name)))
@@ -1323,7 +1340,7 @@
             ((null (act-r-chunk-spec-p chunk-spec))
              (print-warning "module-warning called with an invalid chunk-spec ~S" chunk-spec))
             (t
-             (warn-module (act-r-buffer-module buffer) buffer-name chunk-spec)))))))
+             (warn-module (act-r-buffer-module-instance buffer) buffer-name chunk-spec))))))
 
 
 (defun require-module-warning? (buffer-name)
@@ -1333,7 +1350,7 @@
      (cond ((null buffer)
             (print-warning "require-module-warning? called with an invalid buffer name ~S" buffer-name))
            (t
-            (warn-module? (act-r-buffer-module buffer)))))))
+            (warn-module? (act-r-buffer-module-instance buffer)))))))
 
 
 (defun module-request (buffer-name chunk-spec)
@@ -1352,7 +1369,7 @@
             (print-warning "module-request to buffer ~s has invalid request parameters ~{~S~^, ~}" buffer-name
                            (slot-mask->names (logandc2 (act-r-chunk-spec-request-param-slots chunk-spec) (act-r-buffer-requests-mask buffer)))))  
            (t
-            (request-module (act-r-buffer-module buffer) buffer-name chunk-spec))))))
+            (request-module (act-r-buffer-module-instance buffer) buffer-name chunk-spec))))))
 
 (defun external-module-request (buffer-name chunk-spec)
   (module-request (string->name buffer-name) chunk-spec))
@@ -1421,7 +1438,7 @@
                       (print-warning "module-mod-request to buffer ~s has invalid request parameters ~{~S~^, ~}" buffer-name
                             (slot-mask->names (logandc2 (act-r-chunk-spec-request-param-slots spec) (act-r-buffer-requests-mask buffer)))))
                      (t
-                      (buffer-mod-module (act-r-buffer-module buffer) buffer-name spec)))))))))
+                      (buffer-mod-module (act-r-buffer-module-instance buffer) buffer-name spec)))))))))
 
 (defun schedule-module-mod-request (buffer-name mod-list-or-spec time-delta &key (module :none) (priority 0) (output 'medium) time-in-ms)
    (verify-current-model
@@ -1572,6 +1589,20 @@
              (print-warning "invalid buffer name ~S" buffer-name))
             (t
              (act-r-buffer-searchable buffer))))))
+
+(defun multi-buffer-p (buffer-name)
+   (verify-current-model
+    "multi-buffer-p called with no current model."
+    (let ((buffer (buffer-instance buffer-name)))
+      (cond ((null buffer)
+             (print-warning "invalid buffer name ~S" buffer-name))
+            (t
+             (act-r-buffer-multi buffer))))))
+
+(defun external-multi-buffer-p (buffer-name)
+  (multi-buffer-p (string->name buffer-name)))
+
+(add-act-r-command "multi-buffer-p" 'external-multi-buffer-p "Check if the named buffer is a multi-buffer. Params: buffer" nil)
 
 (defun valid-request-params-for-buffer (buffer-name request-vector)
   (verify-current-model

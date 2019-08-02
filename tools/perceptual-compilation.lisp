@@ -29,6 +29,10 @@
 ;;;             : * Added the whynot reason function.
 ;;; 2014.05.07 Dan [2.0]
 ;;;             : * Start of conversion to typeless chunks.
+;;; 2019.04.26 Dan [3.0]
+;;;             : * Allow compilation of perceptual buffers when strict harvesting
+;;;             :   is turned off over cases which would be stuffed buffers when
+;;;             :   it is on.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 #+:packaged-actr (in-package :act-r)
@@ -93,8 +97,8 @@
                (list a1+))))
       (8
        (list (append 
-              (when c1 
-                (list c1)) 
+              (awhen (buffer-condition-union c1 c2 nil) 
+                     (list it)) 
               (when q2 
                 (list q2)))
              (when a2+ 
@@ -148,6 +152,17 @@
     (= (length query1) (length query2) 
        (length (remove-duplicates (append query1 query2) :test 'equal)))))
 
+
+(defun P-B-C3 (buffer p1 p2)
+  "only if the buffer is not strict harvested"
+  (declare (ignore p1 p2))
+  (find buffer (no-output (car (sgp :do-not-harvest)))))
+
+
+(defun P-B-C4 (buffer p1 p2)
+  "Not strict harvested and same queries"
+  (and (p-b-c2 buffer p1 p2) (p-b-c3 buffer p1 p2)))
+
 (defun perceptual-reason (p1-index p2-index failed-function)
   (cond ((eql failed-function 'p-b-c1)
          "when the first production makes a request and the second does not harvest it the second can only query for state busy or buffer empty.")
@@ -180,8 +195,12 @@
 
 (define-compilation-type PERCEPTUAL ((28 16 P-B-C1)
                                      (28 0 T)
+                                     (24 28 P-B-C4)
+                                     (24 24 P-B-C4)
                                      (24 20 P-B-C2)
                                      (24 16 P-B-C2)
+                                     (24 12 P-B-C3)
+                                     (24 8 P-B-C3)
                                      (24 4 T)
                                      (24 0 T)
                                      (20 16 P-B-C1)
@@ -196,8 +215,12 @@
                                      (16 0 T)
                                      (12 16 P-B-C1)
                                      (12 0 T)
+                                     (8 28 P-B-C3)
+                                     (8 24 P-B-C3)
                                      (8 20 T)
                                      (8 16 T)
+                                     (8 12 P-B-C3)
+                                     (8 8 P-B-C3)
                                      (8 4 T)
                                      (8 0 T)
                                      (4 16 P-B-C1)

@@ -387,6 +387,55 @@
 ;;;             :   block machine to itself.  So, have the standalones default
 ;;;             :   to that since external access is likely going to be rarely
 ;;;             :   used.
+;;; 2019.03.22 Dan
+;;;             : * Reorder dispatch-apply-list since it's called frequently
+;;;             :   with function names...
+;;; 2019.03.26 Dan
+;;;             : * Don't create names for the locks in send-des-action.  Has a
+;;;             :   huge perform hit (3% faster without in zbrodoff test).
+;;; 2019.03.27 Dan
+;;;             : * Removing all the names for dynamically created locks and
+;;;             :   condition variables.
+;;; 2019.04.09 Dan
+;;;             : * Added support for the :single-threaded-act-r flag which
+;;;             :   results in the dispatcher not starting any threads (thus no 
+;;;             :   external connections possible) and all the locks being 
+;;;             :   ignored.  
+;;; 2019.04.10 Dan
+;;;             : * Actually put the flags on start-des, init-des, and stop-des
+;;;             :   as well to prevent anyone trying to start it in the single-
+;;;             :   threaded build.
+;;; 2019.05.28 Dan
+;;;             : * Switch to using jsown to decode incoming messages and reworked
+;;;             :   the message parser a little.
+;;; 2019.05.30 Dan
+;;;             : * Switch back to cl-json from jsown since jsown doesn't keep
+;;;             :   the same number types as provided e.g. 1.0 --> 1 which is
+;;;             :   an issue for things like act-r-random.
+;;; 2019.06.17 Dan
+;;;             : * Add a hack so that CCL's GUI sends all the output to the
+;;;             :   initial listener window (or current if stopped and restarted)
+;;;             :   instead of an AltConsole.
+;;; 2019.06.20 Dan
+;;;             : * Added another handler-case to catch any potential problems
+;;;             :   when sending a command because otherwise that could result 
+;;;             :   in a deadlock when that client exits.
+;;; 2019.06.28 Dan
+;;;             : * Printing the action-parameters can result in an infinite
+;;;             :   loop if *print-circle* is nil so make sure it's t whenever
+;;;             :   they're printed.
+;;;             : * Change the create-local-macro command again, and have it
+;;;             :   handle conditions (since various things can occur there)
+;;;             :   so that 'safe' issues don't abort the command creation.
+;;;             : * Bug in the processing of a returned error message.
+;;; 2019.07.01 Dan
+;;;             : * Added a fmakunbound to create-local-macro to prevent it from
+;;;             :   throwing a condition and exiting to a higher level handler-
+;;;             :   case.
+;;;             : * Which doesn't stop LispWorks from wanting to still assert
+;;;             :   a redefinition warning...  So, basically following the 
+;;;             :   example from the muffile-warning docs to create a function
+;;;             :   to invoke a restart to avoid the warning.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -507,8 +556,6 @@
 #+(and :clean-actr (not :packaged-actr) :ALLEGRO-IDE) (in-package :cg-user)
 #-(or (not :clean-actr) :packaged-actr :ALLEGRO-IDE) (in-package :cl-user)
 
-
-
 ;;; Record the package for use in the threads that are created
 
 (defparameter *default-package* *package*)
@@ -574,22 +621,22 @@
   ;;;
   
   single-instance
-  (lock (bt:make-lock (concatenate 'string "dispatch-command-lock " (princ-to-string (incf *dispatch-command*))))))
+  (lock (bt:make-lock )))
 
 (defvar *pr-lock* 0)
 (defvar *pr-cv* 0)
 
-(defstruct pending-request id action (lock (bt:make-lock (concatenate 'string "pending-request " (princ-to-string (incf *pr-lock*))))) 
-  (cv (bt:make-condition-variable :name (concatenate 'string "pending-request-cv " (princ-to-string (incf *pr-cv*))))) 
+(defstruct pending-request id action (lock (bt:make-lock )) 
+  (cv (bt:make-condition-variable ))
   complete success result)
 
 (defvar *handler-lock* 0)
 (defvar *handler-cv* 0)
 
-(defstruct handler socket thread (stream-lock (bt:make-lock (concatenate 'string "handler-stream " (princ-to-string (incf *handler-lock*)))))
-  (sent-requests-lock (bt:make-lock (concatenate 'string "handler-sent-requests " (princ-to-string *handler-lock*))))
-  sent-requests (received-requests-lock (bt:make-lock (concatenate 'string "handler-received-requests " (princ-to-string *handler-lock*))))
-  received-requests (command-lock (bt:make-lock (concatenate 'string "handler-command " (princ-to-string *handler-lock*)))) commands (id 0)
+(defstruct handler socket thread (stream-lock (bt:make-lock ))
+  (sent-requests-lock (bt:make-lock ))
+  sent-requests (received-requests-lock (bt:make-lock ))
+  received-requests (command-lock (bt:make-lock )) commands (id 0)
   name)
 
 (defvar *allow-external-connections* nil)
@@ -758,15 +805,29 @@ and the result is written as String."
                   (format (usocket:socket-stream (handler-socket handler)) "~a" json-result)
                   (force-output (usocket:socket-stream (handler-socket handler))))
               (error ()
-                (send-error-output "Unable to send return result for action ~s with parameters ~s." (action-type a) (action-parameters a))))))
-      (send-error-output "Don't know how to return a result for action ~s with parameters ~s to handler connection ~s." (action-type a) (action-parameters a) (handler-socket handler)))))
+                (let ((*print-circle* t)) (send-error-output "Unable to send return result for action ~s with parameters ~s." (action-type a) (action-parameters a)))))))
+      (let ((*print-circle* t)) (send-error-output "Don't know how to return a result for action ~s with parameters ~s to handler connection ~s." (action-type a) (action-parameters a) (handler-socket handler))))))
 
 (defvar *action-locks* 0)
 
+#+:single-threaded-act-r 
 (defun send-des-action (a)
+  (handler-case 
+      (progn
+        (perform-action *dispatcher* a)
+        (values (action-result-success a) (action-result a)))
+    
+    (error (x) (let* ((*print-circle* t)
+                      (string (format nil "Error ~/print-error-message/ occurred while waiting for action ~s ~s." x (action-type a) (action-parameters a))))
+                 (send-error-output string)
+                 (values nil string)))))
+  
+
+
+#-:single-threaded-act-r (defun send-des-action (a)
   ;; details already filled in just create the internal controls
-  (setf (action-cv a) (bt:make-condition-variable :name (concatenate 'string "action-cv " (princ-to-string (incf *action-locks*)))))
-  (setf (action-lock a) (bt:make-lock (concatenate 'string "action-lock " (princ-to-string *action-locks*))))
+  (setf (action-cv a) (bt:make-condition-variable))
+  (setf (action-lock a) (bt:make-lock ))
   
   (bt:acquire-lock (action-lock a) t)
   (add-action-to-queue a)
@@ -779,14 +840,15 @@ and the result is written as String."
           (bt:condition-wait (action-cv a) (action-lock a)))
         (values (action-result-success a) (action-result a)))
     
-    (error (x) (let ((string (format nil "Error ~/print-error-message/ occurred while waiting for action ~s ~s." x (action-type a) (action-parameters a))))
+    (error (x) (let* ((*print-circle* t)
+                      (string (format nil "Error ~/print-error-message/ occurred while waiting for action ~s ~s." x (action-type a) (action-parameters a))))
                  (send-error-output string)
                  (values nil string)))
-    (condition (x) (let ((string (format nil "Condition ~/print-error-message/ occurred while waiting for action ~s ~s." x (action-type a) (action-parameters a))))
+    (condition (x) (let* ((*print-circle* t)
+                          (string (format nil "Condition ~/print-error-message/ occurred while waiting for action ~s ~s." x (action-type a) (action-parameters a))))
                      (send-error-output string)
                      (values nil string)))))
-  
-    
+
     
 (defun add-action-to-queue (action)
   (bt:with-lock-held ((dispatcher-action-lock *dispatcher*))
@@ -800,16 +862,19 @@ and the result is written as String."
     (dolist (x (dispatcher-action-queue dispatcher))
       (handler-case
           (perform-action dispatcher x)
-        (error (e) (send-error-output "Error ~/print-error-message/ occurred during perform-action for action ~s ~s." e (action-type x) (action-parameters x)))
-        (condition (c) (send-error-output "Condition ~/print-error-message/ occurred during perform-action for action ~s ~s." c (action-type x) (action-parameters x)))))
+        (error (e) (let ((*print-circle* t)) (send-error-output "Error ~/print-error-message/ occurred during perform-action for action ~s ~s." e (action-type x) (action-parameters x))))
+        (condition (c) (let ((*print-circle* t)) (send-error-output "Condition ~/print-error-message/ occurred during perform-action for action ~s ~s." c (action-type x) (action-parameters x))))))
     (setf (dispatcher-action-queue dispatcher) nil)
     (bt:condition-wait (dispatcher-action-cv dispatcher) (dispatcher-action-lock dispatcher))))
+
+
 
 (defvar *server-host*)
 (defvar *server-port*)
 
 (defvar *force-local* nil)
 
+#-:single-threaded-act-r
 (defun start-des (&optional (create t) given-host (remote-port 2650))
   (let* ((host (if given-host
                    (progn
@@ -891,7 +956,7 @@ and the result is written as String."
             (error (x)
               (send-error-output "Error ~/print-error-message/ occurred while trying to write the port number to ~s~%" x (translate-logical-pathname "~/act-r-port-num.txt"))))
           
-          (handler-case (with-open-file (f "ACT-R:environment;GUI;init;05-current-net.tcl" :direction :output :if-exists :supersede :if-does-not-exist :create)
+          (handler-case (with-open-file (f (translate-logical-pathname "ACT-R:environment;GUI;init;05-current-net.tcl") :direction :output :if-exists :supersede :if-does-not-exist :create)
                           (multiple-value-bind
                                 (second minute hour date month year)
                               (get-decoded-time)
@@ -906,7 +971,6 @@ and the result is written as String."
 
 
 (defun dont-start-des ()
-  
   (setf *dispatcher*
     (make-dispatcher 
      :connection-socket nil
@@ -917,15 +981,17 @@ and the result is written as String."
      :available-received-lock (bt:make-lock "dispatcher-available-received-lock")
      :available-execute-lock (bt:make-lock "dispatcher-available-execute-lock")))
   (setf (dispatcher-action-thread *dispatcher*)
-            (bt:make-thread (lambda ()
-                              (let ((*package* *default-package*))
-                                (dispatcher-process-actions *dispatcher*)))
-                            :name "dispatcher-process-actions")))
+    #-:single-threaded-act-r (bt:make-thread (lambda ()
+                                               (let ((*package* *default-package*))
+                                                 (dispatcher-process-actions *dispatcher*)))
+                                             :name "dispatcher-process-actions")
+    #+:single-threaded-act-r nil))
           
-
+#-:single-threaded-act-r
 (defun init-des ()
   (start-des nil))
 
+#-:single-threaded-act-r
 (defun stop-des ()
   (when (usocket::usocket-p (dispatcher-connection-socket *dispatcher*))
     (usocket:socket-close (dispatcher-connection-socket *dispatcher*)))
@@ -1051,154 +1117,165 @@ and the result is written as String."
                                     ((or error condition) (x)
                                      (send-error-output "Problem encountered decoding JSON string ~s: ~/print-error-message/. Connection terminated" s x)
                                      (return-from process-external-input nil)))))
-                     ;(format t "Got message ~s from string ~s~%" message s)
-                     (cond ((and (= (length message) 3)
-                                 (assoc :method message)
-                                 (assoc :params message)
-                                 (assoc :id message))
-                            (let* ((m (cdr (assoc :method message)))
-                                   (params (cdr (assoc :params message)))
-                                   (action (cond 
-                                            ((and (string-equal m "add")
-                                                  (>= (length params) 2)
-                                                  (stringp (first params))
-                                                  (or (null (second params)) (stringp (second params)))
-                                                  (or (null (third params)) (stringp (third params)))
-                                                  (or (null (fifth params)) (stringp (fifth params))))
-                                             (make-action :type 'add-command
-                                                          :parameters (list :name (first params)
-                                                                            :underlying-function (second params)
-                                                                            :documentation (third params)
-                                                                            :evaluator handler
-                                                                            :single-instance (fourth params)
-                                                                            :local-name (fifth params))))
-                                            ((and (string-equal m "remove")
-                                                  (= (length params) 1)
-                                                  (stringp (first params)))
-                                             (make-action :type 'remove-command
-                                                          :parameters (list (first params))
-                                                          :evaluator handler))
-                                            ((and (string-equal m "evaluate")
-                                                  (>= (length params) 1)
-                                                  (stringp (first params)))
-                                             (make-action :type 'execute-command
-                                                          :model (second params)
-                                                          :parameters (list :name (first params) 
-                                                                            :parameters (cddr params))
-                                                          :evaluator handler))
-                                            ((and (string-equal m "monitor")
-                                                  (>= (length params) 2)
-                                                  (stringp (first params))
-                                                  (stringp (second params)))
-                                             (make-action :type (if (and (stringp (third params)) (string-equal (third params) "after")) 
-                                                                    'after-command 
-                                                                  (if (and (stringp (third params)) (string-equal (third params) "before"))
-                                                                      'before-command
-                                                                    'simple-command))
-                                                          :parameters (list (first params) (second params))
-                                                          :evaluator handler))
-                                            ((and (string-equal m "remove-monitor")
-                                                  (= (length params) 2)
-                                                  (stringp (first params))
-                                                  (stringp (second params)))
-                                             (make-action :type 'remove-monitor
-                                                          :parameters params
-                                                          :evaluator handler))
-                                            ((and (string-equal m "list-commands")
-                                                  (null params))
-                                             (make-action :type 'list-actions
-                                                          :evaluator handler))
-                                            ((and (string-equal m "list-connections")
-                                                  (null params))
-                                             (make-action :type 'list-connections
-                                                          :evaluator handler))
-                                            ((and (string-equal m "check")
-                                                  (= (length params) 1)
-                                                  (stringp (first params)))
-                                             (make-action :type 'check
-                                                          :parameters params
-                                                          :evaluator handler))
-                                            ((and (string-equal m "set-name")
-                                                  (= (length params) 1)
-                                                  (stringp (first params)))
-                                             (make-action :type 'set-name
-                                                          :parameters params
-                                                          :evaluator handler)))))
-                              (if action
-                                  (let ((p (make-pending-request :action action :id (cdr (assoc :id message)))))
-                                    
-                                    (bt:with-lock-held ((handler-received-requests-lock handler))
+                     
+                     (if (= (length message) 3)
+                         (let ((method (assoc :method message :test 'string=))
+                               (result (assoc :result message :test 'string=)))
+                           
+                           (cond (method
                                       
-                                      (push-last p (handler-received-requests handler)))
-                                    
-                                    
-                                    (let ((worker nil))
-                                      
-                                      (bt:with-lock-held ((dispatcher-available-received-lock *dispatcher*))
-                                        (if (dispatcher-available-received-workers *dispatcher*)
-                                            (progn
-                                              (setf worker (pop (dispatcher-available-received-workers *dispatcher*)))
-                                              (setf (worker-handler worker) handler)
-                                              (setf (worker-action worker) action))
-                                          (progn
-                                            (setf worker (make-worker
-                                                          :handler handler
-                                                          :action action
-                                                          :lock (bt:make-lock (concatenate 'string "worker-lock " (princ-to-string (incf *r-w-num*))))
-                                                          :cv (bt:make-condition-variable :name (concatenate 'string "worker-cv " (princ-to-string *r-w-num*)))
-                                                          :started (bt:make-condition-variable :name (concatenate 'string "worker-started " (princ-to-string *r-w-num*)))
-                                                          :start-lock (bt:make-lock (concatenate 'string "start-lock " (princ-to-string *r-w-num*)))))
+                                  (let* ((m (cdr method))
+                                         (p (assoc :params message :test 'string=))
+                                         (i (assoc :id message :test 'string=)))
+                                    (unless (and p i)
+                                      (send-error-output "Invalid message encountered decoding JSON string ~s. Connection terminated" s)
+                                      (return-from process-external-input nil))
+                                    (let* ((params (cdr p))
+                                           (id (cdr i))
+                                           (action (cond 
+                                                    ((and (string-equal m "add")
+                                                          (>= (length params) 2)
+                                                          (stringp (first params))
+                                                          (or (null (second params)) (stringp (second params)))
+                                                          (or (null (third params)) (stringp (third params)))
+                                                          (or (null (fifth params)) (stringp (fifth params))))
+                                                     (make-action :type 'add-command
+                                                                  :parameters (list :name (first params)
+                                                                                    :underlying-function (second params)
+                                                                                    :documentation (third params)
+                                                                                    :evaluator handler
+                                                                                    :single-instance (fourth params)
+                                                                                    :local-name (fifth params))))
+                                                    ((and (string-equal m "remove")
+                                                          (= (length params) 1)
+                                                          (stringp (first params)))
+                                                     (make-action :type 'remove-command
+                                                                  :parameters (list (first params))
+                                                                  :evaluator handler))
+                                                    ((and (string-equal m "evaluate")
+                                                          (>= (length params) 1)
+                                                          (stringp (first params)))
+                                                     (make-action :type 'execute-command
+                                                                  :model (second params)
+                                                                  :parameters (list :name (first params) 
+                                                                                    :parameters (cddr params))
+                                                                  :evaluator handler))
+                                                    ((and (string-equal m "monitor")
+                                                          (>= (length params) 2)
+                                                          (stringp (first params))
+                                                          (stringp (second params)))
+                                                     (make-action :type (if (and (stringp (third params)) (string-equal (third params) "after")) 
+                                                                            'after-command 
+                                                                          (if (and (stringp (third params)) (string-equal (third params) "before"))
+                                                                              'before-command
+                                                                            'simple-command))
+                                                                  :parameters (list (first params) (second params))
+                                                                  :evaluator handler))
+                                                    ((and (string-equal m "remove-monitor")
+                                                          (= (length params) 2)
+                                                          (stringp (first params))
+                                                          (stringp (second params)))
+                                                     (make-action :type 'remove-monitor
+                                                                  :parameters params
+                                                                  :evaluator handler))
+                                                    ((and (string-equal m "list-commands")
+                                                          (null params))
+                                                     (make-action :type 'list-actions
+                                                                  :evaluator handler))
+                                                    ((and (string-equal m "list-connections")
+                                                          (null params))
+                                                     (make-action :type 'list-connections
+                                                                  :evaluator handler))
+                                                    ((and (string-equal m "check")
+                                                          (= (length params) 1)
+                                                          (stringp (first params)))
+                                                     (make-action :type 'check
+                                                                  :parameters params
+                                                                  :evaluator handler))
+                                                    ((and (string-equal m "set-name")
+                                                          (= (length params) 1)
+                                                          (stringp (first params)))
+                                                     (make-action :type 'set-name
+                                                                  :parameters params
+                                                                  :evaluator handler)))))
+                                      (if action
+                                          (let ((p (make-pending-request :action action :id id)))
+                                            (bt:with-lock-held ((handler-received-requests-lock handler))
+                                              (push-last p (handler-received-requests handler)))
                                             
-                                            (bt:acquire-lock (worker-start-lock worker))
-                                            (setf (worker-thread worker)
-                                              (bt:make-thread (lambda () (received-worker worker))
-                                                              :name (concatenate 'string "received-worker " (princ-to-string *r-w-num*))))
-                                            (bt:condition-wait (worker-started worker) (worker-start-lock worker))
-                                            (bt:release-lock (worker-start-lock worker))))
-                                      
-                                      (bt:with-lock-held ((worker-lock worker))
-                                        (bt:condition-notify (worker-cv worker))))))
-                                (progn
-                                  (send-error-output "Invalid message ~s." s)
-                                  (let* ((a (make-action :type 'invalid))
-                                         (p (make-pending-request :action a :id (cdr (assoc :id message)))))
+                                            (let ((worker nil))
+                                              
+                                              (bt:with-lock-held ((dispatcher-available-received-lock *dispatcher*))
+                                                (if (dispatcher-available-received-workers *dispatcher*)
+                                                    (progn
+                                                      (setf worker (pop (dispatcher-available-received-workers *dispatcher*)))
+                                                      (setf (worker-handler worker) handler)
+                                                      (setf (worker-action worker) action))
+                                                  (progn
+                                                    (setf worker (make-worker
+                                                                  :handler handler
+                                                                  :action action
+                                                                  :lock (bt:make-lock )
+                                                                  :cv (bt:make-condition-variable)
+                                                                  :started (bt:make-condition-variable)
+                                                                  :start-lock (bt:make-lock)))
+                                                    
+                                                    (bt:acquire-lock (worker-start-lock worker))
+                                                    (setf (worker-thread worker)
+                                                      (bt:make-thread (lambda () (received-worker worker))
+                                                                      :name (concatenate 'string "received-worker " (princ-to-string *r-w-num*))))
+                                                    (bt:condition-wait (worker-started worker) (worker-start-lock worker))
+                                                    (bt:release-lock (worker-start-lock worker))))
+                                                
+                                                (bt:with-lock-held ((worker-lock worker))
+                                                  (bt:condition-notify (worker-cv worker))))))
+                                        (progn
+                                          (send-error-output "Invalid message ~s." s)
+                                          (let* ((a (make-action :type 'invalid))
+                                                 (p (make-pending-request :action a :id id)))
                                     
-                                    (bt:with-lock-held ((handler-received-requests-lock handler))
-                                                       (push-last p (handler-received-requests handler)))
-                                    (return-result handler a nil (cond ((find m  (list "add" "remove" "evaluate" "monitor" "remove-monitor" "check" "list-commands" "set-name" "list-connections") :test 'string-equal)
-                                                                        (format nil "Invalid form for ~s method: ~s" m s))
-                                                                       (t (format nil "Invalid method ~s. Only add, remove, evaluate, monitor, remove-monitor, check, set-name, list-connections, and list-commands are allowed." m)))))))))
-                           ((and (= (length message) 3)
-                                 (assoc :result message)
-                                 (assoc :error message)
-                                 (assoc :id message))
-                            (let ((id (cdr (assoc :id message)))
-                                  (result (cdr (assoc :result message)))
-                                  (error (cdr (assoc :error message))))
-                              (let (p)
-                                (bt:with-lock-held ((handler-sent-requests-lock handler))
-                                  (setf p (find id (handler-sent-requests handler) :key 'pending-request-id :test 'equalp))
-                                  (when p (setf (handler-sent-requests handler) (remove p (handler-sent-requests handler)))))
-                                
-                                (if p
-                                    (progn ;let ((a (pending-request-action p)))
-                                      (bt:acquire-lock (pending-request-lock p))
-                                        (setf (pending-request-success p) (if result t nil))
-                                        (setf (pending-request-result p) (if result result 
-                                                                           (let ((messages (cdr (assoc :message error))))
-                                                                             (if messages
-                                                                                 messages
-                                                                               (list "No error messages received.")))))
-                                        (setf (pending-request-complete p) t)
-                                      (bt:condition-notify (pending-request-cv p))
-                                      (bt:release-lock (pending-request-lock p)))
-                                (progn
-                                  (send-error-output "Returned result has an id that does not match a pending request ~s" s)
-                                  (return-from process-external-input nil))))))
-                           (t
-                            (send-error-output "Invalid message received ~s terminating connection" s)
-                            (return-from process-external-input nil))))
-                   (setf (fill-pointer s) 0))
+                                            (bt:with-lock-held ((handler-received-requests-lock handler))
+                                              (push-last p (handler-received-requests handler)))
+                                            (return-result handler a nil (cond ((find m  (list "add" "remove" "evaluate" "monitor" "remove-monitor" "check" "list-commands" "set-name" "list-connections") :test 'string-equal)
+                                                                                (format nil "Invalid form for ~s method: ~s" m s))
+                                                                               (t (format nil "Invalid method ~s. Only add, remove, evaluate, monitor, remove-monitor, check, set-name, list-connections, and list-commands are allowed." m))))))))))
+                                 (result
+                                  
+                                  (let* ((r (cdr result))
+                                         (e (assoc :error message :test 'string=))
+                                         (i (assoc :id message :test 'string=)))
+                                    (unless (and e i)
+                                      (send-error-output "Invalid message encountered decoding JSON string ~s. Connection terminated" s)
+                                      (return-from process-external-input nil))
+                                    (let ((id (cdr i))
+                                          (error (cdr e)))
+                                      (let (p)
+                                        (bt:with-lock-held ((handler-sent-requests-lock handler))
+                                          (setf p (find id (handler-sent-requests handler) :key 'pending-request-id :test 'equalp))
+                                          (when p (setf (handler-sent-requests handler) (remove p (handler-sent-requests handler)))))
+                                        
+                                        (if p
+                                            (progn ;let ((a (pending-request-action p)))
+                                              (bt:acquire-lock (pending-request-lock p))
+                                              (setf (pending-request-success p) (if r t nil))
+                                              (setf (pending-request-result p) (if r r 
+                                                                                 (let ((messages (cdr (assoc :message error))))
+                                                                                   (if messages
+                                                                                       messages
+                                                                                     (list "No error messages received.")))))
+                                              (setf (pending-request-complete p) t)
+                                              (bt:condition-notify (pending-request-cv p))
+                                              (bt:release-lock (pending-request-lock p)))
+                                          (progn
+                                            (send-error-output "Returned result has an id that does not match a pending request ~s" s)
+                                            (return-from process-external-input nil)))))))
+                                 (t
+                                  (send-error-output "Invalid message received ~s terminating connection" s)
+                                  (return-from process-external-input nil))))
+                       (progn
+                         (send-error-output "Invalid message received ~s terminating connection" s)
+                         (return-from process-external-input nil))))
+                       (setf (fill-pointer s) 0))
                   (t (vector-push-extend char s))))))
     ((or error condition) (x)
      (send-error-output "Error ~/print-error-message/ occurred in process-external-input for stream ~s.  Connection terminated." x stream))))
@@ -1251,8 +1328,45 @@ and the result is written as String."
 (defvar *e-w-num* 0)
 
 
-;; I know there's got to be a cleaner way to handle this, but for now I've spent way too long
-;; trying to get things to expand correctly since defmacro is a macro...
+;; There is probably a better way to handle this, but I've run into problems with
+;; trying to build a macro to call defmacro since it is a macro, and other
+;; attempts have been only partially successful.
+;;
+;; The fmakunbound avoids a warning in some Lisps, but because LispWorks still
+;; wants to signal a redefinition (for something that is undefined) need to 
+;; build a handler for muffle-warning.
+
+(defun quiet-warning-handler (c)
+  (let ((r (find-restart 'muffle-warning c)))
+    (when r 
+      (invoke-restart r))))
+
+(defun create-local-macro (name cmd)
+  (let ((*read-eval* t)
+        (fn (string->name name)))
+    (fmakunbound fn)
+    (handler-bind ((warning #'quiet-warning-handler)) 
+      (read-from-string (format nil "#.(defmacro ~:@(~a~) (&rest r) `(dispatch-apply-list ~s ',r))" name cmd)))))
+
+
+#| works in ACL, CCL, and SBCL, but not LispWorks because fmakeunbound doesn't
+   suppress their redifintion warning that throws a condition which gets handled
+   elsewhere and thus prevents the completion of the defmethod.
+
+(defun create-local-macro (name cmd)
+  (ignore-errors
+   (let ((*read-eval* t)
+         (fn (string->name name)))
+     
+     (fmakunbound fn)
+     (read-from-string (format nil "#.(defmacro ~:@(~a~) (&rest r) `(dispatch-apply-list ~s ',r))" name cmd)))))
+|#
+
+
+#|
+
+This works in ACL, once in LispWorks and SBCL (probably because of a condition which isn't trapped now),
+but not at all in CCL.
 
 (defmacro create-the-macro (cmd)
   `(defmacro internal-dummy-macro (&rest r) `(dispatch-apply-list ,,cmd ',r)))
@@ -1262,7 +1376,7 @@ and the result is written as String."
   (let ((n (string->name name)))
     (create-the-macro cmd)
     (setf (macro-function n) (macro-function 'internal-dummy-macro))))
-
+|#
 
 #|
 
@@ -1277,8 +1391,7 @@ This almost works, but throws an error in ACL from the eval
 |#
 
 
-(defun perform-action (dispatcher action)
-;  (setf *a* action)
+#-:single-threaded-act-r (defun perform-action (dispatcher action)
   (case (action-type action)
     (add-command 
      (unwind-protect
@@ -1318,9 +1431,10 @@ This almost works, but throws an error in ACL from the eval
                      (setf (action-result action) (format nil "Invalid parameters when trying to add command specified with name ~s and function ~s" name underlying-function))
                      (setf (action-complete action) t))))
              ((or error condition) (x) 
-              (setf (action-result-success action) nil)
-              (setf (action-result action) (format nil "Error ~/print-error-message/ occurred while trying to add command defined by ~s" x (action-parameters action)))
-              (setf (action-complete action) t))))
+              (let ((*print-circle* t))
+                (setf (action-result-success action) nil)
+                (setf (action-result action) (format nil "Error ~/print-error-message/ occurred while trying to add command defined by ~s" x (action-parameters action)))
+                (setf (action-complete action) t)))))
        (progn
          (bt:condition-notify (action-cv action))
          (bt:release-lock (action-lock action)))))
@@ -1346,9 +1460,10 @@ This almost works, but throws an error in ACL from the eval
                    (setf (action-complete action) t)))
              
              ((or error condition) (x) 
-              (setf (action-result-success action) nil)
-              (setf (action-result action) (format nil "Error ~/print-error-message/ occurred while trying to remove command specified by ~s" x (action-parameters action)))
-              (setf (action-complete action) t))))
+              (let ((*print-circle* t))
+                (setf (action-result-success action) nil)
+                (setf (action-result action) (format nil "Error ~/print-error-message/ occurred while trying to remove command specified by ~s" x (action-parameters action)))
+                (setf (action-complete action) t)))))
        (progn
          (bt:condition-notify (action-cv action))
          (bt:release-lock (action-lock action)))))
@@ -1375,10 +1490,10 @@ This almost works, but throws an error in ACL from the eval
                               (setf worker (make-worker
                                             :action action
                                             :other (list c parameters)
-                                            :lock (bt:make-lock (concatenate 'string "execute-worker-lock " (princ-to-string (incf *e-w-num*))))
-                                            :cv (bt:make-condition-variable :name (concatenate 'string "execute-worker-cv " (princ-to-string *e-w-num*)))
-                                            :started (bt:make-condition-variable :name (concatenate 'string "execute-started " (princ-to-string *e-w-num*)))
-                                            :start-lock (bt:make-lock (concatenate 'string "start-lock " (princ-to-string *e-w-num*)))))
+                                            :lock (bt:make-lock )
+                                            :cv (bt:make-condition-variable )
+                                            :started (bt:make-condition-variable)
+                                            :start-lock (bt:make-lock )))
                               (bt:acquire-lock (worker-start-lock worker))
                               
                               (setf (worker-thread worker)
@@ -1395,12 +1510,13 @@ This almost works, but throws an error in ACL from the eval
                           (action-result action) (format nil "Command ~s not found in the table and cannot be executed." name)
                           (action-complete action) t)
                         (bt:condition-notify (action-cv action))))))))
-       (error (x) 
+       ((or error condition) (x) 
         (bt:with-lock-held ((action-lock action))
-          (setf (action-result-success action) nil)
-          (setf (action-result action) (format nil "Error ~/print-error-message/ occurred while trying to execute command specified by ~s" x (action-parameters action)))
-          (setf (action-complete action) t)
-          (bt:condition-notify (action-cv action))))))
+          (let ((*print-circle* t))
+            (setf (action-result-success action) nil)
+            (setf (action-result action) (format nil "Error ~/print-error-message/ occurred while trying to execute command specified by ~s" x (action-parameters action)))
+            (setf (action-complete action) t)
+            (bt:condition-notify (action-cv action)))))))
     
     
     (before-command      
@@ -1430,9 +1546,10 @@ This almost works, but throws an error in ACL from the eval
                          (action-result action) (format nil "Command ~s does not exist thus it cannot be called before another command." before-name)))
                      (setf (action-complete action) t))))
              ((or error condition) (x) 
-              (setf (action-result-success action) nil)
-              (setf (action-result action) (format nil "Error ~/print-error-message/ occurred while trying to monitor command ~s" x (action-parameters action)))
-              (setf (action-complete action) t))))
+              (let ((*print-circle* t))
+                (setf (action-result-success action) nil)
+                (setf (action-result action) (format nil "Error ~/print-error-message/ occurred while trying to monitor command ~s" x (action-parameters action)))
+                (setf (action-complete action) t)))))
        (progn
          (bt:condition-notify (action-cv action))
          (bt:release-lock (action-lock action)))))
@@ -1464,9 +1581,10 @@ This almost works, but throws an error in ACL from the eval
                          (action-result action) (format nil "Command ~s does not exist thus it cannot be called after another command." after-name)))
                      (setf (action-complete action) t))))
              ((or error condition) (x) 
-              (setf (action-result-success action) nil)
-              (setf (action-result action) (format nil "Error ~/print-error-message/ occurred while trying to monitor command ~s" x (action-parameters action)))
-              (setf (action-complete action) t))))
+              (let ((*print-circle* t))
+                (setf (action-result-success action) nil)
+                (setf (action-result action) (format nil "Error ~/print-error-message/ occurred while trying to monitor command ~s" x (action-parameters action)))
+                (setf (action-complete action) t)))))
        (progn
          (bt:condition-notify (action-cv action))
          (bt:release-lock (action-lock action)))))
@@ -1498,9 +1616,10 @@ This almost works, but throws an error in ACL from the eval
                          (action-result action) (format nil "Command ~s does not exist thus it cannot be called after another command." after-name)))
                      (setf (action-complete action) t))))
              ((or error condition) (x) 
-              (setf (action-result-success action) nil)
-              (setf (action-result action) (format nil "Error ~/print-error-message/ occurred while trying to monitor command ~s" x (action-parameters action)))
-              (setf (action-complete action) t))))
+              (let ((*print-circle* t))
+                (setf (action-result-success action) nil)
+                (setf (action-result action) (format nil "Error ~/print-error-message/ occurred while trying to monitor command ~s" x (action-parameters action)))
+                (setf (action-complete action) t)))))
        (progn
          (bt:condition-notify (action-cv action))
          (bt:release-lock (action-lock action)))))
@@ -1534,9 +1653,10 @@ This almost works, but throws an error in ACL from the eval
                    
                    (setf (action-complete action) t))
              ((or error condition) (x) 
-              (setf (action-result-success action) nil)
-              (setf (action-result action) (format nil "Error ~/print-error-message/ occurred while trying to monitor command ~s" x (action-parameters action)))
-              (setf (action-complete action) t))))
+              (let ((*print-circle* t))
+                (setf (action-result-success action) nil)
+                (setf (action-result action) (format nil "Error ~/print-error-message/ occurred while trying to monitor command ~s" x (action-parameters action)))
+                (setf (action-complete action) t)))))
        (progn
          (bt:condition-notify (action-cv action))
          (bt:release-lock (action-lock action)))))
@@ -1663,6 +1783,303 @@ This almost works, but throws an error in ACL from the eval
        (bt:condition-notify (action-cv action))))))
 
 
+
+#+:single-threaded-act-r 
+(defun perform-action (dispatcher action)
+  (case (action-type action)
+    (add-command 
+     
+     (handler-case
+         (destructuring-bind (&key name documentation underlying-function evaluator single-instance local-name) (action-parameters action)
+           (declare (ignorable documentation single-instance))
+           (if (and (stringp name)
+                    (or (null underlying-function)
+                        (and (eq :lisp evaluator) (or (functionp underlying-function)
+                                                      (and (symbolp underlying-function)
+                                                           (fboundp underlying-function))))
+                        ))
+               (bt:with-lock-held ((dispatcher-command-lock dispatcher))
+                 (let ((current (gethash name (dispatcher-command-table dispatcher))))
+                   (if current
+                       (setf (action-result-success action) nil
+                         (action-result action) (format nil "Command ~s already exists in the table and cannot be added." name))
+                     (let ((c (apply 'make-dispatch-command (action-parameters action))))
+                       (setf (gethash name (dispatcher-command-table dispatcher)) c)
+                       ;; a new-name has been used
+                       (remhash name (dispatcher-spec-names dispatcher))
+                       (let ((h (dispatch-command-evaluator c)))
+                         (unless (eq :lisp h) 
+                           (bt:with-lock-held ((handler-command-lock h))
+                             (push c (handler-commands h)))))
+                       
+                       (when (stringp local-name)
+                         (create-local-macro local-name name))
+                       
+                       (setf (action-result-success action) t
+                         (action-result action) (list name))))
+                   (setf (action-complete action) t)))
+             (progn
+               (setf (action-result-success action) nil)
+               (setf (action-result action) (format nil "Invalid parameters when trying to add command specified with name ~s and function ~s" name underlying-function))
+               (setf (action-complete action) t))))
+       ((or error condition) (x) 
+        (let ((*print-circle* t))
+          (setf (action-result-success action) nil)
+          (setf (action-result action) (format nil "Error ~/print-error-message/ occurred while trying to add command defined by ~s" x (action-parameters action)))
+          (setf (action-complete action) t)))))
+    
+    (remove-command 
+     (handler-case
+         (destructuring-bind (name) (action-parameters action)
+           (unless (stringp name)
+             ;; should it only allow the owner to remove a command or
+             ;; should anyone be allowed? Letting anyone allows someone to 
+             ;; override a provided command, but is that a good idea?
+             (error "Invalid remove name")) 
+           (let ((r (remove-command dispatcher name)))
+             (if (stringp r)
+                 (progn 
+                   (setf (action-result-success action) nil)
+                   (setf (action-result action) r))
+               (progn
+                 (setf (action-result-success action) t)
+                 (setf (action-result action) (list name))))
+             (setf (action-complete action) t)))
+             
+       ((or error condition) (x) 
+        (let ((*print-circle* t))
+          (setf (action-result-success action) nil)
+          (setf (action-result action) (format nil "Error ~/print-error-message/ occurred while trying to remove command specified by ~s" x (action-parameters action)))
+          (setf (action-complete action) t)))))
+    
+    (execute-command 
+     (handler-case
+         (destructuring-bind (&key name parameters) (action-parameters action)
+           (unless (stringp name)
+             ;; should there be anything else checked?
+             (error "Invalid execute name"))
+           (bt:with-lock-held ((dispatcher-command-lock dispatcher))
+             (let ((c (gethash name (dispatcher-command-table dispatcher))))
+               (cond (c
+                      
+                      (execute-command action c parameters))
+                     (t
+                      (setf (action-result-success action) nil
+                        (action-result action) (format nil "Command ~s not found in the table and cannot be executed." name)
+                        (action-complete action) t))))))
+       ((or error condition) (x) 
+         (let ((*print-circle* t))
+           (setf (action-result-success action) nil)
+           (setf (action-result action) (format nil "Error ~/print-error-message/ occurred while trying to execute command specified by ~s" x (action-parameters action)))
+           (setf (action-complete action) t)))))
+    
+    
+    (before-command      
+     (handler-case
+         (destructuring-bind (command-name before-name) (action-parameters action)
+           (unless (and (stringp command-name) (stringp before-name))
+             (error "Invalid before monitoring parameter"))                 
+           (bt:with-lock-held ((dispatcher-command-lock dispatcher))
+             (let ((current (gethash before-name (dispatcher-command-table dispatcher))))
+               (if current
+                   (let ((c (gethash command-name (dispatcher-command-table dispatcher))))
+                     (if c
+                         (if (find current (dispatch-command-before c))
+                             (setf (action-result-success action) nil
+                               (action-result action) (format nil "Command ~s already on the before list for command ~s." before-name command-name))
+                           (progn
+                             (push-last current (dispatch-command-before c))
+                             (pushnew c (dispatch-command-monitoring current))
+                             (setf (action-result-success action) t
+                               (action-result action) (list before-name))))
+                       (setf (action-result-success action) nil
+                         (action-result action) (format nil "Command ~s does not exist so command ~s cannot be called before it." command-name before-name))))
+                 (setf (action-result-success action) nil
+                   (action-result action) (format nil "Command ~s does not exist thus it cannot be called before another command." before-name)))
+               (setf (action-complete action) t))))
+       ((or error condition) (x) 
+        (let ((*print-circle* t))
+          (setf (action-result-success action) nil)
+          (setf (action-result action) (format nil "Error ~/print-error-message/ occurred while trying to monitor command ~s" x (action-parameters action)))
+          (setf (action-complete action) t)))))
+       
+     
+    (after-command      
+     (handler-case
+         (destructuring-bind (command-name after-name) (action-parameters action)
+           (unless (and (stringp command-name) (stringp after-name))
+             (error "Invalid after monitoring parameter"))
+           (bt:with-lock-held ((dispatcher-command-lock dispatcher))
+             (let ((current (gethash after-name (dispatcher-command-table dispatcher))))
+               (if current
+                   (let ((c (gethash command-name (dispatcher-command-table dispatcher))))
+                     (if c
+                         (if (find current (dispatch-command-after c))
+                             (setf (action-result-success action) nil
+                               (action-result action) (format nil "Command ~s already on the after list for command ~s." after-name command-name))
+                           (progn
+                             (push-last current (dispatch-command-after c))
+                             (pushnew c (dispatch-command-monitoring current))
+                             (setf (action-result-success action) t
+                               (action-result action) (list after-name))))
+                       (setf (action-result-success action) nil
+                         (action-result action) (format nil "Command ~s does not exist so command ~s cannot be called after it." command-name after-name))))
+                 (setf (action-result-success action) nil
+                   (action-result action) (format nil "Command ~s does not exist thus it cannot be called after another command." after-name)))
+               (setf (action-complete action) t))))
+       ((or error condition) (x) 
+        (let ((*print-circle* t))
+          (setf (action-result-success action) nil)
+          (setf (action-result action) (format nil "Error ~/print-error-message/ occurred while trying to monitor command ~s" x (action-parameters action)))
+          (setf (action-complete action) t)))))
+    
+    (simple-command      
+     (handler-case
+         (destructuring-bind (command-name after-name) (action-parameters action)
+           (unless (and (stringp command-name) (stringp after-name))
+             (error "Invalid simple monitoring parameter"))
+           (bt:with-lock-held ((dispatcher-command-lock dispatcher))
+             (let ((current (gethash after-name (dispatcher-command-table dispatcher))))
+               (if current
+                   (let ((c (gethash command-name (dispatcher-command-table dispatcher))))
+                     (if c
+                         (if (find current (dispatch-command-simple c))
+                             (setf (action-result-success action) nil
+                               (action-result action) (format nil "Command ~s already on the after list for command ~s." after-name command-name))
+                           (progn
+                             (push-last current (dispatch-command-simple c))
+                             (pushnew c (dispatch-command-monitoring current))
+                             (setf (action-result-success action) t
+                               (action-result action) (list after-name))))
+                       (setf (action-result-success action) nil
+                         (action-result action) (format nil "Command ~s does not exist so command ~s cannot be called after it." command-name after-name))))
+                 (setf (action-result-success action) nil
+                   (action-result action) (format nil "Command ~s does not exist thus it cannot be called after another command." after-name)))
+               (setf (action-complete action) t))))
+       ((or error condition) (x) 
+        (let ((*print-circle* t))
+          (setf (action-result-success action) nil)
+          (setf (action-result action) (format nil "Error ~/print-error-message/ occurred while trying to monitor command ~s" x (action-parameters action)))
+          (setf (action-complete action) t)))))
+    
+    (remove-monitor      
+     (handler-case
+         (destructuring-bind (command-name monitor) (action-parameters action)
+           (unless (and (stringp command-name) (stringp monitor))
+             ;; should it verify somehow that the connection that added the
+             ;; monitor be the one to remove it?
+             (error "Invalid remove monitor parameter"))
+           (bt:with-lock-held ((dispatcher-command-lock dispatcher))
+             (let ((c (gethash command-name (dispatcher-command-table dispatcher))))
+               (if c
+                   (let ((m (gethash monitor (dispatcher-command-table dispatcher))))
+                     (if m
+                         (progn
+                           (setf (dispatch-command-before c) (remove m (dispatch-command-before c)))
+                           (setf (dispatch-command-after c) (remove m (dispatch-command-after c)))
+                           (setf (dispatch-command-simple c) (remove m (dispatch-command-simple c)))
+                           (setf (dispatch-command-monitoring m) (remove c (dispatch-command-monitoring m)))
+                           (setf (action-result-success action) t
+                             (action-result action) (list monitor)))
+                       (setf (action-result-success action) nil
+                         (action-result action) (format nil "Command ~s does not exist so it cannot be removed as a monitor of ~s." monitor command-name))))
+                 (setf (action-result-success action) nil
+                   (action-result action) (format nil "Command ~s does not exist so monitor ~s does not need to be removed." command-name monitor)))))
+           
+           (setf (action-complete action) t))
+       ((or error condition) (x) 
+        (let ((*print-circle* t))
+          (setf (action-result-success action) nil)
+          (setf (action-result action) (format nil "Error ~/print-error-message/ occurred while trying to monitor command ~s" x (action-parameters action)))
+          (setf (action-complete action) t)))))
+    
+    (list-actions      
+     (handler-case
+               (progn
+                 (bt:with-lock-held ((dispatcher-command-lock dispatcher))
+                   (let ((d nil))
+                     (maphash (lambda (key value)
+                                (push (list key (dispatch-command-documentation value)) d))
+                              (dispatcher-command-table dispatcher))
+                     (setf (action-result-success action) t
+                       (action-result action) (list d))))                  
+                 (setf (action-complete action) t))
+             ((or error condition) (x) 
+              (setf (action-result-success action) nil)
+              (setf (action-result action) (format nil "Error ~/print-error-message/ occurred while trying to list ACT-R commands" x))
+              (setf (action-complete action) t))))
+    
+    (check      
+     (handler-case
+               (progn
+                 (bt:with-lock-held ((dispatcher-command-lock dispatcher))
+                   (let* ((name (first (action-parameters action)))
+                          (entry (gethash name (dispatcher-command-table dispatcher)))
+                          (speculative (gethash name (dispatcher-spec-names dispatcher))))
+                     (if entry
+                         (setf (action-result action) (list t (eq (action-evaluator action) (dispatch-command-evaluator entry)) (dispatch-command-documentation entry)))
+                       (if speculative
+                           (setf (action-result action) (list t nil "Reserved"))
+                         (setf (action-result action) (list nil))))
+                     (setf (action-result-success action) t)))                  
+                 (setf (action-complete action) t))
+             ((or error condition) (x) 
+              (setf (action-result-success action) nil)
+              (setf (action-result action) (format nil "Error ~/print-error-message/ occurred while trying to check ACT-R commands" x))
+              (setf (action-complete action) t))))
+    
+    (set-name      
+     (handler-case
+               (let ((name (first (action-parameters action)))
+                     (handler (action-evaluator action)))
+                 (if (and name handler)
+                     (progn
+                       (bt:with-lock-held ((handler-command-lock handler))
+                         (setf (handler-name handler) name))
+                       
+                       (setf (action-result action) 
+                         (list name)))
+                   (setf (action-result action) (list nil)))
+                 (setf (action-result-success action) t)
+                 (setf (action-complete action) t))
+             ((or error condition) (x) 
+              (setf (action-result-success action) nil)
+              (setf (action-result action) (format nil "Error ~/print-error-message/ occurred while trying to set connection name" x))
+              (setf (action-complete action) t))))
+    
+    (list-connections
+     (setf (action-result-success action) t
+       (action-result action) nil
+       (action-complete action) t))
+    
+    (t 
+       (setf (action-result-success action) nil)
+       (setf (action-result action) (format nil "Invalid action type ~s." (action-type action)))
+       (setf (action-complete action) t))))
+
+
+#+:single-threaded-act-r 
+(defun execute-command (action c parameters)
+      (handler-case
+          (progn
+            (dolist (x (dispatch-command-before c))
+              (evaluate-command action x (list (dispatch-command-name c) parameters nil nil)))
+            (let ((result (if (dispatch-command-underlying-function c) (multiple-value-list (evaluate-command action c parameters)) (list t t))))
+              (dolist (x (dispatch-command-after c))
+                (evaluate-command action x (list (dispatch-command-name c) parameters (if (car result) t nil)
+                                                 (if (car result) (cdr result) nil))))
+              (dolist (x (dispatch-command-simple c))
+                (evaluate-command action x parameters))
+                
+              (setf (action-result-success action) (car result))
+              (setf (action-result action) (if (car result) (cdr result) (cadr result)))
+              (setf (action-complete action) t)))
+        (error (x) 
+          (setf (action-result-success action) nil)
+          (setf (action-result action) (format nil "Error ~/print-error-message/ occurred during execute-command for command ~s and parameters ~s" x (dispatch-command-name c) parameters))
+          (setf (action-complete action) t))))
+
+#-:single-threaded-act-r 
 (defun execute-command (action c parameters)
   (unwind-protect
       (handler-case
@@ -1733,17 +2150,25 @@ This almost works, but throws an error in ACL from the eval
       (setf p (make-pending-request :action action :id (incf (handler-id handler))))
       (push p (handler-sent-requests handler)))
     (bt:acquire-lock (pending-request-lock p))
-    (bt:with-lock-held ((handler-stream-lock handler))
-      (format (usocket:socket-stream (handler-socket handler)) "{\"method\": \"evaluate\", \"params\": ~a, \"id\": ~d}~c" 
-        (json:encode-json-to-string (cons (dispatch-command-underlying-function command) (cons (model-to-name (action-model action)) parameters))) (pending-request-id p) (code-char 4))
-      (force-output (usocket:socket-stream (handler-socket handler))))
-    (loop
-      (when (pending-request-complete p)
-        (return-from send-remote-command (values-list (append (list (pending-request-success p)) (if (listp (pending-request-result p))
-                                                                                                     (pending-request-result p)
-                                                                                                   (list (pending-request-result p)))))) ;(values (pending-request-success p) (pending-request-result p)))
-        )
-      (bt:condition-wait (pending-request-cv p) (pending-request-lock p)))))
+    (handler-case 
+        (progn
+          (bt:with-lock-held ((handler-stream-lock handler))
+            (format (usocket:socket-stream (handler-socket handler)) "{\"method\": \"evaluate\", \"params\": ~a, \"id\": ~d}~c" 
+              (json:encode-json-to-string (cons (dispatch-command-underlying-function command) (cons (model-to-name (action-model action)) parameters))) (pending-request-id p) (code-char 4))
+            (force-output (usocket:socket-stream (handler-socket handler))))
+          (loop
+            (when (pending-request-complete p)
+              (return-from send-remote-command (values-list (append (list (pending-request-success p)) (if (listp (pending-request-result p))
+                                                                                                           (pending-request-result p)
+                                                                                                         (list (pending-request-result p)))))) ;(values (pending-request-success p) (pending-request-result p)))
+              )
+            (bt:condition-wait (pending-request-cv p) (pending-request-lock p))))
+      (error (x)
+        (bt:with-lock-held ((handler-sent-requests-lock handler))
+          
+          (setf (handler-sent-requests handler) (remove p (handler-sent-requests handler))))
+        (bt:release-lock (pending-request-lock p))
+        (error (format nil "Error during send-remote-command ~/print-error-message/" x))))))
     
 
 (eval-when (:load-toplevel :execute)
@@ -1764,6 +2189,15 @@ This almost works, but throws an error in ACL from the eval
 
 (defvar *top-level-lock* (bt:make-lock "top-level"))
 
+
+#+:single-threaded-act-r
+(defmacro with-top-level-lock (warning &body body)
+  (declare (ignore warning))
+  `(progn
+     ,@body))
+
+
+#-:single-threaded-act-r
 (defmacro with-top-level-lock (warning &body body)
   `(if (bt:acquire-lock *top-level-lock* nil)
        (unwind-protect 
@@ -1826,6 +2260,11 @@ This almost works, but throws an error in ACL from the eval
 
 ;;; 
 ;;; Send all the ACT-R output to the current *standard-output*.
+;;;
+;;; Really should have a lock around these, but that's a heavy price
+;;; and Lisp users are more likely to use the ACT-R controls, like
+;;; setting :v, :cmdt, and no-output.
+
 
 (defvar *act-r-echo-stream* nil)
 (defvar *act-r-echo-command* nil)
@@ -1833,6 +2272,24 @@ This almost works, but throws an error in ACL from the eval
 ;;; This is now simple...
 (defun echo-trace-stream (output)
   (format *act-r-echo-stream* "~a" output))
+
+#|
+
+Some options for CCL GUI output control other than AltConsole.
+Going to use the initial listener approach by default
+
+Goes to initial listener only:
+
+(setf *act-r-echo-stream* (GUI::cocoa-listener-process-output-stream (GUI::top-listener-process))) 
+
+Goes to 'active' listener:
+
+#+(and :ccl :darwin :hemlock) (defun echo-trace-stream (output)
+                                (when *act-r-echo-stream*
+                                  (HI::call-with-output-to-listener 
+                                   (lambda () (format t "~a" output)))))
+
+|#
 
 
 (defun echo-act-r-output ()
@@ -1844,7 +2301,15 @@ This almost works, but throws an error in ACL from the eval
 
   (let ((name (get-new-command-name "echo-output")))
     (add-act-r-command name 'echo-trace-stream "Internal command for monitoring output - should not be evaluated." nil)
+
+    ;; special hack for CCL GUI to force output to initial listener
+    ;; instead of the AltConsole window
+    #+(and :ccl :darwin :hemlock)
+    (setf *act-r-echo-stream* (GUI::cocoa-listener-process-output-stream (GUI::top-listener-process))) 
+
+    #-(and :ccl :darwin :hemlock)
     (setf *act-r-echo-stream* *standard-output*)
+
     (monitor-act-r-command "model-trace" name)
     (monitor-act-r-command "command-trace" name)
     (monitor-act-r-command "warning-trace" name)
@@ -2058,15 +2523,16 @@ This almost works, but throws an error in ACL from the eval
          (print-warning "Function ~s provide for dispatch-apply is not a local or dispatcher function" fct))))
 
 (defun dispatch-apply-list (fct param-list)
-  (cond ((stringp fct)
+  (cond ((and (symbolp fct) (fboundp fct))
+         (apply fct param-list))
+        ((functionp fct)
+         (apply fct param-list))
+        ((stringp fct)
          (let ((results (multiple-value-list (apply 'evaluate-act-r-command (cons fct param-list)))))
            (if (first results)
                (values-list (rest results))
              (print-warning "Error ~s while attempting to evaluate the form (~s ~s})" (second results) fct param-list))))
-        ((functionp fct)
-         (apply fct param-list))
-        ((and (symbolp fct) (fboundp fct))
-         (apply fct param-list))
+        
         (t
          (print-warning "Function ~s provide for dispatch-apply-list is not a local or dispatcher function" fct))))
 
@@ -2173,6 +2639,12 @@ This almost works, but throws an error in ACL from the eval
 ;;; Actually echo the output by default now if it's not the standalone.
 
 #-:standalone (echo-act-r-output)
+
+;;; The single-threaded code currently sets :standalone mode
+;;; to avoid starting the dispatcher so need to handle that too.
+
+#+:single-threaded-act-r (echo-act-r-output)
+
 
 #|
 This library is free software; you can redistribute it and/or

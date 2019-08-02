@@ -179,6 +179,8 @@
 ;;;             : * Updated doc string for event-displayed-p command.
 ;;; 2019.01.16 Dan
 ;;;             : * Adjust filter-event so it only needs to grab the lock once.
+;;; 2019.06.18 Dan
+;;;             : * Change the ccl hack from :sharing :lock to :sharing :external.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -225,7 +227,7 @@
       (ignore-errors (open (parse-namestring name)
                            :direction :output :if-exists :append 
                            :if-does-not-exist :create
-                           #+:ccl :sharing #+:ccl :lock))
+                           #+:ccl :sharing #+:ccl :external))
     (when (and err (subtypep (type-of err) 'condition))
       (print-warning "Error encountered when trying to open the file associated with the ~s parameter:~% ~s" cmd err)
       (print-warning "The ~s parameter is being set to t instead." cmd))

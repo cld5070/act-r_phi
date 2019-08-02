@@ -48,7 +48,7 @@ set window_config(.whynot) \
     "200x300+[expr $screen_center_x - 100]+[expr $screen_center_y - 150]"
 
 set window_config(.buffers) \
-    "350x240+[expr $screen_center_x - 175]+[expr $screen_center_y - 120]"
+    "470x240+[expr $screen_center_x - 235]+[expr $screen_center_y - 120]"
 
 set window_config(.bufferstatus) \
     "450x240+[expr $screen_center_x - 225]+[expr $screen_center_y - 120]"

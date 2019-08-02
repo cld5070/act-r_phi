@@ -230,6 +230,9 @@
 ;;;             :   a chunk-spec id in addition to a chunk-spec.
 ;;; 2018.07.26 Dan [5.1]
 ;;;             : * Don't worry about request tracking.
+;;; 2019.05.22 Dan
+;;;             : * The unstuff-buffer function should clear the unstuff-event
+;;;             :   slot of the module as should resetting the module.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 #+:packaged-actr (in-package :act-r)
@@ -807,6 +810,9 @@
    (overstuff-loc :accessor overstuff-loc :initform nil)))
 
 
+(defmethod reset-pm-module :after ((module attn-module))
+  (setf (unstuff-event module) nil))
+
 
 (defmethod check-unstuff-buffer ((module attn-module) buffer chunk)
   (let ((current (buffer-read buffer)))
@@ -829,6 +835,7 @@
 
 (defmethod unstuff-buffer ((module attn-module) buffer chunk)
   (declare (ignore chunk))
+  (setf (unstuff-event module) nil)
   (schedule-event-now 'erase-buffer :params (list buffer) :module (my-name module)))
 
 

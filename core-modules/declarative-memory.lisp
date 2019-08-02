@@ -13,7 +13,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; 
 ;;; Filename    : declarative-memory.lisp
-;;; Version     : 6.3
+;;; Version     : 6.4
 ;;; 
 ;;; Description : Implements the declarative memory module.
 ;;; 
@@ -466,6 +466,18 @@
 ;;;             :   the if since it defaults to 0 thus no need to keep setting
 ;;;             :   it there if spreading-activation is off and that's a parameter
 ;;;             :   which shouldn't change during a run.
+;;; 2019.04.02 Dan
+;;;             : * Have hash-chunk-contents use the underlying chunk info 
+;;;             :   instead of going through the accessors.
+;;; 2019.04.04 Dan
+;;;             : * Cache the result of chunk-spec-slots in the retrieval
+;;;             :   request since that's costly don't want to do it twice.
+;;; 2019.04.15 Dan
+;;;             : * Depend on splice-into-position-des being destructive and 
+;;;             :   don't setf with the returned value.
+;;; 2019.05.17 Dan [6.4]
+;;;             : * Allow the sim-hook cache to persist across a reset.  Only
+;;;             :   clear the table when a new hook function is set.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -670,6 +682,8 @@
   cache-sim-hook-results
   (sim-hook-cache (make-hash-table :test 'equalp))
   
+  last-sim-hook
+  
   (chunk-lock (bt:make-lock "dm-chunks")) ;; chunks and chunk-hash-table
   (param-lock (bt:make-lock "dm-params")) ;; things through sgp
   (state-lock (bt:make-lock "dm-state"))  ;; other slots
@@ -813,14 +827,18 @@
 ;;; A function for converting a chunk to a list of its info
 
 (defun hash-chunk-contents (chunk)
-  (cons (chunk-slots-vector chunk)
-        (mapcar (lambda (x) 
-                  (let ((val (fast-chunk-slot-value-fct chunk x)))
-                    (if (stringp val) 
-                        (string-upcase val)
-                      (true-chunk-name-fct val))))
-          (chunk-filled-slots-list-fct chunk t))))
-
+ (let ((c (get-chunk chunk)))
+    (when c
+      (bt:with-recursive-lock-held ((act-r-chunk-lock c))
+        (cons (act-r-chunk-filled-slots c)
+              (mapcar (lambda (x)
+                        (let ((val (cdr x)))
+                          (if (stringp val) 
+                              (string-upcase val)
+                            (true-chunk-name-fct val))))
+                (sort (copy-list (act-r-chunk-slot-value-lists c))
+                      #'< :key (lambda (x) (act-r-slot-index (car x))))))))))
+  
 
 (defun reset-dm-module (dm)
   
@@ -851,9 +869,14 @@
     
     (setf (dm-current-trace dm) nil))
   
-  (bt:with-lock-held ((dm-param-lock dm))
+  #| Don't do that at reset
+     only when a new hook function gets
+     set so that results persist across a reset for
+     a given function.
+   (bt:with-lock-held ((dm-param-lock dm))
     ;; clear the sim-hook cache
     (clrhash (dm-sim-hook-cache dm)))
+   |#
   )
 
 (defun secondary-reset-dm-module (dm)
@@ -1050,89 +1073,90 @@
                         (print-warning x))
                       (return-from start-retrieval)))
       
-      (when (member :recently-retrieved (chunk-spec-slots request))
-        (let ((recent (chunk-spec-slot-spec request :recently-retrieved)))
-          (cond ((> (length recent) 1)
-                 (invalid :too-many '("Invalid retrieval request." ":recently-retrieved parameter used more than once.")))
-                ((not (or (eq '- (caar recent)) (eq '= (caar recent))))
-                 (invalid :bad-modifier '("Invalid retrieval request." ":recently-retrieved parameter's modifier can only be = or -.")))
-              ((not (or (eq t (third (car recent)))
-                        (eq nil (third (car recent)))
-                        (and (eq 'reset (third (car recent)))
-                             (eq '= (caar recent)))))
-               (invalid :bad-value '("Invalid retrieval request." ":recently-retrieved parameter's value can only be t, nil, or reset.")))
-              (t ;; it's a valid value for recently-retrieved
-               
-               (if (eq 'reset (third (car recent)))
-                   (bt:with-lock-held ((dm-state-lock dm))
-                     (setf (dm-finsts dm) nil))
-                 
-                 (let ((finsts (remove-old-dm-finsts dm)))
+      (let ((requested-slots (chunk-spec-slots request)))
+        (when (member :recently-retrieved requested-slots)
+          (let ((recent (chunk-spec-slot-spec request :recently-retrieved)))
+            (cond ((> (length recent) 1)
+                   (invalid :too-many '("Invalid retrieval request." ":recently-retrieved parameter used more than once.")))
+                  ((not (or (eq '- (caar recent)) (eq '= (caar recent))))
+                   (invalid :bad-modifier '("Invalid retrieval request." ":recently-retrieved parameter's modifier can only be = or -.")))
+                  ((not (or (eq t (third (car recent)))
+                            (eq nil (third (car recent)))
+                            (and (eq 'reset (third (car recent)))
+                                 (eq '= (caar recent)))))
+                   (invalid :bad-value '("Invalid retrieval request." ":recently-retrieved parameter's value can only be t, nil, or reset.")))
+                  (t ;; it's a valid value for recently-retrieved
                    
-                     (cond ((or (and (eq t (third (car recent)))   ;; = request t
-                                     (eq (caar recent) '=)) 
-                                (and (null (third (car recent)))   ;; - request nil
-                                     (eq (caar recent) '-)))
-                          
-                            ;; only those chunks marked are available
-                            
-                            (setf chunk-list (intersection (mapcar 'car finsts) chunk-list))
-                            
-                            ;; save that info for whynot
-                            (setf (last-request-finst last-request) :marked)
-                            (setf (last-request-finst-chunks last-request) chunk-list)
-                        
-                            (when sact
-                              (bt:with-lock-held ((dm-state-lock dm))
-                                (setf (sact-trace-only-recent (dm-current-trace dm)) t)
-                                (setf (sact-trace-recents (dm-current-trace dm)) chunk-list)))
-                        
-                            (when (dm-act-level act 'high)
-                              (model-output "Only recently retrieved chunks: ~s" chunk-list)))
-                           (t
-                            ;; simply remove the marked items
-                            ;; may be "faster" to do this later
-                            ;; once the set is trimed elsewise, but
-                            ;; for now keep things simple
-                            (unwind-protect
-                                (progn
-                                  (when sact
-                                    (bt:acquire-lock (dm-state-lock dm))
-                                    (setf (sact-trace-remove-recent (dm-current-trace dm)) t))
-                                  
-                                  (when (dm-act-level act 'high)
-                                    (model-output "Removing recently retrieved chunks:"))
-                                  
-                                  (setf (last-request-finst last-request) :unmarked)
-                                  
-                                  (setf chunk-list 
-                                    (remove-if (lambda (x)
-                                                 (when (member x finsts :key 'car :test 'eq-chunks-fct)
-                                                   
-                                                   (when sact
-                                                     (push-last x (sact-trace-recents (dm-current-trace dm))))
-                                                   
-                                                   (when (dm-act-level act 'high)
-                                                     (model-output "~s" x))
-                                                   
-                                                   (push x (last-request-finst-chunks last-request))
-                                                   t))
-                                               chunk-list)))
+                   (if (eq 'reset (third (car recent)))
+                       (bt:with-lock-held ((dm-state-lock dm))
+                         (setf (dm-finsts dm) nil))
+                     
+                     (let ((finsts (remove-old-dm-finsts dm)))
+                       
+                       (cond ((or (and (eq t (third (car recent)))   ;; = request t
+                                       (eq (caar recent) '=)) 
+                                  (and (null (third (car recent)))   ;; - request nil
+                                       (eq (caar recent) '-)))
+                              
+                              ;; only those chunks marked are available
+                              
+                              (setf chunk-list (intersection (mapcar 'car finsts) chunk-list))
+                              
+                              ;; save that info for whynot
+                              (setf (last-request-finst last-request) :marked)
+                              (setf (last-request-finst-chunks last-request) chunk-list)
+                              
                               (when sact
-                                (bt:release-lock (dm-state-lock dm))))))))))))
-    
-
-      (when (member :mp-value (chunk-spec-slots request))
-        (let ((mp-value (chunk-spec-slot-spec request :mp-value)))
-          (cond ((> (length mp-value) 1)
-                 (invalid :mp-multi '("Invalid retrieval request." ":mp-value parameter used more than once.")))
-                ((not (eq '= (caar mp-value)))
-                 (invalid :mp-modifier '("Invalid retrieval request." ":mp-value parameter's modifier can only be =.")))
-                ((not (numornil (third (car mp-value))))
-                 (invalid :mp-not-num '("Invalid retrieval request." ":mp-value parameter's value can only be nil or a number.")))
-                
-                (t ;; it's a valid request
-                 (setf mp (third (car mp-value)))))))
+                                (bt:with-lock-held ((dm-state-lock dm))
+                                  (setf (sact-trace-only-recent (dm-current-trace dm)) t)
+                                  (setf (sact-trace-recents (dm-current-trace dm)) chunk-list)))
+                              
+                              (when (dm-act-level act 'high)
+                                (model-output "Only recently retrieved chunks: ~s" chunk-list)))
+                             (t
+                              ;; simply remove the marked items
+                              ;; may be "faster" to do this later
+                              ;; once the set is trimed elsewise, but
+                              ;; for now keep things simple
+                              (unwind-protect
+                                  (progn
+                                    (when sact
+                                      (bt:acquire-lock (dm-state-lock dm))
+                                      (setf (sact-trace-remove-recent (dm-current-trace dm)) t))
+                                    
+                                    (when (dm-act-level act 'high)
+                                      (model-output "Removing recently retrieved chunks:"))
+                                    
+                                    (setf (last-request-finst last-request) :unmarked)
+                                    
+                                    (setf chunk-list 
+                                      (remove-if (lambda (x)
+                                                   (when (member x finsts :key 'car :test 'eq-chunks-fct)
+                                                     
+                                                     (when sact
+                                                       (push-last x (sact-trace-recents (dm-current-trace dm))))
+                                                     
+                                                     (when (dm-act-level act 'high)
+                                                       (model-output "~s" x))
+                                                     
+                                                     (push x (last-request-finst-chunks last-request))
+                                                     t))
+                                                 chunk-list)))
+                                (when sact
+                                  (bt:release-lock (dm-state-lock dm))))))))))))
+        
+        
+        (when (member :mp-value requested-slots)
+          (let ((mp-value (chunk-spec-slot-spec request :mp-value)))
+            (cond ((> (length mp-value) 1)
+                   (invalid :mp-multi '("Invalid retrieval request." ":mp-value parameter used more than once.")))
+                  ((not (eq '= (caar mp-value)))
+                   (invalid :mp-modifier '("Invalid retrieval request." ":mp-value parameter's modifier can only be =.")))
+                  ((not (numornil (third (car mp-value))))
+                   (invalid :mp-not-num '("Invalid retrieval request." ":mp-value parameter's value can only be nil or a number.")))
+                  
+                  (t ;; it's a valid request
+                   (setf mp (third (car mp-value))))))))
           
       (let ((best-val nil)
             (best nil)
@@ -1583,7 +1607,18 @@
               (setf (dm-finst-span dm) (safe-seconds->ms (cdr param) 'sgp))
               (cdr param))
              
-             (:sim-hook (setf (dm-sim-hook dm) (cdr param)))
+             (:sim-hook 
+              
+              ;; If a different sim-hook is set clear the cache
+              (when (cdr param)
+                (when (and (dm-last-sim-hook dm)
+                           (cdr param)
+                           (not (equalp (cdr param) (dm-last-sim-hook dm))))
+                  (clrhash (dm-sim-hook-cache dm)))
+                (setf (dm-last-sim-hook dm) (cdr param)))
+              
+              (setf (dm-sim-hook dm) (cdr param)))
+             
              (:sji-hook (setf (dm-sji-hook dm) (cdr param)))
              (:w-hook (setf (dm-w-hook dm) (cdr param)))
              
@@ -1637,7 +1672,8 @@
                     (push (cdr param) (dm-chunk-add-hook dm)))
                 (setf (dm-chunk-add-hook dm) nil)))
              (:nsji (setf (dm-nsji dm) (cdr param)))
-             (:cache-sim-hook-results (setf (dm-cache-sim-hook-results dm) (cdr param)))))
+             (:cache-sim-hook-results 
+              (setf (dm-cache-sim-hook-results dm) (cdr param)))))
           (t 
            (case param
              
@@ -1923,7 +1959,7 @@
   (let ((result nil))
     (dolist (x ordering result)
       (aif (position-if (lambda (y) (find (car x) (cdr y))) result)
-           (setf result (splice-into-position-des result it x))
+           (splice-into-position-des result it x)
            (push-last x result)))))
         
 
@@ -2060,7 +2096,7 @@
         (define-parameter :cache-sim-hook-results :valid-test 'tornil :default-value nil
           :warning "T or nil" :documentation "Whether the results of calling a sim-hook function should be cached to avoid future calls to the hook function"))
   
-  :version "6.3" 
+  :version "6.4" 
   :documentation "The declarative memory module stores chunks from the buffers for retrieval"
   
   ;; The creation function returns a new dm structure

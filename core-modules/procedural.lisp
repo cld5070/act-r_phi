@@ -809,6 +809,15 @@
 ;;;             :   slot.
 ;;; 2019.03.06 Dan
 ;;;             : * Use valid-slot-index instead of valid-slot-name.
+;;; 2019.05.03 Dan
+;;;             : * Can't use the length of (buffers) to set the lookup array
+;;;             :   because if a buffer is removed and added back it'll get a
+;;;             :   new index that's outside that range.  Using the new max-
+;;;             :   buffer-index command instead.
+;;; 2019.05.16 Dan
+;;;             : * Fixed production-statement-text for the @ actions because
+;;;             :   it assumed only the old style of '@buffer> chunk' was 
+;;;             :   possible.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -1093,7 +1102,7 @@
     (setf (procedural-delayed-resolution prod) nil)
     (setf (procedural-buffer-indices prod) nil)  
     (setf (procedural-buffer-lookup prod) nil)
-    (setf (procedural-buffer-lookup-size prod) (length (buffers))) 
+    (setf (procedural-buffer-lookup-size prod) (1+ (max-buffer-index)))
     (setf (procedural-last-cr-time prod) nil)
     (setf (procedural-search-buffer-table prod) (make-hash-table))
                      
@@ -2176,7 +2185,14 @@
          ;; there's only one thing in the definition but leave it flexible...
          (format s "   ~c~a> ~{~s~^ ~}~%" op target (replace-variables definition bindings))))
       (#\@
-       (format s "   @~a> ~s~%" target (replace-variables (car definition) bindings)))
+       (cond ((null definition)
+              (format s "   @~a>~%" target))
+             ((= (length definition) 1)
+              (format s "   @~a> ~s~%" target (first (replace-variables definition bindings))))
+             (t
+              (format s "   @~a>~%" target)
+              (dolist (slot (replace-variables (chunk-spec-slot-spec spec) bindings)) 
+                (format s "       ~s ~s~%" (spec-slot-name slot) (spec-slot-value slot))))))
       (#\!
        (format s "   !~a! ~{~s~^ ~}~%" target (replace-variables definition bindings)))
       (#\+

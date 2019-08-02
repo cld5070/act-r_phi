@@ -859,3 +859,6 @@ def permute_list(l):
     for i in new_indexes:
         result.append(l[i])
     return result
+
+def call_command(command,*parameters):
+    return current_connection.evaluate_single(command,*parameters)

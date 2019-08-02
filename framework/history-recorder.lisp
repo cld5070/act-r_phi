@@ -167,6 +167,10 @@
 ;;; 2018.08.22 Dan
 ;;;             : * Process-history-data should also return the comment from a
 ;;;             :   file of history data as the second result.
+;;; 2019.05.29 Dan
+;;;             : * Turn off file access in single threaded mode because there
+;;;             :   isn't a JSON parser loaded so data will be in the original
+;;;             :   Lisp format and don't want to generate incompatible files.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -374,6 +378,9 @@
   `(apply 'get-history-data-fct ',name ',file ',rest))
 
 (defun get-history-data-fct (name &optional file &rest rest)
+  #+:single-threaded-act-r (when file 
+                             (print-warning "History file access unavailable in single-threaded model.")
+                             (return-from get-history-data-fct))
   (if (not (stringp name))
       (print-warning "Get-history-data given name ~s but names must be strings." name)
     (let ((history-recorder (get-component history-recorder)))
@@ -446,6 +453,9 @@
   `(process-history-data-fct ',name ',file ',data-params ',processor-params))
 
 (defun process-history-data-fct (name &optional file data-params processor-params)
+  #+:single-threaded-act-r (when file 
+                             (print-warning "History file access unavailable in single-threaded model.")
+                             (return-from process-history-data-fct))
   (if (not (stringp name))
       (print-warning "Process-history-data given name ~s but names must be strings." name)
     (let ((history-recorder (get-component history-recorder)))
@@ -468,6 +478,9 @@
 
 
 (defun start-incremental-history-data-fct (name size &optional file &rest rest)
+  #+:single-threaded-act-r (when file 
+                             (print-warning "History file access unavailable in single-threaded model.")
+                             (return-from start-incremental-history-data-fct))
   (if (not (stringp name))
       (print-warning "Start-incremental-history-data given name ~s but names must be strings." name)
     (let ((history-recorder (get-component history-recorder)))
@@ -529,6 +542,9 @@
   `(save-history-data-fct ',name ',file ',comment ',@rest))
 
 (defun save-history-data-fct (name file &optional comment &rest rest)
+  #+:single-threaded-act-r (when file 
+                             (print-warning "History file access unavailable in single-threaded model.")
+                             (return-from save-history-data-fct))
   (if (not (stringp name))
       (print-warning "Save-history-data given name ~s but names must be strings." name)
     (let ((history-recorder (get-component history-recorder)))
@@ -563,6 +579,9 @@
 
 
 (defun parse-saved-history-data (requested file)
+  #+:single-threaded-act-r (when file 
+                             (print-warning "History file access unavailable in single-threaded model.")
+                             (return-from parse-saved-history-data))
   (handler-case
       (let* ((d (json:decode-json-from-source file))
              (name (cdr (assoc :name d)))

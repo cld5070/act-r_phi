@@ -231,6 +231,15 @@
 ;;;             :   eventually added it can use the options list for them.
 ;;; 2019.02.05 Dan
 ;;;             : * Adjustments because meta-p-models is now an alist.
+;;; 2019.03.22 Dan
+;;;             : * Next-scheduled-event is only called when the lock is held
+;;;             :   so make that assumption and skip the lock.
+;;; 2019.04.09 Dan
+;;;             : * Adjust compare-events and the scheduling of waiting and
+;;;             :   after events to use the new min and max slots for priority.
+;;; 2019.04.15 Dan
+;;;             : * Replace splice-into-list with splice-into-position-des and
+;;;             :   don't setf with the returned value since it's destructive.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -490,8 +499,9 @@
 
 
 (defun next-scheduled-event (mp)
-  (bt:with-recursive-lock-held ((meta-p-schedule-lock mp))
-    (first (meta-p-events mp))))
+  ;; assume this is true! (bt:with-recursive-lock-held ((meta-p-schedule-lock mp))
+  
+  (first (meta-p-events mp)))
 
 
 (defun remove-scheduled-event (mp event)
@@ -546,12 +556,11 @@
     
     (if (null (meta-p-events mp))
         (push event (meta-p-events mp))
-      (setf (meta-p-events mp)
-        (do* ((pos 0 (1+ pos))
-              (queue (meta-p-events mp) (cdr queue)))
-             ((or (null queue)
-                  (eq :left (compare-events event (car queue))))
-              (splice-into-list-des (meta-p-events mp) pos event)))))
+      (do* ((pos 0 (1+ pos))
+            (queue (meta-p-events mp) (cdr queue)))
+           ((or (null queue)
+                (compare-events event (car queue)))
+            (splice-into-position-des (meta-p-events mp) pos event))))
     
     (when (or (meta-p-delayed mp) (meta-p-dynamics mp))
       (update-waiting-events mp event))))
@@ -578,16 +587,14 @@
 ;;; existing events with the same priority.
 
 (defun compare-events (new-event old-event)
-  (if (or (> (act-r-event-mstime new-event) (act-r-event-mstime old-event))
-          (and (= (act-r-event-mstime new-event) (act-r-event-mstime old-event))
-               (or (eq (act-r-event-priority new-event) :min)
-                   (eq (act-r-event-priority old-event) :max)
-                   (and (numberp (act-r-event-priority new-event))
-                        (numberp (act-r-event-priority old-event))
-                        (<= (act-r-event-priority new-event) 
-                            (act-r-event-priority old-event))))))
-      
-      :right :left))
+  (or (< (act-r-event-mstime new-event) (act-r-event-mstime old-event))
+      (and (= (act-r-event-mstime new-event) (act-r-event-mstime old-event))
+           (null (act-r-event-max old-event))
+           (null (act-r-event-min new-event))
+           (or (act-r-event-max new-event)
+               (act-r-event-min old-event)
+               (and (> (act-r-event-priority new-event) 
+                       (act-r-event-priority old-event)))))))
 
 
 
@@ -630,7 +637,7 @@
     
     (dolist (event moved-events)
       (setf (act-r-event-mstime event) (act-r-event-mstime new-event))
-      (setf (act-r-event-priority event) :min)
+      (setf (act-r-event-min event) :min)
       (insert-queue-event mp event))
     
     (dolist (event moved-events)
@@ -681,7 +688,7 @@
              (values (act-r-event-num new-event) (if (act-r-event-wait-condition new-event) t nil)))
             ((null delay)
              (setf (act-r-event-mstime new-event) (meta-p-time mp))
-             (setf (act-r-event-priority new-event) :max)
+             (setf (act-r-event-max new-event) :max)
              (setf (act-r-event-wait-condition new-event) nil)
              (setf (act-r-event-dynamic new-event) nil)
              

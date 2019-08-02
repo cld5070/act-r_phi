@@ -1132,9 +1132,4 @@ proc get_3dbrain_history_data {win model scale {fname ""}} {
 }
 
 
-
-
-
-button [control_panel_name].brain3d -command main_bold_brains -text "BOLD 3D brain" -font button_font
-
-pack [control_panel_name].brain3d
+add_bold_trace_type "3D brain" main_bold_brains

@@ -346,6 +346,10 @@
 ;;;             : * Bug in check for whether a button modification was valid.
 ;;; 2018.11.19 Dan
 ;;;             : * Really fixed the button modification tests now.
+;;; 2019.06.19 Dan
+;;;             : * Adjust close-exp-window because LispWorks implicitly locks
+;;;             :   hash-tables between threads which means a maphash can't
+;;;             :   call something in another thread that accesses the table.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 #+:packaged-actr (in-package :act-r)
@@ -747,19 +751,25 @@
     (multiple-value-bind (wind key) (determine-exp-window instance window)
       (if wind
           ;; for every model in which it is installed it must be removed
-          (progn 
+          (let (to-remove) 
             
-               
-                 (maphash (lambda (model windows)
-                            (when (find key windows :test 'string-equal)
-                              (with-model-eval model
-                                (remove-device (list "vision" "exp-window" key)))
-                              
-                              (bt:with-recursive-lock-held ((agi-lock instance))
-                                (setf (gethash model (installed-windows instance)) (remove key windows :test 'string-equal)))
-                              
-                              ))
-                          (bt:with-recursive-lock-held ((agi-lock instance)) (installed-windows instance)))
+            
+            (maphash (lambda (model windows)
+                       (when (find key windows :test 'string-equal)
+                         (push (cons model windows) to-remove)))
+                     (bt:with-recursive-lock-held ((agi-lock instance)) (installed-windows instance)))
+            
+            (mapcar (lambda (x)
+                      (let ((model (car x))
+                            (windows (cdr x)))
+                        (with-model-eval model
+                          (remove-device (list "vision" "exp-window" key)))
+                        
+                        (bt:with-recursive-lock-held ((agi-lock instance))
+                          (setf (gethash model (installed-windows instance)) (remove key windows :test 'string-equal)))))
+              to-remove)
+            
+            
             
             ;; Close the window 
             (close-rpm-window wind)

@@ -60,6 +60,8 @@ There is an example run provided at the end of this file.
 
 (clear-all)
 
+(require-extra "tracker")
+
 (define-model simple-tracker-test
     
   (sgp :v t :trace-tracker t :trace-detail high)

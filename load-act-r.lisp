@@ -13,7 +13,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Filename    : load-act-r.lisp
-;;; Version     : 2.0
+;;; Version     : 3.0
 ;;;
 ;;; Description : Top level loader for the whole ACT-R system.
 ;;;
@@ -287,6 +287,25 @@
 ;;;             :   removed from *modules* for some reason (reloading ACT-R in
 ;;;             :   a separate package for example).  The variable *act-r-modules*
 ;;;             :   holds the things that were loaded with those.
+;;; 2019.04.09 Dan
+;;;             : * Added support for the :single-threaded-act-r flag which
+;;;             :   results in the dispatcher not starting any threads (thus no
+;;;             :   external connections possible) and all the locks being
+;;;             :   ignored.
+;;; 2019.04.10 Dan
+;;;             : * Print a notice that it's single threaded after the version
+;;;             :   information.
+;;; 2019.05.29 Dan [3.0]
+;;;             : * Don't need QuickLisp if loading in single-threaded mode.
+;;;             :   Instead just load the support/single-threaded.lisp file
+;;;             :   that now defines the packages and stubs for all the things
+;;;             :   that are referenced from the Quicklisp libraries.
+;;;             : * Record which mode was last used in support/mode.txt so that
+;;;             :   it can automatically force a recompile when switching
+;;;             :   between full and single-threaded.
+;;; 2019.05.30 Dan
+;;;             : * Reverting from using jsown since it doesn't differentiate
+;;;             :   1.0 from 1, but that distinction is important.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -335,19 +354,6 @@
 ;;;
 ;;; The code
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;;----Added by Chris Dancy, xml libraries needed for physiology module
-;;No longer needed (ACT-R7 needs QL anyway, so we can just load it that way),
-;; but kept for historical purposes
-#|
-;;Load sxml files
-(load (merge-pathnames "sxml/package.lisp" *LOAD-TRUENAME*))
-(load (merge-pathnames "sxml/dom.lisp" *LOAD-TRUENAME*))
-(load (merge-pathnames "sxml/lxml-dom.lisp" *LOAD-TRUENAME*))
-(load (merge-pathnames "sxml/sxml-dom.lisp" *LOAD-TRUENAME*))
-(load (merge-pathnames "sxml/xml.lisp" *LOAD-TRUENAME*))
-(load (merge-pathnames "sxml/xml-struct-dom.lisp" *LOAD-TRUENAME*))
-|#
 
 #+:packaged-actr (make-package :act-r
                                :use '("COMMON-LISP-USER"
@@ -585,18 +591,37 @@
 ;; versions with the sources so it can be loaded without them too.
 
 
-#-:QUICKLISP (eval-when (:compile-toplevel :load-toplevel :execute)
-               (when (probe-file "~/quicklisp/setup.lisp")
-                 (load "~/quicklisp/setup.lisp"))
-               (unless (find :quicklisp *features*)
-                 (error "This version of ACT-R requires Quicklisp to load the components necessary for the remote connection.")))
+#+(and (not :QUICKLISP) (not :single-threaded-act-r)) (eval-when (:compile-toplevel :load-toplevel :execute)
+                                                        (when (probe-file "~/quicklisp/setup.lisp")
+                                                          (load "~/quicklisp/setup.lisp"))
+                                                        (unless (find :quicklisp *features*)
+                                                          (error "This version of ACT-R requires Quicklisp to load the components necessary for the remote connection.")))
 
 ;;; Load the libraries
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (ql:quickload :bordeaux-threads)
-  (ql:quickload :usocket)
-  (ql:quickload :cl-json)
-	(ql:quickload "s-xml"))
+#-:single-threaded-act-r (eval-when (:compile-toplevel :load-toplevel :execute)
+                           (ql:quickload :bordeaux-threads)
+                           (ql:quickload :usocket)
+                           (ql:quickload :cl-json))
+;; Added by Chris Dancy: Needed for Physio Module
+(ql:quickload :s-xml)
+
+;;; Check which mode the last load used to determine if it should
+;;; force a recompile.
+
+(defvar *current-load-mode* nil)
+
+(let ((current (if (find :single-threaded-act-r *features*)
+                   :single
+                 :normal))
+      (previous (ignore-errors (with-open-file (f (translate-logical-pathname "ACT-R-support:load-mode.lisp") :direction :input)
+                                 (read f)))))
+  (unless (eq current previous)
+    (pushnew :actr-recompile *features*))
+  (setf *current-load-mode* current))
+
+
+#+:single-threaded-act-r (smart-load (translate-logical-pathname "ACT-R:support;") "single-threaded.lisp")
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Load the framework's loader file (it is order dependent)
@@ -822,7 +847,14 @@
 
 (format t "~%##################################~%")
 #-:standalone (mp-print-versions)
+#+:single-threaded-act-r (mp-print-versions)
 (format t "~%######### Loading of ACT-R ~d is complete #########~%" *actr-architecture-version*)
+#+:single-threaded-act-r (format t "~%######### This is a single threaded build #########~%")
+
+
+
+(ignore-errors (with-open-file (f "ACT-R-support:load-mode.lisp" :direction :output :if-does-not-exist :create :if-exists :overwrite)
+                 (write *current-load-mode* :stream f)))
 
 
 (let ((d (directory (translate-logical-pathname "ACT-R:user-loads;*.lisp"))))

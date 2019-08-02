@@ -8,6 +8,36 @@ global run_over
 global stepper_tutorable
 global stepper_tutored
 
+
+frame [control_panel_name].step_frame -borderwidth 0 
+
+checkbutton [control_panel_name].step_frame.step_all_events -text "Step All" -font checkbox_font \
+                -variable step_for_all -command {change_step_all} 
+
+set step_for_all 0
+set revert_step_all 0
+
+proc stepper_pause {} {
+  global step_for_all
+  global revert_step_all
+
+  if {$step_for_all == 0} {
+    set step_for_all 1
+    call_act_r_command "change-step-all" nil [list 1]
+    set revert_step_all 1
+  }
+
+  select_stepper
+}
+
+
+proc change_step_all {} {
+  global step_for_all
+
+  call_act_r_command "change-step-all" nil [list $step_for_all]
+}
+
+
 proc stepper_button_state_control {state} {
  .stepper.step configure -state $state
  .stepper.stop configure -state $state
@@ -25,7 +55,12 @@ proc run_starts {model time} {
 proc run_ends {model time} {
   global run_over
 
-  set run_over 1
+  if {$time == "delay"} {
+    set run_over -1
+  } else {
+    set run_over 1
+  }
+
   stepper_button_state_control disabled
 }
 
@@ -37,11 +72,11 @@ proc select_stepper {} {
     raise .stepper
   } else {
 
-    if {[call_act_r_command "act-r-running-p"] == "true"} {
-      tk_messageBox -icon info -type ok -title "ACT-R running" \
-                    -message "Cannot open the stepper while ACT-R is currently running."
-      return 0
-    }
+ #   if {[call_act_r_command "act-r-running-p"] == "true"} {
+ #     tk_messageBox -icon info -type ok -title "ACT-R running" \
+ #                   -message "Cannot open the stepper while ACT-R is currently running."
+ #     return 0
+ #   }
 
     set stepper_temp [call_act_r_command "stepper-status-check"]
 
@@ -235,15 +270,27 @@ proc select_stepper {} {
       global step_now
 
       set step_now 999 
+
+      global step_for_all
+      global revert_step_all
+
+      if {$revert_step_all == 1} {
+        set step_for_all 0
+        call_act_r_command "change-step-all" nil [list 0]
+        set revert_step_all 0
+      }
     }
 
     reset_stepper_tool ""
 
-#    if {[call_act_r_command "act-r-running-p"] == "true"} {
-#      run_starts 0 0
-#    } else {
-    run_ends 0 0
-#    }
+    call_act_r_command "stepper-condition" nil [list false false]
+
+
+    if {[call_act_r_command "act-r-running-p"] == "true"} {
+      run_ends 0 delay
+    } else {
+      run_ends 0 0
+    }
 
     if {[call_act_r_command "install-stepper-hooks"] != "true"} {
       tk_messageBox -icon warning -type ok -title "Stepper problem" \
@@ -252,6 +299,8 @@ proc select_stepper {} {
     } else {
       wm deiconify .stepper
     }
+
+    
   }
 }
 
@@ -351,6 +400,10 @@ proc wait_for_stepper {model event} {
     return "true"
   } else {
 
+    if {$run_over == -1} {
+      run_starts 0 0
+    }
+
     set step_now 0
     tkwait variable step_now
 
@@ -377,6 +430,8 @@ proc display_stepper_stepped {model text items tutorable p1 p2 p3 p4} {
 
   set .stepper.current_text.var $text
  
+  if {$p3 == "null"} { set p3 ""}
+
   set .stepper.prod_frame.f4.list_title.var $p1
   set .stepper.prod_frame.f5.production.var $p2
   set .stepper.prod_frame.f2.bindings.var $p3
@@ -498,10 +553,12 @@ proc update_instantiation_viewers {list} {
 
     } else {
       set b "" 
-      foreach i $bindings {
-        append b [format "%s : %s\n" [lindex $i 0] [lindex $i 1]]
+      if {$bindings != "null"} {
+        foreach i $bindings {
+          append b [format "%s : %s\n" [lindex $i 0] [lindex $i 1]]
+        }
       }
-    
+
       update_text_pane .stepper.prod_frame.f2.f.text $b
       update_text_pane .stepper.prod_frame.f3.f.text $display
     }
@@ -694,9 +751,9 @@ proc tutor_hint {word side buf is_buf} {
   } elseif {$side == "rhs"} {
     set tutor_help "You should find the binding for $word on\nthe left hand side of the production first."
   } elseif $is_buf {
-    set tutor_help "Use the buffer contents tool to determine the chunk in the [string range $word 1 end] buffer."
+    set tutor_help "Use the buffers tool to determine the chunk in the [string range $word 1 end] buffer."
   } elseif {$side == "lhs" && $buf != ""} { 
-    set tutor_help "$word is in a slot of the [string range $buf 1 end] buffer.\nYou can find its value using the buffer contents tool."
+    set tutor_help "$word is in a slot of the [string range $buf 1 end] buffer.\nYou can find its value using the buffers tool."
   } else {
     set tutor_help "No hint is available for this variable.  If it is in a !bind! or !mv-bind! you will need to use the help button to get the answer."
   }
@@ -710,6 +767,14 @@ proc tutor_help {word} {
 }
 
 
-button [control_panel_name].step_button -command {select_stepper} -text "Stepper" -font button_font
+button [control_panel_name].step_frame.step_button -command {select_stepper} -text "Stepper" -font button_font
 
-pack [control_panel_name].step_button
+pack [control_panel_name].step_frame.step_button -side left
+
+pack [control_panel_name].step_frame.step_all_events -side right
+
+pack [control_panel_name].step_frame
+
+button [control_panel_name].pause_button -command {stepper_pause} -text "Pause" -font button_font
+
+pack [control_panel_name].pause_button

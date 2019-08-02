@@ -13,7 +13,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; 
 ;;; Filename    : scheduling.lisp
-;;; Version     : 5.0
+;;; Version     : 5.1
 ;;; 
 ;;; Description : Event creation and scheduling and schedule running functions.
 ;;; 
@@ -522,6 +522,12 @@
 ;;;             : * Added a switch that kills the trace output without having to
 ;;;             :   access the printing module or output filtering and it's 
 ;;;             :   associated with the system parameter - :high-performance.
+;;; 2019.04.09 Dan
+;;;             : * When creating events set the min and max slots instead of
+;;;             :   priority when needed since priority is now always a number.
+;;; 2019.05.22 Dan [5.1]
+;;;             : * Added a run-until-action function that runs the system 
+;;;             :   until after an event that has the provided action occurs.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -880,6 +886,64 @@
 
 (add-act-r-command "run-until-condition" 'run-until-condition "Run the ACT-R scheduler until the provided function returns a non-nil value. Params: fct-or-cmd-string {real-time?}." "Only one run allowed at a time")
 
+
+(defun run-until-action (action &optional (real-time nil))
+  (indicate-running
+   (if (not (or (symbolp action) (stringp action)))
+       (print-warning "run-until-action must be given a name(symbol) or a string, but given ~s which is a ~s." action (type-of action))
+     (let ((stop nil)
+           (name (when (symbolp action) (symbol-name action))))
+       (flet ((test-symbol (mp next-time count)
+                           (declare (ignore next-time count))
+                           (let* ((e (next-scheduled-event mp))
+                                  (a (act-r-event-action e)))
+                             (prog1
+                                 stop
+                               (unless stop
+                                 (cond ((symbolp a)
+                                        (setf stop (eq action a)))
+                                       ((stringp a)
+                                        (setf stop (string-equal name a))))))))
+              
+              (test-string (mp next-time count)
+                           (declare (ignore next-time count))
+                           (let* ((e (next-scheduled-event mp))
+                                  (a (act-r-event-action e)))
+                             (prog1
+                                 stop
+                               (unless stop
+                                 (cond ((symbolp a)
+                                        (setf stop (string-equal action (symbol-name a))))
+                                       ((stringp a)
+                                        (setf stop (string= action a)))))))))
+         (multiple-value-bind (time events break)
+             (run-sched-queue (current-mp) (if (symbolp action) #'test-symbol #'test-string) :real-time real-time)
+           (unless break
+             (if stop
+                 (meta-p-output (format-event (make-act-r-event 
+                                               :mstime (mp-time-ms) 
+                                               :module "------"
+                                               :model '-
+                                               :details (format nil "Stopped because ~a action occurred" action)
+                                               :output t
+                                               :mp nil)))
+               
+               (meta-p-output (format-event (make-act-r-event 
+                                               :mstime (mp-time-ms)
+                                               :module "------"
+                                               :model '-
+                                               :details 
+                                               "Stopped because no events left to process"
+                                               :output t
+                                               :mp nil)))))
+                      
+           (values (ms->seconds time) events break)))))))
+
+(defun run-until-action-external (action &optional (real-time nil))
+  (run-until-action (decode-string action) real-time))
+
+(add-act-r-command "run-until-action" 'run-until-action-external "Run the ACT-R scheduler stopping after an event with the given action occurs. Params: 'action' {real-time}." "Only one run allowed at a time")
+
 (defun run-full-time (run-time &optional (real-time nil))
   (indicate-running
    (if (not (and (numberp run-time) (> run-time 0)))
@@ -1093,7 +1157,9 @@
                                       :model (current-model-struct)
                                       :module module
                                       :mstime (if time-in-ms time (safe-seconds->ms time 'sechedule-event))
-                                      :priority priority
+                                      :priority (if (numberp priority) priority 0)
+                                      :min (and (eq priority :min) priority)
+                                      :max (and (eq priority :max) priority)
                                       :action action
                                       :params params
                                       :details details
@@ -1153,7 +1219,9 @@
                             :mp nil
                             :model (current-model-struct) 
                             :module module
-                            :priority priority
+                            :priority (if (numberp priority) priority 0)
+                            :min (and (eq priority :min) priority)
+                            :max (and (eq priority :max) priority)
                             :action action
                             :params params
                             :details details
@@ -1208,7 +1276,9 @@
                             :mp nil
                             :model (current-model-struct) 
                             :module module
-                            :priority priority
+                            :priority (if (numberp priority) priority 0)
+                            :min (and (eq priority :min) priority)
+                            :max (and (eq priority :max) priority)
                             :action action
                             :params params
                             :details details
@@ -1263,7 +1333,7 @@
                              :mp nil
                              :model (current-model-struct) 
                              :module module
-                             :priority :min
+                             :min :min
                              :action action
                              :params params
                              :details details
@@ -1321,7 +1391,7 @@
                              :mp nil
                              :model (current-model-struct) 
                              :module module
-                             :priority :min
+                             :min :min
                              :action action
                              :params params
                              :details details
@@ -1378,7 +1448,7 @@
                                         :mp nil
                                         :model (current-model-struct) 
                                         :module module
-                                        :priority :max
+                                        :max :max
                                         :action action
                                         :params params
                                         :details details
@@ -1393,7 +1463,9 @@
                      :module :none
                      :model (current-model-struct) 
                      
-                     :priority priority
+                     :priority (if (numberp priority) priority 0)
+                     :min (and (eq priority :min) priority)
+                     :max (and (eq priority :max) priority)
                      :action 'periodic-action
                      :output nil
                      :details 
@@ -1451,7 +1523,9 @@
            (let ((new-event (make-act-r-break-event :mp nil
                                                     :mstime (if time-in-ms time (safe-seconds->ms time 'schedule-break))
                                                     :params (list mp)
-                                                    :priority priority
+                                                    :priority (if (numberp priority) priority 0)
+                                                    :min (and (eq priority :min) priority)
+                                                    :max (and (eq priority :max) priority)
                                                     :details details)))
              
              (insert-queue-event mp new-event)
@@ -1485,7 +1559,9 @@
            (let ((new-event (make-act-r-break-event 
                              :mp nil
                              :params (list mp)
-                             :priority priority
+                             :priority (if (numberp priority) priority 0)
+                             :min (and (eq priority :min) priority)
+                             :max (and (eq priority :max) priority)
                              :details details)))
              
              (insert-queue-event mp new-event :delta (if time-in-ms time-delay (safe-seconds->ms time-delay 'schedule-break-relative)))
@@ -1517,7 +1593,7 @@
             (let* ((new-event (make-act-r-break-event 
                                :mp nil
                                :model (current-model-struct)
-                               :priority :min
+                               :min :min
                                :params (list mp)
                                :details details
                                :dynamic dynamic
@@ -1542,7 +1618,7 @@
   (let* ((mp (current-mp))
          (new-event (make-act-r-break-event :mp nil
                                             :params (list mp)
-                                            :priority :min
+                                            :min :min
                                             :details details)))
     
     (insert-final-queue-event mp new-event)

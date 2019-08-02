@@ -13,16 +13,18 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; 
 ;;; Filename    : modules.lisp
-;;; Version     : 2.0
+;;; Version     : 3.0
 ;;; 
 ;;; Description : Code for defining and using the modules.
 ;;; 
 ;;; Bugs        : 
 ;;;
-;;; To do       : * Finish the documentation.
+;;; To do       : X Finish the documentation.
 ;;;             : X Write an undefine function.
 ;;;             : X Test better so that a module can't be created with models
 ;;;             :   already defined otherwise bad things happen.
+;;;             : * Look into an undefine "on the fly" for when a remotely
+;;;             :   defined module goes away.
 ;;; 
 ;;; ----- History -----
 ;;;
@@ -194,6 +196,22 @@
 ;;;             :   is likely more complicated.
 ;;; 2019.01.17 Dan
 ;;;             : * Fixed a bug in a warning with m-buffer-offset.
+;;; 2019.03.15 Dan
+;;;             : * Getting rid of most get-abstract-module calls by storing the
+;;;             :   abstract-module in the table with the instance so that get-
+;;;             :   module returns both -- the exists is the abstract!
+;;; 2019.04.03 Dan
+;;;             : * The functions called from internal code (like reset-module)
+;;;             :   are now passed the module instance and abstract module.
+;;; 2019.04.15 Dan
+;;;             : * Replace splice-into-list with splice-into-position-des and
+;;;             :   don't setf with the returned value since it's destructive.
+;;; 2019.05.24 Dan [3.0] 
+;;;             : * Add code to check that a remote module still has valid  
+;;;             :   interface functions and undefine it if it doesn't.  Can only
+;;;             :   be called at clear-all time, and clear-all now does so.
+;;; 2019.07.02 Dan
+;;;             : * Actually set the external flag on the remote modules.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -367,6 +385,11 @@
 (defvar *modules-lookup* (make-act-r-modules)
   "The table of all defined modules")
 
+;;; For safety reasons need to know which modules are defined
+;;; remotely so that they can be verified at clear-all time.
+
+(defvar *remote-act-r-modules* nil)
+
 ;;; Some macros to hide the global from direct use in other files
 
 
@@ -514,8 +537,9 @@
                                                     :run-over-notify run-end)))
                      (bt:with-recursive-lock-held ((act-r-modules-lock *modules-lookup*))
                        (setf (gethash module-name (act-r-modules-table *modules-lookup*)) new-mod)
-                       (setf (act-r-modules-sorted-names *modules-lookup*)
-                         (splice-into-list (act-r-modules-sorted-names *modules-lookup*) 
+                       (if (null (act-r-modules-sorted-names *modules-lookup*))
+                           (push module-name (act-r-modules-sorted-names *modules-lookup*))
+                         (splice-into-position-des (act-r-modules-sorted-names *modules-lookup*) 
                                            (aif (position-if (lambda (x)
                                                                (string< (symbol-name module-name) (symbol-name x)))
                                                              (act-r-modules-sorted-names *modules-lookup*))
@@ -571,11 +595,45 @@
   (multiple-value-bind (valid interface)
       (process-options-list interface-list "define-module" '(:version :documentation :creation :reset :query :request :buffer-mod :params :delete :notify-on-clear :update :warning :search :offset :run-start :run-end))
     (if valid
-        (apply 'define-module-fct (string->name name) (parse-remote-buffers buffer-list) (parse-remote-params param-list) interface)
+        (let ((success (apply 'define-module-fct (string->name name) (parse-remote-buffers buffer-list) (parse-remote-params param-list) interface)))
+          (when success
+            (bt:with-recursive-lock-held ((act-r-modules-lock *modules-lookup*))
+              (let ((m (gethash success (act-r-modules-table *modules-lookup*))))
+                (setf (act-r-module-external m) t))
+              (push success *remote-act-r-modules*)))
+          success)  
       nil)))
 
 (add-act-r-command "define-module" 'remote-define-module "Create a new module. Params: name (buffer-spec*) (param-spec*) {< version, documentation, creation , reset, query, request, buffer-mod, params, delete, notify-on-clear, update, warning, search, offset, run-start, run-end >}")
 
+
+(defun verify-remote-modules ()
+  (bt:with-recursive-lock-held ((act-r-modules-lock *modules-lookup*))
+    (dolist (module *remote-act-r-modules*)
+      (let ((m (gethash module (act-r-modules-table *modules-lookup*))))
+        (when (some (lambda (fn)
+                      (and (stringp fn) (not (check-act-r-command fn))))
+                    (list (act-r-module-creation m)
+                          (act-r-module-reset m)
+                          (act-r-module-secondary-reset m)
+                          (act-r-module-tertiary-reset m)
+                          (act-r-module-query m)
+                          (act-r-module-request m)
+                          (act-r-module-buffer-mod m)
+                          (act-r-module-params m)
+                          (act-r-module-delete m)
+                          (act-r-module-notify-on-clear m)
+                          (act-r-module-update m)
+                          (act-r-module-warn m)
+                          (act-r-module-search m)
+                          (act-r-module-offset m)
+                          (act-r-module-run-notify m)
+                          (act-r-module-run-over-notify m)))
+          (undefine-module-fct module)
+          (print-warning "Module ~s undefined because remote commands no longer available." module)
+          (setf *remote-act-r-modules* (remove module *remote-act-r-modules*)))))))
+                          
+                    
 
 ;;; Since a module can't be redefined interactive creation of new 
 ;;; modules requires a way to get rid of one on the fly
@@ -643,7 +701,7 @@
              (multiple-value-bind (mod present)
                  (gethash module-name (let ((model (current-model-struct))) (bt:with-lock-held ((act-r-model-modules-lock model)) (act-r-model-modules-table model))))
                (if present
-                   (progn (setf instance t) mod)
+                   (progn (setf instance (cdr mod)) (car mod))
                  (print-warning "~s is not the name of a module in the current model." module-name))))
             instance)))
 
@@ -664,8 +722,7 @@
 
 
 (defun process-parameters (module-name param)
-  (let ((instance (get-module-fct module-name))
-        (module (get-abstract-module module-name)))
+  (multiple-value-bind (instance module) (get-module-fct module-name)
     (if module
         (awhen (act-r-module-params module) ;; should be guranteed
                (if (act-r-module-external module)
@@ -681,200 +738,133 @@
     (if module
         (let ((instance (when (act-r-module-creation module)
                           (dispatch-apply (act-r-module-creation module) model-name))))
-          ; allow external to specify own instance
-          ;(if (act-r-module-external module)
-          ;    model-name
-          ;  instance)
           
-          instance)
+          ;; store the abstract in the table with the instance!
+          (cons instance module))
       (print-warning "There is no module named ~S. Cannot instantiate it." module-name))))
 
-(defun reset-module (module-name)
-  (let ((module (get-abstract-module module-name)))
-    (if module
-        (multiple-value-bind (instance exists)
-            (get-module-fct module-name)
-          (if exists
-              (awhen (act-r-module-reset module)
-                     (dispatch-apply it instance))
-            (print-warning "There is no module named ~S in the current model.  Cannot reset it." module-name)))
-      (print-warning "There is no module named ~S defined. Cannot reset it." module-name))))
+(defun reset-module (module-alist)
+  (let ((module (cdr module-alist))
+        (instance (car module-alist)))
+    (awhen (act-r-module-reset module)
+           (dispatch-apply it instance))))
   
-(defun secondary-reset-module (module-name)
-  (let ((module (get-abstract-module module-name)))
-    (if module
-        (multiple-value-bind (instance exists)
-            (get-module-fct module-name)
-          (if exists
-              (awhen (act-r-module-secondary-reset module)
-                     (dispatch-apply it instance))
-            (print-warning "There is no module named ~S in the current model.  Cannot reset it." module-name)))
-      (print-warning "There is no module named ~S defined. Cannot reset it." module-name))))
+(defun secondary-reset-module (module-alist)
+  (let ((module (cdr module-alist))
+        (instance (car module-alist)))
+    (awhen (act-r-module-secondary-reset module)
+           (dispatch-apply it instance))))
 
-(defun tertiary-reset-module (module-name)
-  (let ((module (get-abstract-module module-name)))
-    (if module
-        (multiple-value-bind (instance exists)
-            (get-module-fct module-name)
-          (if exists
-              (awhen (act-r-module-tertiary-reset module)
-                     (dispatch-apply it instance))
-            (print-warning "There is no module named ~S in the current model.  Cannot reset it." module-name)))
-      (print-warning "There is no module named ~S defined. Cannot reset it." module-name))))
+(defun tertiary-reset-module (module-alist)
+  (let ((module (cdr module-alist))
+        (instance (car module-alist)))
+    (awhen (act-r-module-tertiary-reset module)
+           (dispatch-apply it instance))))
 
-(defun query-module (module-name buffer-name query value)
-  (let ((module (get-abstract-module module-name)))
-    (if module
-        (multiple-value-bind (instance exists)
-            (get-module-fct module-name)
-          (if exists
-              (aif (act-r-module-query module)
-                   (cond ((eq query 'error)
-                          (if value
-                             (dispatch-apply it instance buffer-name 'state 'error)
-                           (not (dispatch-apply it instance buffer-name 'state 'error))))
-                        (t
-                         (dispatch-apply it instance buffer-name query value)))
-                (print-warning "Module ~s does not support queries." module-name))
-            (print-warning "There is no module named ~S in the current model. Cannot query it." module-name)))
-      (print-warning "There is no module named ~S. Cannot query it." module-name))))
+(defun query-module (module-alist buffer-name query value)
+  (let ((module (cdr module-alist))
+        (instance (car module-alist)))
+    (aif (act-r-module-query module)
+         (cond ((eq query 'error)
+                (if value
+                    (dispatch-apply it instance buffer-name 'state 'error)
+                  (not (dispatch-apply it instance buffer-name 'state 'error))))
+               (t
+                (dispatch-apply it instance buffer-name query value)))
+         (print-warning "Module ~s does not support queries." (act-r-module-name module)))))
 
 
-(defun warn-module? (module-name)
-  (let ((module (get-abstract-module module-name)))
-    (if module
-        (if (act-r-module-warn module) t nil)
-      (print-warning "There is no module named ~S. Cannot determine if it needs warnings." module-name))))
+(defun warn-module? (module-alist)
+  (if (act-r-module-warn (cdr module-alist)) t nil))
 
-(defun warn-module (module-name buffer-name chunk-spec)
-  (let ((module (get-abstract-module module-name)))
-    (if module
-        (multiple-value-bind (instance exists)
-            (get-module-fct module-name)
-          (if exists
-              (aif (act-r-module-warn module)
-                   (if (act-r-module-external module)
-                       (dispatch-apply it instance buffer-name (chunk-spec-to-id chunk-spec))
-                     (funcall it instance buffer-name chunk-spec))
-                   (print-warning "Module ~s does not require warnings." module-name))
-            (print-warning "There is no module named ~S in the current model. Cannot warn it." module-name)))
-      (print-warning "There is no module named ~S. Cannot warn it." module-name))))
+(defun warn-module (module-alist buffer-name chunk-spec)
+  (let ((module (cdr module-alist))
+        (instance (car module-alist)))
+    (aif (act-r-module-warn module)
+         (if (act-r-module-external module)
+             (dispatch-apply it instance buffer-name (chunk-spec-to-id chunk-spec))
+           (funcall it instance buffer-name chunk-spec))
+         (print-warning "Module ~s does not require warnings." (act-r-module-name module)))))
 
+(defun request-module (module-alist buffer-name chunk-spec)
+  (let ((module (cdr module-alist))
+        (instance (car module-alist)))
+    (aif (act-r-module-request module)
+         (progn
+           (if (act-r-module-external module)
+               (dispatch-apply it instance buffer-name (chunk-spec-to-id chunk-spec))
+             (funcall it instance buffer-name chunk-spec))
+           t)
+         (print-warning "Module ~s does not handle requests." (act-r-module-name module)))))
 
-(defun request-module (module-name buffer-name chunk-spec)
-  (let ((module (get-abstract-module module-name)))
-    (if module
-        (multiple-value-bind (instance exists)
-            (get-module-fct module-name)
-          (if exists
-              (aif (act-r-module-request module)
-                   (progn
-                     (if (act-r-module-external module)
-                         (dispatch-apply it instance buffer-name (chunk-spec-to-id chunk-spec))
-                       (funcall it instance buffer-name chunk-spec))
-                     t)
-                   (print-warning "Module ~s does not handle requests." module-name))
-            (print-warning "There is no module named ~S in the current model.  Cannot make a request of it." module-name)))
-      (print-warning "There is no module named ~S. Cannot make a request of it." module-name))))
-
-
-(defun buffer-mod-module (module-name buffer-name chunk-mods)
-  (let ((module (get-abstract-module module-name)))
-    (if module
-        (multiple-value-bind (instance exists)
-            (get-module-fct module-name)
-          (if exists
-              (aif (act-r-module-buffer-mod module)
-                  (progn
-                    (if (act-r-module-external module)
-                         (dispatch-apply it instance buffer-name (chunk-spec-to-id chunk-mods))
-                       (funcall it instance buffer-name chunk-mods))
-                    t)
-                   (print-warning "Module ~s does not support buffer modification requests." module-name))
-            (print-warning "There is no module named ~S in the current model. Cannot make a buffer modification request using it." module-name))) 
-      (print-warning "There is no module named ~S. Cannot make a buffer modification using it." module-name))))
-
+(defun buffer-mod-module (module-alist buffer-name chunk-mods)
+  (let ((module (cdr module-alist))
+        (instance (car module-alist)))
+    (aif (act-r-module-buffer-mod module)
+         (progn
+           (if (act-r-module-external module)
+               (dispatch-apply it instance buffer-name (chunk-spec-to-id chunk-mods))
+             (funcall it instance buffer-name chunk-mods))
+           t)
+         (print-warning "Module ~s does not support buffer modification requests." (act-r-module-name module)))))
 
 (defun delete-module (module-name)
-  (let ((module (get-abstract-module module-name)))
+  (multiple-value-bind (instance module)
+      (get-module-fct module-name)
     (if module
-        (multiple-value-bind (instance exists)
-            (get-module-fct module-name)
-          (if exists
-              (awhen (act-r-module-delete module)
-                (dispatch-apply it instance))
-            (print-warning "There is no module named ~S in the current model. Cannot delete an instance of it." module-name)))
-      (print-warning "There is no module named ~S. Cannot delete an instance of it." module-name))))
-
+        (awhen (act-r-module-delete module)
+               (dispatch-apply it instance))
+      (print-warning "There is no module named ~S in the current model. Cannot delete an instance of it." module-name))))
   
 (defun notify-module (module-name buffer-name chunk-name)
-  (let ((module (get-abstract-module module-name)))
+  (multiple-value-bind (instance module)
+      (get-module-fct module-name)
     (if module
-        (multiple-value-bind (instance exists)
-            (get-module-fct module-name)
-          (if exists
-              ;; this only gets called if there is such a function
-              ;; so no need to double check it
-              (dispatch-apply (act-r-module-notify-on-clear module) instance buffer-name chunk-name)
-            (print-warning "There is no module named ~S in the current model. Cannot notify it of a buffer's clearing." module-name)))
-      (print-warning "There is no module named ~S.  Cannot notify it of a buffer's clearing." module-name))))
-
+        ;; this only gets called if there is such a function
+        ;; so no need to double check it
+        (dispatch-apply (act-r-module-notify-on-clear module) instance buffer-name chunk-name)
+      (print-warning "There is no module named ~S in the current model. Cannot notify it of a buffer's clearing." module-name))))
 
 (defun update-the-module (module-name old-time new-time)
-  (let ((module (get-abstract-module module-name)))
+  (multiple-value-bind (instance module)
+      (get-module-fct module-name)
     (if module
-        (multiple-value-bind (instance exists)
-            (get-module-fct module-name)
-          (if exists
-              ;; this only gets called if there is such a function
-              ;; so no need to double check it
-              (dispatch-apply (act-r-module-update module) instance old-time new-time)
-            (print-warning "There is no module named ~S in the current model. Cannot update it." module-name)))
-      (print-warning "There is no module named ~S. Cannot update it."  module-name))))
-
+        ;; this only gets called if there is such a function
+        ;; so no need to double check it
+        (dispatch-apply (act-r-module-update module) instance old-time new-time)
+      (print-warning "There is no module named ~S in the current model. Cannot update it." module-name))))
 
 (defun run-notify-module (module-name)
-  (let ((module (get-abstract-module module-name)))
+  (multiple-value-bind (instance module)
+      (get-module-fct module-name)
     (if module
-        (multiple-value-bind (instance exists)
-            (get-module-fct module-name)
-          (if exists
-              ;; this only gets called if there is such a function
-              ;; so no need to double check it
-              (dispatch-apply (act-r-module-run-notify module) instance)
-            (print-warning "There is no module named ~S in the current model. Cannot notify it of a run start." module-name)))
-      (print-warning "There is no module named ~S. Cannot notify it of a run start."  module-name))))
-
+        ;; this only gets called if there is such a function
+        ;; so no need to double check it
+        (dispatch-apply (act-r-module-run-notify module) instance)
+      (print-warning "There is no module named ~S in the current model. Cannot notify it of a run start." module-name))))
 
 (defun run-over-notify-module (module-name)
-  (let ((module (get-abstract-module module-name)))
+  (multiple-value-bind (instance module)
+      (get-module-fct module-name)
     (if module
-        (multiple-value-bind (instance exists)
-            (get-module-fct module-name)
-          (if exists
-              ;; this only gets called if there is such a function
-              ;; so no need to double check it
-              (dispatch-apply (act-r-module-run-over-notify module) instance)
-            (print-warning "There is no module named ~S in the current model. Cannot notify it of a run ending." module-name)))
-      (print-warning "There is no module named ~S. Cannot notify it of a run ending."  module-name))))
+        ;; this only gets called if there is such a function
+        ;; so no need to double check it
+        (dispatch-apply (act-r-module-run-over-notify module) instance)
+      (print-warning "There is no module named ~S in the current model. Cannot notify it of a run ending." module-name))))
 
 (defun m-buffer-search (buffer-name)
   (aif (buffers-module-name buffer-name)
        (module-m-buffer-search it buffer-name)
        (print-warning "m-buffer-search cannot search ~s because it does not name a valid buffer.")))
-                
 
 (defun module-m-buffer-search (module-name buffer-name)
-  (let ((module (get-abstract-module module-name)))
+  (multiple-value-bind (instance module)
+      (get-module-fct module-name)
     (if module
-        (multiple-value-bind (instance exists)
-            (get-module-fct module-name)
-          (if exists
-              (aif (act-r-module-search module)
-                   (values t (dispatch-apply it instance buffer-name))
-                   (values nil nil))
-            (print-warning "There is no module named ~S in the current model. Cannot perform buffer search." module-name)))
-      (print-warning "There is no module named ~S. Cannot perform buffer search."  module-name))))
+        (aif (act-r-module-search module)
+             (values t (dispatch-apply it instance buffer-name))
+             (values nil nil))
+      (print-warning "There is no module named ~S in the current model. Cannot perform buffer search." module-name))))
 
 (defun m-buffer-offset (buffer-name c-list)
   (aif (buffers-module-name buffer-name)
@@ -882,16 +872,13 @@
        (print-warning "m-buffer-offset cannot get values for ~s because it does not name a valid buffer." buffer-name)))
 
 (defun module-m-buffer-offset (module-name buffer-name c-list)
-  (let ((module (get-abstract-module module-name)))
+  (multiple-value-bind (instance module)
+      (get-module-fct module-name)
     (if module
-        (multiple-value-bind (instance exists)
-            (get-module-fct module-name)
-          (if exists
-              (aif (act-r-module-offset module)
-                   (values t (dispatch-apply it instance buffer-name c-list))
-                   (values nil nil))
-            (print-warning "There is no module named ~S in the current model. Cannot get buffer offsets." module-name)))
-      (print-warning "There is no module named ~S. Cannot get buffer offsets."  module-name))))
+        (aif (act-r-module-offset module)
+             (values t (dispatch-apply it instance buffer-name c-list))
+             (values nil nil))
+      (print-warning "There is no module named ~S in the current model. Cannot get buffer offsets." module-name))))
 
 #|
 This library is free software; you can redistribute it and/or

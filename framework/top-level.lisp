@@ -114,6 +114,11 @@
 ;;;             :   reload.
 ;;; 2019.02.05 Dan
 ;;;             : * Adjustments because meta-p-models is now an alist.
+;;; 2019.05.24 Dan
+;;;             : * At clear-all make sure all remote modules are still connected.
+;;;             :   Would be nice to check at other times, but can't undefine
+;;;             :   when there are models so this is really the only safe spot
+;;;             :   right now.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
@@ -152,10 +157,15 @@
     
     (dispatch-apply "clear-all-start")
     
+    
     (mapcar (lambda (x)
               (delete-model-fct (car x)))
              (bt:with-lock-held ((meta-p-models-lock mp)) (meta-p-models mp)))
     
+    
+    ;; Make sure all the remote modules are still available
+    (verify-remote-modules)
+
     ;; update the componenets
     
     (dolist (c (bt:with-lock-held ((meta-p-component-lock mp)) (meta-p-component-list mp)))
