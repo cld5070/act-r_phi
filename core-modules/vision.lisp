@@ -793,7 +793,7 @@
 
 
     ;; build the temp visicon
-    (time (setf feature-list (flatten (build-vis-locs-for (device devin) vis-mod))))
+    (setf feature-list (flatten (build-vis-locs-for (device devin) vis-mod)))
 
     (when (with-cursor-p devin)
 

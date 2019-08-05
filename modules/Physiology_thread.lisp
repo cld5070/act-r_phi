@@ -1,4 +1,4 @@
-	#| Copyright 2017 Christopher L. Dancy II
+#| Copyright 2019 Christopher L. Dancy II
 		This program is free software: you can redistribute it and/or modify
 		 it under the terms of the GNU General Public License as published by
 		 the Free Software Foundation, either version 3 of the License, or
@@ -96,7 +96,7 @@ t)
 
 ;;;Request values from Model Solver
 (defun set-as-init-cond ()
-	"Sets current state as initial conditions for model"
+"Sets current state as initial conditions for model"
 	(let* ((phys (get-module physio))
 				 (solver-input-file (concatenate 'string *HumModDir* "SolverIn" (phys-module-pipeID phys)))
 				 (solver-in-msg "<solverin><newics/></solverin>")
@@ -108,7 +108,7 @@ t)
 		(while (not (probe-file solver-out-file)))))
 
 (defun create-ics-from-out (out-file ics-file-name phys &optional (delete-solverout? nil))
-	"Creates a suitable initial conditions file from the given output file"
+"Creates a suitable initial conditions file from the given output file"
 	(let ((out-vals (cdadr (s-xml:parse-xml-file out-file)))
 				(init-str "<ics>"))
 		(loop for val in out-vals and var in (cdadr (phys-module-physVarList phys))
@@ -126,8 +126,8 @@ t)
 
 ;;;Advance the HumMod model a specified amount of time (mins)
 (defun advance-phys (timeSlice)
-	"Advance the modelsolver forward in time
-		timeSlice - The time in minutes"
+"Advance the modelsolver forward in time
+	timeSlice - The time in minutes"
 	(let*	((advanceMessage
 				 (concatenate 'string
 						"\"<solverin><gofor><solutionint>"
@@ -223,8 +223,8 @@ t)
 
 ;;;Set HumMod Vars using specified list
 (defun set-phys-vals (varValList)
-	"Set HumMod variables using the input list
-		varValList - a list of (variable value) pairs"
+"Set HumMod variables using the input list
+	varValList - a list of (variable value) pairs"
 	(tagbody resetSetVal
 		(clear-phys-files)
 		(model-output "Changing the following physiology: ~a~&" varValList)
@@ -311,11 +311,10 @@ t)
  ((text :initarg :text :reader text)))
 
 (defun start-HumMod (phys)
-
+"Starts HumMod (the ModelSolver)"
 	;;So we can use basic windows api functions to restart a process if we're on a windows platform
 	;; This doesn't seem to be needed anymore, but keeping here for legacy purposes for now
 	;#+:Windows (open-shared-library "kernel32.dll")
- "Starts HumMod (the ModelSolver)"
 	(let* ((old-dir)
 				(get-module-physio)
 				(progName

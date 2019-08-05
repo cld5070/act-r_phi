@@ -1,0 +1,68 @@
+HumMod / GENDER DES
+
+Created : 2011-07-26
+Revised : 2012-03-11
+Author : Tom Coleman
+Copyright : 2011-2012
+By : University of Mississippi Medical Center
+
+<branch>
+  <name> HORMONES </name>
+  <label> Hormones </label>
+  <parent> MAINMENU </parent>
+</branch>
+
+<leaf>
+  <name> Hormones-Summary </name>
+  <label> Summary </label>
+  <parent> HORMONES </parent>
+</leaf>
+
+<branch>
+  <name> GENDER </name>
+  <label> Gender </label>
+  <parent> HORMONES </parent>
+</branch>
+
+<separatorbar>
+  <parent> HORMONES </parent>
+</separatorbar>
+
+<?path Display/Tree/Hormones/ ?>
+
+<?include ACTH.DES ?>
+<?include ADH.DES ?>
+<?include Aldosterone.DES ?>
+<?include ANP.DES ?>
+<?include Calcitonin.DES ?>
+<?include CorticotropinReleasingFactor.DES ?>
+<?include Cortisol.DES ?>
+<?include EPO.DES ?>
+<?include Glucagon.DES ?>
+<?include Insulin.DES ?>
+<?include Leptin.DES ?>
+<?include ParathyroidHormone.DES ?>
+<?include Renin.DES ?>
+<?include ThyroidGland.DES ?>
+<?include VitaminD.DES ?>
+
+<leaf>
+  <name> Gender-Summary </name>
+  <label> Summary </label>
+  <parent> GENDER </parent>
+</leaf>
+
+<separatorbar>
+  <parent> GENDER </parent>
+</separatorbar>
+
+<?include Estradiol.DES ?>
+<?include FSH.DES ?>
+<?include GnRH.DES ?>
+<?include hCG.DES ?>
+<?include Inhibin.DES ?>
+<?include LH.DES ?>
+<?include Progesterone.DES ?>
+<?include Testosterone.DES ?>
+
+End

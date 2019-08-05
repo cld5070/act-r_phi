@@ -1,0 +1,64 @@
+HumMod / Fractions
+
+Created : 2012-07-10
+Revised : 2012-07-10
+Author : Tom Coleman
+Copyright : 2012-2012
+By : University of Mississippi Medical Center
+
+<groupbox>
+   <row> 2.0 </row>
+   <col> 32.0 </col>
+   <high> 11.4 </high>
+   <wide> 30.0 </wide>
+   <title> Fractions </title>
+
+<structurename> NephronGlucose </structurename>
+
+<showvalue>
+   <row> 1.4 </row><col> 1.0 </col>
+   <name> FractionalReabsorption </name>
+   <format><decimal> 2 </decimal></format>
+   <label> Fractional Reabsorption </label>
+</showvalue>
+
+<showcurve>
+  <row> 2.4 </row><col> 1.0 </col><high> 7 </high><wide> 28 </wide>
+  <leftmargin> 5 </leftmargin>
+
+  <xaxis>
+    <name> FractionalFiltration </name>
+    <label> Filtration </label>
+    <scale>
+      <min> 0 </min><max> 1.5 </max>
+    </scale>
+  </xaxis>
+
+  <yaxis>
+    <label> Reab </label>
+    <scale>
+      <min> 0 </min><max> 1 </max>
+    </scale>
+  </yaxis>
+
+  <curvename> TMax </curvename>
+</showcurve>
+
+<showvalue>
+   <row> 9.8 </row><col> 1.0 </col>
+   <name> FractionalFiltration </name>
+   <format><decimal> 2 </decimal></format>
+   <label> Fractional Filtration </label>
+</showvalue>
+
+<infobutton>
+  <row> 1.2 </row>
+  <col> 26.0 </col>
+  <line> These fractions of TMax (between 0 and 1) have </line>
+  <line> no units. The curve implements a smooth transition </line>
+  <line> between total reabsorption and maximum reabsorption.</line>
+</infobutton>
+
+</groupbox>
+
+End

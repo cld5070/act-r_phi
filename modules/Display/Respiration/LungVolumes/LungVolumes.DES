@@ -1,0 +1,84 @@
+HumMod / LungVolumes
+
+Created : 2012-07-11
+Revised : 2012-07-11
+Author : Tom Coleman
+Copyright : 2012-2012
+By : University of Mississippi Medical Center
+
+<panel><name> LungVolumes </name>
+
+<showbitmap>
+	<row> 0.3 </row>
+	<col> 1.0 </col>
+	<name> Lungs </name>
+</showbitmap>
+
+<label>
+	<row> 0.3 </row>
+	<col> 4.5 </col>
+	<text> Lung Volumes </text>
+</label>
+
+<showclock>
+	<row> 0.3 </row><col> 32.0 </col>
+	<name> System.X </name>
+	<ampm/>
+	<secs/>
+	<days/>
+</showclock>
+
+<?path Display/Respiration/LungVolumes/ ?>
+
+<?include Box.DES ?>
+
+<!--	<structurename> LungVolumesTidalSin </structurename>
+	<showvalue>
+		<row> 24.0 </row><col> 1.0 </col>
+		<name> TidalVolume </name>
+		<label> Tidal Volume (Sin) </label>
+	</showvalue>
+
+	<radiobuttons>
+		<row> 26 </row><col> 1.0 </col>
+		<name> ControlledBreathing </name>
+		<listname> Common.Switch </listname>
+		<label> Controlled Breathing </label>
+	</radiobuttons>
+
+	<repeatlist>
+		<name> RespRate </name>
+		<repeat><reps> 15 </reps><stepsize> 1 </stepsize></repeat>
+	</repeatlist>
+
+	<slidebar>
+		<row> 28 </row><col> 1.0 </col>
+		<name> RespRate </name>
+		<listname> RespRate </listname>
+		<label> Respiratory Rate </label>
+	</slidebar>
+
+	<showgraph>
+		<row> 4 </row><col> 38.0 </col><high> 7 </high><wide> 28 </wide>
+		<leftmargin> 4 </leftmargin>
+		<xaxis>
+			<name> System.X </name>
+			<label> Time </label>
+			<scale><min> 0 </min><max> 2 </max></scale>
+		</xaxis>
+		<yaxis>
+			<yvar>
+				<name> TidalVolume </name>
+				<label> Tidal Volume </label>
+				<linecolor> BLUE </linecolor>
+			</yvar>
+			<scale>
+				<min> 0 </min><max> 500 </max><inc> 2 </inc>
+			</scale>
+		</yaxis>
+	</showgraph>
+	-->
+
+</panel>
+
+End

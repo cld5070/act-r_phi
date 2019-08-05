@@ -1,0 +1,17 @@
+HumMod / SplanchnicVeins
+
+Created : 2012-11-02
+Revised : 2012-11-02
+Author : Tom Coleman
+Copyright : 2012-2012
+By : University Of Mississippi Medical Center
+
+<?path Display/Circulation/BloodVessels/SplanchnicVeins/ ?>
+
+<?include Vessels/Vessels.DES ?>
+
+<?include PortalVein/PortalVein.DES ?>
+<?include HepaticArtery/HepaticArtery.DES ?>
+<?include HepaticVein/HepaticVein.DES ?>
+
+End

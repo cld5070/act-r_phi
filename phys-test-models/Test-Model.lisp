@@ -5,7 +5,8 @@
 	;(schedule-event 0.022 'set-phys-vals :module 'physio :params (list (list (list "IVDrip.Switch" 1) (list "IVDrip.H2OSetting" 25) (list "IVDrip.ClinicalSaline" 860))) :priority :max :details "Start hypertonic saline IV")
 	(schedule-periodic-event 1 'test-record-arousal
 		:initial-delay 2 :module :physio :output nil)
-	(sgp :phys-ics-exp-file "ICS/Racinais-2008_Hot.ICS")
+	;(sgp :phys-ics-exp-file "ICS/Racinais-2008_Hot.ICS")
+	(sgp :phys-ics-exp-file "ICS/Liu-2013_Hot.ICS")
 	(run run-time))
 
 (defun run-graded-stress1 (&optional (length 20) (perc-inc 100) (num-steps 20))

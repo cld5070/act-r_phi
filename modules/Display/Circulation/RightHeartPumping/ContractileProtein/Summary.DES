@@ -1,0 +1,94 @@
+HumMod / Summary
+
+Created : 2011-08-10
+Revised : 2012-02-03
+Author : Tom Coleman
+Copyright : 2011-2012
+By : University of Mississippi Medical Center
+
+<structurename> RightHeartPumping-ContractileProtein </structurename>
+
+<groupbox>
+   <row> 2.0 </row>
+   <col> 1.0 </col>
+   <high> 17.8 </high>
+   <wide> 30.0 </wide>
+   <title> Summary </title>
+
+<showvalue>
+   <row> 1.4 </row><col> 1.0 </col>
+   <name> Mass </name>
+   <format><decimal> 1 </decimal></format>
+   <label> Mass </label>
+</showvalue>
+
+<showgraph>
+  <row> 2.4 </row><col> 1.0 </col><high> 7 </high><wide> 28 </wide>
+  <leftmargin> 6 </leftmargin>
+  <xaxis>
+    <name> System.X </name>
+    <label> Time </label>
+    <scale><min> 0 </min><max> 2 </max></scale>
+  </xaxis>
+  <yaxis>
+    <yvar>
+      <name> Mass </name>
+      <nolabel/>
+      <linecolor> BLUE </linecolor>
+    </yvar>
+    <scale>
+      <min> 0 </min><max> 20 </max>
+    </scale>
+  </yaxis>
+</showgraph>
+
+<showvalue>
+   <row> 9.8 </row><col> 1.0 </col>
+   <name> Change </name>
+   <format><decimal> 4 </decimal></format>
+   <label> Change </label>
+</showvalue>
+
+<showvalue>
+   <row> 11.2 </row><col> 1.0 </col>
+   <name> Functional </name>
+   <format><decimal> 1 </decimal></format>
+   <label> Functional </label>
+</showvalue>
+
+<showvalue>
+   <row> 12.2 </row><col> 1.0 </col>
+   <name> Ischemic </name>
+   <format><decimal> 1 </decimal></format>
+   <label> Ischemic </label>
+</showvalue>
+
+<showvalue>
+   <row> 13.2 </row><col> 1.0 </col>
+   <name> Dead </name>
+   <format><decimal> 1 </decimal></format>
+   <label> Dead </label>
+</showvalue>
+
+<showvalue>
+   <row> 14.6 </row><col> 1.0 </col>
+   <name> LeftHeartPumping-Work.Work </name>
+   <format><integer/></format>
+   <label> Work </label>
+</showvalue>
+
+<repeatlist>
+  <name> Delay(Days) </name>
+  <repeat><reps> 100 </reps><stepsize> 1 </stepsize></repeat>
+</repeatlist>
+
+<slidebar>
+  <row> 16.0 </row><col> 1.0 </col>
+  <name> Delay(Days) </name>
+  <listname> Delay(Days) </listname>
+  <label> Delay (Days) </label>
+</slidebar>
+
+</groupbox>
+
+End
