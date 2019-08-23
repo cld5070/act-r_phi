@@ -4,7 +4,7 @@
 
 # This was formerly in the splash-screen.tcl init file
 # This script opens a window with the Powered by ONR Logo in it
-# centered on the screen for 3 seconds or until it's clicked 
+# centered on the screen for 3 seconds or until it's clicked
 
 # read the image from the file
 image create photo onr_logo -file [file join [pwd] "logo.gif"]
@@ -29,7 +29,7 @@ global clear_splash
 # logo is 579x288 and set it
 
 set x [expr ([winfo screenwidth .]/2) - 290]
-set y [expr ([winfo screenheight .]/2) - 144] 
+set y [expr ([winfo screenheight .]/2) - 144]
 
 wm geometry .splash +$x+$y
 
@@ -59,7 +59,7 @@ proc set_quit_now {val} {
   set quit_now $val
 }
 
-# close the console window if it's open 
+# close the console window if it's open
 
 if {$tcl_platform(platform) != "unix"} {console hide}
 
