@@ -40,7 +40,7 @@ focus -force .splash
 # set the variable that triggers destruction after 3 seconds
 # or as soon as a button is pressed on the window
 
-after 3000 {set clear_splash 1}
+after 0 {set clear_splash 1}
 bind .splash <ButtonPress> {set clear_splash 1}
 
 # wait for one of the triggering events to happen
