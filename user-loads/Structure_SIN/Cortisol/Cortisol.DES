@@ -118,7 +118,7 @@ By : University of Mississippi Medical Center
    <val> Sleep-allostatic-mag * ( 1 - ( Sleep-allostatic-rate ^ ( ( System.X - Status.LastAwake ) / 60 ) ) ) </val>
   </def>
  </case>
- 
+
  <case>
   <test> Status.Activity EQ 1 </test>
    <def>
@@ -126,8 +126,13 @@ By : University of Mississippi Medical Center
 	<val> Wake-allostatic-mag * ( 1 - ( Wake-allostatic-rate ^ ( ( System.X - Status.LastAsleep ) / 60 ) ) ) </val>
    </def>
  </case>
- 
+
 </testcase>
+
+<def>
+ <name> Secretion-Sleep-Hom </name>
+ <val> ( Status.Activity * ( Wake-allostatic-mag * ( 1 - ( Wake-allostatic-rate ^ ( ( System.X - Status.LastAsleep ) / 60 ) ) ) ) ) + ( 1 - Status.Activity * ( Sleep-allostatic-mag * ( 1 - ( Sleep-allostatic-rate ^ ( ( System.X - Status.LastAwake ) / 60 ) ) ) ) ) </val>
+</def>
 
 <def>
  <name> Secretion </name>

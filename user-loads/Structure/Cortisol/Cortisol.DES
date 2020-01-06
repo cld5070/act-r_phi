@@ -39,6 +39,12 @@ By : University of Mississippi Medical Center
 
 <parm><name> K </name><val> 52.0 </val></parm>
 
+<var><name> Secretion-Sleep-Hom </name><val> 0 </val></var>
+<var><name> Sleep-allostatic-mag </name><val> 3.6 </val></var>
+<var><name> Sleep-allostatic-rate </name><val> 0.9 </val></var>
+<var><name> Wake-allostatic-mag </name><val> 1.6 </val></var>
+<var><name> Wake-allostatic-rate </name><val> 0.9 </val></var>
+
 </variables>
 
 <equations>
@@ -108,8 +114,13 @@ By : University of Mississippi Medical Center
 </def>
 
 <def>
+  <name> Secretion-Sleep-Hom </name>
+  <val> ( Status.Activity * ( Wake-allostatic-mag * ( 1 - ( Wake-allostatic-rate ^ ( ( System.X - Status.LastAsleep ) / 60 ) ) ) ) ) + ( 1 - Status.Activity * ( Sleep-allostatic-mag * ( 1 - ( Sleep-allostatic-rate ^ ( ( System.X - Status.LastAwake ) / 60 ) ) ) ) ) </val>
+</def>
+
+<def>
   <name> Secretion </name>
-  <val> Secretion-Basic * [ACTH]Effect * ( ( InsulinPump.T2D * 4 ) + 1 ) * SecondaryInsufficiency </val>
+  <val> Secretion-Basic * [ACTH]Effect * ( ( InsulinPump.T2D * 4 ) + 1 ) * SecondaryInsufficiency + Secretion-Sleep-Hom </val>
 </def>
 
 <def><name> Degradation </name><val> K * [Conc(uG/mL)] </val></def>

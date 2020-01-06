@@ -44,6 +44,14 @@ By : University of Mississippi Medical Center
 <point><x> 100 </x><y> 0.5 </y><slope> 0 </slope></point>
 </curve>
 
+<curve>
+<name>SleepStressEffect</name>
+<point><x> 0 </x><y> 1 </y><slope> 0 </slope></point>
+<point><x> 960 </x><y> 1 </y><slope> 0 </slope></point>
+<point><x> 961 </x><y> 961 </y><slope> 1 </slope></point>
+<point><x> 14400 </x><y> 14400 </y><slope> 1 </slope></point>
+</curve>
+
 </functions>
 
 <definitions>
@@ -71,9 +79,9 @@ By : University of Mississippi Medical Center
   <true> Level </true>
   <false>
       [CRF(pG/mL)-Basic]
-    * NeuralEffect 
-    * StressEffect 
-    * [Cortisol]Effect 
+    * NeuralEffect
+    * StressEffect
+    * [Cortisol]Effect
     * Brain-Function.Effect
   </false>
 </conditional>

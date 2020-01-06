@@ -131,7 +131,8 @@ By : University of Mississippi Medical Center
 
 <def>
   <name> [CRF]Effect </name>
-  <val> [CRF]Effect [ CorticotropinReleasingFactor.[CRF(pG/mL)] ] </val>
+  <val> CorticotropinReleasingFactor.EffectOnACTH * ( ( 0.7 * ( SIN ( ( 3.14 * System.X / 720 ) - 0.1 ) ) + 0.25 ) + ( 0.22 * ( SIN ( ( 2 * 3.14 * System.X / 720 ) - 0.1 ) ) + 0.25 ) + ( 0.07 * ( SIN ( ( 3 * 3.14 * System.X / 720 ) - 0.1 ) ) + 0.25 ) + ( 0.03 * ( SIN ( ( 4 * 3.14 * System.X / 720 ) - 0.1 ) ) + 0.25 ) )</val>
+  <!-- [CRF]Effect [ CorticotropinReleasingFactor.[CRF(pG/mL)] ] -->
 </def>
 
 <def>
@@ -152,7 +153,7 @@ By : University of Mississippi Medical Center
   <val>
       Secretion-Basic
     * [CRF]Effect
-    * [ANP]Effect    
+    * [ANP]Effect
     * Brain-Function.Effect
   </val>   <!--   * [ADH]Effect -->
 </def>
