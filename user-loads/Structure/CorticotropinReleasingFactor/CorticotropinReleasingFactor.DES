@@ -16,11 +16,16 @@ By : University of Mississippi Medical Center
 <var><name> NeuralEffect </name></var>
 <var><name> StressEffect </name></var>
 <var><name> [Cortisol]Effect </name></var>
+<!-- Block added by Chris Dancy -->
+<var><name> SleepStressEffect </name></var>
+<!-- -->
 
 <parm><name> Stress </name><val> 2 </val></parm>
 
 <parm><name> Clamp </name><val> FALSE </val></parm>
 <parm><name> Level </name><val> 0.0 </val></parm>
+
+<var><name> TimeSinceLastAsleep </name></var>
 
 </variables>
 
@@ -44,13 +49,15 @@ By : University of Mississippi Medical Center
 <point><x> 100 </x><y> 0.5 </y><slope> 0 </slope></point>
 </curve>
 
+<!-- Block added by Chris Dancy -->
 <curve>
 <name>SleepStressEffect</name>
-<point><x> 0 </x><y> 1 </y><slope> 0 </slope></point>
-<point><x> 960 </x><y> 1 </y><slope> 0 </slope></point>
+<point><x> 0 </x><y> 0 </y><slope> 0 </slope></point>
+<point><x> 960 </x><y> 0 </y><slope> 0 </slope></point>
 <point><x> 961 </x><y> 961 </y><slope> 1 </slope></point>
 <point><x> 14400 </x><y> 14400 </y><slope> 1 </slope></point>
 </curve>
+<!-- -->
 
 </functions>
 
@@ -59,32 +66,47 @@ By : University of Mississippi Medical Center
 <block><name> Dervs </name>
 
 <def>
-  <name> NeuralEffect </name>
-  <val> NeuralEffect [ Nucleus-CRF.NA ] </val>
+	<name> TimeSinceLastAsleep </name>
+	<val> ( System.X - Status.LastAsleep ) </val>
 </def>
 
 <def>
-  <name> StressEffect </name>
-  <val> StressEffect [ Stress ] </val>
+	<name> NeuralEffect </name>
+	<val> NeuralEffect [ Nucleus-CRF.NA ] </val>
 </def>
 
 <def>
-  <name> [Cortisol]Effect </name>
-  <val> [Cortisol]Effect [ Cortisol.[Conc(uG/dL)] ] </val>
+	<name> StressEffect </name>
+	<val> StressEffect [ Stress ] </val>
 </def>
 
+<!-- Block added by Chris Dancy -->
+<def>
+	<name> SleepStressEffect </name>
+	<val> 1 + ( DailyPlannerControl.Switch * SleepStressEffect [ TimeSinceLastAsleep ] / 9600 ) </val>
+</def>
+<!-- -->
+
+<def>
+	<name> [Cortisol]Effect </name>
+	<val> [Cortisol]Effect [ Cortisol.[Conc(uG/dL)] ] </val>
+</def>
+
+<!-- Block Modified by Chris Dancy to include SleepStressEffect -->
 <conditional>
-  <name> [CRF(pG/mL)] </name>
-  <test> Clamp </test>
-  <true> Level </true>
-  <false>
-      [CRF(pG/mL)-Basic]
-    * NeuralEffect
-    * StressEffect
-    * [Cortisol]Effect
-    * Brain-Function.Effect
-  </false>
+	<name> [CRF(pG/mL)] </name>
+	<test> Clamp </test>
+	<true> Level </true>
+	<false>
+			[CRF(pG/mL)-Basic]
+		* NeuralEffect
+		* StressEffect
+		* [Cortisol]Effect
+		* Brain-Function.Effect
+		* SleepStressEffect
+	</false>
 </conditional>
+<!-- -->
 
 </block>
 

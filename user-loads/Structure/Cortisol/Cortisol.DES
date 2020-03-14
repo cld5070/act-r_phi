@@ -39,11 +39,15 @@ By : University of Mississippi Medical Center
 
 <parm><name> K </name><val> 52.0 </val></parm>
 
+<!-- Block added by Chris Dancy -->
 <var><name> Secretion-Sleep-Hom </name><val> 0 </val></var>
 <var><name> Sleep-allostatic-mag </name><val> 3.6 </val></var>
 <var><name> Sleep-allostatic-rate </name><val> 0.9 </val></var>
 <var><name> Wake-allostatic-mag </name><val> 1.6 </val></var>
 <var><name> Wake-allostatic-rate </name><val> 0.9 </val></var>
+<var><name> Sleep-Secretion-Sleep-Hom </name></var>
+<var><name> Wake-Secretion-Sleep-Hom </name></var>
+<!-- -->
 
 </variables>
 
@@ -108,20 +112,34 @@ By : University of Mississippi Medical Center
 <false> 0 </false>
 </conditional>
 
+<!-- Block added by Chris Dancy -->
+<def>
+	<name> Sleep-Secretion-Sleep-Hom </name>
+	<val> ( Status.Sleeping * Sleep-allostatic-mag * ( 1 - ( Sleep-allostatic-rate ^ ( ( System.X - Status.LastAwake ) / 60 ) ) ) ) </val>
+</def>
+
+<def>
+	<name> Wake-Secretion-Sleep-Hom  </name>
+	<val> ( Status.Awake * Wake-allostatic-mag * ( 1 - ( Wake-allostatic-rate ^ ( ( System.X - Status.LastAsleep ) / 60 ) ) ) ) </val>
+</def>
+
+<def>
+	<name> Secretion-Sleep-Hom </name>
+	<val> Sleep-Secretion-Sleep-Hom + Wake-Secretion-Sleep-Hom </val>
+</def>
+<!-- -->
+
 <def>
   <name> [ACTH]Effect </name>
   <val> [ACTH]Effect [ ACTH.[Conc(nG/dL)] ] </val>
 </def>
 
-<def>
-  <name> Secretion-Sleep-Hom </name>
-  <val> ( Status.Activity * ( Wake-allostatic-mag * ( 1 - ( Wake-allostatic-rate ^ ( ( System.X - Status.LastAsleep ) / 60 ) ) ) ) ) + ( 1 - Status.Activity * ( Sleep-allostatic-mag * ( 1 - ( Sleep-allostatic-rate ^ ( ( System.X - Status.LastAwake ) / 60 ) ) ) ) ) </val>
-</def>
-
+<!-- Block modified by Chris Dancy to include Secretion-Sleep-Home -->
 <def>
   <name> Secretion </name>
   <val> Secretion-Basic * [ACTH]Effect * ( ( InsulinPump.T2D * 4 ) + 1 ) * SecondaryInsufficiency + Secretion-Sleep-Hom </val>
 </def>
+<!-- -->
 
 <def><name> Degradation </name><val> K * [Conc(uG/mL)] </val></def>
 

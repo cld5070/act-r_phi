@@ -15,8 +15,11 @@ By : University Of Mississippi Medical Center
 <var><name> Posture </name><val> 1 </val></var>
 <var><name> Nutrition </name><val> 2 </val></var>
 
-<var><name> Sleeping </name></var>
-<var><name> Awake </name></var>
+<!-- Block added by Chris Dancy -->
+<var><name> Sleeping </name><val> 0 </val></var>
+<var><name> Awake </name><val> 0 </val></var>
+<!-- -->
+
 <var><name> Unconscious </name></var>
 <var><name> NotDefined </name></var>
 <var><name> Resting </name></var>
@@ -34,7 +37,7 @@ By : University Of Mississippi Medical Center
 <var><name> CantEat </name></var>
 
 
-<var><name> LastAsleep </name> <val> 0 </val></var>
+<var><name> LastAsleep </name><val> 0 </val></var>
 <var><name> LastAwake </name><val> 0 </val></var>
 
 <var><name> Conscious </name><val> TRUE </val></var>
@@ -178,7 +181,7 @@ By : University Of Mississippi Medical Center
 </case>
 
 <case>
-<test> Posture EQ PostureControl.TILTED </test>
+<test> Posture EQ PostureControl.TILTING </test>
 <def><name> Tilting </name><val> TRUE </val></def>
 </case>
 

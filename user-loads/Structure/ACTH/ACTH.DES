@@ -34,8 +34,11 @@ By : University of Mississippi Medical Center
 
 <var><name> [CRF]Effect </name></var>
 <var><name> [ANP]Effect </name></var>
-
 <var><name> [ADH]Effect </name></var>
+
+<!-- Block Modified by Chris Dancy -->
+<var><name> CircardianCRFEffect </name><val> 1 </val></var>
+<!-- -->
 
 <parm><name> Secretion-Basic </name><val> 28.0 </val></parm>
 
@@ -131,9 +134,15 @@ By : University of Mississippi Medical Center
 
 <def>
   <name> [CRF]Effect </name>
-  <val> CorticotropinReleasingFactor.EffectOnACTH * ( ( 0.7 * ( SIN ( ( 3.14 * System.X / 720 ) - 0.1 ) ) + 0.25 ) + ( 0.22 * ( SIN ( ( 2 * 3.14 * System.X / 720 ) - 0.1 ) ) + 0.25 ) + ( 0.07 * ( SIN ( ( 3 * 3.14 * System.X / 720 ) - 0.1 ) ) + 0.25 ) + ( 0.03 * ( SIN ( ( 4 * 3.14 * System.X / 720 ) - 0.1 ) ) + 0.25 ) )</val>
-  <!-- [CRF]Effect [ CorticotropinReleasingFactor.[CRF(pG/mL)] ] -->
+  <val> [CRF]Effect [ CorticotropinReleasingFactor.[CRF(pG/mL)] ] </val>
 </def>
+
+<!-- Block Added by Chris Dancy -->
+<def>
+	<name> CircardianCRFEffect </name>
+	<val> [CRF]Effect * ( ( 0.7 * ( SIN ( ( 3.14 * System.X / 720 ) - 0.1 ) ) + 0.25 ) + ( 0.22 * ( SIN ( ( 2 * 3.14 * System.X / 720 ) - 0.1 ) ) + 0.25 ) + ( 0.07 * ( SIN ( ( 3 * 3.14 * System.X / 720 ) - 0.1 ) ) + 0.25 ) + ( 0.03 * ( SIN ( ( 4 * 3.14 * System.X / 720 ) - 0.1 ) ) + 0.25 ) ) </val>
+</def>
+<!-- -->
 
 <def>
   <name> [ANP]Effect </name>
@@ -148,11 +157,12 @@ By : University of Mississippi Medical Center
   <val> [ADH]Effect [ ADHPool.Log10Conc ] </val>
 </def>
 
+<!-- Block Modified by Chris Dancy to include CircardianCRFEffect (which replaced normal [CRF]Effect) -->
 <def>
   <name> Secretion </name>
   <val>
       Secretion-Basic
-    * [CRF]Effect
+    * CircardianCRFEffect
     * [ANP]Effect
     * Brain-Function.Effect
   </val>   <!--   * [ADH]Effect -->
