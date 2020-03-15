@@ -146,11 +146,15 @@ By : University of Mississippi Medical Center
 
 </block>
 
+<!-- Block modified by Chris Dancy to include initial setting of Status.LastAwake & Status.LastAsleep -->
 <block><name> Start </name>
  <!-- <message> Daily planner is starting. </message>-->
   <def><name> Status </name><val> 2 </val></def>
+	<def><name> Status.LastAwake </name><val> System.x </val></def>
+	<def><name> Status.LastAsleep </name><val> System.x </val></def>
   <call> NewTask </call>
 </block>
+<!-- -->
 
 <block><name> Stop </name>
   <def><name> Status </name><val> 0 </val></def>
@@ -168,7 +172,7 @@ By : University of Mississippi Medical Center
      <name> PostureControl.Request </name>
      <val> PostureControl.LYING </val>
   </def>
-  <call> PostureControl.RequestChange </call> 
+  <call> PostureControl.RequestChange </call>
 
   <def><name> Status.Nutrition </name><val> 2 </val></def>
 </block>
@@ -346,7 +350,7 @@ By : University of Mississippi Medical Center
      <name> PostureControl.Request </name>
      <val> PostureControl.LYING </val>
   </def>
-  <call> PostureControl.RequestChange </call> 
+  <call> PostureControl.RequestChange </call>
 
   <def><name> Status.Nutrition </name><val> 1 </val></def>
 </block>
@@ -369,7 +373,7 @@ By : University of Mississippi Medical Center
      <name> PostureControl.Request </name>
      <val> PostureControl.STANDING </val>
   </def>
-  <call> PostureControl.RequestChange </call> 
+  <call> PostureControl.RequestChange </call>
 
 
   <def><name> Status.Nutrition </name><val> 1 </val></def>
@@ -389,7 +393,7 @@ By : University of Mississippi Medical Center
      <name> PostureControl.Request </name>
      <val> PostureControl.STANDING </val>
   </def>
-  <call> PostureControl.RequestChange </call> 
+  <call> PostureControl.RequestChange </call>
 
   <def><name> Status.Nutrition </name><val> 1 </val></def>
 </block>
@@ -408,7 +412,7 @@ By : University of Mississippi Medical Center
      <name> PostureControl.Request </name>
      <val> PostureControl.SITTING </val>
   </def>
-  <call> PostureControl.RequestChange </call> 
+  <call> PostureControl.RequestChange </call>
 
   <def><name> Status.Nutrition </name><val> 0 </val></def>
 </block>
@@ -425,7 +429,7 @@ By : University of Mississippi Medical Center
      <name> PostureControl.Request </name>
      <val> PostureControl.SITTING </val>
   </def>
-  <call> PostureControl.RequestChange </call> 
+  <call> PostureControl.RequestChange </call>
 
   <def><name> Status.Nutrition </name><val> 1 </val></def>
 </block>

@@ -41,12 +41,14 @@ By : University of Mississippi Medical Center
 
 <!-- Block added by Chris Dancy -->
 <var><name> Secretion-Sleep-Hom </name><val> 0 </val></var>
-<var><name> Sleep-allostatic-mag </name><val> 3.6 </val></var>
-<var><name> Sleep-allostatic-rate </name><val> 0.9 </val></var>
-<var><name> Wake-allostatic-mag </name><val> 1.6 </val></var>
-<var><name> Wake-allostatic-rate </name><val> 0.9 </val></var>
-<var><name> Sleep-Secretion-Sleep-Hom </name></var>
-<var><name> Wake-Secretion-Sleep-Hom </name></var>
+<parm><name> Sleep-allostatic-mag </name><val> 3.6 </val></parm>
+<parm><name> Sleep-allostatic-rate </name><val> 0.9 </val></parm>
+<!-- Using mag from Thorsley paper -->
+<parm><name> Wake-allostatic-mag </name><val> 70.8 </val></parm>
+<!-- <parm><name> Wake-allostatic-mag </name><val> 1.6 </val></parm> -->
+<parm><name> Wake-allostatic-rate </name><val> 0.9 </val></parm>
+<var><name> Sleep-Secretion-Sleep-Hom </name><val> 0 </val></var>
+<var><name> Wake-Secretion-Sleep-Hom </name><val> 0 </val></var>
 <!-- -->
 
 </variables>

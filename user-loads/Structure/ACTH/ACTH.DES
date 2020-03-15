@@ -36,8 +36,8 @@ By : University of Mississippi Medical Center
 <var><name> [ANP]Effect </name></var>
 <var><name> [ADH]Effect </name></var>
 
-<!-- Block Modified by Chris Dancy -->
-<var><name> CircardianCRFEffect </name><val> 1 </val></var>
+<!-- Block Added by Chris Dancy -->
+<var><name> CircadianCRFEffect </name><val> 1 </val></var>
 <!-- -->
 
 <parm><name> Secretion-Basic </name><val> 28.0 </val></parm>
@@ -139,8 +139,8 @@ By : University of Mississippi Medical Center
 
 <!-- Block Added by Chris Dancy -->
 <def>
-	<name> CircardianCRFEffect </name>
-	<val> [CRF]Effect * ( ( 0.7 * ( SIN ( ( 3.14 * System.X / 720 ) - 0.1 ) ) + 0.25 ) + ( 0.22 * ( SIN ( ( 2 * 3.14 * System.X / 720 ) - 0.1 ) ) + 0.25 ) + ( 0.07 * ( SIN ( ( 3 * 3.14 * System.X / 720 ) - 0.1 ) ) + 0.25 ) + ( 0.03 * ( SIN ( ( 4 * 3.14 * System.X / 720 ) - 0.1 ) ) + 0.25 ) ) </val>
+	<name> CircadianCRFEffect </name>
+	<val> [CRF]Effect * ( ( 0.97 * ( SIN ( ( System.Pi * System.X / 720 ) - 0.1 ) ) ) + ( 0.22 * ( SIN ( ( 2 * System.Pi * System.X / 720 ) - 0.1 ) ) ) + ( 0.07 * ( SIN ( ( 3 * System.Pi * System.X / 720 ) - 0.1 ) ) ) + ( 0.03 * ( SIN ( ( 4 * System.Pi * System.X / 720 ) - 0.1 ) ) ) + 1 ) </val>
 </def>
 <!-- -->
 
@@ -157,12 +157,12 @@ By : University of Mississippi Medical Center
   <val> [ADH]Effect [ ADHPool.Log10Conc ] </val>
 </def>
 
-<!-- Block Modified by Chris Dancy to include CircardianCRFEffect (which replaced normal [CRF]Effect) -->
+<!-- Block Modified by Chris Dancy to include CircadianCRFEffect (which replaced normal [CRF]Effect) -->
 <def>
   <name> Secretion </name>
   <val>
       Secretion-Basic
-    * CircardianCRFEffect
+    * CircadianCRFEffect
     * [ANP]Effect
     * Brain-Function.Effect
   </val>   <!--   * [ADH]Effect -->
