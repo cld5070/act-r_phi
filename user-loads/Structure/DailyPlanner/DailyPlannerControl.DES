@@ -150,8 +150,8 @@ By : University of Mississippi Medical Center
 <block><name> Start </name>
  <!-- <message> Daily planner is starting. </message>-->
   <def><name> Status </name><val> 2 </val></def>
-	<def><name> Status.LastAwake </name><val> System.x </val></def>
-	<def><name> Status.LastAsleep </name><val> System.x </val></def>
+	<def><name> Status.LastAwake </name><val> System.X </val></def>
+	<def><name> Status.LastAsleep </name><val> System.X </val></def>
   <call> NewTask </call>
 </block>
 <!-- -->

@@ -37,7 +37,17 @@ By : University of Mississippi Medical Center
 <var><name> [ADH]Effect </name></var>
 
 <!-- Block Added by Chris Dancy -->
+<var><name> SystemHour </name><val> 0 </val></var>
 <var><name> CircadianCRFEffect </name><val> 1 </val></var>
+<var><name> CircadianEffect </name><val> 1 </val></var>
+<parm><name> CircadianPhase </name><val> 0 </val></parm>
+<parm><name> CircadianAmp </name><val> 1 </val></parm>
+	<!-- Borbély-Achermann parameters -->
+<parm><name> a1 </name><val> 0.97 </val></parm>
+<parm><name> a2 </name><val> 0.22 </val></parm>
+<parm><name> a3 </name><val> 0.07 </val></parm>
+<parm><name> a4 </name><val> 0.03 </val></parm>
+	<!-- -->
 <!-- -->
 
 <parm><name> Secretion-Basic </name><val> 28.0 </val></parm>
@@ -49,18 +59,18 @@ By : University of Mississippi Medical Center
 <equations>
 
 <diffeq>
-  <name> Mass </name>
-  <integralname> Mass </integralname>
-  <dervname> Change </dervname>
-  <errorlim> 7.5 </errorlim>
+	<name> Mass </name>
+	<integralname> Mass </integralname>
+	<dervname> Change </dervname>
+	<errorlim> 7.5 </errorlim>
 </diffeq>
 
 <diffeq>
-  <name> NormalADH </name>
-  <integralname> NormalADH </integralname>
-  <initialval> 2 </initialval>
-  <dervname> dNormal </dervname>
-  <errorlim> 0.03 </errorlim>
+	<name> NormalADH </name>
+	<integralname> NormalADH </integralname>
+	<initialval> 2 </initialval>
+	<dervname> dNormal </dervname>
+	<errorlim> 0.03 </errorlim>
 </diffeq>
 
 </equations>
@@ -91,13 +101,13 @@ By : University of Mississippi Medical Center
 <block><name> Init </name>
 
 <def>
-  <name> InitialMass </name>
-  <val> TargetConc * ECFV.InitialVol </val>
+	<name> InitialMass </name>
+	<val> TargetConc * ECFV.InitialVol </val>
 </def>
 
 <def>
-  <name> Mass </name>
-  <val> InitialMass </val>
+	<name> Mass </name>
+	<val> InitialMass </val>
 </def>
 
 </block>
@@ -105,67 +115,81 @@ By : University of Mississippi Medical Center
 <block><name> Conc </name>
 
 <conditional>
-  <name> [Conc(nG/mL)] </name>
-  <test> ClampSwitch </test>
-  <true> ClampSetting / 100 </true>
-  <false> Mass / ECFV.Vol </false>
+	<name> [Conc(nG/mL)] </name>
+	<test> ClampSwitch </test>
+	<true> ClampSetting / 100 </true>
+	<false> Mass / ECFV.Vol </false>
 </conditional>
 
 <def>
-  <name> [Conc(nG/dL)] </name>
-  <val> 100 * [Conc(nG/mL)] </val>
+	<name> [Conc(nG/dL)] </name>
+	<val> 100 * [Conc(nG/mL)] </val>
 </def>
 
 <def>
-  <name> [Conc(pMol/L)] </name>
-  <val> [Conc(nG/dL)] * NG/DL_TO_PMOL/L </val>
+	<name> [Conc(pMol/L)] </name>
+	<val> [Conc(nG/dL)] * NG/DL_TO_PMOL/L </val>
 </def>
 
 </block>
 
 <block><name> Dervs </name>
 
+<!-- Block Added by Chris Dancy -->
+<def>
+	<name> SystemHour </name>
+	<val> ( System.X REM 1440.0 ) / 60.0 </val>
+</def>
+<!-- -->
+
 <conditional>
-  <name> PumpRate </name>
-  <test> PumpSwitch </test>
-  <true> PumpSetting </true>
-  <false> 0 </false>
+	<name> PumpRate </name>
+	<test> PumpSwitch </test>
+	<true> PumpSetting </true>
+	<false> 0 </false>
 </conditional>
 
 <def>
-  <name> [CRF]Effect </name>
-  <val> [CRF]Effect [ CorticotropinReleasingFactor.[CRF(pG/mL)] ] </val>
+	<name> [CRF]Effect </name>
+	<val> [CRF]Effect [ CorticotropinReleasingFactor.[CRF(pG/mL)] ] </val>
 </def>
 
 <!-- Block Added by Chris Dancy -->
 <def>
+	<name> CircadianEffect </name>
+	<!-- Uses Borbély-Achermann equation for C process (from Thorsley, 2012) -->
+	<val> ( CircadianAmp ) * ( ( a1 * ( SIN ( ( System.Pi / 12 ) * ( SystemHour - CircadianPhase ) ) ) ) + ( a2 * ( SIN ( ( 2 * System.Pi / 12 ) * ( SystemHour - CircadianPhase ) ) ) ) + ( a3 * ( SIN ( ( 3 * System.Pi / 12 ) * ( SystemHour - CircadianPhase ) ) ) ) + ( a4 * ( SIN ( ( 4 * System.Pi / 12 ) * ( SystemHour - CircadianPhase ) ) ) ) + 1 ) </val>
+</def>
+
+<def>
 	<name> CircadianCRFEffect </name>
-	<val> [CRF]Effect * ( ( 0.97 * ( SIN ( ( System.Pi * System.X / 720 ) - 0.1 ) ) ) + ( 0.22 * ( SIN ( ( 2 * System.Pi * System.X / 720 ) - 0.1 ) ) ) + ( 0.07 * ( SIN ( ( 3 * System.Pi * System.X / 720 ) - 0.1 ) ) ) + ( 0.03 * ( SIN ( ( 4 * System.Pi * System.X / 720 ) - 0.1 ) ) ) + 1 ) </val>
+	<!-- Uses Borbély-Achermann equation for C process (from Thorsley, 2012) -->
+	<val> [CRF]Effect * CircadianEffect </val>
 </def>
 <!-- -->
 
 <def>
-  <name> [ANP]Effect </name>
-  <val> [ANP]Effect [ ANPPool.[ANP] ] </val>
+	<name> [ANP]Effect </name>
+	<val> [ANP]Effect [ ANPPool.[ANP] ] </val>
 </def>
 
 
 <def><name> dNormal </name><val> 0.01 * ( ADHPool.Log10Conc - NormalADH ) </val></def>
 
 <def>
-  <name> [ADH]Effect </name>
-  <val> [ADH]Effect [ ADHPool.Log10Conc ] </val>
+	<name> [ADH]Effect </name>
+	<val> [ADH]Effect [ ADHPool.Log10Conc ] </val>
 </def>
 
 <!-- Block Modified by Chris Dancy to include CircadianCRFEffect (which replaced normal [CRF]Effect) -->
 <def>
-  <name> Secretion </name>
-  <val>
-      Secretion-Basic
-    * CircadianCRFEffect
-    * [ANP]Effect
-    * Brain-Function.Effect
-  </val>   <!--   * [ADH]Effect -->
+	<name> Secretion </name>
+	<val>
+			Secretion-Basic
+		* CircadianCRFEffect
+		* [ANP]Effect
+		* Brain-Function.Effect
+	</val>   <!--   * [ADH]Effect -->
 </def>
 
 <def><name> Degradation </name><val> K * [Conc(nG/mL)] </val></def>
