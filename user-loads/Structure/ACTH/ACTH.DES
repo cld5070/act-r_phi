@@ -41,7 +41,7 @@ By : University of Mississippi Medical Center
 <var><name> CircadianCRFEffect </name><val> 1 </val></var>
 <var><name> CircadianEffect </name><val> 1 </val></var>
 <parm><name> CircadianPhase </name><val> 0 </val></parm>
-<parm><name> CircadianAmp </name><val> 1 </val></parm>
+<parm><name> CircadianAmp </name><val> 0.8 </val></parm>
 	<!-- Borbély-Achermann parameters -->
 <parm><name> a1 </name><val> 0.97 </val></parm>
 <parm><name> a2 </name><val> 0.22 </val></parm>
@@ -158,7 +158,7 @@ By : University of Mississippi Medical Center
 <def>
 	<name> CircadianEffect </name>
 	<!-- Uses Borbély-Achermann equation for C process (from Thorsley, 2012) -->
-	<val> ( CircadianAmp ) * ( ( a1 * ( SIN ( ( System.Pi / 12 ) * ( SystemHour - CircadianPhase ) ) ) ) + ( a2 * ( SIN ( ( 2 * System.Pi / 12 ) * ( SystemHour - CircadianPhase ) ) ) ) + ( a3 * ( SIN ( ( 3 * System.Pi / 12 ) * ( SystemHour - CircadianPhase ) ) ) ) + ( a4 * ( SIN ( ( 4 * System.Pi / 12 ) * ( SystemHour - CircadianPhase ) ) ) ) + 1 ) </val>
+	<val> ( CircadianAmp ) * ( ( a1 * ( SIN ( ( System.Pi / 12 ) * ( SystemHour - CircadianPhase ) ) ) ) + ( a2 * ( SIN ( ( 2 * System.Pi / 12 ) * ( SystemHour - CircadianPhase ) ) ) ) + ( a3 * ( SIN ( ( 3 * System.Pi / 12 ) * ( SystemHour - CircadianPhase ) ) ) ) + ( a4 * ( SIN ( ( 4 * System.Pi / 12 ) * ( SystemHour - CircadianPhase ) ) ) ) + 1.2 ) </val>
 </def>
 
 <def>
