@@ -35,18 +35,19 @@ By : University of Mississippi Medical Center
 
 <var><name> [ACTH]Effect </name></var>
 <var><name> Secretion-Basic </name></var>
-<!-- <parm><name> Secretion-Basic(/G) </name><val> 1.1556 </val></parm> -->
-<parm><name> Secretion-Basic(/G) </name><val> 0.15 </val></parm>
+<!-- Original -> <parm><name> Secretion-Basic(/G) </name><val> 1.1556 </val></parm> -->
+<!-- Works w/out wake/sleep processes -> <parm><name> Secretion-Basic(/G) </name><val> 0.15 </val></parm> -->
+<parm><name> Secretion-Basic(/G) </name><val> 0.1 </val></parm>
 
 <parm><name> K </name><val> 52.0 </val></parm>
 
 <!-- Block added by Chris Dancy -->
 <var><name> Secretion-Sleep-Hom </name><val> 0 </val></var>
-<parm><name> Sleep-allostatic-mag </name><val> 3.6 </val></parm>
+<parm><name> Sleep-allostatic-mag </name><val> 1.6 </val></parm>
 <parm><name> Sleep-allostatic-rate </name><val> 0.92 </val></parm>
 <!-- Using mag from Thorsley paper -->
 <!-- <parm><name> Wake-allostatic-mag </name><val> 70.8 </val></parm> -->
-<parm><name> Wake-allostatic-mag </name><val> 1.6 </val></parm>
+<parm><name> Wake-allostatic-mag </name><val> 1.1 </val></parm>
 <parm><name> Wake-allostatic-rate </name><val> 0.90 </val></parm>
 <var><name> Sleep-Secretion-Sleep-Hom </name><val> 0 </val></var>
 <var><name> Wake-Secretion-Sleep-Hom </name><val> 0 </val></var>
