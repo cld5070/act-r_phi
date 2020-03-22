@@ -47,7 +47,7 @@ By : University of Mississippi Medical Center
 <parm><name> Sleep-allostatic-rate </name><val> 0.92 </val></parm>
 <!-- Using mag from Thorsley paper -->
 <!-- <parm><name> Wake-allostatic-mag </name><val> 70.8 </val></parm> -->
-<parm><name> Wake-allostatic-mag </name><val> 1.1 </val></parm>
+<parm><name> Wake-allostatic-mag </name><val> 1.3 </val></parm>
 <parm><name> Wake-allostatic-rate </name><val> 0.90 </val></parm>
 <var><name> Sleep-Secretion-Sleep-Hom </name><val> 0 </val></var>
 <var><name> Wake-Secretion-Sleep-Hom </name><val> 0 </val></var>
