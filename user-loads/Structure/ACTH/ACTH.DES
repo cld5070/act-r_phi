@@ -41,7 +41,7 @@ By : University of Mississippi Medical Center
 <var><name> CircadianCRFEffect </name><val> 1 </val></var>
 <var><name> CircadianEffect </name><val> 1 </val></var>
 <parm><name> CircadianPhase </name><val> 0 </val></parm>
-<parm><name> CircadianAmp </name><val> 0.55 </val></parm>
+<parm><name> CircadianAmp </name><val> 0.4 </val></parm>
 <parm><name> CircadianConst </name><val> 1 </val></parm>
 	<!-- Borbély-Achermann parameters -->
 <parm><name> a1 </name><val> 0.97 </val></parm>

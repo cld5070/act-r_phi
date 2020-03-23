@@ -37,7 +37,7 @@ By : University of Mississippi Medical Center
 <var><name> Secretion-Basic </name></var>
 <!-- Original -> <parm><name> Secretion-Basic(/G) </name><val> 1.1556 </val></parm> -->
 <!-- Works w/out wake/sleep processes -> <parm><name> Secretion-Basic(/G) </name><val> 0.15 </val></parm> -->
-<parm><name> Secretion-Basic(/G) </name><val> 0.1 </val></parm>
+<parm><name> Secretion-Basic(/G) </name><val> 0.15 </val></parm>
 
 <parm><name> K </name><val> 52.0 </val></parm>
 
