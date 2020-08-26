@@ -497,7 +497,9 @@ t)
 				(while (probe-file solverInputFile))
 				(when (wait-delete-output SolverOutputFile 5) (go resetCreate))
 				;; Initialize with stable values (default is obtained from running sim 1 week)
+				(format t "Loading ICS!~&")
 				(load-HumMod-ICs (phys-module-ics-file phys))
+				(format t "Done!~&")
 
 ;(sleep 0.05)
 				;Create input file for hummod to give us a list of variables and digest the output file created by HumMod (w/ the variables). Loop back around if there is an error
@@ -649,17 +651,12 @@ t)
 		(let ((events (meta-p-events (current-mp)))
 					(lastTime nil))
 			(dolist (event events (length events))
-				(print "ERERERERERERRRRR~&~&")
 				(dolist (module moduleList (length moduleList))
-					(print "2222222222~&~&")
-					(print (evt-module event))
-					(print "444")
-					(when (or (eq (evt-module event) module)
-						(eq (evt-module event) 'NONE))
-						(print "33333333~&~&")
+					(when (or (eq (act-r-event-module event) module)
+						(eq (act-r-event-module event) 'NONE))
 						(if (or (eq lastTime nil)
-								(> (evt-time event) lastTime))
-								(setf lastTime (evt-time event))
+								(> (* (act-r-event-mstime event) 0.001) lastTime))
+								(setf lastTime (* (act-r-event-mstime event) 0.001))
 								))))
 	 (if lastTime
 		lastTime
@@ -717,6 +714,7 @@ t)
 			(tagbody startGetVals
 				(while (probe-file solverOutputFile)
 					(handler-case (delete-file solverOutputFile)	(error () nil)))
+				(format t "723...~&")
 				 ;;Get new HumMod value list
 				(handler-case
 					(with-open-file
@@ -724,6 +722,7 @@ t)
 							:direction :output :if-exists :overwrite :if-does-not-exist :create)
 							(format messageStream getValsMessage)) ((or simple-error (or file-error))
 							() (go startGetVals)))
+				(format t "731...~&")
 
 				;wait for HumMod to digest input file
 				(let ((startTime (get-universal-time)))
