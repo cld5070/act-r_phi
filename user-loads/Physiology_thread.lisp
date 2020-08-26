@@ -1084,6 +1084,18 @@ t)
 		    (ics-out-file (concatenate 'string *HumModDir* "../ICS/Racinais-2008_Hot.ICS")))
 	(create-ics-from-out solver-out-file ics-out-file phys)))
 
+(defun make-Default-ICS (new-ics-file-name phys)
+	"Make default ICS file that moves model to stable position (1 week)"
+	(schedule-event-relative 0.023 'advance-phys :module 'physio
+		:module :physio :priority :max :params '(10080)
+		:details "Advance physiology 1 week")
+	(schedule-break-relative 0.024)
+	(run 0.5)
+	(set-as-init-cond)
+	(let ((solver-out-file (concatenate 'string *HumModDir* "SolverOut" (phys-module-pipeID phys)))
+		    (ics-out-file (concatenate 'string *HumModDir* "../ICS/1wkNormal.ICS")))
+	(create-ics-from-out solver-out-file ics-out-file phys)))
+
 #|---End Physiological Initial Condition Functions---|#
 
 ;;;
