@@ -714,7 +714,6 @@ t)
 			(tagbody startGetVals
 				(while (probe-file solverOutputFile)
 					(handler-case (delete-file solverOutputFile)	(error () nil)))
-				(format t "723...~&")
 				 ;;Get new HumMod value list
 				(handler-case
 					(with-open-file
@@ -722,7 +721,6 @@ t)
 							:direction :output :if-exists :overwrite :if-does-not-exist :create)
 							(format messageStream getValsMessage)) ((or simple-error (or file-error))
 							() (go startGetVals)))
-				(format t "731...~&")
 
 				;wait for HumMod to digest input file
 				(let ((startTime (get-universal-time)))

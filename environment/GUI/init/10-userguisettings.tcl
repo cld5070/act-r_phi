@@ -29,7 +29,7 @@ if {$reset_window_sizes != "yes"} {
   set changed_window_list(.ptrace) 1
   set window_config(.dispatcher) 700x274+1370+583
   set changed_window_list(.dispatcher) 1
-  set window_config(.control_panel) 235x700+2716+644
+  set window_config(.control_panel) 235x1010+2716+334
   set changed_window_list(.control_panel) 1
   set window_config(.audicon) 870x150+1521+747
   set changed_window_list(.audicon) 1
@@ -43,10 +43,10 @@ if {$reset_window_sizes != "yes"} {
   set changed_window_list(.bold_graphs) 1
   set window_config(.bufferstatus) 450x240+1223+277
   set changed_window_list(.bufferstatus) 1
-  set window_config(.whynot) 956x300+1620+570
-  set changed_window_list(.whynot) 1
   set window_config(.procedural) 1469x450+1601+240
   set changed_window_list(.procedural) 1
+  set window_config(.whynot) 956x300+1620+570
+  set changed_window_list(.whynot) 1
 }
 set gui_options(p_selected) #44DA22
 set gui_options(p_matched) #FCA31D
