@@ -1058,11 +1058,15 @@ t)
 		Provides some useful functions that can create initial condition files that can be used to run simulations under various conditions
 		Initial condition files help us avoid having to take the time to get to some stable state related to a particular physiological state
 |#
-(defun make-Racinais08-ICS (new-ics-file-name phys)
+(defun make-Racinais08-ICS (&optional (new-ics-file-name "Racinais-2008_Hot.ICS") (phys (get-module physio)))
 	"Sets up physiology in a scenario that matches:
 		Racinais, S., Gaoua, N., & Grantham, J. (2008).
 		Hyperthermia impairs short-term memory and peripheral motor drive transmission.
-		The Journal of Physiology, 586(19), 4751-4762."
+		The Journal of Physiology, 586(19), 4751-4762.
+		This needs to be run every time the Phys Model is changed
+		@param new-ics-file-name: [string] The output file name for the ICS file. \"Racinais-2008_Hot.ICS\" by default
+		@param phys: [ACT-R module] should be ACT-R module (what you get from call to get-module).
+									(get-module physio) by default"
 	(schedule-event-relative 0.020 'set-phys-vals :module 'physio
 		:params (list (list (list "PostureControl.Request" 3)))
 		:priority :max :details "Change to standing posture")
@@ -1080,11 +1084,15 @@ t)
 	(run 0.5)
 	(set-as-init-cond)
 	(let ((solver-out-file (concatenate 'string *HumModDir* "SolverOut" (phys-module-pipeID phys)))
-		    (ics-out-file (concatenate 'string *HumModDir* "../ICS/Racinais-2008_Hot.ICS")))
+		    (ics-out-file (concatenate 'string *HumModDir* "../ICS/" new-ics-file-name)))
 	(create-ics-from-out solver-out-file ics-out-file phys)))
 
-(defun make-Default-ICS (new-ics-file-name phys)
-	"Make default ICS file that moves model to stable position (1 week)"
+(defun make-Default-ICS (&optional (new-ics-file-name "1wkNormal.ICS") (phys (get-module physio)))
+	"Make default ICS file that moves model to stable position (1 week)
+		This needs to be run every time the Phys Model is changed
+		@param new-ics-file-name: [string] The output file name for the ICS file. \"1wkNormal.ICS\" by default
+		@param phys: [ACT-R module] should be ACT-R module (what you get from call to get-module).
+									(get-module physio) by default"
 	(schedule-event-relative 0.023 'advance-phys :module 'physio
 		:module :physio :priority :max :params '(10080)
 		:details "Advance physiology 1 week")
@@ -1092,7 +1100,7 @@ t)
 	(run 0.5)
 	(set-as-init-cond)
 	(let ((solver-out-file (concatenate 'string *HumModDir* "SolverOut" (phys-module-pipeID phys)))
-		    (ics-out-file (concatenate 'string *HumModDir* "../ICS/1wkNormal.ICS")))
+		    (ics-out-file (concatenate 'string *HumModDir* "../ICS/" new-ics-file-name)))
 	(create-ics-from-out solver-out-file ics-out-file phys)))
 
 #|---End Physiological Initial Condition Functions---|#
