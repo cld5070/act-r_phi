@@ -497,7 +497,6 @@
                                       :device (pathname-device pathname)
                                       :name (pathname-name pathname)))
       (error "To compile a file it must have a .lisp extension")))
-
   (let* ((srcpath (merge-pathnames pathname *.lisp-pathname*))
          (binpath (merge-pathnames pathname *.fasl-pathname*)))
     (unless (probe-file srcpath)
@@ -632,7 +631,6 @@
 
 (dolist (the-file *file-list*)
   (smart-load (translate-logical-pathname "ACT-R:framework;") the-file t))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Define system parameters for version information before anything could
 ;;; change the global variables.
@@ -738,7 +736,6 @@
       (print-warning "Invalid version specified in written-for-act-r-version: ~s.  Version must be an ACT-R version string." version)
       :invalid-value)))
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Define a macro to make loading extras easier
 
@@ -778,16 +775,17 @@
 
 (smart-load (translate-logical-pathname "ACT-R:core-modules;") "core-loader.lisp")
 
+
+
 (dolist (the-file *file-list*)
+	(when (string-equal the-file "declarative-memory") (continue))
   (smart-load (translate-logical-pathname "ACT-R:core-modules;") the-file))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; First, load any additional extensions.
-
 (dolist (file (directory (translate-logical-pathname "ACT-R:commands;*.lisp")))
   (compile-and-load file))
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; When a new device is added it should be included with a switch below so that it can be loaded
@@ -824,7 +822,6 @@
     (format t
         "#################~%#### No uwi file found in ~S ####~%################"
       *device-interface-pathname*)))
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; After the modules and devices files are done load any files in the
@@ -863,7 +860,6 @@
     (dolist (file (sort d 'string< :key (lambda (x) (string (pathname-name x)))))
       (compile-and-load file))
     (format t "~%######### User files loaded #########~%")))
-
 
 #|
 This library is free software; you can redistribute it and/or
