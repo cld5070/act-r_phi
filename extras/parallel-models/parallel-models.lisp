@@ -1,27 +1,27 @@
 ;;;  -*- mode: LISP; Syntax: COMMON-LISP;  Base: 10 -*-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; 
+;;;
 ;;; Author      : Dan Bothell
 ;;; Copyright   : (c) 2015 Dan Bothell
 ;;; Availability: Covered by the GNU LGPL, see LGPL.txt
-;;; Address     : Department of Psychology 
+;;; Address     : Department of Psychology
 ;;;             : Carnegie Mellon University
 ;;;             : Pittsburgh, PA 15213-3890
 ;;;             : db30@andrew.cmu.edu
-;;; 
-;;; 
+;;;
+;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; 
+;;;
 ;;; Filename    : parallel-models.lisp
 ;;; Version     : 2.0a1
-;;; 
+;;;
 ;;; Description : Provides the ability to run independent models in separate
 ;;;             : processes within a single Lisp instance.
-;;; 
-;;; Bugs        : 
+;;;
+;;; Bugs        :
 ;;;
 ;;; To do       : [ ] More testing, both for performance and reliability.
-;;; 
+;;;
 ;;; ----- History -----
 ;;; 2015.06.15 Dan
 ;;;             : * Initial creation.
@@ -40,23 +40,23 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; General Docs:
-;;; 
+;;;
 ;;; This file provides a means of running multiple independent models along with
 ;;; their supporting Lisp code simultaneously.  It creates multiple instances of
 ;;; the full ACT-R system within a single Lisp and uses those to run the models.
 ;;; Those separate instances do not open a remote connection for the dispatcher
 ;;; therefore everything must be done in Lisp to use this extension.
-;;; 
+;;;
 ;;; This code depends on components of ACT-R therefore ACT-R must be loaded
 ;;; before loading this file.
-;;; 
+;;;
 ;;; The recommended way to load this is by using the require-extra command:
-;;; 
+;;;
 ;;; (require-extra "parallel-models")
 ;;;
 ;;;
 ;;; The basic procedure for using this is to create a set of independent ACT-R
-;;; instances, instantiate the model to be run in each, and then use those to 
+;;; instances, instantiate the model to be run in each, and then use those to
 ;;; run multiple copies of a model in parallel and get the results of each returned
 ;;; in a list.
 ;;;
@@ -66,8 +66,8 @@
 ;;; are some restrictions because of that:
 ;;;  - The model code should not call reload since there will only be a single
 ;;;    compiled file which will be specific to one of the packages.
-;;;  - The model code should not include any package specific code, or if it 
-;;;    does, then it must use the full package specifier for all references to 
+;;;  - The model code should not include any package specific code, or if it
+;;;    does, then it must use the full package specifier for all references to
 ;;;    that code and that code must be thread-safe.
 ;;;  - The model file(s) must include all the code necessary to run it.
 ;;;  - Any code which writes out data should be sure to use unique file names
@@ -103,11 +103,11 @@
 ;;;
 ;;; Number is how many independent ACT-R instances to create and must be a positive
 ;;; integer.
-;;; 
-;;; How many to create for best performance is going to require testing by the 
+;;;
+;;; How many to create for best performance is going to require testing by the
 ;;; user because it's going to depend on the Lisp and machine involved since
 ;;; there will be a lot of memory required to create the separate instances and
-;;; each will be run in its own process/thread.  
+;;; each will be run in its own process/thread.
 ;;;
 ;;; This function should only be called once to create the instances.
 ;;;
@@ -126,19 +126,19 @@
 ;;; the number of instances.  If there are any problems warnings will be printed
 ;;; and nil returned.
 ;;;
-;;; 
+;;;
 ;;; destroy-parallel-instances ()
 ;;;
 ;;; This function will delete the packages created by create-parallel-instances.
 ;;; If the packages are deleted then create-parallel-instances would have to be
 ;;; called again before being able to run parallel models.
-;;; 
+;;;
 ;;; If all the instances are successfully deleted then the number of instances that
 ;;; were destroyed is returned.  If there are any problems then warnings will be
 ;;; printed and nil returned.
 ;;;
 ;;;
-;;; 
+;;;
 ;;; run-parallel-models (function &optional (time-out 60) parameters &rest more-parameters)
 ;;;
 ;;; function should be a string which contains the name of a function
@@ -146,35 +146,35 @@
 ;;; have to name a function in the default/current package.
 ;;;
 ;;; time-out is a positive number in seconds which indicates how long
-;;; the instances should be allowed to run before being terminated 
+;;; the instances should be allowed to run before being terminated
 ;;; automatically.
 ;;;
-;;; parameters should be a list of parameters which will be passed to 
+;;; parameters should be a list of parameters which will be passed to
 ;;; the function specified.  The elements of that list will be written
 ;;; to a string which will then be evaluated in one of the instances.
 ;;;
 ;;; more-parameters is zero or more lists like parameters.
 ;;;
 ;;; If more-parameters are not specified then each instance which
-;;; was created will effectively execute: 
+;;; was created will effectively execute:
 ;;;
 ;;;   (apply (read-from-string function) parameters)
-;;; 
+;;;
 ;;; with all the symbols in parameters being local to the package in which
 ;;; it is being run.
 ;;;
-;;; Two values are returned.  The first is a list containing the result 
-;;; of that call for each instance which was run.  A result is the return 
-;;; value from the call if it completed before the time-out expired, the 
-;;; keyword :time-out if the function did not complete before the time-out 
-;;; period, or the keyword :error if the instance encountered an error 
+;;; Two values are returned.  The first is a list containing the result
+;;; of that call for each instance which was run.  A result is the return
+;;; value from the call if it completed before the time-out expired, the
+;;; keyword :time-out if the function did not complete before the time-out
+;;; period, or the keyword :error if the instance encountered an error
 ;;; while running the function provided.  The second parameter is a list
-;;; of conses for the error conditions which occurred with one for each 
+;;; of conses for the error conditions which occurred with one for each
 ;;; occurrence of :error in the results list.  The car of the cons is the
 ;;; error condition encountered and the cdr is a string with the printing
 ;;; of that error message in the package which generated it.
 ;;;
-;;; If more-parameters contains ome or more items and fewer than the 
+;;; If more-parameters contains ome or more items and fewer than the
 ;;; number of instances which were created then each of the lists
 ;;; of parameters specified in parameters and more-parameters will
 ;;; be passed to a separate instance to be run and it will return
@@ -182,25 +182,25 @@
 ;;; The first return value will be effectively as if this were called:
 ;;;
 ;;; (mapcar (lambda (x) (apply function x)) (append (list parameters) more-parameters))
-;;; 
+;;;
 ;;; with each of the elements being generated in parallel and also
 ;;; subject to the time-out and error detection as indicated above.
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Design Choices:
-;;; 
+;;;
 ;;; Decided that since modern CPUs have multiple cores in them and most Lisps
 ;;; support threading that utilizes multiple cores I should try to take
 ;;; advantage of that for model running as well as general code execution as
 ;;; is done with the parallel-computation code (I don't recommend trying to
 ;;; use the two together).
 ;;;
-;;; This is similar to the parallel-computation code, except this instantiates 
+;;; This is similar to the parallel-computation code, except this instantiates
 ;;; multiple ACT-Rs in separate packages to run things.
 ;;;
 ;;; Right now it's really bare-bones -- create the instance, load the code into
-;;; them, run as needed, and kill when done. 
+;;; them, run as needed, and kill when done.
 ;;;
 ;;; The processor allocation is up to the Lisp to handle.  So how well it spreads
 ;;; things across processors/cores is going to require testing with the Lisp and
@@ -219,7 +219,7 @@
 ;;; or general enough to make available with ACT-R.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; 
+;;;
 ;;; The code
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -250,11 +250,11 @@
               (eval `(in-package ,name))
               (let ((*features* (remove :act-r *features*))
                     (*modules* (set-difference *modules* cm :test 'string-equal)))
-                
+
                 (pushnew :actr-recompile *features*)
                 (pushnew :actr-fast *features*)
                 (pushnew :standalone *features*)
-                
+
                 (load "ACT-R:load-act-r.lisp")))
           (eval `(in-package ,cp))))
       name)
@@ -267,7 +267,7 @@
     (progn
       (setf *parallel-actr-package-count* 0)
       (dotimes (i number number)
-        (aif (make-and-load-actr-package) 
+        (aif (make-and-load-actr-package)
              (push-last it *existing-parallel-packages*)
              (return-from create-parallel-instances nil))))))
 
@@ -283,12 +283,12 @@
         ;; Want to make sure each package loads any
         ;; 'requires' even though they may have already been
         ;; loaded -- should fix that at some point.
-        
+
         (let ((*modules* (set-difference *modules* cm :test 'string-equal)))
-          
+
           (pushnew :actr-recompile *features*)
           (pushnew :actr-fast *features*)
-          
+
           (dolist (x files)
             (handler-case (compile-and-load x)
               (error (e)
@@ -297,7 +297,7 @@
                 (return-from instantiate-parallel-models nil)))))
           (eval `(in-package ,cp)))
       success)))
-  
+
 (defun destroy-parallel-instances ()
   (if *existing-parallel-packages*
       (let ((count (length *existing-parallel-packages*)))
@@ -326,13 +326,13 @@
          (print-warning "Too many sets of parameters passed to run-parallel-models because there are only ~d instances available."
                         (length *existing-parallel-packages*)))
         (t
-         (let* ((count (if more-parameters 
+         (let* ((count (if more-parameters
                            (1+ (length more-parameters))
                          (length *existing-parallel-packages*)))
                 (status (make-list count :initial-element :time-out))
                 (result (make-list count :initial-element nil))
                 (jobs (make-list count :initial-element nil)))
-             
+
            (unwind-protect
                (let ((params (if more-parameters
                                  (append (list parameters) more-parameters)
@@ -340,41 +340,42 @@
                  (setf *parallel-packages-running* t)
                  (setf *parallel-packages-done* 0)
                  (setf *parallel-packages-lock* (bt:make-lock "Parallel-models"))
-                 
+
                  (dotimes (i count)
                    (let ((pack (nth i *existing-parallel-packages*))
                          (index i)
                          (p (format nil "~s" (nth i params))))
+										(format t "~a~&" p)
                      (setf (nth i jobs)
-                       (bt:make-thread  
+                       (bt:make-thread
                         (lambda ()
                           (eval `(in-package ,pack))
                           (multiple-value-bind (r e)
                               (ignore-errors (apply (read-from-string function) (read-from-string p)))
-                            
+
                             (bt:with-lock-held (*parallel-packages-lock*)
-                            
+                            	(format t "~&~a~&.....~a~&" r e)
                               (if (subtypep (type-of e) 'condition)
                                   (setf (nth index status) :error
                                     (nth index result) (cons e (format nil "Error: ~/print-error-message/~%" e)))
                                 (setf (nth index status) :success
                                   (nth index result) r))
-                            
+
                               (setf (nth index jobs) nil)
                               (incf *parallel-packages-done*))))
                         :name pack))))
-                 
+
                  (let ((start (get-internal-real-time)))
                    (while (and (< (/ (- (get-internal-real-time) start) internal-time-units-per-second) time-out)
                                  (< (bt:with-lock-held (*parallel-packages-lock*) *parallel-packages-done*) count))
                      (process-events))))
-               
+
              (unless (= count (bt:with-lock-held (*parallel-packages-lock*) *parallel-packages-done*))
                (dolist (x jobs)
                  (when x
                    (bt:destroy-thread x))))
              (setf *parallel-packages-running* nil))
-           
+
            (let ((res (make-list count))
                  (errors nil))
              (dotimes (i count)
@@ -391,7 +392,7 @@
 
 Example of using it to run the zbrodoff model from unit 4 of the tutorial.
 This was run using this version of ACL:
- 
+
 International Allegro CL Enterprise Edition
 9.0 [Windows *SMP*] (Jun 15, 2016 12:41)
 Copyright (C) 1985-2012, Franz Inc., Oakland, CA, USA.  All Rights Reserved.
@@ -499,7 +500,7 @@ Block  2  2.297 (64)  2.801 (64)  3.309 (64)
 Block  3  2.301 (64)  2.804 (64)  3.295 (64)
 >
 
- 
+
 CG-USER(9): (destroy-parallel-instances)
 4
 |#
