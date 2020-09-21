@@ -1,3 +1,0 @@
-# Port settings for ACT-R server started at 15:40:53 9/19/2020
-set actr_port 2665
-set actr_address "192.168.1.118"
