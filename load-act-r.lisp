@@ -422,7 +422,6 @@
           ;(format t "Returning ~S from directory of new-path: ~s which returns ~s.~%" res new-path new-val)
           res)
       (cl::directory pathname))))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Create the logical host "ACT-R" relative to the current location
 
@@ -589,7 +588,6 @@
 ;; For now, assume quicklisp is available, but eventually want to include local
 ;; versions with the sources so it can be loaded without them too.
 
-
 #+(and (not :QUICKLISP) (not :single-threaded-act-r)) (eval-when (:compile-toplevel :load-toplevel :execute)
                                                         (when (probe-file "~/quicklisp/setup.lisp")
                                                           (load "~/quicklisp/setup.lisp"))
@@ -668,7 +666,6 @@
                          :default-value (if *actr-minor-version-string* (read-from-string *actr-minor-version-string*) 0) :warning "unmodified"
                          :documentation "The minor software version"
                          :handler (fixed-version-parameter-value (if *actr-minor-version-string* (read-from-string *actr-minor-version-string*) 0)))
-
 (defun valid-version-test-string (val)
   (if (eq val t)
       t
@@ -775,10 +772,7 @@
 
 (smart-load (translate-logical-pathname "ACT-R:core-modules;") "core-loader.lisp")
 
-
-
 (dolist (the-file *file-list*)
-	(when (string-equal the-file "declarative-memory") (continue))
   (smart-load (translate-logical-pathname "ACT-R:core-modules;") the-file))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -789,7 +783,6 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; When a new device is added it should be included with a switch below so that it can be loaded
-
 (defvar *device-interface-pathname* nil)
 
 ;;; Here are the devices that are defined
