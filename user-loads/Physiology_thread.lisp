@@ -67,9 +67,8 @@
 (defvar *HumModInStream* nil)
 ;;;Custom Physiology Function Section
 ;;HumMod Directory variable
-(print (namestring *LOAD-TRUENAME*))
 #+:windows	(defvar *HumModDir* (subseq (namestring *LOAD-TRUENAME*) 0 (search (file-namestring *LOAD-TRUENAME*) (namestring *LOAD-TRUENAME*))))
-#-:windows	(defvar *HumModDir* (substitute #\\ #\/ (subseq (namestring *LOAD-TRUENAME*) 0 (search (file-namestring *LOAD-TRUENAME*) (namestring *LOAD-TRUENAME*))) :from-end t :count 1))
+#-:windows	(defvar *HumModDir* (subseq (namestring *LOAD-TRUENAME*) 0 (search (file-namestring *LOAD-TRUENAME*) (namestring *LOAD-TRUENAME*)))) ;(defvar *HumModDir* (substitute #\\ #\/ (subseq (namestring *LOAD-TRUENAME*) 0 (search (file-namestring *LOAD-TRUENAME*) (namestring *LOAD-TRUENAME*))) :from-end t :count 1))
 
 ;;We use this so we have a reference to the next update-event that is scheduled to be run
 (defvar *nextUpdateEvent* nil)
