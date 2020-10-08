@@ -336,9 +336,9 @@ t)
 				(model (concatenate 'string
 				  "\"<root><model>" *HumModDir* "HumMod.DES</model><pipeid>"
 				  pipeID "</pipeid></root>\""))
-				(hide-gui "\"True\"")
-				(non-gui-version "\"False\"")
-				(activity-timeout "60"))
+				(hide-gui " \"True\"")
+				(non-gui-version " \"False\"")
+				(activity-timeout " 60"))
 
 		(setf old-dir
 			#+:ccl	(ccl::current-directory-name)
@@ -1257,7 +1257,9 @@ t)
 			(:phys-ics-file
 				(setf (phys-module-ics-file phys) (cdr param)))
 			(:phys-ics-exp-file
-				(setf (phys-module-ics-exp-file phys) (cdr param))))
+				(setf (phys-module-ics-exp-file phys) (cdr param)))
+			(:phys-pipe-id
+				(setf (phys-module-pipeID phys) (cdr param))))
 
 		(case param
 			(:phys-delay
@@ -1273,7 +1275,9 @@ t)
 			(:phys-ics-file
 				(phys-module-ics-file phys))
 			(:phys-ics-exp-file
-				(phys-module-ics-exp-file phys)))))
+				(phys-module-ics-exp-file phys))
+			(:phys-pipe-id
+				(phys-module-pipeID phys)))))
 
 
 ;;;Deprecated, keeping for now for records
@@ -1378,6 +1382,13 @@ t)
 		(define-parameter
 		:phys-ics-exp-file
 		:documentation "File used to load initial conditions for an experiment"
+		:default-value nil
+		:valid-test (lambda (x) (or (typep x 'string) (equal x nil)))
+		:owner t)
+
+		(define-parameter
+		:phys-pipe-id
+		:documentation "Used by HumMod to determine solver{input/output} file name for communication"
 		:default-value nil
 		:valid-test (lambda (x) (or (typep x 'string) (equal x nil)))
 		:owner t))
