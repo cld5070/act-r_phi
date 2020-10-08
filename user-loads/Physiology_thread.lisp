@@ -1151,7 +1151,7 @@ t)
 	(timeSliceCount 0)
 
 	;;Used to communicate with HumMod Process
-	(pipeID (write-to-string (random(get-universal-time))))
+	(pipeID (write-to-string (random (get-universal-time))))
 	(init nil)
 
 	;;Holds our physiological variables (key) and place in value list (val; e.g., 1, 2, 3, etc.)
@@ -1389,7 +1389,7 @@ t)
 		(define-parameter
 		:phys-pipe-id
 		:documentation "Used by HumMod to determine solver{input/output} file name for communication"
-		:default-value nil
+		:default-value (write-to-string (random (get-universal-time)))
 		:valid-test (lambda (x) (or (typep x 'string) (equal x nil)))
 		:owner t))
 	:version "1.0"
