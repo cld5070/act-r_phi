@@ -68,7 +68,8 @@
 ;;;Custom Physiology Function Section
 ;;HumMod Directory variable
 #+:windows	(defvar *HumModDir* (subseq (namestring *LOAD-TRUENAME*) 0 (search (file-namestring *LOAD-TRUENAME*) (namestring *LOAD-TRUENAME*))))
-#-:windows	(defvar *HumModDir* (subseq (namestring *LOAD-TRUENAME*) 0 (search (file-namestring *LOAD-TRUENAME*) (namestring *LOAD-TRUENAME*)))) ;(defvar *HumModDir* (substitute #\\ #\/ (subseq (namestring *LOAD-TRUENAME*) 0 (search (file-namestring *LOAD-TRUENAME*) (namestring *LOAD-TRUENAME*))) :from-end t :count 1))
+#-:linux	(defvar *HumModDir* (subseq (namestring *LOAD-TRUENAME*) 0 (search (file-namestring *LOAD-TRUENAME*) (namestring *LOAD-TRUENAME*))))
+#+:darwin	 (defvar *HumModDir* (substitute #\\ #\/ (subseq (namestring *LOAD-TRUENAME*) 0 (search (file-namestring *LOAD-TRUENAME*) (namestring *LOAD-TRUENAME*))) :from-end t :count 1))
 
 ;;We use this so we have a reference to the next update-event that is scheduled to be run
 (defvar *nextUpdateEvent* nil)
@@ -335,7 +336,7 @@ t)
 				(model (concatenate 'string
 				  "\"<root><model>" *HumModDir* "HumMod.DES</model><pipeid>"
 				  pipeID "</pipeid></root>\""))
-				(hide-gui "\"False\"")
+				(hide-gui "\"True\"")
 				(non-gui-version "\"False\"")
 				(activity-timeout "60"))
 
