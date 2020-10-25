@@ -340,7 +340,7 @@ t)
 				(non-gui-version
 					(if (phys-module-non-gui phys)
 						" \"True\""
-						" \"False\"")
+						" \"False\""))
 				(activity-timeout " 60"))
 
 		(setf old-dir
