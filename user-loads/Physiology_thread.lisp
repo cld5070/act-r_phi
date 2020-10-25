@@ -71,11 +71,12 @@
 #+:linux	(defvar *HumModDir* (subseq (namestring *LOAD-TRUENAME*) 0 (search (file-namestring *LOAD-TRUENAME*) (namestring *LOAD-TRUENAME*))))
 #+:darwin	 (defvar *HumModDir* (subseq (namestring *LOAD-TRUENAME*) 0 (search (file-namestring *LOAD-TRUENAME*) (namestring *LOAD-TRUENAME*))));(substitute #\\ #\/ (subseq (namestring *LOAD-TRUENAME*) 0 (search (file-namestring *LOAD-TRUENAME*) (namestring *LOAD-TRUENAME*))) :from-end t :count 1))
 
-;;We need to use a seprate SolverPipeFileID var on Linux systems because ModelSolver
+;;We need to use a seprate SolverPipeFileDir var on Linux systems because ModelSolver
 ;; (unfortunately) does not use a platform specific directory separator...
 ;; it uses \\ for outputting PipeID
 #+:windows	(defvar *SolverPipeFileDir* *HumMoDir*)
 #+:unix	(defvar *SolverPipeFileDir* (substitute #\\ #\/ *HumModDir* :from-end t :count 1))
+#+:unix (setf *SolverPipeFileDir* (format nil "~a\\" *SolverPipeFileDir*))
 
 ;(format t "+++++++++~&~s~&++++++----+++++" (substitute #\\ #\/ (subseq (namestring *LOAD-TRUENAME*) 0 (search (file-namestring *LOAD-TRUENAME*) (namestring *LOAD-TRUENAME*))) :from-end t :count 1))
 
