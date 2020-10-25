@@ -365,7 +365,7 @@ t)
 		#+:ccl	(ccl::cwd old-dir)
 		#+:sbcl	(sb-posix:chdir old-dir)
 		;;Wait for the output file from starting HumMod, then delete it
-		(while (not(probe-file solverOutputFile)))
+		(while (not(probe-file solverOutputFile)) (print "."))
 
 		(handler-case (delete-file solverOutputFile)	(error () nil))))
 
