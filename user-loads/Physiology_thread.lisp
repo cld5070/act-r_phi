@@ -340,7 +340,7 @@ t)
 					#+:linux		"./ModelSolverLinux"
 					)
 				(pipeID (phys-module-pipeID phys))
-				(solverOutputFile (concatenate 'string *SolverPipeFileDir* "SolverOut" pipeID))
+				(solverOutputFile (format nil "~aSolverOut~a" *SolverPipeFileDir* pipeID);(concatenate 'string *SolverPipeFileDir* "SolverOut" pipeID))
 				(model (concatenate 'string
 				  "\"<root><model>" *HumModDir* "HumMod.DES</model><pipeid>"
 				  pipeID "</pipeid></root>\""))
