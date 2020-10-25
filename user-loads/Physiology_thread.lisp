@@ -68,7 +68,7 @@
 ;;;Custom Physiology Function Section
 ;;HumMod Directory variable
 #+:windows	(defvar *HumModDir* (subseq (namestring *LOAD-TRUENAME*) 0 (search (file-namestring *LOAD-TRUENAME*) (namestring *LOAD-TRUENAME*))))
-#+:linux	(defvar *HumModDir* (substitute #\\ #\/ (subseq (namestring *LOAD-TRUENAME*) 0 (search (file-namestring *LOAD-TRUENAME*) (namestring *LOAD-TRUENAME*))) :from-end t :count 1));(subseq (namestring *LOAD-TRUENAME*) 0 (search (file-namestring *LOAD-TRUENAME*) (namestring *LOAD-TRUENAME*))))
+#+:linux	(defvar *HumModDir* (subseq (namestring *LOAD-TRUENAME*) 0 (search (file-namestring *LOAD-TRUENAME*) (namestring *LOAD-TRUENAME*))))
 #+:darwin	 (defvar *HumModDir* (substitute #\\ #\/ (subseq (namestring *LOAD-TRUENAME*) 0 (search (file-namestring *LOAD-TRUENAME*) (namestring *LOAD-TRUENAME*))) :from-end t :count 1))
 
 (format t "+++++++++~&~s~&++++++----+++++" (substitute #\ #\/ (subseq (namestring *LOAD-TRUENAME*) 0 (search (file-namestring *LOAD-TRUENAME*) (namestring *LOAD-TRUENAME*))) :from-end t :count 1))
