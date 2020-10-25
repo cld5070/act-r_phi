@@ -344,7 +344,6 @@ t)
 			#+:ccl	(ccl::current-directory-name)
 			#+:sbcl	(sb-posix:getcwd)
 			)
-		(format t "~a~&" (concatenate 'string model hide-gui non-gui-version activity-timeout))
 		#+:ccl	(ccl::cwd *HumModDir*)
 		#+:sbcl	(sb-posix:chdir *HumModDir*)
 		(setf (phys-module-HProc phys)
@@ -1104,13 +1103,24 @@ t)
 	(create-ics-from-out solver-out-file ics-out-file phys)))
 
 #|---End Physiological Initial Condition Functions---|#
-
+#|---Start Physiological data help functions---|#
 ;;;
 ;;;;Helpful functions for examining physiological data
 (defun get-recorded-vals ()
 	(phys-module-vals-analysis (get-module physio)))
 
+(defun output-phys-var (var-name &key (out-file-name "phys-var.txt") (phys (get-module physio)))
+	"Output physiological variable state (value) to given file
+		@param var-name: [string] Name of physiological variable who's value we will output
+		@key out-file-name: [string] name of output file
+		@key phys: Physiological module to use for output (our own physio by default)"
+		(let ((var-val (read-from-string (cadar (car (get-phys-vals nil (list (list var-name))))))))
+			(with-open-file
+				(out-file out-file-name
+					:direction :output :if-exists :append :if-does-not-exist :create)
+				(format out-file "~3$,~3$~&" (mp-time) var-val))))
 
+#|---End Physiological data help functions---|#
 ;;;
 ;;;;;ACT-R Module Section
 (defstruct phys-module
