@@ -68,8 +68,14 @@
 ;;;Custom Physiology Function Section
 ;;HumMod Directory variable
 #+:windows	(defvar *HumModDir* (subseq (namestring *LOAD-TRUENAME*) 0 (search (file-namestring *LOAD-TRUENAME*) (namestring *LOAD-TRUENAME*))))
-#+:linux	(defvar *HumModDir* (substitute #\\ #\/ (subseq (namestring *LOAD-TRUENAME*) 0 (search (file-namestring *LOAD-TRUENAME*) (namestring *LOAD-TRUENAME*))) :from-end t :count 1));(subseq (namestring *LOAD-TRUENAME*) 0 (search (file-namestring *LOAD-TRUENAME*) (namestring *LOAD-TRUENAME*))))
-#+:darwin	 (defvar *HumModDir* (substitute #\\ #\/ (subseq (namestring *LOAD-TRUENAME*) 0 (search (file-namestring *LOAD-TRUENAME*) (namestring *LOAD-TRUENAME*))) :from-end t :count 1))
+#+:linux	(defvar *HumModDir* (subseq (namestring *LOAD-TRUENAME*) 0 (search (file-namestring *LOAD-TRUENAME*) (namestring *LOAD-TRUENAME*))))
+#+:darwin	 (defvar *HumModDir* (subseq (namestring *LOAD-TRUENAME*) 0 (search (file-namestring *LOAD-TRUENAME*) (namestring *LOAD-TRUENAME*))));(substitute #\\ #\/ (subseq (namestring *LOAD-TRUENAME*) 0 (search (file-namestring *LOAD-TRUENAME*) (namestring *LOAD-TRUENAME*))) :from-end t :count 1))
+
+;;We need to use a seprate SolverPipeFileID var on Linux systems because ModelSolver
+;; (unfortunately) does not use a platform specific directory separator...
+;; it uses \\ for outputting PipeID
+#+:windows	(defvar *SolverPipeFileDir* *HumMoDir*)
+#+:unix	(defvar *SolverPipeFileDir* (substitute #\\ #\/ *HumModDir* :from-end t :count 1))
 
 ;(format t "+++++++++~&~s~&++++++----+++++" (substitute #\\ #\/ (subseq (namestring *LOAD-TRUENAME*) 0 (search (file-namestring *LOAD-TRUENAME*) (namestring *LOAD-TRUENAME*))) :from-end t :count 1))
 
@@ -83,11 +89,11 @@
 ;;;clear out any unwanted files
 (defun clear-phys-files ()
 	(sleep 0.005)
-	(dolist (fileName (directory (concatenate 'string *HumModDir* "SolverOut" (phys-module-pipeID (get-module physio)))))
+	(dolist (fileName (directory (concatenate 'string *SolverPipeFileDir* "SolverOut" (phys-module-pipeID (get-module physio)))))
 		(handler-case (delete-file fileName) (error () nil)))
-	(dolist (fileName (directory (concatenate 'string *HumModDir* "SolverIn" (phys-module-pipeID (get-module physio)))))
+	(dolist (fileName (directory (concatenate 'string *SolverPipeFileDir* "SolverIn" (phys-module-pipeID (get-module physio)))))
 		(handler-case (delete-file fileName) (error () nil)))
-	(dolist (fileName (directory (concatenate 'string *HumModDir* (phys-module-pipeID (get-module physio)) ".tem")))
+	(dolist (fileName (directory (concatenate 'string *SolverPipeFileDir* (phys-module-pipeID (get-module physio)) ".tem")))
 		(handler-case (delete-file fileName) (error () nil))))
 
 ;;;Initialize Variable and Variable Order Hash-Table for physiological variable order
@@ -108,9 +114,9 @@ t)
 (defun set-as-init-cond ()
 	"Sets current state as initial conditions for model"
 	(let* ((phys (get-module physio))
-				 (solver-input-file (concatenate 'string *HumModDir* "SolverIn" (phys-module-pipeID phys)))
+				 (solver-input-file (concatenate 'string *SolverPipeFileDir* "SolverIn" (phys-module-pipeID phys)))
 				 (solver-in-msg "<solverin><newics/></solverin>")
-				 (solver-out-file (concatenate 'string *HumModDir* "SolverOut" (phys-module-pipeID phys))))
+				 (solver-out-file (concatenate 'string *SolverPipeFileDir* "SolverOut" (phys-module-pipeID phys))))
 		(with-open-file
 			(messageStream	solver-input-file
 				:direction :output :if-exists :overwrite :if-does-not-exist :create)
@@ -148,10 +154,10 @@ t)
 				 (phys (get-module physio))
 				 (solverInputFile
 					(concatenate 'string
-						*HumModDir* "SolverIn" (phys-module-pipeID phys)))
+						*SolverPipeFileDir* "SolverIn" (phys-module-pipeID phys)))
 				 (solverOutputFile
 					(concatenate 'string
-						*HumModDir* "SolverOut" (phys-module-pipeID phys)))
+						*SolverPipeFileDir* "SolverOut" (phys-module-pipeID phys)))
 				 (max-wait
 					(cond
 						((<= timeSlice 2) 1)
@@ -257,8 +263,8 @@ t)
 								(format nil "~10,$" (cadr v)) "</val></setvalue>"))
 						(incf num-param-changes))))
 		(setf setPhysMessage (concatenate 'string setPhysMessage "</solverin>"))
-		(let ((solverOutputFile (concatenate 'string *HumModDir* "SolverOut" (phys-module-pipeID phys)))
-					(solverInputFile (concatenate 'string *HumModDir* "SolverIn" (phys-module-pipeID phys))))
+		(let ((solverOutputFile (concatenate 'string *SolverPipeFileDir* "SolverOut" (phys-module-pipeID phys)))
+					(solverInputFile (concatenate 'string *SolverPipeFileDir* "SolverIn" (phys-module-pipeID phys))))
 			(tagbody startGetVals
 				;;Set HumMod variables (by writing file to be digested by HumMod)
 				(handler-case
@@ -334,7 +340,7 @@ t)
 					#+:linux		"./ModelSolverLinux"
 					)
 				(pipeID (phys-module-pipeID phys))
-				(solverOutputFile (concatenate 'string *HumModDir* "SolverOut" pipeID))
+				(solverOutputFile (concatenate 'string *SolverPipeFileDir* "SolverOut" pipeID))
 				(model (concatenate 'string
 				  "\"<root><model>" *HumModDir* "HumMod.DES</model><pipeid>"
 				  pipeID "</pipeid></root>\""))
@@ -383,8 +389,8 @@ t)
 		(clear-phys-files)
 		(let* ((phys (get-module physio))
 					(pipeID (phys-module-pipeID phys)) ;Used by model solver as UID for in/out files
-					(solverInputFile (concatenate 'string *HumModDir* "SolverIn" pipeID)) ;Filename for file that will be digested by modelsolver
-					(solverOutputFile (concatenate 'string *HumModDir* "SolverOut" pipeID)) ;Filename for file that will be output by modelsolver
+					(solverInputFile (concatenate 'string *SolverPipeFileDir* "SolverIn" pipeID)) ;Filename for file that will be digested by modelsolver
+					(solverOutputFile (concatenate 'string *SolverPipeFileDir* "SolverOut" pipeID)) ;Filename for file that will be output by modelsolver
 					;Reset/Restart Utility Message (needed to start getting values from HumMod model solver)
 					(resetMessage "\"<solverin><restart/></solverin>\""))
 			;;Create input file & place reset message in file
@@ -412,8 +418,8 @@ t)
 			filename - Name of file to be read in and parsed"
 
 	(let* ((phys (get-module physio))
-				 (solverInputFile (concatenate 'string *HumModDir* "SolverIn" (phys-module-pipeID phys)))
-				 (solverOutputFile (concatenate 'string *HumModDir* "SolverOut" (phys-module-pipeID phys)))
+				 (solverInputFile (concatenate 'string *SolverPipeFileDir* "SolverIn" (phys-module-pipeID phys)))
+				 (solverOutputFile (concatenate 'string *SolverPipeFileDir* "SolverOut" (phys-module-pipeID phys)))
 				 (init-vals-msg "<solverin>")
 				 ordered-val-list
 				 old-dir
@@ -470,8 +476,8 @@ t)
 			;;Set Physiology Substrate periodic communication time (HumMod)
 			(let*	((pipeID (phys-module-pipeID phys))
 						 ;;Set the name of the files used to input to model solver stream and to which solver outputs results
-						 (solverInputFile (concatenate 'string *HumModDir* "SolverIn" pipeID))
-						 (solverOutputFile (concatenate 'string *HumModDir* "SolverOut" pipeID))
+						 (solverInputFile (concatenate 'string *SolverPipeFileDir* "SolverIn" pipeID))
+						 (solverOutputFile (concatenate 'string *SolverPipeFileDir* "SolverOut" pipeID))
 						 (initial-advance-time (format nil "~10,$" (phys-module-initial-advance phys)))
 
 						 ;Restart Utility Message (needed to start getting values from HumMod model solver)
@@ -707,8 +713,8 @@ t)
 		(let*
 		 ((physUpdateDelay (format nil "~10,$" physUpdateDelay))
 		 ;;Set the name of the files used to input to model solver stream and to which solver outputs results
-		 (solverInputFile (concatenate 'string *HumModDir* "SolverIn" pipeID))
-		 (solverOutputFile (concatenate 'string *HumModDir* "SolverOut" pipeID))
+		 (solverInputFile (concatenate 'string *SolverPipeFileDir* "SolverIn" pipeID))
+		 (solverOutputFile (concatenate 'string *SolverPipeFileDir* "SolverOut" pipeID))
 		 (physValueList nil)
 		 ;;Utility Messages that can be sent to solver
 		 (getValsMessage
@@ -1087,7 +1093,7 @@ t)
 	(schedule-break-relative 0.024)
 	(run 0.5)
 	(set-as-init-cond)
-	(let ((solver-out-file (concatenate 'string *HumModDir* "SolverOut" (phys-module-pipeID phys)))
+	(let ((solver-out-file (concatenate 'string *SolverPipeFileDir* "SolverOut" (phys-module-pipeID phys)))
 		    (ics-out-file (concatenate 'string *HumModDir* "../ICS/" new-ics-file-name)))
 	(create-ics-from-out solver-out-file ics-out-file phys)))
 
@@ -1103,7 +1109,7 @@ t)
 	(schedule-break-relative 0.024)
 	(run 0.5)
 	(set-as-init-cond)
-	(let ((solver-out-file (concatenate 'string *HumModDir* "SolverOut" (phys-module-pipeID phys)))
+	(let ((solver-out-file (concatenate 'string *SolverPipeFileDir* "SolverOut" (phys-module-pipeID phys)))
 		    (ics-out-file (concatenate 'string *HumModDir* "../ICS/" new-ics-file-name)))
 	(create-ics-from-out solver-out-file ics-out-file phys)))
 
