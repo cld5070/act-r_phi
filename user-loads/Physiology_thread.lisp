@@ -337,7 +337,10 @@ t)
 				  "\"<root><model>" *HumModDir* "HumMod.DES</model><pipeid>"
 				  pipeID "</pipeid></root>\""))
 				(hide-gui " \"True\"")
-				(non-gui-version " \"False\"")
+				(non-gui-version
+					(if (phys-module-non-gui phys)
+						" \"True\""
+						" \"False\"")
 				(activity-timeout " 60"))
 
 		(setf old-dir
@@ -1233,6 +1236,10 @@ t)
 	(de-stress-evt nil)
 	;Tells us whether this is the 1st run of the module (i.e., it was reset once)
 	(first-run nil)
+
+	;Tells us whether the model solver should be run in non-gui mode (only really useful currently for Ubuntu/Redhat)
+	; (For modelsolver that can be made to use only console [and no GUI])
+	(non-gui nil)
 )
 
 ;Create module everytime new model is defined
@@ -1269,7 +1276,9 @@ t)
 			(:phys-ics-exp-file
 				(setf (phys-module-ics-exp-file phys) (cdr param)))
 			(:phys-pipe-id
-				(setf (phys-module-pipeID phys) (cdr param))))
+				(setf (phys-module-pipeID phys) (cdr param)))
+			(:phys-non-gui
+				(setf (phys-module-non-gui phys) (cdr param))))
 
 		(case param
 			(:phys-delay
@@ -1287,7 +1296,9 @@ t)
 			(:phys-ics-exp-file
 				(phys-module-ics-exp-file phys))
 			(:phys-pipe-id
-				(phys-module-pipeID phys)))))
+				(phys-module-pipeID phys))
+			(:phys-non-gui
+				(phys-module-non-gui phys)))))
 
 
 ;;;Deprecated, keeping for now for records
@@ -1401,6 +1412,13 @@ t)
 		:documentation "Used by HumMod to determine solver{input/output} file name for communication"
 		:default-value (write-to-string (random (get-universal-time)))
 		:valid-test (lambda (x) (or (typep x 'string) (equal x nil)))
+		:owner t)
+
+		(define-parameter
+		:phys-non-gui
+		:documentation "Used by HumMod to determine whether we should try to use model-solver with no actual GUI"
+		:default-value nil
+		:valid-test (lambda (x) (or (typep x 't) (typep x 'nil)))
 		:owner t))
 	:version "1.0"
 	:documentation
