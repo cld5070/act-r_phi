@@ -74,7 +74,7 @@
 ;;We need to use a seprate SolverPipeFileDir var on Linux systems because ModelSolver
 ;; (unfortunately) does not use a platform specific directory separator...
 ;; it uses \\ for outputting PipeID
-#+:windows	(defvar *SolverPipeFileDir* *HumMoDir*)
+#+:windows	(defvar *SolverPipeFileDir* *HumModDir*)
 #+:unix	(defvar *SolverPipeFileDir* (substitute #\\ #\/ *HumModDir* :from-end t :count 1))
 #+:unix (setf *SolverPipeFileDir* (format nil "~a\\" *SolverPipeFileDir*))
 
@@ -970,10 +970,15 @@ t)
 	       (crh-factor (/ crh crh-base)));(+ (- crh crh-base) (* (- (phys-module-max-crh phys) crh-base) 0.25)) (- (phys-module-max-crh phys) crh-base)))
 		;Write to output file if we are testing things
 		(if test
-			(with-open-file
-				(msgStream (concatenate 'string "Phys-data/CRH-Raw" (phys-module-pipeID phys) ".txt")
-					:direction :output :if-exists :append :if-does-not-exist :create)
-				(format msgStream "~S~T~10$~T~10$~&" crh-stress crh crh-base)))
+			(if (probe-file (concatenate 'string "Phys-data/CRH-RAW" (phys-module-pipeID phys) ".txt"))
+				(with-open-file
+					(msgStream (concatenate 'string "Phys-data/CRH-RAW" (phys-module-pipeID phys) ".txt")
+						:direction :output :if-exists :append :if-does-not-exist :create)
+					(format msgStream "~$,~S,~10$,~10$~&" (mp-time-ms) crh-stress crh crh-base))
+				(with-open-file
+					(msgStream (concatenate 'string "Phys-data/CRH-RAW" (phys-module-pipeID phys) ".txt")
+						:direction :output :if-exists :overwrite :if-does-not-exist :create)
+					(format msgStream "Time (ms), CRH Stress Effect, CRH, CRH (Baseline)~&"))))
 		;Return the CRH factor or 0 if less than 0
 		(if (< crh-factor 0) 0 crh-factor)))
 
@@ -989,10 +994,15 @@ t)
 	       (epi-factor (/ epi epi-base)));(+ (- epi epi-base) (* (- (phys-module-max-epi phys) epi-base) 0.25)) (- (phys-module-max-epi phys) epi-base)))))
 		;Write to output file if we are testing things
 		(if test
-			(with-open-file
-				(msgStream (concatenate 'string "Phys-data/EPI-RAW" (phys-module-pipeID phys) ".txt")
-					:direction :output :if-exists :append :if-does-not-exist :create)
-				(format msgStream "~10$~T~10$~&" epi epi-base)))
+			(if (probe-file (concatenate 'string "Phys-data/EPI-RAW" (phys-module-pipeID phys) ".txt"))
+				(with-open-file
+					(msgStream (concatenate 'string "Phys-data/EPI-RAW" (phys-module-pipeID phys) ".txt")
+						:direction :output :if-exists :append :if-does-not-exist :create)
+					(format msgStream "~$,~10$,~10$~&" (mp-time-ms) epi epi-base))
+				(with-open-file
+					(msgStream (concatenate 'string "Phys-data/EPI-RAW" (phys-module-pipeID phys) ".txt")
+						:direction :output :if-exists :overwrite :if-does-not-exist :create)
+					(format msgStream "Time (ms), Epinephrine, Epinephrine (Baseline)~&"))))
 		;Return the epi factor or 0 if less than 0
 		(if (< epi-factor 0) 0 epi-factor)))
 
@@ -1056,10 +1066,15 @@ t)
 				(/ (+ (/ cort-ratio cort-ratio-base) (/ cort cort-base)) 2) 0))
 		;Write to output file if we are testing things
 		(if test
-			(with-open-file
-				(msgStream (concatenate 'string "Phys-data/CORT-RAW" (phys-module-pipeID phys) ".txt")
-					:direction :output :if-exists :append :if-does-not-exist :create)
-				(format msgStream "~5$~T~5$~T~5$~T~5$~&" cort cort-base cort-ratio cort-ratio-base)))
+			(if (probe-file (concatenate 'string "Phys-data/CORT-RAW" (phys-module-pipeID (get-module physio)) ".txt"))
+				(with-open-file
+					(msgStream (concatenate 'string "Phys-data/CORT-RAW" (phys-module-pipeID (get-module physio)) ".txt")
+						:direction :output :if-exists :append :if-does-not-exist :create)
+					(format msgStream "~$,~5$,~5$,~5$,~5$~&" (mp-time-ms) cort cort-base cort-ratio cort-ratio-base))
+				(with-open-file
+					(msgStream (concatenate 'string "Phys-data/CORT-RAW" (phys-module-pipeID (get-module physio)) ".txt")
+						:direction :output :if-exists :overwrite :if-does-not-exist :create)
+					(format msgStream "Time (ms),Cortisol,Cortisol (baseline),Cortisol (gain/loss ratio),Cortisol (gain/loss ratio-baseline)~&" cort cort-base cort-ratio cort-ratio-base))))
 		;Return the cort factor or 0 if less than 0
 		(if (<= cort-norm 0) 0 cort-norm)))
 
