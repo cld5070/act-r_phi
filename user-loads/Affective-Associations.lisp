@@ -248,9 +248,9 @@
 		;When physiology is enabled
 		(when (and (get-module physio) (phys-module-enabled phys))
 			(if test
-				(if (probe-file (concatenate 'string "CEC-Arous" *START-TIME* ".txt"))
+				(if (probe-file (concatenate 'string "Phys-data/CEC-Arous" (phys-module-pipeID phys) ".txt"))
 					(with-open-file
-						(msgStream (concatenate 'string "CEC-Arous" *START-TIME* ".txt")
+						(msgStream (concatenate 'string "Phys-data/CEC-Arous" (phys-module-pipeID phys) ".txt")
 							:direction :output :if-exists :append :if-does-not-exist :create)
 						(format msgStream "~5$,~5$,~5$,~5$~&"
 							(compute-cort test) (compute-epi-arousal test) (compute-crh-arousal test)
@@ -260,7 +260,7 @@
 										(compute-epi-arousal))
 									(* (AA-crh-arous-ratio aa) (compute-crh-arousal))))))
 					(with-open-file
-						(msgStream (concatenate 'string "CEC-Arous" *START-TIME* ".txt")
+						(msgStream (concatenate 'string "Phys-data/CEC-Arous" (phys-module-pipeID phys) ".txt")
 							:direction :output :if-exists :supersede :if-does-not-exist :create)
 						(format msgStream "f(Cortisol),g(Epinephrine),h(CRH),Arousal~&"))))
 			(* (compute-homeostatic-arousal-factor) (compute-cort)
@@ -300,7 +300,7 @@
 			(setf ret-arousal 1))
 		(if test
 			(with-open-file
-				(msgStream (concatenate 'string "Homeostatic-Arousal" *START-TIME* ".txt")
+				(msgStream (concatenate 'string "Phys-data/Homeostatic-Arousal" (phys-module-pipeID phys) ".txt")
 					:direction :output :if-exists :append :if-does-not-exist :create)
 				(format msgStream "~5$~&" ret-arousal)))
 		ret-arousal))

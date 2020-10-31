@@ -73,7 +73,7 @@
 
 ;;We need to use a seprate SolverPipeFileDir var on Linux systems because ModelSolver
 ;; (unfortunately) does not use a platform specific directory separator...
-;; it uses \\ for outputting PipeID 
+;; it uses \\ for outputting PipeID
 #+:windows	(defvar *SolverPipeFileDir* *HumMoDir*)
 #+:unix	(defvar *SolverPipeFileDir* (substitute #\\ #\/ *HumModDir* :from-end t :count 1))
 #+:unix (setf *SolverPipeFileDir* (format nil "~a\\" *SolverPipeFileDir*))
@@ -971,7 +971,7 @@ t)
 		;Write to output file if we are testing things
 		(if test
 			(with-open-file
-				(msgStream (concatenate 'string "CRH-Raw" *START-TIME* ".txt")
+				(msgStream (concatenate 'string "Phys-data/CRH-Raw" (phys-module-pipeID phys) ".txt")
 					:direction :output :if-exists :append :if-does-not-exist :create)
 				(format msgStream "~S~T~10$~T~10$~&" crh-stress crh crh-base)))
 		;Return the CRH factor or 0 if less than 0
@@ -990,7 +990,7 @@ t)
 		;Write to output file if we are testing things
 		(if test
 			(with-open-file
-				(msgStream (concatenate 'string "EPI-RAW" *START-TIME* ".txt")
+				(msgStream (concatenate 'string "Phys-data/EPI-RAW" (phys-module-pipeID phys) ".txt")
 					:direction :output :if-exists :append :if-does-not-exist :create)
 				(format msgStream "~10$~T~10$~&" epi epi-base)))
 		;Return the epi factor or 0 if less than 0
@@ -1057,7 +1057,7 @@ t)
 		;Write to output file if we are testing things
 		(if test
 			(with-open-file
-				(msgStream (concatenate 'string "CORT-RAW" *START-TIME* ".txt")
+				(msgStream (concatenate 'string "Phys-data/CORT-RAW" (phys-module-pipeID phys) ".txt")
 					:direction :output :if-exists :append :if-does-not-exist :create)
 				(format msgStream "~5$~T~5$~T~5$~T~5$~&" cort cort-base cort-ratio cort-ratio-base)))
 		;Return the cort factor or 0 if less than 0
