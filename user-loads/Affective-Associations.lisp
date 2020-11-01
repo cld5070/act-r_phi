@@ -84,17 +84,20 @@
 		(if (<= arous-dm-noise arous-mid)
 			(progn
 				(setf noise-val (/ (+ (* arous-dm-noise (AA-nom-dm-noise aa)) (* (- arous-mid arous-dm-noise) (AA-max-dm-noise aa))) arous-mid))
-				(with-open-file
-					(n-stream "ans-log.txt" :direction :output :if-exists :append :if-does-not-exist :create)
-					(format n-stream "~a~T~10$~&" (mp-time) noise-val))
+				;We only record every 5 seconds
+				(when (eq (mod (mp-time-ms) 5000) 0)
+					(with-open-file
+						(n-stream (format nil "Phys-data/ans-log~a.txt" (phys-module-pipeID (get-module physio))) :direction :output :if-exists :append :if-does-not-exist :create)
+						(format n-stream "~5$,~10$~&" (mp-time-ms) noise-val)))
 				(setf noise-val (act-r-noise noise-val))
 				noise-val)
 			(progn
 				(setf noise-val (/ (+ (* (- (AA-max-arous aa) arous-dm-noise) (AA-nom-dm-noise aa)) (* (- arous-dm-noise arous-mid) (AA-max-dm-noise aa))) arous-mid))
 				;(when (and (>= (mod (mp-time) 5) 0) (<= (mod (mp-time) 5) 1))
-				(with-open-file
-					(n-stream "ans-log.txt" :direction :output :if-exists :append :if-does-not-exist :create)
-					(format n-stream "~5$~T~10$~&" (mp-time) noise-val))
+				(when (eq (mod (mp-time-ms) 5000) 0)
+					(with-open-file
+						(n-stream (format nil "Phys-data/ans-log~a.txt" (phys-module-pipeID (get-module physio))) :direction :output :if-exists :append :if-does-not-exist :create)
+						(format n-stream "~5$,~10$~&" (mp-time-ms) noise-val)))
 				(setf noise-val (act-r-noise noise-val))
 				noise-val))))
 
