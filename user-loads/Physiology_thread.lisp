@@ -161,11 +161,11 @@ t)
 						*SolverPipeFileDir* "SolverOut" (phys-module-pipeID phys)))
 				 (max-wait
 					(cond
-						((<= timeSlice 2) 3)
-						((< timeSlice 10) 18)
-						((< timeSlice 60) 36)
-						((< timeSlice 600) 48)
-						((< timeSlice 3600) 96)
+						((<= timeSlice 2) 6)
+						((< timeSlice 10) 24)
+						((< timeSlice 60) 48)
+						((< timeSlice 600) 64)
+						((< timeSlice 3600) 128)
 						(t 480))))
 		(clear-phys-files) ;;Make sure we don't have any files left over for some reason
 
