@@ -85,7 +85,7 @@
 			(progn
 				(setf noise-val (/ (+ (* arous-dm-noise (AA-nom-dm-noise aa)) (* (- arous-mid arous-dm-noise) (AA-max-dm-noise aa))) arous-mid))
 				;We only record every 5 seconds
-				(when (eq (mod (mp-time) 5) 0)
+				(when (eq (mod (mp-time) 2) 0)
 					(with-open-file
 						(n-stream (format nil "Phys-data/ans-log~a.txt" (phys-module-pipeID (get-module physio))) :direction :output :if-exists :append :if-does-not-exist :create)
 						(format n-stream "~5$,~10$~&" (mp-time-ms) noise-val)))
@@ -94,7 +94,7 @@
 			(progn
 				(setf noise-val (/ (+ (* (- (AA-max-arous aa) arous-dm-noise) (AA-nom-dm-noise aa)) (* (- arous-dm-noise arous-mid) (AA-max-dm-noise aa))) arous-mid))
 				;(when (and (>= (mod (mp-time) 5) 0) (<= (mod (mp-time) 5) 1))
-				(when (eq (mod (mp-time) 5) 0)
+				(when (eq (mod (mp-time) 2) 0)
 					(with-open-file
 						(n-stream (format nil "Phys-data/ans-log~a.txt" (phys-module-pipeID (get-module physio))) :direction :output :if-exists :append :if-does-not-exist :create)
 						(format n-stream "~5$,~10$~&" (mp-time-ms) noise-val)))
@@ -255,8 +255,8 @@
 					(with-open-file
 						(msgStream (concatenate 'string "Phys-data/CEC-Arous" (phys-module-pipeID phys) ".txt")
 							:direction :output :if-exists :append :if-does-not-exist :create)
-						(format msgStream "~$,~5$,~5$,~5$,~5$~&"
-							(mp-time-ms) (compute-cort test) (compute-epi-arousal test) (compute-crh-arousal test)
+						(format msgStream "~$,~5$,~5$,~5$,~5$,~5$~&"
+							(mp-time-ms) (compute-homeostatic-arousal-factor) (compute-cort test) (compute-epi-arousal test) (compute-crh-arousal test)
 							(* (compute-homeostatic-arousal-factor)
 								(compute-cort test)
 								(+ (* (AA-epi-arous-ratio aa)
@@ -265,7 +265,7 @@
 					(with-open-file
 						(msgStream (concatenate 'string "Phys-data/CEC-Arous" (phys-module-pipeID phys) ".txt")
 							:direction :output :if-exists :overwrite :if-does-not-exist :create)
-						(format msgStream "time (ms),f(Cortisol),g(Epinephrine),h(CRH),Arousal~&"))))
+						(format msgStream "time (ms),Homeostatic-Arousal-Factor,f(Cortisol),g(Epinephrine),h(CRH),Arousal~&"))))
 			(* (compute-homeostatic-arousal-factor) (compute-cort)
 				(+
 					(if (and (get-module physio) (phys-module-enabled phys))

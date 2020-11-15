@@ -1,4 +1,4 @@
-	#| Copyright 2017 Christopher L. Dancy II
+	#| Copyright 2020 Christopher L. Dancy II
 		This program is free software: you can redistribute it and/or modify
 		 it under the terms of the GNU General Public License as published by
 		 the Free Software Foundation, either version 3 of the License, or
@@ -13,15 +13,19 @@
 		 along with this program.	If not, see <http://www.gnu.org/licenses/>.
 |#
 
-;;;By Christopher L. Dancy II
+;;;By Christopher L. Dancy
 ;;;Dept of Computer Science, Bucknell University
-;;;Made to be used with HumMod v1.6.2 - Modular
+;;;Made to be used with ModelSolver v1.0.16 (which comes with HumMod v3.1)
 ;;;---------------
 ;;; ---For any nerve activity related to heart-rate, HR shouldn't go above : 208-(0.7*age) : (from H Tanaka, KD Monahan 2001).
 
 ;;; Tested w/ CCL
 ;;; Should theoretically work with sbcl
 ;;;	(*features* stil need to be tested for all implementation specific functions)
+
+#|---Todos---|#
+;;; Consider getting baseline by moving ahead ~1 day with larger step & averaging those values output from that day
+#|------|#
 
 
 ;;Thread library
@@ -248,7 +252,7 @@ t)
 		;(format t "Changing the following physiology: ~a~&" varValList)
 		(let ((phys (get-module physio))
 					(setPhysMessage "<solverin>")
-					(timeOut 6)
+					(timeOut 12)
 					(num-param-changes 0))
 		;;Construct message to be sent to new HumMod Solver Process
 		;; -We must find the chunk in the hash-table because the request to HumMod is case sensitive
@@ -640,6 +644,74 @@ t)
 		(setf (phys-module-vars-baseLine-init phys) t))))
 	(clear-phys-files))
 
+(defun update-phys-baseline (&optional (phys-module nil) (timeout 120))
+"Allows us to update baseline (e.g., after moving ahead in time at beginning of experiment)
+	@param phys-module: [ACT-R Module] should be the Physio ACT-R module (which is what is defined within the physiology_thread.lisp file!
+	@param timeout: [int] The maximum amount of time in which the function should wait for the ModelSolver to output the file we need"
+
+	(let* ((phys
+					(if phys-module phys-module (get-module physio)))
+				(pipeID (phys-module-pipeID phys))
+				;;Set the name of the files used to input to model solver stream and to which solver outputs results
+				(solverInputFile (concatenate 'string *SolverPipeFileDir* "SolverIn" pipeID))
+				(solverOutputFile (concatenate 'string *SolverPipeFileDir* "SolverOut" pipeID))
+				(initial-advance-time (format nil "~10,$" (phys-module-initial-advance phys)))
+				(getValsMessage
+					(concatenate 'string
+						"<solverin><gofor><solutionint>" initial-advance-time
+						"</solutionint><displayint>" initial-advance-time
+						"</displayint></gofor></solverin>~&"))
+				(physValueList nil))
+		(tagbody startGetVals
+			;;Get new value list output by the ModelSolver
+			(handler-case
+				(with-open-file
+					(messageStream solverInputFile
+						:direction :output :if-exists :overwrite :if-does-not-exist :create)
+					(format messageStream getValsMessage))
+				((or
+						#+:ccl ccl::simple-file-error
+						#+:sbcl sb-impl::simple-file-error
+						simple-error) ()
+					(progn
+						(handler-case
+							(progn (delete-file solverInputFile) (delete-file solverOutputFile))
+							(error () nil))
+						(go startGetVals))))
+
+			(while (probe-file solverInputFile)) ;Wait for input file to be digested
+			(let ((currTime (get-universal-time)))
+				;;We only wait so long for the file to be created
+				(handler-case
+					(while (and (not (probe-file solverOutputFile)) (< (- (get-universal-time) currTime) timeout)))
+					(error () nil)))
+			;;When we ran out of time, start this section of the code over
+			(when (not (probe-file solverOutputFile)) (go startGetVals))
+			;;Parse the list of values output by ModelSolver
+			(let ((parseStart (get-universal-time)))
+				(tagbody parseValList
+					;If we've been stuck in this block for 4 secs or more, go back to the beginning of the function
+					(when (> (- (get-universal-time) parseStart) 4) (go startGetVals))
+					(handler-case
+						(setf physValueList (s-xml:parse-xml-file solverOutputFile))
+						((or file-error s-xml::xml-parser-error type-error) () (go parseValList)))
+					;;If parsing the output file didn't error, but physValList is still nil
+					;; (Can this actually happen?
+					;; May want to explore in the future to see if I need to do this)
+					(when (not physValueList)
+						(go parseValList))
+
+					;;If the modelsolver happens to give us a variable roster
+					;; instead of list, delete and redo this section of code
+					(when (equal (caadr physValueList) ':|varroster|)
+						(while (not (handler-case (delete-file solverOutputFile)
+							(error () nil))))
+						(go parseValList)))))
+		(while (not (handler-case (delete-file solverOutputFile) (error () nil))))
+		;;Set our current values
+		(setf (phys-module-physValList-baseline phys) physValueList)
+		(setf (phys-module-vars-baseLine-init phys) t)))
+
 ;;Record values for variables specified by model
 (defun record-phys-vals (recVarList allValList savedValList)
 	(let ((valNumbers nil)
@@ -945,6 +1017,37 @@ t)
 (defun stop-controlled-breathing ()
 	"Move to spontaneous breath"
 	(set-phys-vals (list (list "ControlledBreathing.ControlledBreathing" 0))))
+
+(defun start-sleep-dep ()
+	"Make all changes needed for sleep deprivation (and full enactment of circadian rhythms)"
+	;;Turn on daily planner so that sleep schedule and sleep homeostasis can cause deprivation
+	(schedule-event-relative 0.023 'set-phys-vals :module 'physio
+		:params (list (list (list "DailyPlannerControl.Switch" 1) ;Start daily planner
+									(list "DailyPlannerSchedule.Hour12AM-1AM" 1) ;Rest
+									(list "DailyPlannerSchedule.Hour1AM-2AM" 4) ;Eat
+									(list "DailyPlannerSchedule.Hour2AM-3AM" 1) ;Rest
+									(list "DailyPlannerSchedule.Hour3AM-4AM" 1) ;Rest
+									(list "DailyPlannerSchedule.Hour4AM-5AM" 1) ;Rest
+									(list "DailyPlannerSchedule.Hour5AM-6AM" 1) ;Rest
+									(list "DailyPlannerSchedule.Hour6AM-7AM" 1) ;Rest
+									(list "DailyPlannerSchedule.Hour7AM-8AM" 4) ;Eat
+									(list "DailyPlannerSchedule.Hour8AM-9AM" 1) ;Rest
+									(list "DailyPlannerSchedule.Hour9AM-10AM" 1) ;Rest
+									(list "DailyPlannerSchedule.Hour10AM-11AM" 1) ;Rest
+									(list "DailyPlannerSchedule.Hour11AM-12PM" 1) ;Rest
+									(list "DailyPlannerSchedule.Hour12PM-1PM" 1) ;Rest
+									(list "DailyPlannerSchedule.Hour1PM-2PM" 4) ;Eat
+									(list "DailyPlannerSchedule.Hour2PM-3PM" 1) ;Rest
+									(list "DailyPlannerSchedule.Hour3PM-4PM" 1) ;Rest
+									(list "DailyPlannerSchedule.Hour4PM-5PM" 1) ;Rest
+									(list "DailyPlannerSchedule.Hour5PM-6PM" 1) ;Rest
+									(list "DailyPlannerSchedule.Hour6PM-7PM" 1) ;Rest
+									(list "DailyPlannerSchedule.Hour7PM-8PM" 4) ;Eat
+									(list "DailyPlannerSchedule.Hour8PM-9PM" 1) ;Rest
+									(list "DailyPlannerSchedule.Hour9PM-10PM" 1) ;Rest
+									(list "DailyPlannerSchedule.Hour10PM-11PM" 1) ;Rest
+									(list "DailyPlannerSchedule.Hour11PM-12AM" 1))) ;Rest
+		:priority :max :details "Start Daily Control Cycle & change daily planner"))
 
 ;;;Set food intake (eating) variable to a value
 (defun set-food-intake (value)
