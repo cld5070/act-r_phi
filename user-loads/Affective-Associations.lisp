@@ -255,17 +255,19 @@
 					(with-open-file
 						(msgStream (concatenate 'string "Phys-data/CEC-Arous" (phys-module-pipeID phys) ".txt")
 							:direction :output :if-exists :append :if-does-not-exist :create)
-						(format msgStream "~$,~5$,~5$,~5$,~5$,~5$~&"
-							(mp-time-ms) (compute-homeostatic-arousal-factor) (compute-cort test) (compute-epi-arousal test) (compute-crh-arousal test)
+						(format msgStream "~&~$,~$,~5$,~5$,~5$,~5$,~5$,~5$,~5$,~5$"
+							(mp-time) (mp-time-ms) (compute-homeostatic-arousal-factor)
+							(compute-cort test) (compute-epi-arousal test) (compute-crh-arousal test)
 							(* (compute-homeostatic-arousal-factor)
 								(compute-cort test)
 								(+ (* (AA-epi-arous-ratio aa)
 										(compute-epi-arousal))
-									(* (AA-crh-arous-ratio aa) (compute-crh-arousal))))))
+									(* (AA-crh-arous-ratio aa) (compute-crh-arousal))))
+							(sgp :ans) (sgp :egs) (sgp :ut)))
 					(with-open-file
 						(msgStream (concatenate 'string "Phys-data/CEC-Arous" (phys-module-pipeID phys) ".txt")
 							:direction :output :if-exists :overwrite :if-does-not-exist :create)
-						(format msgStream "time (ms),Homeostatic-Arousal-Factor,f(Cortisol),g(Epinephrine),h(CRH),Arousal~&"))))
+						(format msgStream "time.s,time.ms,Homeostatic-Arousal-Factor,f(Cortisol),g(Epinephrine),h(CRH),Arousal,ans,egs,ut"))))
 			(* (compute-homeostatic-arousal-factor) (compute-cort)
 				(+
 					(if (and (get-module physio) (phys-module-enabled phys))
