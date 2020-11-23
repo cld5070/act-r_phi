@@ -283,10 +283,13 @@
 						(* (AA-pred-error-arous-ratio aa) pred-error-factor)
 						0))))))
 
-		;;This function computes a factor to decay arousal slightly non-linearly (X^2) based
+		;;This function computes a factor to decay arousal non-linearly (logistic function with beta param) based
 		;; on how long it has been since the model has slept. By default, the function assumes
 		;; an arbitrary max amount of days awake of 4 before hitting a minimal value (0.0001)
 		;; The value output is in the range from 0.0001 to 1
+		;;Beta-Logistic function - 1/(1+(homArousal^r/(1-homArousal^r))^-beta)
+		;; r here tells us where on the x the y should be located
+		;; time_since_norm is defined as ((maxDays-timeSinceAsleep)/maxDays)
 (defun compute-homeostatic-arousal-factor (&optional test)
 	(let* ((LA (if (cadar  (car (get-phys-vals nil (list '("Status.LastAsleep")))))
 	      			(cadar  (car (get-phys-vals nil (list '("Status.LastAsleep")))))
@@ -298,10 +301,10 @@
 		(maxDays 4)
 		(timeSinceAsleep (- (read-from-string currT) (read-from-string LA))))
 		(if (and LA currT (> timeSinceAsleep 0))
-			(let ((homArousal (/ (- (expt (* maxDays 1440) 2) (expt timeSinceAsleep 2)) (expt (* maxDays 1440) 2))))
+			(let ((homArousal (/ (- (* maxDays 1440) timeSinceAsleep) (* maxDays 1440))))
 				(if (> homArousal 0)
 					(progn
-						(setf ret-arousal homArousal))))
+						(setf ret-arousal (/ 1 (+ 1 (expt (/ (expt homArousal r) (- 1 (expt homArousal r))) (* -1 beta))))))))
 			(setf ret-arousal 1))
 		(if test
 			(with-open-file
