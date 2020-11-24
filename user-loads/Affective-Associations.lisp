@@ -288,17 +288,20 @@
 		;; an arbitrary max amount of days awake of 4 before hitting a minimal value (0.0001)
 		;; The value output is in the range from 0.0001 to 1
 		;;Beta-Logistic function - 1/(1+(homArousal^r/(1-homArousal^r))^-beta)
-		;; r here tells us where on the x the y should be located
-		;; time_since_norm is defined as ((maxDays-timeSinceAsleep)/maxDays)
+		;; r here tells us roughly where (at what time) we should be in the center (0.5 on y-axis) of
+		;;  the non-linear curve descention
+		;; homArousal is defined as ((maxDays-timeSinceAsleep)/maxDays)
 (defun compute-homeostatic-arousal-factor (&optional test)
 	(let* ((LA (if (cadar  (car (get-phys-vals nil (list '("Status.LastAsleep")))))
-	      			(cadar  (car (get-phys-vals nil (list '("Status.LastAsleep")))))
-	      			"0"))
+							(cadar  (car (get-phys-vals nil (list '("Status.LastAsleep")))))
+							"0"))
 		(currT (if (cadar  (car (get-phys-vals nil (list '("System.X")))))
-				(cadar  (car (get-phys-vals nil (list '("System.X")))))
-					"0"))
+							(cadar  (car (get-phys-vals nil (list '("System.X")))))
+							"0"))
 		(ret-arousal 0.0001) ;Arousal variable/value to be returned
 		(maxDays 4)
+		(r 0.75)
+		(beta 2)
 		(timeSinceAsleep (- (read-from-string currT) (read-from-string LA))))
 		(if (and LA currT (> timeSinceAsleep 0))
 			(let ((homArousal (/ (- (* maxDays 1440) timeSinceAsleep) (* maxDays 1440))))
