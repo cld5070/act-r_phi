@@ -263,7 +263,7 @@
 								(+ (* (AA-epi-arous-ratio aa)
 										(compute-epi-arousal))
 									(* (AA-crh-arous-ratio aa) (compute-crh-arousal))))
-							(sgp :ans) (sgp :egs) (sgp :ut)))
+							(car (sgp :ans)) (car (sgp :egs)) (car (sgp :ut))))
 					(with-open-file
 						(msgStream (concatenate 'string "Phys-data/CEC-Arous" (phys-module-pipeID phys) ".txt")
 							:direction :output :if-exists :overwrite :if-does-not-exist :create)
@@ -305,9 +305,8 @@
 		(timeSinceAsleep (- (read-from-string currT) (read-from-string LA))))
 		(if (and LA currT (> timeSinceAsleep 0))
 			(let ((homArousal (/ (- (* maxDays 1440) timeSinceAsleep) (* maxDays 1440))))
-				(if (> homArousal 0)
-					(progn
-						(setf ret-arousal (/ 1 (+ 1 (expt (/ (expt homArousal r) (- 1 (expt homArousal r))) (* -1 beta))))))))
+				(when (> homArousal 0)
+					(setf ret-arousal (/ 1 (+ 1 (expt (/ (expt homArousal r) (- 1 (expt homArousal r))) (* -1 beta)))))))
 			(setf ret-arousal 1))
 		(if test
 			(with-open-file
