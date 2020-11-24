@@ -263,7 +263,9 @@
 								(+ (* (AA-epi-arous-ratio aa)
 										(compute-epi-arousal))
 									(* (AA-crh-arous-ratio aa) (compute-crh-arousal))))
-							(car (sgp :ans)) (car (sgp :egs)) (car (sgp :ut))))
+							(if (sgp :ans) (car (sgp :ans)) -999)
+							(if (sgp :egs) (car (sgp :egs)) -999)
+							(if (sgp :ut) (car (sgp :ut)) -999)))
 					(with-open-file
 						(msgStream (concatenate 'string "Phys-data/CEC-Arous" (phys-module-pipeID phys) ".txt")
 							:direction :output :if-exists :overwrite :if-does-not-exist :create)
