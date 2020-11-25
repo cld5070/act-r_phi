@@ -132,11 +132,6 @@
 	(setf ut (no-output (sgp-fct (list :ut))))
 	(setf ut (car ut))
 	(setf addNoise (act-r-noise egs))
-	(when (and (>= (mod (mp-time) 5) 0) (<= (mod (mp-time) 5) 1))
-		(with-open-file
-		(msgStream "noiseVals.txt"
-		:direction :output :if-exists :append :if-does-not-exist :create)
-		(format msgStream "~10$~&" arous-util-noise)))
 	(setf prod-utility (+ prod-utility (if (zerop egs) 0.0 addNoise)))
 ;(format t "~a ~a Noise Added ~a egs ~a Threshold ~a arousUtilNoise ~a~%" (production-name (get-production production)) prod-utility addNoise egs ut arous-util-noise)
 		prod-utility))
