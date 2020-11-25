@@ -256,7 +256,7 @@
 						(msgStream (concatenate 'string "Phys-data/CEC-Arous" (phys-module-pipeID phys) ".txt")
 							:direction :output :if-exists :append :if-does-not-exist :create)
 						(format msgStream "~$,~$,~5$,~5$,~5$,~5$,~5$,~5$,~5$,~5$~&"
-							(mp-time) (mp-time-ms) (compute-homeostatic-arousal-factor)
+							(mp-time) (mp-time-ms) (compute-homeostatic-arousal-factor test)
 							(compute-cort test) (compute-epi-arousal test) (compute-crh-arousal test)
 							(* (compute-homeostatic-arousal-factor)
 								(compute-cort)
@@ -279,7 +279,7 @@
 						 0)
 					(if (and (get-module FEAR) (FEAR-enabled (get-module FEAR)))
 						(* (AA-FEAR-arous-ratio aa)
-							(/ (FEAR-arousal (get-module FEAR)) (log (exp (FEAR-max-FEAR-val (get-module FEAR))))))
+							(/ (FEAR-arousal (get-module FEAR)) (log (exp (FEAR-max-FEAR-val (get-moduR))))))
 						0)
 					(if (and (numberp pred-error-factor) (> pred-error-factor 0))
 						(* (AA-pred-error-arous-ratio aa) pred-error-factor)
@@ -302,7 +302,8 @@
 							"0"))
 		(ret-arousal 0.0001) ;Arousal variable/value to be returned
 		(maxDays 4)
-		(r 0.75)
+		(p5p 0.75)
+		(r (/ (* -1 (log 2)) (log p5p)))
 		(beta 2)
 		(timeSinceAsleep (- (read-from-string currT) (read-from-string LA))))
 		(if (and LA currT (> timeSinceAsleep 0))
@@ -312,9 +313,9 @@
 			(setf ret-arousal 1))
 		(if test
 			(with-open-file
-				(msgStream (concatenate 'string "Phys-data/Homeostatic-Arousal" (phys-module-pipeID phys) ".txt")
+				(msgStream (concatenate 'string "Phys-data/Homeostatic-Arousal" (phys-module-pipeID (get-module physio)) ".txt")
 					:direction :output :if-exists :append :if-does-not-exist :create)
-				(format msgStream "~5$~&" ret-arousal)))
+				(format msgStream "~5$,~a~&" ret-arousal timeSinceAsleep)))
 		ret-arousal))
 
 
