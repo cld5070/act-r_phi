@@ -109,17 +109,17 @@
 		(messageStream  "arousalLevels.txt" :direction :output :if-exists :append :if-does-not-exist :create)
 		(format messageStream "~a~&" arous-util-noise))|#
 	(when (<= arous-util-noise 0) (setf arous-util-noise 0.000001))
-		(if (<= arous-util-noise arous-mid)
-			(sgp-fct (list :ut (* (AA-util-thresh-scalar aa) (- (AA-max-util-thresh aa) arous-util-noise));(- (AA-max-util-thresh aa) (* (- 1 (/ arous-util-noise 0.5)) (AA-max-util-thresh aa) ))))
-				:egs (* (AA-util-noise-scalar aa) (/ (+ (* arous-util-noise (AA-nom-util-noise aa)) (* (- arous-mid arous-util-noise) (AA-max-util-noise aa))) arous-mid))))
-			(sgp-fct (list :egs (* (AA-util-noise-scalar aa) (/ (+ (* (- (AA-max-arous aa) arous-util-noise) (AA-nom-util-noise aa)) (* (- arous-util-noise arous-mid) (AA-max-util-noise aa))) arous-mid)))))
+	(if (<= arous-util-noise arous-mid)
+		(sgp-fct (list :ut (* (AA-util-thresh-scalar aa) (- (AA-max-util-thresh aa) arous-util-noise));(- (AA-max-util-thresh aa) (* (- 1 (/ arous-util-noise 0.5)) (AA-max-util-thresh aa) ))))
+			:egs (* (AA-util-noise-scalar aa) (/ (+ (* arous-util-noise (AA-nom-util-noise aa)) (* (- arous-mid arous-util-noise) (AA-max-util-noise aa))) arous-mid))))
+		(sgp-fct (list :egs (* (AA-util-noise-scalar aa) (/ (+ (* (- (AA-max-arous aa) arous-util-noise) (AA-nom-util-noise aa)) (* (- arous-util-noise arous-mid) (AA-max-util-noise aa))) arous-mid)))))
 
 	(setf egs (no-output (sgp-fct (list :egs))))
 	(setf egs (car egs))
 	(setf ut (no-output (sgp-fct (list :ut))))
 	(setf ut (car ut))
 	(setf addNoise (act-r-noise egs))
-	(setf prod-utility (+ prod-utility (if (zerop egs) 0.0 addNoise)))
+	(setf prod-utility (if addNoise (+ prod-utility addNoise) prod-utility))
 ;(format t "~a ~a Noise Added ~a egs ~a Threshold ~a arousUtilNoise ~a~%" (production-name (get-production production)) prod-utility addNoise egs ut arous-util-noise)
 		prod-utility))
 ;nom-util-noise
