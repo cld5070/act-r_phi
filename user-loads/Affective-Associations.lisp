@@ -82,24 +82,11 @@
 			(noise-val 0))
 		(when (= arous-dm-noise 0) (incf arous-dm-noise 0.000001))
 		(if (<= arous-dm-noise arous-mid)
-			(progn
-				(setf noise-val (/ (+ (* arous-dm-noise (AA-nom-dm-noise aa)) (* (- arous-mid arous-dm-noise) (AA-max-dm-noise aa))) arous-mid))
-				;We only record every 5 seconds
-				(when (eq (mod (mp-time) 2) 0)
-					(with-open-file
-						(n-stream (format nil "Phys-data/ans-log~a.txt" (phys-module-pipeID (get-module physio))) :direction :output :if-exists :append :if-does-not-exist :create)
-						(format n-stream "~5$,~10$~&" (mp-time-ms) noise-val)))
-				(setf noise-val (act-r-noise noise-val))
-				noise-val)
-			(progn
-				(setf noise-val (/ (+ (* (- (AA-max-arous aa) arous-dm-noise) (AA-nom-dm-noise aa)) (* (- arous-dm-noise arous-mid) (AA-max-dm-noise aa))) arous-mid))
-				;(when (and (>= (mod (mp-time) 5) 0) (<= (mod (mp-time) 5) 1))
-				(when (eq (mod (mp-time) 2) 0)
-					(with-open-file
-						(n-stream (format nil "Phys-data/ans-log~a.txt" (phys-module-pipeID (get-module physio))) :direction :output :if-exists :append :if-does-not-exist :create)
-						(format n-stream "~5$,~10$~&" (mp-time-ms) noise-val)))
-				(setf noise-val (act-r-noise noise-val))
-				noise-val))))
+			(setf noise-val (/ (+ (* arous-dm-noise (AA-nom-dm-noise aa)) (* (- arous-mid arous-dm-noise) (AA-max-dm-noise aa))) arous-mid))
+			(setf noise-val (/ (+ (* (- (AA-max-arous aa) arous-dm-noise) (AA-nom-dm-noise aa)) (* (- arous-dm-noise arous-mid) (AA-max-dm-noise aa))) arous-mid)))
+		(no-output (sgp-fct (list :ans noise-val)))
+		(setf noise-val (act-r-noise noise-val))
+		noise-val))
 
 ;;We use the utility-hook function to change the current utility noise (egs) value based on current arousal
 ;;((A-0)*nom + (0.5-A)*max) / 0.5 or ((1-A)*nom + (A-0.5)*max)/0.5
