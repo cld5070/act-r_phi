@@ -112,7 +112,8 @@
 	(if (<= arous-util-noise arous-mid)
 		(sgp-fct (list :ut (* (AA-util-thresh-scalar aa) (- (AA-max-util-thresh aa) arous-util-noise));(- (AA-max-util-thresh aa) (* (- 1 (/ arous-util-noise 0.5)) (AA-max-util-thresh aa) ))))
 			:egs (* (AA-util-noise-scalar aa) (/ (+ (* arous-util-noise (AA-nom-util-noise aa)) (* (- arous-mid arous-util-noise) (AA-max-util-noise aa))) arous-mid))))
-		(sgp-fct (list :egs (* (AA-util-noise-scalar aa) (/ (+ (* (- (AA-max-arous aa) arous-util-noise) (AA-nom-util-noise aa)) (* (- arous-util-noise arous-mid) (AA-max-util-noise aa))) arous-mid)))))
+		(sgp-fct (list :ut (* (AA-util-thresh-scalar aa) (- (AA-max-util-thresh aa) arous-mid))
+			:egs (* (AA-util-noise-scalar aa) (/ (+ (* (- (AA-max-arous aa) arous-util-noise) (AA-nom-util-noise aa)) (* (- arous-util-noise arous-mid) (AA-max-util-noise aa))) arous-mid)))))
 
 	(setf egs (no-output (sgp-fct (list :egs))))
 	(setf egs (car egs))
@@ -1165,7 +1166,7 @@
 		 :valid-test (lambda (x) (numberp x)))
 		(define-parameter
 		 :AA-max-arous
-		 :default-value 2
+		 :default-value 3.5
 		 :valid-test (lambda (x) (numberp x))))
 	:version "0.1"
 	:documentation "Affective Associations Module"
