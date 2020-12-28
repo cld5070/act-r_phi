@@ -232,158 +232,159 @@
 (defvar *parallel-packages-running* nil)
 (defvar *parallel-packages-done* 0)
 (defvar *parallel-packages-lock* nil)
+(defvar *parallel-jobs-lock* nil)
 
 (defun make-and-load-actr-package ()
-  (handler-case
-    (let ((name (format nil "ACT-R-~d" (incf *parallel-actr-package-count*))))
-      (if (find :allegro-ide *features*)
-          (make-package name :use '(:cl-user :cg-user :cg :cl :excl))
-        (if (find :allegro *features*)
-            (make-package name :use '(:cl-user :cl :excl))
-          (if (find :ccl *features*)
-              (make-package name :use '(:cl-user :cl :ccl))
-            (make-package name :use '(:cl-user :cl)))))
-      (let ((cp (package-name *package*))
-            (cm *act-r-modules*))
-        (unwind-protect
-            (progn
-              (eval `(in-package ,name))
-              (let ((*features* (remove :act-r *features*))
-                    (*modules* (set-difference *modules* cm :test 'string-equal)))
+	(handler-case
+		(let ((name (format nil "ACT-R-~d" (incf *parallel-actr-package-count*))))
+			(if (find :allegro-ide *features*)
+					(make-package name :use '(:cl-user :cg-user :cg :cl :excl))
+				(if (find :allegro *features*)
+						(make-package name :use '(:cl-user :cl :excl))
+					(if (find :ccl *features*)
+							(make-package name :use '(:cl-user :cl :ccl))
+						(make-package name :use '(:cl-user :cl)))))
+			(let ((cp (package-name *package*))
+						(cm *act-r-modules*))
+				(unwind-protect
+						(progn
+							(eval `(in-package ,name))
+							(let ((*features* (remove :act-r *features*))
+										(*modules* (set-difference *modules* cm :test 'string-equal)))
 
-                (pushnew :actr-recompile *features*)
-                (pushnew :actr-fast *features*)
-                (pushnew :standalone *features*)
+								(pushnew :actr-recompile *features*)
+								(pushnew :actr-fast *features*)
+								(pushnew :standalone *features*)
 
-                (load "ACT-R:load-act-r.lisp")))
-          (eval `(in-package ,cp))))
-      name)
-    (error (x)
-      (print-warning "Encountered error ~/print-error-message/ while trying to create a new package with ACT-R." x))))
+								(load "ACT-R:load-act-r.lisp")))
+					(eval `(in-package ,cp))))
+			name)
+		(error (x)
+			(print-warning "Encountered error ~/print-error-message/ while trying to create a new package with ACT-R." x))))
 
 (defun create-parallel-instances (number)
-  (if *existing-parallel-packages*
-      (print-warning "There are already ~d parallel instances available.  None created." (length *existing-parallel-packages*))
-    (progn
-      (setf *parallel-actr-package-count* 0)
-      (dotimes (i number number)
-        (aif (make-and-load-actr-package)
-             (push-last it *existing-parallel-packages*)
-             (return-from create-parallel-instances nil))))))
+	(if *existing-parallel-packages*
+			(print-warning "There are already ~d parallel instances available.  None created." (length *existing-parallel-packages*))
+		(progn
+			(setf *parallel-actr-package-count* 0)
+			(dotimes (i number number)
+				(aif (make-and-load-actr-package)
+						 (push-last it *existing-parallel-packages*)
+						 (return-from create-parallel-instances nil))))))
 
 (defun instantiate-parallel-models (&rest files)
-  (if (not (every 'probe-file files))
-      (print-warning "These files were not found when trying to instantiate parallel models: ~{~s~^, ~}"
-                     (mapcan (lambda (x) (unless (probe-file x) (list x))) files))
-    (let ((cp (package-name *package*))
-          (cm *act-r-modules*)
-          (success (length *existing-parallel-packages*)))
-      (dolist (package *existing-parallel-packages*)
-        (eval `(in-package ,package))
-        ;; Want to make sure each package loads any
-        ;; 'requires' even though they may have already been
-        ;; loaded -- should fix that at some point.
+	(if (not (every 'probe-file files))
+			(print-warning "These files were not found when trying to instantiate parallel models: ~{~s~^, ~}"
+										 (mapcan (lambda (x) (unless (probe-file x) (list x))) files))
+		(let ((cp (package-name *package*))
+					(cm *act-r-modules*)
+					(success (length *existing-parallel-packages*)))
+			(dolist (package *existing-parallel-packages*)
+				(eval `(in-package ,package))
+				;; Want to make sure each package loads any
+				;; 'requires' even though they may have already been
+				;; loaded -- should fix that at some point.
 
-        (let ((*modules* (set-difference *modules* cm :test 'string-equal)))
+				(let ((*modules* (set-difference *modules* cm :test 'string-equal)))
 
-          (pushnew :actr-recompile *features*)
-          (pushnew :actr-fast *features*)
+					(pushnew :actr-recompile *features*)
+					(pushnew :actr-fast *features*)
 
-          (dolist (x files)
-            (handler-case (compile-and-load x)
-              (error (e)
-                (eval `(in-package ,cp))
-                (print-warning (format nil "Error ~/print-error-message/ in compile and load of file ~s in package ~s~%" e x package))
-                (return-from instantiate-parallel-models nil)))))
-          (eval `(in-package ,cp)))
-      success)))
+					(dolist (x files)
+						(handler-case (compile-and-load x)
+							(error (e)
+								(eval `(in-package ,cp))
+								(print-warning (format nil "Error ~/print-error-message/ in compile and load of file ~s in package ~s~%" e x package))
+								(return-from instantiate-parallel-models nil)))))
+					(eval `(in-package ,cp)))
+			success)))
 
 (defun destroy-parallel-instances ()
-  (if *existing-parallel-packages*
-      (let ((count (length *existing-parallel-packages*)))
-        (dolist (x *existing-parallel-packages*)
-          (let ((cp (package-name *package*)))
+	(if *existing-parallel-packages*
+			(let ((count (length *existing-parallel-packages*)))
+				(dolist (x *existing-parallel-packages*)
+					(let ((cp (package-name *package*)))
 
-            (eval `(in-package ,x))
-            (eval (read-from-string "(stop-des)"))
-            (eval `(in-package ,cp))
-            (delete-package x)))
-        (setf *existing-parallel-packages* nil)
-        count)
-    (print-warning "There are no parallel instances to destroy.")))
+						(eval `(in-package ,x))
+						(eval (read-from-string "(stop-des)"))
+						(eval `(in-package ,cp))
+						(delete-package x)))
+				(setf *existing-parallel-packages* nil)
+				count)
+		(print-warning "There are no parallel instances to destroy.")))
 
 
 (defun run-parallel-models (function &optional (time-out 60) parameters &rest more-parameters)
-  (cond (*parallel-packages-running*
-         (print-warning "Run-parallel-models cannot be run multiple times.  You must wait for the previous run to finish."))
-        ((null *existing-parallel-packages*)
-         (print-warning "There are no parallel instances available to run models.  First create and instantiate some."))
-        ((not (stringp function))
-         (print-warning "Function parameter to run-parallel-models must be a string not ~s" function))
-        ((not (and (numberp time-out) (plusp time-out)))
-         (print-warning "Time-out parameter to run-parallel-models must be a positive number not ~s" time-out))
-        ((and more-parameters (>= (length more-parameters) (length *existing-parallel-packages*)))
-         (print-warning "Too many sets of parameters passed to run-parallel-models because there are only ~d instances available."
-                        (length *existing-parallel-packages*)))
-        (t
-         (let* ((count (if more-parameters
-                           (1+ (length more-parameters))
-                         (length *existing-parallel-packages*)))
-                (status (make-list count :initial-element :time-out))
-                (result (make-list count :initial-element nil))
-                (jobs (make-list count :initial-element nil)))
+	(cond (*parallel-packages-running*
+				 (print-warning "Run-parallel-models cannot be run multiple times.  You must wait for the previous run to finish."))
+				((null *existing-parallel-packages*)
+				 (print-warning "There are no parallel instances available to run models.  First create and instantiate some."))
+				((not (stringp function))
+				 (print-warning "Function parameter to run-parallel-models must be a string not ~s" function))
+				((not (and (numberp time-out) (plusp time-out)))
+				 (print-warning "Time-out parameter to run-parallel-models must be a positive number not ~s" time-out))
+				((and more-parameters (>= (length more-parameters) (length *existing-parallel-packages*)))
+				 (print-warning "Too many sets of parameters passed to run-parallel-models because there are only ~d instances available."
+												(length *existing-parallel-packages*)))
+				(t
+				 (let* ((count (if more-parameters
+													 (1+ (length more-parameters))
+												 (length *existing-parallel-packages*)))
+								(status (make-list count :initial-element :time-out))
+								(result (make-list count :initial-element nil))
+								(jobs (make-list count :initial-element nil)))
 
-           (unwind-protect
-               (let ((params (if more-parameters
-                                 (append (list parameters) more-parameters)
-                               (make-list count :initial-element parameters))))
-                 (setf *parallel-packages-running* t)
-                 (setf *parallel-packages-done* 0)
-                 (setf *parallel-packages-lock* (bt:make-lock "Parallel-models"))
+					 (unwind-protect
+							 (let ((params (if more-parameters
+																 (append (list parameters) more-parameters)
+															 (make-list count :initial-element parameters))))
+								 (setf *parallel-packages-running* t)
+								 (setf *parallel-packages-done* 0)
+								 (setf *parallel-packages-lock* (bt:make-lock "Parallel-models"))
 
-                 (dotimes (i count)
-                   (let ((pack (nth i *existing-parallel-packages*))
-                         (index i)
-                         (p (format nil "~s" (nth i params))))
-										(format t "~a~&" p)
-                     (setf (nth i jobs)
-                       (bt:make-thread
-                        (lambda ()
-                          (eval `(in-package ,pack))
-                          (multiple-value-bind (r e)
-                              (ignore-errors (apply (read-from-string function) (read-from-string p)))
+								 (dotimes (i count)
+									 (let ((pack (nth i *existing-parallel-packages*))
+												 (index i)
+												 (p (format nil "~s" (nth i params))))
+										;(format t "====+++++====~a=====+++++=====~&" p)
+										 (setf (nth i jobs)
+											 (bt:make-thread
+												(lambda ()
+													(eval `(in-package ,pack))
+													(multiple-value-bind (r e)
+															(ignore-errors (apply (read-from-string function) (read-from-string p)))
 
-                            (bt:with-lock-held (*parallel-packages-lock*)
-                            	(format t "~&~a~&.....~a~&" r e)
-                              (if (subtypep (type-of e) 'condition)
-                                  (setf (nth index status) :error
-                                    (nth index result) (cons e (format nil "Error: ~/print-error-message/~%" e)))
-                                (setf (nth index status) :success
-                                  (nth index result) r))
+														(bt:with-lock-held (*parallel-packages-lock*)
+															;(format t "~&~a~&.....~a~&" r e)
+															(if (subtypep (type-of e) 'condition)
+																	(setf (nth index status) :error
+																		(nth index result) (cons e (format nil "Error: ~/print-error-message/~%" e)))
+																(setf (nth index status) :success
+																	(nth index result) r))
 
-                              (setf (nth index jobs) nil)
-                              (incf *parallel-packages-done*))))
-                        :name pack))))
+															(setf (nth index jobs) nil)
+															(incf *parallel-packages-done*))))
+												:name pack))))
 
-                 (let ((start (get-internal-real-time)))
-                   (while (and (< (/ (- (get-internal-real-time) start) internal-time-units-per-second) time-out)
-                                 (< (bt:with-lock-held (*parallel-packages-lock*) *parallel-packages-done*) count))
-                     (process-events))))
+								 (let ((start (get-internal-real-time)))
+									 (while (and (< (/ (- (get-internal-real-time) start) internal-time-units-per-second) time-out)
+																 (< (bt:with-lock-held (*parallel-packages-lock*) *parallel-packages-done*) count))
+										 (process-events))))
 
-             (unless (= count (bt:with-lock-held (*parallel-packages-lock*) *parallel-packages-done*))
-               (dolist (x jobs)
-                 (when x
-                   (bt:destroy-thread x))))
-             (setf *parallel-packages-running* nil))
+						 (unless (= count (bt:with-lock-held (*parallel-packages-lock*) *parallel-packages-done*))
+							 (dolist (x jobs)
+								 (when x
+									 (bt:destroy-thread x))))
+						 (setf *parallel-packages-running* nil))
 
-           (let ((res (make-list count))
-                 (errors nil))
-             (dotimes (i count)
-               (setf (nth i res) (case (nth i status)
-                                   (:time-out :time-out)
-                                   (:error (push-last (nth i result) errors) :error)
-                                   (:success (nth i result)))))
-             (values res errors))))))
+					 (let ((res (make-list count))
+								 (errors nil))
+						 (dotimes (i count)
+							 (setf (nth i res) (case (nth i status)
+																	 (:time-out :time-out)
+																	 (:error (push-last (nth i result) errors) :error)
+																	 (:success (nth i result)))))
+						 (values res errors))))))
 
 
 (provide "parallel-models")
@@ -420,7 +421,7 @@ CG-USER(3): (time (zbrodoff-compare 4))
 CORRELATION:  0.286
 MEAN DEVIATION:  1.312
 
-              2 (64)      3 (64)      4 (64)
+							2 (64)      3 (64)      4 (64)
 Block  1  2.297 (64)  2.796 (64)  3.301 (64)
 Block  2  2.301 (64)  2.798 (64)  3.299 (64)
 Block  3  2.297 (64)  2.798 (64)  3.300 (64)
@@ -479,22 +480,22 @@ NIL
  but looks like this:
 
 
-              2 (64)      3 (64)      4 (64)
+							2 (64)      3 (64)      4 (64)
 Block  1  2.298 (64)  2.800 (64)  3.295 (64)
 Block  2  2.300 (64)  2.790 (64)  3.297 (64)
 Block  3  2.303 (64)  2.795 (64)  3.289 (64)
 
-              2 (64)      3 (64)      4 (64)
+							2 (64)      3 (64)      4 (64)
 Block  1  2.306 (64)  2.798 (64)  3.306 (64)
 Block  2  2.300 (64)  2.795 (64)  3.306 (64)
 Block  3  2.295 (64)  2.800 (64)  3.295 (64)
 
-              2 (64)      3 (64)      4 (64)
+							2 (64)      3 (64)      4 (64)
 Block  1  2.304 (64)  2.789 (64)  3.298 (64)
 Block  2  2.297 (64)  2.784 (64)  3.300 (64)
 Block  3  2.295 (64)  2.787 (64)  3.293 (64)
 
-              2 (64)      3 (64)      4 (64)
+							2 (64)      3 (64)      4 (64)
 Block  1  2.300 (64)  2.804 (64)  3.290 (64)
 Block  2  2.297 (64)  2.801 (64)  3.309 (64)
 Block  3  2.301 (64)  2.804 (64)  3.295 (64)
